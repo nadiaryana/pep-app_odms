@@ -1,0 +1,21 @@
+.breadcrumbs {
+	display: none;
+}
+
+.breadcrumbs-break {
+	display: block;
+	clear: both;
+}
+
+.breadcrumbs-item,
+.breadcrumbs-separator {
+	display: block;
+	float: left;
+	font-size: 14px;
+}
+
+.breadcrumbs-separator .mat-icon {
+ 	margin-top: 3px;
+ 	margin-left: 4px;
+ 	width: 18px;
+ }

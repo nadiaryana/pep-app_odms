@@ -1,0 +1,100 @@
+/* form */
+
+mat-card { 
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+mat-progress-bar {
+  width: 332px;
+  margin: -16px 0 16px 0 !important;
+}
+
+mat-form-field {
+   width: 250px;
+}
+
+::ng-deep .mat-card-header-text {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+mat-card-content {
+  
+}
+
+mat-card-actions {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* list */
+
+.rate-limit-reached {
+  color: #980000;
+  max-width: 360px;
+  text-align: center;
+}
+
+/* Column Widths */
+.mat-column-number,
+.mat-column-state {
+  max-width: 64px;
+}
+
+.mat-column-created {
+  max-width: 124px;
+}
+
+/* verify table */
+
+::ng-deep .mat-form-field-infix {
+  width: auto !important;
+}
+
+.select-well {
+  padding-top: 0.625em;
+  width: 100px
+}
+
+.input-hidden {
+    position: absolute;
+    width: 0px;
+    border: none;
+    height: 100%;
+}
+
+#daily_chart_el,
+#weekly_chart_el,
+#monthly_chart_el {
+  min-height: 400px;
+}
+
+::ng-deep .mat-form-field-wrapper {
+  padding-bottom: 5px !important;
+}
+
+::ng-deep .mat-form-field-wrapper .mat-form-field-underline {
+  bottom: 5px !important;
+}
+
+::ng-deep .mat-form-field-wrapper .mat-form-field-infix {
+  padding: 5px !important;
+}
+
+.field-well app-xfilter {
+  position: absolute;
+  right: 0px;
+  top: -5px;
+}
+
+.daily_chart {
+  height : 80vh;
+}
+
+.clicked_row {
+  background-color: lightgreen;
+}
+

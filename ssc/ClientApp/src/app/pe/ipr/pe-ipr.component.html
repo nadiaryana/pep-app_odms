@@ -1,0 +1,108 @@
+<div class="container-content">
+	<div fxLayout="row" fxLayout.lt-md="column" fxLayoutWrap fxLayoutGap="0.5%" fxLayoutAlign="center">
+		<div fxFlex="25%" class="container-table">
+			<mat-card>
+				<div class="mat-table">
+					<div class="mat-row">
+						<div class="mat-cell cell-name"><mat-label>Well</mat-label></div>
+						<div class="mat-cell cell-value-uom" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
+							<input matInput [(ngModel)]="well_xSelected" class="input-visible" disabled>
+							<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
+						</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name"><mat-label>Date</mat-label></div>
+						<div class="mat-cell cell-value-uom" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
+							<mat-form-field floatLabel="never">
+								<input matInput class="input-hidden" [matDatepicker]="datePicker" [formControl]="dateControl" (dateChange)="dateChange($event)" disabled>
+								<input matInput [(ngModel)]="dateInput" class="input-visible" disabled>
+								<mat-datepicker-toggle matSuffix [for]="datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+								<mat-datepicker #datePicker disabled="false"></mat-datepicker>
+							</mat-form-field>
+						</div>
+					</div>
+					<div class="cell-separator"></div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Top</div>
+						<div class="mat-cell cell-value">{{(top | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">m</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Bottom</div>
+						<div class="mat-cell cell-value">{{(bottom | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">m</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Mid</div>
+						<div class="mat-cell cell-value">{{(mid | number: "1.0-1") || '-'}}</div>
+						<div class="mat-cell cell-uom">m</div>
+					</div>
+					<div class="cell-separator"></div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Gross</div>
+						<div class="mat-cell cell-value">{{(gross | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">bfpd</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Net</div>
+						<div class="mat-cell cell-value">{{(net | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">bopd</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">WC</div>
+						<div class="mat-cell cell-value">{{(wc/100 | percent: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom"></div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">SG Mix</div>
+						<div class="mat-cell cell-value">{{(sgmix | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom"></div>
+					</div>
+					<div class="cell-separator"></div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">DFL</div>
+						<div class="mat-cell cell-value">{{(dfl | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">m</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Pwf</div>
+						<div class="mat-cell cell-value">{{(pwf | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">psi</div>
+					</div>
+					<div class="cell-separator"></div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">SFL</div>
+						<div class="mat-cell cell-value">{{(sfl | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">m</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Ps</div>
+						<div class="mat-cell cell-value">{{(ps | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">psi</div>
+					</div>
+					<div class="cell-separator"></div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Vogel</div>
+						<div class="mat-cell cell-value">{{(vogel | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">bfpd</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Fetkovich</div>
+						<div class="mat-cell cell-value">{{(fetkovich | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">bfpd</div>
+					</div>
+					<div class="mat-row">
+						<div class="mat-cell cell-name">Wiggins</div>
+						<div class="mat-cell cell-value">{{(wiggins | number: "1.0-0") || '-'}}</div>
+						<div class="mat-cell cell-uom">bfpd</div>
+					</div>
+				</div>
+			</mat-card>
+		</div>
+		<div fxFlex="75%" #wellstat_chart_el class="wellstat_chart">
+			<mat-card>
+				<div #ipr_chart_el class="ipr_chart"></div>	
+			</mat-card>
+		</div>
+	</div>
+</div>

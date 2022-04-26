@@ -1,0 +1,15 @@
+<mat-expansion-panel  *ngFor="let panel of panels; let i=index" [expanded]="i==1 ?  true : false" >
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      {{panel.title}}
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+  <mat-nav-list>
+    <ng-container *ngFor="let menu of panel.items">
+      <a mat-list-item [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path" *ngIf="menu.permission">
+        <mat-icon class="icon">{{menu.icon}}</mat-icon>
+        <span class="label">{{menu.label}}</span>
+      </a>
+    </ng-container>
+  </mat-nav-list>
+</mat-expansion-panel>

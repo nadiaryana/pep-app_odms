@@ -1,0 +1,55 @@
+iframe {
+	overflow: hidden;
+}
+
+mat-card, .mat-card {
+	margin: 5px;
+}
+
+.bmc {
+	width: 960px;
+	height: 420px;
+}
+
+.pandora {
+	width: 890px;
+	height: 370px;
+}
+
+.nms {
+	width: 606px;
+	height: 276px;
+}
+
+.nms_util {
+	width: 774px;
+	height: 124px;	
+}
+
+.nms_util_group {
+	transform: scale(0.79);
+	transform-origin: left top;
+	outline: 1px solid transparent;
+}
+
+.nms_card {
+	width: 615px;
+	height: 680px;
+}
+
+.ipthermo {
+	width: 580px;
+	height: 300px;
+}
+
+.mat-card-subtitle {
+	margin-top: 16px !important;
+	margin-bottom: 0;
+}
+
+.button-fw {
+  font-size: 24px;
+  position: absolute;
+  right: 0;
+  top: 0;
+}

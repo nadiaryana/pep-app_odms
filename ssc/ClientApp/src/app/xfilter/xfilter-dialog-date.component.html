@@ -1,0 +1,41 @@
+<h1 mat-dialog-title>Date Filter</h1>
+<form (ngSubmit)="onOk()">
+	<div mat-dialog-content>
+		<div class="group-dialog">
+			<mat-form-field >
+				<mat-select class="opr-number" [(ngModel)]="opr1" name="opr1">
+					<mat-option *ngFor="let item of operators | keyvalue" [value]="item.key">{{item.value}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput class="input-hidden" [matDatepicker]="datePicker1" [(ngModel)]="val1" name="val1" (dateChange)="dateChange($event, 'val1Input')" disabled>
+				<input matInput [(ngModel)]="val1Input" name="val1Input" disabled>
+				<mat-datepicker-toggle matSuffix [for]="datePicker1"></mat-datepicker-toggle>
+				<mat-datepicker #datePicker1 disabled="false"></mat-datepicker>
+		    </mat-form-field>
+		</div>
+		<div class="group-dialog">
+			<mat-radio-group aria-label="Select an option" [(ngModel)]="log" name="log">
+				<mat-radio-button value="and" selected>And</mat-radio-button>
+				<mat-radio-button value="or">Or</mat-radio-button>
+			</mat-radio-group>
+		</div>
+		<div class="group-dialog">
+			<mat-form-field >
+				<mat-select class="opr-number" [(ngModel)]="opr2" name="opr2">
+					<mat-option *ngFor="let item of operators | keyvalue" [value]="item.key">{{item.value}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput class="input-hidden" [matDatepicker]="datePicker2" [(ngModel)]="val2" name="val2" (dateChange)="dateChange($event, 'val2Input')" disabled>
+				<input matInput [(ngModel)]="val2Input" name="val2Input" disabled>
+				<mat-datepicker-toggle matSuffix [for]="datePicker2"></mat-datepicker-toggle>
+				<mat-datepicker #datePicker2 disabled="false"></mat-datepicker>
+		    </mat-form-field>
+		</div>
+	</div>
+	<div mat-dialog-actions>
+		<button mat-button type="submit" cdkFocusInitial>Ok</button>
+		<button mat-button type="button" (click)="onCancel()">Cancel</button>
+	</div>
+</form>

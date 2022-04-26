@@ -1,0 +1,106 @@
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+    <mat-form-field class="filter" floatLabel="never">
+      <mat-label>Date</mat-label>
+      <input matInput class="input-hidden" [matDatepicker]="datePicker" [formControl]="dateControl" (dateChange)="dateChange($event)" disabled>
+      <input matInput [(ngModel)]="dateInput" disabled>
+      <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+      <mat-datepicker #datePicker disabled="false"></mat-datepicker>
+    </mat-form-field>
+    <button mat-button (click)="commonService.toggleFullwindow()" class="button-fw" [matTooltip]="commonService.fullWindow? 'Exit Fullscreen' : 'Fullscreen'"><mat-icon>{{commonService.fullWindow? "fullscreen_exit" : "fullscreen"}}</mat-icon></button>
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" fxLayout="column" fxLayoutGap="5px">
+
+	<div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="center" fxLayoutGap="5px">
+
+		<mat-card fxFlex="30%" fxLayout="row" fxLayout.lt-lg="column">
+			<div fxFlex="62%" fxFlex.md="100%" #wellstat_chart_el class="wellstat_chart"></div>
+			<div fxFlex="38%" fxFlex.md="100%" class="container-table">
+				<table mat-table [dataSource]="wellstat_table_data" class="ds-table wellstat-table" matSort matSortActive="count" matSortDisableClear matSortDirection="desc">
+			    	<ng-container matColumnDef="status">
+				      <th mat-header-cell *matHeaderCellDef>Well Status</th>
+				      <td mat-cell *matCellDef="let row">{{row.status}}</td>
+				    </ng-container>
+				    <ng-container matColumnDef="count">
+				      <th mat-header-cell *matHeaderCellDef>Qty</th>
+				      <td mat-cell *matCellDef="let row" class="cell-right">{{row.count}}</td>
+				    </ng-container>
+
+				    <tr mat-header-row *matHeaderRowDef="wellstat_table_columns; sticky: true"></tr>
+					<tr mat-row *matRowDef="let row; columns: wellstat_table_columns;"></tr>
+			    </table>
+			</div>
+		</mat-card>											
+		
+		<mat-card fxFlex="70%" fxLayout="row" fxLayout.lt-lg="column">
+			<div fxFlex="70%" fxFlex.md="100%" #structprod_chart_el class="structprod_chart"></div>
+			<div fxFlex="30%" fxFlex.md="100%" class="container-table">
+				<table mat-table [dataSource]="structprod_table_data" class="ds-table structprod-table" matSort matSortActive="structure" matSortDisableClear matSortDirection="asc">
+			    	<ng-container matColumnDef="structure">
+				      <th mat-header-cell *matHeaderCellDef>Structure</th>
+				      <td mat-cell *matCellDef="let row">{{row.structure}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="oil_count">
+				      <th mat-header-cell *matHeaderCellDef>Oil</th>
+				      <td mat-cell *matCellDef="let row" class="cell-right">{{row.oil_count}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="gas_count">
+				      <th mat-header-cell *matHeaderCellDef>Gas</th>
+				      <td mat-cell *matCellDef="let row" class="cell-right">{{row.gas_count}}</td>
+				    </ng-container>
+
+				    <tr mat-header-row *matHeaderRowDef="structprod_table_columns; sticky: true"></tr>
+					<tr mat-row *matRowDef="let row; columns: structprod_table_columns;"></tr>
+			    </table>
+			</div>
+		</mat-card>
+	</div>
+	
+	<div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="center" fxLayoutGap="5px">
+
+		<mat-card fxFlex="30%" fxLayout="row" fxLayout.lt-lg="column">
+			<div fxFlex="62%" fxFlex.md="100%" #wellprod_chart_el class="wellprod_chart"></div>
+			<div fxFlex="38%" fxFlex.md="100%" class="container-table">
+				<table mat-table [dataSource]="wellprod_table_data" class="ds-table wellprod-table" matSort matSortActive="count" matSortDisableClear matSortDirection="desc">
+			    	<ng-container matColumnDef="prod">
+				      <th mat-header-cell *matHeaderCellDef>Production</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center">{{row.prod}}</td>
+				    </ng-container>
+				    <ng-container matColumnDef="count">
+				      <th mat-header-cell *matHeaderCellDef>Qty</th>
+				      <td mat-cell *matCellDef="let row" class="cell-right">{{row.count}}</td>
+				    </ng-container>
+
+				    <tr mat-header-row *matHeaderRowDef="wellprod_table_columns; sticky: true"></tr>
+					<tr mat-row *matRowDef="let row; columns: wellprod_table_columns;"></tr>
+			    </table>
+			</div>
+		</mat-card>
+
+		<mat-card fxFlex="70%" fxLayout="row" fxLayout.lt-lg="column">
+			<div fxFlex="70%" fxFlex.md="100%" #wellrank_chart_el class="wellrank_chart"></div>
+			<div fxFlex="30%" fxFlex.md="100%" class="container-table">
+				<table mat-table [dataSource]="wellrank_table_data" class="ds-table wellrank-table" matSort matSortActive="count" matSortDisableClear matSortDirection="desc">
+					<ng-container matColumnDef="rank">
+				      <th mat-header-cell *matHeaderCellDef>Rank</th>
+				      <td mat-cell *matCellDef="let row; let i = index">{{i+1}}</td>
+				    </ng-container>
+			    	<ng-container matColumnDef="well">
+				      <th mat-header-cell *matHeaderCellDef>Well</th>
+				      <td mat-cell *matCellDef="let row">{{row.well}}</td>
+				    </ng-container>
+				    <ng-container matColumnDef="net">
+				      <th mat-header-cell *matHeaderCellDef>Production</th>
+				      <td mat-cell *matCellDef="let row" class="cell-right">{{row.net | number:'1.0-2'}}</td>
+				    </ng-container>
+
+				    <tr mat-header-row *matHeaderRowDef="wellrank_table_columns; sticky: true"></tr>
+					<tr mat-row *matRowDef="let row; columns: wellrank_table_columns;"></tr>
+			    </table>
+			</div>
+		</mat-card>
+	</div>
+	<br/>
+</div>

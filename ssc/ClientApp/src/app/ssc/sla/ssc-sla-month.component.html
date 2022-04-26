@@ -1,0 +1,63 @@
+<div class="container-top-bar">
+  <mat-form-field>
+    <input matInput placeholder="Filter" [formControl]="filterControl">
+  </mat-form-field>
+  <mat-form-field class="filter" floatLabel="never">
+    <mat-label>Month</mat-label>
+    <input matInput class="input-hidden" [formControl]="sla_month" [matDatepicker]="sla_monthPicker" disabled>
+    <input matInput [(ngModel)]="sla_monthInput" disabled>
+    <mat-datepicker-toggle matSuffix [for]="sla_monthPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+    <mat-datepicker #sla_monthPicker startView="year" disabled="false" (monthSelected)="monthChange($event)"></mat-datepicker>
+  </mat-form-field>
+</div>
+
+<div class="container-content">
+  
+  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+
+  <div class="container-table">
+
+    <table mat-table [dataSource]="data" class=""
+    matSort matSortActive="id" matSortDisableClear matSortDirection="asc">
+    
+    <ng-container matColumnDef="no">
+      <th mat-header-cell *matHeaderCellDef>No</th>
+      <td mat-cell *matCellDef="let row">{{row.no}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="group">
+      <th mat-header-cell *matHeaderCellDef>Lokasi</th>
+      <td mat-cell *matCellDef="let row" (click)="navigateTicket(row.group)">{{row.group}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="met">
+      <th mat-header-cell *matHeaderCellDef class="cell-right">Met</th>
+      <td mat-cell *matCellDef="let row" class="cell-right" (click)="navigateTicket(row.group, 'met')">{{row.met}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="missed">
+      <th mat-header-cell *matHeaderCellDef class="cell-right">Missed</th>
+      <td mat-cell *matCellDef="let row" class="cell-right" (click)="navigateTicket(row.group, 'missed')">{{row.missed}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef class="cell-right">Total</th>
+      <td mat-cell *matCellDef="let row" class="cell-right" (click)="navigateTicket(row.group)">{{row.total}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="sla">
+      <th mat-header-cell *matHeaderCellDef class="cell-right">SLA</th>
+      <td mat-cell *matCellDef="let row" class="cell-right">{{row.sla | percent:'1.2'}}</td>
+    </ng-container>
+
+   <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+ </table>
+</div>
+
+<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[10, 25, 50, 100]"></mat-paginator>
+<router-outlet></router-outlet>
+  <router-outlet name="overlay2"></router-outlet>
+</div>

@@ -1,0 +1,131 @@
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <!--mat-form-field>
+    <input matInput placeholder="Filter" [formControl]="filterControl">
+  </mat-form-field-->
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/location/add']">Add/Edit</button>
+  <button mat-button color="primary" (click)="deleteSelected()" [disabled]="!selection.selected.length">Delete Selected</button>
+  <button mat-button color="primary" (click)="exportExcel()" [disabled]="isLoadingResults">Export to Excel</button>
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  
+  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+
+  <div class="container-table">
+
+    <table mat-table [dataSource]="data" class="common-table"
+    matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+
+    <ng-container matColumnDef="expand">
+      <th mat-header-cell *matHeaderCellDef>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <button mat-button matTooltip="Expand" *ngIf="row.has_children" (click)="treeToggle(row);$event.stopPropagation()" [disabled]="isLoadingResults">
+          <mat-icon>{{row.expand == 1 ? 'remove_box' : 'add_box'}}</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          [aria-label]="checkboxLabel()"
+          [disabled]="isEditing">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+          (change)="($event && !isEditing) ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+          [aria-label]="checkboxLabel(row)"
+          [disabled]="isEditing">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">ID</span>
+          <app-xfilter title="ID" column="id" [selected]="id_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center">{{row.id}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="tree">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Tree</span>
+          <app-xfilter title="Name" column="name" [selected]="name_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" [ngClass]="'tree-depth-'+row.path.length" >
+        <button mat-button (click)="treeToggle(row);$event.stopPropagation()" [disabled]="isLoadingResults || !row.has_children" [ngClass]="!row.has_children? 'tree-spacer' : ''">
+          <mat-icon>{{row.expand == 1 ? 'remove_circle_outline' : 'add_circle_outline'}}</mat-icon>
+        </button>
+        <span>{{row.name}}</span>
+      </td>
+    </ng-container>
+
+   <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Name</span>
+          <app-xfilter title="Name" column="name" [selected]="name_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" >{{row.name}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="parent_id">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Parent</span>
+          <app-xfilter title="Parent" column="parent_id" [selected]="parent_id_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" >{{row.parent_id}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="path">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Path</span>
+          <app-xfilter title="Path" column="path" [selected]="path_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" >{{row.path}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="type">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Type</span>
+          <app-xfilter title="Type" column="type" [selected]="type_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" >{{row.type}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="Actions">
+      <th mat-header-cell *matHeaderCellDef>Action</th>   
+      <td mat-cell *matCellDef="let row"> 
+       <!--button mat-button *ngIf="passPermission('/pe/sensor/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
+       <button mat-button *ngIf="passPermission('/pe/sensor/delete')" (click)="deleteLocation(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
+     </td>
+   </ng-container>
+
+   <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+   <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+ </table>
+</div>
+
+<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+<router-outlet></router-outlet>
+  <router-outlet name="overlay2"></router-outlet>
+</div>

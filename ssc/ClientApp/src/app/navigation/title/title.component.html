@@ -1,0 +1,10 @@
+<div class="breadcrumbs" *ngIf="!fullWindow">
+	<ng-container *ngFor="let item of breadcrumbs; let isLast = last">
+		<span *ngIf="item.routerLink" class="breadcrumbs-item"><a [routerLink]="[item.routerLink]">{{item.label}}</a></span>
+		<span *ngIf="!item.routerLink" class="breadcrumbs-item">{{item.label}}</span>
+		<span *ngIf="!isLast" class="breadcrumbs-separator"><mat-icon>chevron_right</mat-icon>
+		</span>
+		<span *ngIf="isLast" class="breadcrumbs-break"></span>
+	</ng-container>
+</div>
+<h1 class="mat-h1" >{{title}}</h1>

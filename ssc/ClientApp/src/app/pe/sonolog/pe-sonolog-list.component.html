@@ -1,0 +1,151 @@
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <!--mat-form-field>
+    <input matInput placeholder="Filter" [formControl]="filterControl">
+  </mat-form-field-->
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/sonolog/add']" *ngIf="pePermissionService.passPermission('pe/sonolog/add')">Add/Edit</button>
+  <button mat-button color="primary" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/sonolog/delete')">Delete Selected</button>
+  <button mat-button color="primary" (click)="exportExcel()" [disabled]="isLoadingResults">Export to Excel</button>
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  
+  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+
+  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
+
+    <table mat-table [dataSource]="data" class="pe-table"
+    matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+
+    <ng-container matColumnDef="select" sticky>
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          [aria-label]="checkboxLabel()"
+          [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+          (change)="($event && !isEditing) ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+          [aria-label]="checkboxLabel(row)"
+          [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+    
+    <ng-container matColumnDef="date" sticky>
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="Date" column="date" format="date" [selected]="date_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="well" sticky>
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
+          <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center">{{row.well}}</td>
+    </ng-container>
+
+   <ng-container matColumnDef="pump_intake">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Pump Intake</span>
+          <app-xfilter title="pump_intake" column="pump_intake" format="number" [selected]="pump_intake_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.pump_intake | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="fluid_level">
+      <th mat-header-cell *matHeaderCellDef colspan="3">Fluid Level</th>
+    </ng-container>
+
+   <ng-container matColumnDef="dfl">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Dynamic</span>
+          <app-xfilter title="dfl" column="dfl" format="number" [selected]="dfl_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.dfl | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="cdfl">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Cor. Dynamic</span>
+          <app-xfilter title="cdfl" column="cdfl" format="number" [selected]="cdfl_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.cdfl | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="sfl">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Static</span>
+          <app-xfilter title="sfl" column="sfl" format="number" [selected]="sfl_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.sfl | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="tglc">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Total Gaseous Liq. Column</span>
+          <app-xfilter title="tglc" column="tglc" format="number" [selected]="tglc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.tglc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="egfl">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Equivalent Gas Free Liq</span>
+          <app-xfilter title="egfl" column="egfl" format="number" [selected]="egfl_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.egfl | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="al">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Annular Liquid</span>
+          <app-xfilter title="al" column="al" format="number" [selected]="al_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.al | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+    <ng-container matColumnDef="Actions" rowspan="2">
+      <th mat-header-cell *matHeaderCellDef>Action</th>   
+      <td mat-cell *matCellDef="let row"> 
+       <!--button mat-button *ngIf="passPermission('/pe/sonolog/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
+       <button mat-button *ngIf="passPermission('/pe/sonolog/delete')" (click)="deletePeSonolog(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
+     </td>
+   </ng-container>
+
+   <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
+   <tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>
+   <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+ </table>
+</div>
+
+<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+<router-outlet></router-outlet>
+  <router-outlet name="overlay2"></router-outlet>
+</div>

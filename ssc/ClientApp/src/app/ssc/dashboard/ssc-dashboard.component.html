@@ -1,0 +1,47 @@
+<button mat-button (click)="commonService.toggleFullwindow()" class="button-fw" [matTooltip]="commonService.fullWindow? 'Exit Fullscreen' : 'Fullscreen'"><mat-icon>{{commonService.fullWindow? "fullscreen_exit" : "fullscreen"}}</mat-icon></button>
+<div fxLayout="column" fxLayout.xs="column">
+	<div fxLayout="row" fxLayoutAlign="left">
+		<mat-card>
+			<mat-card-header><mat-card-title>Pandora Console</mat-card-title></mat-card-header>
+			<mat-card-content><iframe #pandora class="pandora" src="/api/ssc/proxy/pandora?nick=admin&pass=Pertamin4123!" frameborder="0" scrolling="no" (load)="onLoad(pandora)"></iframe></mat-card-content>
+		</mat-card>
+		<mat-card>
+			<mat-card-header><mat-card-title>SSC Open Tickets</mat-card-title></mat-card-header>
+			<mat-card-content><iframe #bmc class="bmc" src="/ssc/ticket/open;group=Sangasanga;fullWindow=1;refresh=120" frameborder="0" scrolling="no" (load)="onLoad(bmc)"></iframe></mat-card-content>
+		</mat-card>
+	</div>
+	<div fxLayout="row" fxLayoutAlign="left">
+		<mat-card>
+			<mat-card-header><mat-card-title>Server Room</mat-card-title></mat-card-header>
+			<mat-card-content><iframe #ipthermo class="ipthermo" src="/api/ssc/proxy/ipthermo" frameborder="0" scrolling="no" (load)="onLoad(ipthermo)"></iframe></mat-card-content>
+		</mat-card>
+		<mat-card class="nms_card">
+			<mat-card-header><mat-card-title>MPLS XL</mat-card-title></mat-card-header>
+			<mat-card-content fxLayout="column">
+				<iframe #nms2 class="nms" src="/api/ssc/proxy/nms?ResourceID=958&AccountID=monitor&Password=satrio" frameborder="0" scrolling="no" (load)="onLoad(nms2)"></iframe>
+				<div class="nms_util_group">
+					<mat-card-subtitle>XL Sangasanga</mat-card-subtitle>
+					<iframe #nms_util1 class="nms_util" src="/api/ssc/proxy/nms?ResourceID=80&AccountID=monitor&Password=satrio&NetObject=N:186" frameborder="0" scrolling="no" (load)="onLoad(nms_util1)"></iframe>
+					<mat-card-subtitle>XL Anggana</mat-card-subtitle>
+					<iframe #nms_util2 class="nms_util" src="/api/ssc/proxy/nms?ResourceID=80&AccountID=monitor&Password=satrio&NetObject=N:187" frameborder="0" scrolling="no" (load)="onLoad(nms_util2)"></iframe>
+					<mat-card-subtitle>XL Samboja</mat-card-subtitle>
+					<iframe #nms_util3 class="nms_util" src="/api/ssc/proxy/nms?ResourceID=80&AccountID=monitor&Password=satrio&NetObject=N:23" frameborder="0" scrolling="no" (load)="onLoad(nms_util3)"></iframe>
+				</div>
+			</mat-card-content>
+		</mat-card>
+		<mat-card class="nms_card">
+			<mat-card-header><mat-card-title>MPLS Telkom</mat-card-title></mat-card-header>
+			<mat-card-content fxLayout="column">
+				<iframe #nms1 class="nms" src="/api/ssc/proxy/nms?ResourceID=1185&AccountID=monitor&Password=satrio" frameborder="0" scrolling="no" (load)="onLoad(nms1)"></iframe>
+				<div class="nms_util_group">
+					<mat-card-subtitle>Telkom Sangasanga</mat-card-subtitle>
+					<iframe #nms_util4 class="nms_util" src="/api/ssc/proxy/nms?ResourceID=80&AccountID=monitor&Password=satrio&NetObject=N:207" frameborder="0" scrolling="no" (load)="onLoad(nms_util4)"></iframe>
+					<mat-card-subtitle>Telkom Anggana</mat-card-subtitle>
+					<iframe #nms_util5 class="nms_util" src="/api/ssc/proxy/nms?ResourceID=80&AccountID=monitor&Password=satrio&NetObject=N:211" frameborder="0" scrolling="no" (load)="onLoad(nms_util5)"></iframe>
+					<mat-card-subtitle>Telkom Samboja</mat-card-subtitle>
+					<iframe #nms_util6 class="nms_util" src="/api/ssc/proxy/nms?ResourceID=80&AccountID=monitor&Password=satrio&NetObject=N:208" frameborder="0" scrolling="no" (load)="onLoad(nms_util6)"></iframe>
+				</div>
+			</mat-card-content>
+		</mat-card>
+	</div>
+</div>

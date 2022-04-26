@@ -1,0 +1,12 @@
+Host: sscops.pertamina.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0
+Accept: application/json, text/plain, */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Content-Type: application/json;charset=utf-8
+X-XSRF-TOKEN: 155iki333adcu38e485ekgv2ofq7598a7f27q7q4f9svls9714v7
+Expect:
+Origin: https://sscops.pertamina.com
+Connection: keep-alive
+Referer: https://sscops.pertamina.com/smartit/app/
+Cookie: JSESSIONID=5AA68D156A3711FFD3A0A19A1AE6A9B7; _ga=GA1.2.476893036.1564098072; __gads=ID=fd02e5dc434632ab:T=1566642686:S=ALNI_MZj6wVigH6p2r-Ko0KEPfKKP0XEKA; nvg51046=9dd011bb3e728b15d9e7ef9c309|2_269; IAM={"ADUserName":"PERTAMINA-EP\\andar.hutasoit","ClientID":"100","ExecutorCompanyCode":"2021","ExecutorPernr":19011772,"RequestorCompanyCode":"2021","RequestorPernr":19011772,"SessionID":"1dik1xaxoer1flclbkvx01wl"}; sso_1530360343559="VND_RSSO_V2.eyJpYXQiOjE1ODM4OTIxMjgxNzksInNydiI6Imh0dHBzOi8vcHRta3Bzc29sYnNzYy5wZXJ0YW1pbmEuY29tL3Jzc28vIiwicmxtIjoic3Njb3BzLnBlcnRhbWluYS5jb21AKiIsInRva2VuSWQiOiJfY2QwYjc3NDAtYWUwZC00MDZmLTk0M2YtMGMwM2Q3YzY1NTI4In0="; XSRF-TOKEN=155iki333adcu38e485ekgv2ofq7598a7f27q7q4f9svls9714v7; sso.session.restore.cookies=rO0ABXNyACtjb20uYm1jLmJzbS5teWl0c20udm8ubG9naW4uU1NPTG9naW5SZXF1ZXN018T9BEsEG4oCAAB4cgAwY29tLmJtYy5ic20ubXlpdHNtLnZvLmxvZ2luLkFic3RyYWN0TG9naW5SZXF1ZXN0kdd7fQ6/b8oCAApaAAVhZG1pbkkACmFwaVZlcnNpb25MAAdhcHBOYW1ldAASTGphdmEvbGFuZy9TdHJpbmc7TAAKYXBwVmVyc2lvbnEAfgACTAAEY3NyZnEAfgACTAAIZGV2aWNlSWRxAH4AAkwAC2RldmljZVRva2VucQB+AAJMAAZsb2NhbGVxAH4AAkwABW1vZGVscQB+AAJMAAJvc3EAfgACeHAAABhqAHQAB0dhbGlsZW90AAo5LjEuMDUuMDAwdAA0MTU1aWtpMzMzYWRjdTM4ZTQ4NWVrZ3Yyb2ZxNzU5OGE3ZjI3cTdxNGY5c3Zsczk3MTR2N3B0AApkdW1teVRva2VudAACZW50AApXZWIgQ2xpZW50dABOTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NDsgcnY6NzMuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC83My4w

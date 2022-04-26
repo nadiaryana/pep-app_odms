@@ -1,0 +1,115 @@
+<div class="container-content">
+	<mat-horizontal-stepper linear #stepper>
+		<mat-step completed=false>
+			<ng-template matStepLabel>Upload Excel</ng-template>
+			<div>
+				<input style="display: none" (change)="handleFile($event)" type="file" #fileInput/>
+			</div>
+			<button mat-raised-button color="basic"(click)="fileInput.click()">Pick File</button> {{ fileName }}
+			<br/>
+			<div class="loading-shade" *ngIf="isUploading">
+				<mat-spinner></mat-spinner>
+			</div>
+			<div class="progress-bar" *ngIf="isUploading">
+				<mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+			</div>
+			<button mat-raised-button color="primary" (click)="onUpload()" [disabled]="!fileName">Upload</button>
+			<!--div>
+				<button mat-button matStepperNext>Next</button>
+			</div-->
+		</mat-step>
+
+	    <mat-step completed=false>
+	      	<ng-template matStepLabel>Verify Data</ng-template>
+	      	<div *ngIf="data_error_count == 0">
+	      		Save this data ?
+	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+	        	<button mat-raised-button (click)="saveData()">Commit</button>
+	      	</div>
+	      	<div *ngIf="data_error_count > 0">
+	      		<div class="cell-error">There are {{ data_error_count }} error(s) in your data</div>
+	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+	      	</div>
+	      	<mat-form-field>
+	      		<mat-select [(value)]="data_mode" (selectionChange)="loadData()">
+					<mat-option value="all">Show All</mat-option>
+					<mat-option value="error">Show error(s) only</mat-option>
+					<mat-option value="warning">Show warning(s) only</mat-option>
+				</mat-select>
+	      	</mat-form-field>
+	      	<div class="loading-shade" *ngIf="isSaving || isLoading">
+				<mat-spinner></mat-spinner>
+			</div>
+	      	<div class="container-table">
+				<table mat-table [dataSource]="data" class="pe-table"
+				    matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+
+				    <ng-container matColumnDef="info">
+				      <th mat-header-cell *matHeaderCellDef></th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-warning':row._error._row?.value=='warning','cell-error':row._error._row?.value=='error'}" [matTooltip]="row._error._row?.message" matTooltipPosition="after"><mat-icon>{{row._error._row?.value}}</mat-icon></td>
+				    </ng-container>
+				    
+				    <ng-container matColumnDef="date">
+				      <th mat-header-cell *matHeaderCellDef>Date</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date?.value}" [matTooltip]="row._error.date?.message" matTooltipPosition="after">{{(row.date | date: 'dd MMM y') || row._error.date?.value || '-'}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="well">
+				      <th mat-header-cell *matHeaderCellDef>Well</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.well?.value}" [matTooltip]="row._error.well?.message" matTooltipPosition="after">{{row.well || row._error.well?.value || '-'}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="freq">
+					  <th mat-header-cell *matHeaderCellDef>Freq (Hz)</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.freq?.value}" [matTooltip]="row._error.freq?.message" matTooltipPosition="after">{{(row.freq | number) || row._error.freq?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="load">
+					  <th mat-header-cell *matHeaderCellDef>Load (A)</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.load?.value}" [matTooltip]="row._error.load?.message" matTooltipPosition="after">{{(row.load | number) || row._error.load?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="pi">
+					  <th mat-header-cell *matHeaderCellDef>PI (psi)</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.pi?.value}" [matTooltip]="row._error.pi?.message" matTooltipPosition="after">{{(row.pi | number) || row._error.pi?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="ti">
+					  <th mat-header-cell *matHeaderCellDef>TI (F)</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ti?.value}" [matTooltip]="row._error.ti?.message" matTooltipPosition="after">{{(row.ti | number) || row._error.ti?.value || '-'}}</td>
+					</ng-container>
+
+				    <ng-container matColumnDef="esp">
+				      <th mat-header-cell *matHeaderCellDef>ESP</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.esp?.value}" [matTooltip]="row._error.esp?.message" matTooltipPosition="after">{{row.esp || row._error.esp?.value || '-'}}</td>
+				    </ng-container>
+
+					<ng-container matColumnDef="capacity">
+					  <th mat-header-cell *matHeaderCellDef>Capacity</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.capacity?.value}" [matTooltip]="row._error.capacity?.message" matTooltipPosition="after">{{(row.capacity | number) || row._error.capacity?.value || '-'}}</td>
+					</ng-container>
+
+				    <ng-container matColumnDef="Actions">
+				      <th mat-header-cell *matHeaderCellDef>Action</th>   
+				      <td mat-cell *matCellDef="let row"> 
+				       <!--button mat-button *ngIf="passPermission('/pe/sensor/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
+				       <button mat-button *ngIf="passPermission('/pe/sensor/delete')" (click)="deletePeSensor(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
+				     </td>
+				   </ng-container>
+
+				   	<tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+				   	<tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+		 		</table>
+	 		</div>
+	 		<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+	  	</mat-step>
+		<mat-step>
+	    	<ng-template matStepLabel>Done</ng-template>
+	    		<p *ngIf="modified_count">{{ modified_count + " item(s) updated successfully." }}</p>
+	    		<p *ngIf="created_count">{{ created_count + " item(s) created successfully." }}</p>
+	    	<div>
+	      		<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+	    	</div>
+	  	</mat-step>
+	 </mat-horizontal-stepper>
+</div>

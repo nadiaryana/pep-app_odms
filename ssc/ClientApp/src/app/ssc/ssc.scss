@@ -1,0 +1,21 @@
+.container {
+  /*position: relative;*/
+  min-height: 200px;
+  margin: 2em;
+}
+
+.container-top-bar {
+	/*position: relative;*/
+	display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.container-top-bar button {
+  margin: 16px;
+}
+
+.container-content {
+	position: relative;
+	min-height: 200px;
+}

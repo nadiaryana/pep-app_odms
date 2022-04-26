@@ -1,0 +1,70 @@
+.mat-dialog-content {
+  position: relative;
+}
+
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+::ng-deep .mat-dialog-container {
+  padding: 12px 24px 18px 12px !important;
+  overflow: hidden !important;
+}
+
+::ng-deep .mat-dialog-container .mat-dialog-title {
+  margin: 0px !important;
+  font-size: 15px !important;
+}
+
+::ng-deep .mat-dialog-container .mat-dialog-content {
+  padding: 0 0 0 24px !important;
+}
+
+.mat-selection-list .mat-list-option,
+.mat-tree .mat-tree-node {
+  height: 32px !important;
+  min-height: 32px !important;
+}
+
+.mat-selection-list .mat-list-option.number {
+  text-align: right !important;
+}
+
+.x-active {
+  color: #c00 !important;
+}
+
+.opr-number {
+  width: 200px;
+  margin-right: 10px;
+}
+
+.input-hidden {
+    position: absolute;
+    width: 0px;
+    border: none;
+    height: 100%;
+}
+
+.group-dialog .mat-form-field,
+.group-dialog .mat-radio-button, {
+  margin-right: 10px !important;
+}
+
+::ng-deep .mat-select-panel .mat-option {
+  height: 32px !important;
+}
+
+::ng-deep .mat-menu-content .mat-menu-item {
+  height: 32px !important;
+  line-height: 32px !important;
+}
