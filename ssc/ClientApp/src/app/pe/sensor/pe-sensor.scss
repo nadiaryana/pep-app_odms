@@ -1,5 +1,9 @@
 /* form */
 
+.container-top-bar {
+  margin-right: 21.5%;
+}
+
 mat-card { 
   display: flex;
   justify-content: flex-start;
@@ -9,7 +13,6 @@ mat-card {
 
 mat-progress-bar {
   width: 332px;
-  margin: -16px 0 16px 0 !important;
 }
 
 mat-form-field {
@@ -39,4 +42,31 @@ mat-card-actions {
 .mat-column-created {
   max-width: 124px;
 }
+
+.clicked_row {
+  background-color: lightgreen;
+}
+
+.container-content {
+  padding: 5px;
+  box-shadow: 0 2px 1px -1px rgb(255, 0, 0), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%);
+  background-color: white;
+  border-radius: 8px;
+}
+
+
+ng::host .mat-horizontal-stepper-content {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.margin-10 {
+  margin-right: 10px;
+}
+
+.progress-bar {
+  margin-top: 20px;
+}
+
+
 

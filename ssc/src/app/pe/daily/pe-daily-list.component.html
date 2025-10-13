@@ -1,0 +1,961 @@
+<div
+  class="container-top-bar"
+  [ngClass.gt-sm]="'top-flow'"
+  [ngClass.lt-md]="'top-flow-xs'"
+>
+  <!--mat-form-field>
+      <input matInput placeholder="Filter" [formControl]="filterControl">
+    </mat-form-field-->
+  <button
+    mat-button
+    color="primary"
+    [disabled]="isLoadingResults"
+    [routerLink]="['/pe/daily/add']"
+    *ngIf="pePermissionService.passPermission('pe/daily/add')"
+  >
+    <mat-icon>add</mat-icon> Add/Edit
+  </button>
+  <button
+    mat-button
+    color="warn"
+    (click)="deleteSelected()"
+    [disabled]="!selection.selected.length"
+    *ngIf="pePermissionService.passPermission('pe/daily/delete')"
+  >
+    <mat-icon>delete</mat-icon> Delete Selected
+  </button>
+  <button
+    mat-button
+    color="secondary"
+    (click)="exportExcel()"
+    [disabled]="isLoadingResults"
+  >
+    <mat-icon>file_download</mat-icon> Export to Excel
+  </button>
+  <button
+    mat-button
+    color="tertiary"
+    [disabled]="isLoadingResults"
+    [routerLink]="['/pe/daily/chart']"
+  >
+    <mat-icon>bar_chart</mat-icon>Chart
+  </button>
+</div>
+
+<div
+  class="container-content"
+  [ngClass.gt-sm]="'top-flow'"
+  [ngClass.lt-md]="'top-flow-xs'"
+>
+  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+  <div
+    class="container-table"
+    [style.max-height]="
+      commonService.Math.max(commonService.screenHeight - 180, 250) + 'px'
+    "
+  >
+    <table
+      mat-table
+      [dataSource]="data"
+      class="pe-table"
+      matSort
+      matSortActive="date"
+      matSortDisableClear
+      matSortDirection="desc"
+    >
+      <ng-container matColumnDef="select" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <mat-checkbox
+            (change)="$event && !isEditing ? masterToggle() : null"
+            [checked]="selection.hasValue() && isAllSelected()"
+            [indeterminate]="selection.hasValue() && !isAllSelected()"
+            [aria-label]="checkboxLabel()"
+            [disabled]="isEditing"
+            *ngIf="pePermissionService.passPermission('pe/daily/delete')"
+          >
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="$event && !isEditing ? selection.toggle(row) : null"
+            [checked]="selection.isSelected(row)"
+            [aria-label]="checkboxLabel(row)"
+            [disabled]="isEditing"
+            *ngIf="pePermissionService.passPermission('pe/daily/delete')"
+          >
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="date" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Date</span
+            >
+            <app-xfilter
+              title="Date"
+              column="date"
+              format="date"
+              [selected]="date_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.date ? (row.date | date : "dd MMM y") : "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="well" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Well</span
+            >
+            <app-xfilter
+              title="Well"
+              column="well"
+              [selected]="well_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.well }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="zone">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Zone</span
+            >
+            <app-xfilter
+              title="Zone"
+              column="zone"
+              [selected]="zone_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.zone ? row.zone.join(", ") : "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="interval">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Interval</span
+            >
+            <app-xfilter
+              title="Interval"
+              column="interval"
+              [selected]="interval_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.interval ? formatInterval(row.interval) : "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="test_date">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Test date</span
+            >
+            <app-xfilter
+              title="Test Date"
+              column="test_date"
+              format="date"
+              [selected]="test_date_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.test_date ? (row.test_date | date : "dd MMM y") : "-" }}
+        </td>
+      </ng-container>
+      <!-- <ng-container matColumnDef="test_duration">
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Test Duration</span>
+              <app-xfilter title="Test Duration" column="test_duration" format="number" [selected]="test_duration_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.test_duration | number : '1.0-0') || '-'}}</td>
+        </ng-container> -->
+      <ng-container matColumnDef="last_prod">
+        <th mat-header-cell *matHeaderCellDef colspan="4">Last Production</th>
+      </ng-container>
+      <ng-container matColumnDef="last_prod_hours">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Hours</span
+            >
+            <app-xfilter
+              title="Last Production Hours"
+              column="last_prod_hours"
+              format="number"
+              [selected]="last_prod_hours_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.last_prod_hours | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="last_prod_gross">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Gross</span
+            >
+            <app-xfilter
+              title="Last Production Gross"
+              column="last_prod_gross"
+              format="number"
+              [selected]="last_prod_gross_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.last_prod_gross | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="last_prod_net">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Net</span
+            >
+            <app-xfilter
+              title="Last Production Net"
+              column="last_prod_net"
+              format="number"
+              [selected]="last_prod_net_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.last_prod_net | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="last_prod_wc">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >WC</span
+            >
+            <app-xfilter
+              title="Last Production WC"
+              column="last_prod_wc"
+              format="number"
+              [selected]="last_prod_wc_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.last_prod_wc / 100 | percent : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="gas">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Gas</span
+            >
+            <app-xfilter
+              title="Gas"
+              column="gas"
+              format="number"
+              [selected]="gas_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.gas | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift">
+        <th mat-header-cell *matHeaderCellDef colspan="7">Artificial Lift</th>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_size">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Size</span
+            >
+            <app-xfilter
+              title="Art Lift Size"
+              column="art_lift_size"
+              [selected]="art_lift_size_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.art_lift_size || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_type">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Type</span
+            >
+            <app-xfilter
+              title="Art Lift Type"
+              column="art_lift_type"
+              [selected]="art_lift_type_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.art_lift_type || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_sl">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >SL</span
+            >
+            <app-xfilter
+              title="Art Lift Sl"
+              column="art_lift_sl"
+              format="number"
+              [selected]="art_lift_sl_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.art_lift_sl | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_spm">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >SPM</span
+            >
+            <app-xfilter
+              title="Art Lift Spm"
+              column="art_lift_spm"
+              format="number"
+              [selected]="art_lift_spm_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.art_lift_spm | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_freq">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Frequency</span
+            >
+            <app-xfilter
+              title="Art Lift Freq"
+              column="art_lift_freq"
+              format="number"
+              [selected]="art_lift_freq_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.art_lift_freq | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_load">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Load</span
+            >
+            <app-xfilter
+              title="Art Lift Load"
+              column="art_lift_load"
+              format="number"
+              [selected]="art_lift_load_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.art_lift_load | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_bean_size">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Bean Size</span
+            >
+            <app-xfilter
+              title="Art Lift Bean Size"
+              column="art_lift_bean_size"
+              format="number"
+              [selected]="art_lift_bean_size_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.art_lift_bean_size | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="art_lift_efficiency">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Efficiency</span
+            >
+            <app-xfilter
+              title="Art Lift Efficiency"
+              column="art_lift_efficiency"
+              format="number"
+              [selected]="art_lift_efficiency_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.art_lift_efficiency | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="thp">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >THP</span
+            >
+            <app-xfilter
+              title="Thp"
+              column="thp"
+              format="number"
+              [selected]="thp_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.thp | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="chp">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >CHP</span
+            >
+            <app-xfilter
+              title="Chp"
+              column="chp"
+              format="number"
+              [selected]="chp_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.chp | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="pfl">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Pfl</span
+            >
+            <app-xfilter
+              title="Pfl"
+              column="pfl"
+              format="number"
+              [selected]="pfl_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.pfl | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="psep">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Psep</span
+            >
+            <app-xfilter
+              title="Psep"
+              column="psep"
+              format="number"
+              [selected]="psep_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.psep | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="pump_intake">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Pump Intake</span
+            >
+            <app-xfilter
+              title="Pump Intake"
+              column="pump_intake"
+              format="number"
+              [selected]="pump_intake_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.pump_intake | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="perforation_depth">
+        <th mat-header-cell *matHeaderCellDef colspan="3">Perforation Depth</th>
+      </ng-container>
+      <ng-container matColumnDef="top">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Top</span
+            >
+            <app-xfilter
+              title="Top"
+              column="top"
+              format="number"
+              [selected]="top_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.top | number : "1.0-1") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="mid">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Mid</span
+            >
+            <app-xfilter
+              title="Mid"
+              column="mid"
+              format="number"
+              [selected]="mid_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.mid | number : "1.0-1") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="bottom">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Bottom</span
+            >
+            <app-xfilter
+              title="Bottom"
+              column="bottom"
+              format="number"
+              [selected]="bottom_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.bottom | number : "1.0-1") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="pump_capacity">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Pump Capacity</span
+            >
+            <app-xfilter
+              title="Pump Capacity"
+              column="pump_capacity"
+              format="number"
+              [selected]="pump_capacity_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.pump_capacity | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="pump_efficiency">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Pump Efficiency</span
+            >
+            <app-xfilter
+              title="Pump Efficiency"
+              column="pump_efficiency"
+              format="number"
+              [selected]="pump_efficiency_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.pump_efficiency | percent : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="sonolog">
+        <th mat-header-cell *matHeaderCellDef colspan="3">Fluid Level</th>
+      </ng-container>
+      <ng-container matColumnDef="sonolog_date">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Date</span
+            >
+            <app-xfilter
+              title="Date"
+              column="sonolog_date"
+              format="date"
+              [selected]="sonolog_date_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.sonolog_date ? (row.sonolog_date | date : "dd MMM y") : "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="sonolog_dfl">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >DFL</span
+            >
+            <app-xfilter
+              title="DFL"
+              column="sonolog_dfl"
+              format="number"
+              [selected]="sonolog_dfl_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.sonolog_dfl | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="sonolog_sfl">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >SFL</span
+            >
+            <app-xfilter
+              title="SFL"
+              column="sonolog_sfl"
+              format="number"
+              [selected]="sonolog_sfl_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.sonolog_sfl | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="sm">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >SM</span
+            >
+            <app-xfilter
+              title="SM"
+              column="sm"
+              format="number"
+              [selected]="sm_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.sm | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="ps">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Ps</span
+            >
+            <app-xfilter
+              title="Ps"
+              column="ps"
+              format="number"
+              [selected]="ps_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.ps | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="pwf">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Pwf</span
+            >
+            <app-xfilter
+              title="Pwf"
+              column="pwf"
+              format="number"
+              [selected]="pwf_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.pwf | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="qmax">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Qmax</span
+            >
+            <app-xfilter
+              title="Qmax"
+              column="qmax"
+              format="number"
+              [selected]="qmax_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.qmax | number : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="well_efficiency">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Well Efficiency</span
+            >
+            <app-xfilter
+              title="Well Efficiency"
+              column="well_efficiency"
+              format="number"
+              [selected]="well_efficiency_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.well_efficiency | percent : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="Actions">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">Action</th>
+        <td mat-cell *matCellDef="let row">
+          <!--button mat-button *ngIf="passPermission('/pe/daily/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button>
+            <button mat-button *ngIf="passPermission('/pe/daily/delete')" (click)="deletePeDaily(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button-->
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="headerColumns1; sticky: true"></tr>
+      <tr mat-header-row *matHeaderRowDef="headerColumns2; sticky: true"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        (click)="!isEditing ? selection.toggle(row) : null"
+      ></tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="resultsLength"
+    [pageSizeOptions]="[50, 100, 500, 1000]"
+    showFirstLastButtons
+  ></mat-paginator>
+  <router-outlet></router-outlet>
+  <router-outlet name="overlay2"></router-outlet>
+</div>

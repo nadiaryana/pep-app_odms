@@ -7,6 +7,7 @@ import { Router, RouterStateSnapshot, ActivatedRoute } from '@angular/router';
 //import { User } from './user';
 import { Login }    from './login';
 //import { Company } from './company';
+// import { formatDate } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,7 @@ export class AuthService {
 	
   private currentUserSubject: BehaviorSubject<any>;
   private state: RouterStateSnapshot;
+  public DisplayName: string;
   
   constructor(
 	private http: HttpClient,
@@ -30,24 +32,31 @@ export class AuthService {
 	}
 
     login(login) {
+		
 		return this.http.post<any>('api/account/login', login)
 		.pipe(map(res => {
 			// login successful if there's a jwt token in the response
 			if (res.user) { // && user.token
 				// store user details and jwt token in local storage to keep user logged in between page refreshes
 				sessionStorage.setItem('currentUser', JSON.stringify(res.user));
+				// console.log("what is : "+JSON.stringify(res.user.DisplayName));
 				this.currentUserSubject.next(res.user);
 				this.router.navigate([this.active.snapshot.queryParams['returnUrl'] ? this.active.snapshot.queryParams['returnUrl'] : '']);
 			}
+			
 			if (res.timezone) {
 				sessionStorage.setItem('serverTimezone', JSON.stringify(res.timezone));
+				
 			}
+			this.DisplayName = JSON.stringify(res.user.DisplayName);
+			console.log("Login time : "+JSON.stringify(res.time));
+			
 			return res;
 		}, error => {
 			return error;
 		}));
     }
-
+	
     logout() {
 		return this.http.get<any>('api/account/logout')
 		.pipe(map(res => {

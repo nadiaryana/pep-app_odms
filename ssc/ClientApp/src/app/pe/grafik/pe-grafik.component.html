@@ -1,0 +1,67 @@
+<!-- <mat-card fxFlex="100%" class="dasboard_card">
+      <mat-card-content>
+        <h4 class="title_awy" align="center">Diagnostic Chart</h4>
+        <hr class="garis_aw" />
+        <div>
+          <label for="xSelect">X Data :</label>
+          <select id="xSelect" [(ngModel)]="selectedX" (change)="updateChart()">
+            <option *ngFor="let x of xDataSets" [value]="x.name">
+              {{ x.name }}
+            </option>
+          </select>
+
+          <label for="ySelect">Y Data :</label>
+          <select id="ySelect" [(ngModel)]="selectedY" (change)="updateChart()">
+            <option *ngFor="let y of yDataSets" [value]="y.name">
+              {{ y.name }}
+            </option>
+          </select>
+        </div>
+
+        <highcharts-chart
+          *ngIf="dynamicChartOptions"
+          [Highcharts]="Highcharts"
+          [options]="dynamicChartOptions"
+          style="width: 100%; height: 320px; display: block"
+        >
+        </highcharts-chart>
+      </mat-card-content>
+    </mat-card> -->
+<div fxLayout="column" fxLayoutGap="10px">
+  <!-- Pilih X -->
+  <mat-form-field appearance="fill">
+    <mat-label>Pilih X</mat-label>
+    <mat-select [(value)]="selectedX" (selectionChange)="onXYChange()">
+      <mat-option *ngFor="let col of xColumns" [value]="col">
+        {{ col }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+<mat-form-field appearance="fill">
+  <mat-label>Y Axis 1</mat-label>
+  <mat-select [(ngModel)]="selectedY1" (selectionChange)="onXYChange()">
+    <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
+  </mat-select>
+</mat-form-field>
+
+<mat-form-field appearance="fill">
+  <mat-label>Y Axis 2</mat-label>
+  <mat-select [(ngModel)]="selectedY2" (selectionChange)="onXYChange()">
+    <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
+  </mat-select>
+</mat-form-field>
+
+
+  <!-- Chart -->
+  <mat-card>
+    <mat-card-content>
+      <highcharts-chart
+        *ngIf="chartOptions"
+        [Highcharts]="Highcharts"
+        [options]="chartOptions"
+        style="width: 100%; height: 400px; display: block;"
+      ></highcharts-chart>
+    </mat-card-content>
+  </mat-card>
+</div>

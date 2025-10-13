@@ -1,4 +1,4 @@
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" style="margin-bottom:10px;">
     <mat-form-field class="filter" floatLabel="never">
       <mat-label>Date</mat-label>
       <input matInput class="input-hidden" [matDatepicker]="datePicker" [formControl]="dateControl" (dateChange)="dateChange($event)" disabled>
@@ -6,96 +6,123 @@
       <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
       <mat-datepicker #datePicker disabled="false"></mat-datepicker>
     </mat-form-field>
-    <button mat-button (click)="commonService.toggleFullwindow()" class="button-fw" [matTooltip]="commonService.fullWindow? 'Exit Fullscreen' : 'Fullscreen'"><mat-icon>{{commonService.fullWindow? "fullscreen_exit" : "fullscreen"}}</mat-icon></button>
+    <button mat-button (click)="makeFullScreen()" class="button-fw" [matTooltip]="commonService.fullWindow? 'Exit Fullscreen' : 'Fullscreen'"><mat-icon>{{commonService.fullWindow? "fullscreen_exit" : "fullscreen"}}</mat-icon></button>
 </div>
 
 <div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" fxLayout="column" fxLayoutGap="5px">
-	<div class="loading-shade" *ngIf="isLoadingProduction">
-		<mat-spinner *ngIf="isLoadingProduction"></mat-spinner>
-	</div>
-	<div fxLayout="row" fxLayout.lt-md="column" fxLayoutWrap fxLayoutGap="5px" fxLayoutAlign="center">
-		
-		<mat-card fxFlex="25%">
-			<mat-card-title>Operasi</mat-card-title>
-			<mat-card-content>
-				<div class="value">{{(valueOperation | number : '1.0-2') || '-'}}</div>
-				<div class="uom">BOPD</div>
-			</mat-card-content>
-		</mat-card>
+  <div class="loading-shade" *ngIf="isLoadingProduction">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  </div>
 
-		<mat-card fxFlex="25%">
-			<mat-card-title>SOT</mat-card-title>
-			<mat-card-content>
-				<div class="value" *ngIf="!isLoadingSOT">{{(valueSOT | number : '1.0-2') || '-'}}</div>
-				<div class="uom" *ngIf="!isLoadingSOT">BOPD</div>
-			</mat-card-content>
-		</mat-card>
+  <div fxLayout="row" fxLayout.lt-md="column" fxLayoutWrap fxLayoutGap="5px" fxLayoutAlign="center">
 
-		<mat-card fxFlex="25%">
-			<mat-card-title>Figure</mat-card-title>
-			<mat-card-content>
-				<div class="value">{{(valueFigure | number : '1.0-2') || '-'}}</div>
-				<div class="uom">BOPD</div>
-			</mat-card-content>
-		</mat-card>
+    <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_operation">
+      <mat-card-title class="title_dasboard">Operation</mat-card-title>
+      <mat-card-content>
+        <div class="value">{{(valueOperation | number : '1.0-2') || '-'}} </div>
+        <div class="uom"><b>BOPD</b></div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_sot">
+      <mat-card-title class="title_dasboard">SOT</mat-card-title>
+      <mat-card-content>
+        <div class="value" *ngIf="!isLoadingSOT">{{(valueSOT | number : '1.0-2') || '-'}}</div>
+        <div class="uom" *ngIf="!isLoadingSOT"><b>BOPD</b></div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_figure">
+      <mat-card-title class="title_dasboard">Figure</mat-card-title>
+      <mat-card-content>
+        <div class="value">{{(valueFigure | number : '1.0-2') || '-'}}</div>
+        <div class="uom"><b>BOPD</b></div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card fxFlex="20%" class="gas_dasboard_card gas_dasboard_card_production">
+      <mat-card-title class="title_dasboard">Gas Production</mat-card-title>
+      <mat-card-content>
+        <div class="value">{{(valueGas | number : '1.0-2') || '-'}}</div>
+        <div class="uom"><b>MMSCFD</b></div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card fxFlex="20%" class="gas_dasboard_card gas_dasboard_card_sales">
+      <mat-card-title class="title_dasboard">Gas Sales</mat-card-title>
+      <mat-card-content>
+        <div class="value">{{(valueGasSales | number : '1.0-2') || '-'}}</div>
+        <div class="uom"><b>MMSCFD</b></div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
-		<mat-card fxFlex="25%">
-			<mat-card-title>Gas Production</mat-card-title>
-			<mat-card-content>
-				<div class="value">{{(valueGas | number : '1.0-2') || '-'}}</div>
-				<div class="uom">MMSCFD</div>
-			</mat-card-content>
-		</mat-card>
+  <div fxLayout="row" fxLayout.lt-md="column" fxLayoutWrap fxLayoutGap="5px" fxLayoutAlign="right">
+    <mat-form-field>
+      <input matInput class="input-hidden" [matDatepicker]="datePicker2" [formControl]="dateControl2" (dateChange)="dateChange2($event)" disabled>
+      <input matInput [(ngModel)]="dateInput2" disabled>
+      <mat-datepicker-toggle matSuffix [for]="datePicker2"></mat-datepicker-toggle>
+      <mat-datepicker #datePicker2 disabled="false"></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field>
+      <input matInput class="input-hidden" [matDatepicker]="datePicker3" [formControl]="dateControl3" (dateChange)="dateChange3($event)" disabled>
+      <input matInput [(ngModel)]="dateInput3" disabled>
+      <mat-datepicker-toggle matSuffix [for]="datePicker3"></mat-datepicker-toggle>
+      <mat-datepicker #datePicker3 disabled="false"></mat-datepicker>
+    </mat-form-field>
+  </div>
 
-	</div>
+  <!--<div fxLayout="row" fxLayout.lt-md="column" fxLayoutWrap fxLayoutGap="5px" fxLayoutAlign="center">
+    <mat-card fxFlex="50%" class="dasboard_card">
+      <div #oil_chart_el class="oil_chart"></div>
+    </mat-card>
+    <mat-card fxFlex="50%" class="dasboard_card">
+      <div #gas_chart_el class="gas_chart"></div>
+    </mat-card>
+  </div>-->
 
-	<div fxLayout="row" fxLayout.lt-md="column" fxLayoutWrap fxLayoutGap="5px" fxLayoutAlign="center">
-		<mat-card fxFlex="50%">
-			<div #oil_chart_el class="oil_chart"></div>
-		</mat-card>
-		<mat-card fxFlex="50%">
-			<div #gas_chart_el class="gas_chart"></div>
-		</mat-card>
-	</div>
-
-	<div fxLayout="row" fxLayout.lt-lg="column" fxLayoutWrap fxLayoutGap="5px" fxLayoutAlign="center">
-
-		<div fxFlex="30%" fxLayout="column" fxLayoutGap="5px">
-      <mat-card fxFlex="100%">
-        <!--<mat-card-title>Active Wells</mat-card-title>-->
-        <mat-card-content>
-          
-          <div fxFlex="20%">
-            <h4>Active Well</h4>
-            <p class="value" align="center">{{active_wells_count}}</p>
-          </div>
-          <div fxFlex="80%">
-            <div #active_well_chart_el class="active_well_chart"></div>
-          </div>
-        </mat-card-content>
+  <div fxLayout="row" fxLayout.lt-lg="column" fxLayoutWrap fxLayoutGap="10px" fxLayoutAlign="center">
+    <div fxFlex="50%" fxLayout="column" fxLayoutGap="5px">
+      <mat-card fxFlex="100%" class="dasboard_card">
+        <div #oil_chart_el class="oil_chart"></div>
       </mat-card>
+    </div>
+    <div fxFlex="50%" fxLayout="column" fxLayoutGap="5px">
+      <mat-card fxFlex="100%" class="dasboard_card">
+        <div #gas_chart_el class="gas_chart"></div>
+      </mat-card>
+    </div>
+  </div>
 
-			<mat-card fxFlex="100%">
-				<div #wellstat_chart_el class="wellstat_chart"></div>
-			</mat-card>
-		</div>
+    <div fxLayout="row" fxLayout.lt-lg="column" fxLayoutWrap fxLayoutGap="10px" fxLayoutAlign="center">
+      <div fxFlex="100%" fxLayout="column" fxLayoutGap="5px">
+        <mat-card fxFlex="100%" class="dasboard_card">
+          <!--<mat-card-title>Active Wells</mat-card-title>-->
+          <mat-card-content>
+            <div class="active_well_yestd" fxFlex="15%" align="center">
+              <h4 class="title_awy" align="center">Active Well</h4>
+              <h1 class="value value_awy" align="center"><b>{{active_wells_count}}</b></h1>
+			  <h5 class="tanggal_awy" align="center">{{dateActiveWell}}</h5>
+            </div>
+			<hr class="garis_aw">
+            <div fxFlex="85 %">
+              <div #active_well_chart_el class="active_well_chart"></div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
 
-		<div fxFlex="70%" fxLayout="column" fxLayoutGap="5px">
-			<mat-card fxFlex="100%">
-				<div #wellrank_chart_el class="wellrank_chart"></div>
-			</mat-card>
 
-			<div fxFlex="100%" fxLayout="row" fxLayout.xs="column" fxLayoutGap="5px">
-				<mat-card fxFlex="58%">
-					<div #structprod_chart_el class="structprod_chart"></div>
-				</mat-card>
+    </div>
 
-				<mat-card fxFlex="42%">
-					<div #wellprod_chart_el class="wellprod_chart"></div>
-				</mat-card>
-			</div>
-			
-		</div>
 
-	</div>
-</div>
+
+    <div fxLayout="row" fxLayout.lt-lg="column" fxLayoutWrap fxLayoutGap="10px" fxLayoutAlign="center">
+      <div fxFlex="50%" fxLayout="column" fxLayoutGap="5px">
+        <mat-card fxFlex="100%" class="dasboard_card">
+          <div #wellrank_chart_el class="wellrank_chart"></div>
+        </mat-card>
+      </div>
+      <div fxFlex="50%" fxLayout="column" fxLayoutGap="5px">
+        <mat-card fxFlex="100%" class="dasboard_card">
+          <div #wellstat_chart_el class="wellstat_chart"></div>
+        </mat-card>
+      </div>
+    </div>
+  

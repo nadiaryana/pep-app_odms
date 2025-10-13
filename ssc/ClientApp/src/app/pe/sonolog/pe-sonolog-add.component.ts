@@ -43,9 +43,9 @@ export class PeSonologAddComponent {
 
 	data: PeSonolog[] = [];
 	data_error_count: number = 0;
-	displayedColumns: string[] = ["info", "date","well","pump_intake","dfl","cdfl","sfl","tglc","egfl","al"];
-  	headerColumns1: string[] = ["info", "date","well","pump_intake","fluid_level","tglc","egfl","al"];
-  	headerColumns2: string[] = ["dfl","cdfl","sfl"];
+	displayedColumns: string[] = ["info", "date","well","pump_intake","dfl","sfl","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time"];
+  	headerColumns1: string[] = ["info", "date","well","pump_intake","fluid_level","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time"];
+  	headerColumns2: string[] = ["dfl","sfl"];
 
 	constructor(
 		private formBuilder: FormBuilder,
@@ -68,7 +68,8 @@ export class PeSonologAddComponent {
 	ngOnInit() { 
 
 		this.titleService.titleSource.next({
-	      title: "Add Sonolog", 
+          title: "Add Sonolog",
+          icon : "add",
 	      breadcrumbs: [
 	        {label: 'Petroleum Engineering', routerLink: ''}, 
 	        {label: 'Sonolog', routerLink: 'pe/sonolog'},

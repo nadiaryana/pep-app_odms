@@ -1,0 +1,100 @@
+<div class="container-content">
+	<mat-horizontal-stepper linear #stepper>
+		<mat-step completed=false>
+			<ng-template matStepLabel>Upload Excel</ng-template>
+			<div>
+				<input style="display: none" (change)="handleFile($event)" type="file" #fileInput/>
+			</div>
+			<button mat-raised-button color="basic"(click)="fileInput.click()">Pick File</button> {{ fileName }}
+			<br/>
+			<div class="loading-shade" *ngIf="isUploading">
+				<mat-spinner></mat-spinner>
+			</div>
+			<div class="progress-bar" *ngIf="isUploading">
+				<mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+			</div>
+			<button mat-raised-button color="primary" (click)="onUpload()" [disabled]="!fileName">Upload</button>
+			<!--div>
+				<button mat-button matStepperNext>Next</button>
+			</div-->
+		</mat-step>
+
+	    <mat-step completed=false>
+	      	<ng-template matStepLabel>Verify Data</ng-template>
+	      	<div *ngIf="data_error_count == 0">
+	      		Save this data ?
+	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+	        	<button mat-raised-button (click)="saveData()">Commit</button>
+	      	</div>
+	      	<div *ngIf="data_error_count > 0">
+	      		<div class="cell-error">There are {{ data_error_count }} error(s) in your data</div>
+	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+	      	</div>
+	      	<mat-form-field>
+	      		<mat-select [(value)]="data_mode" (selectionChange)="loadData()">
+					<mat-option value="all">Show All</mat-option>
+					<mat-option value="error">Show error(s) only</mat-option>
+					<mat-option value="warning">Show warning(s) only</mat-option>
+				</mat-select>
+	      	</mat-form-field>
+	      	<div class="loading-shade" *ngIf="isSaving || isLoading">
+				<mat-spinner></mat-spinner>
+			</div>
+	      	<div class="container-table">
+				<table mat-table [dataSource]="data" class="common-table"
+				    matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+
+				    <ng-container matColumnDef="info">
+				      <th mat-header-cell *matHeaderCellDef></th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-warning':row._error._row?.value=='warning','cell-error':row._error._row?.value=='error'}" [matTooltip]="row._error._row?.message" matTooltipPosition="after"><mat-icon>{{row._error._row?.value}}</mat-icon></td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="id">
+				      <th mat-header-cell *matHeaderCellDef>ID</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.id?.value}" [matTooltip]="row._error.id?.message" matTooltipPosition="after">{{row.id || row._error.id?.value || '-'}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="name">
+				      <th mat-header-cell *matHeaderCellDef>Name</th>
+				      <td mat-cell *matCellDef="let row" [ngClass]="{'cell-error':row._error.name?.value}" [matTooltip]="row._error.name?.message" matTooltipPosition="after">{{row.name || row._error.name?.value || '-'}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="parent_id">
+				      <th mat-header-cell *matHeaderCellDef>Parent</th>
+				      <td mat-cell *matCellDef="let row" [ngClass]="{'cell-error':row._error.parent_id?.value}" [matTooltip]="row._error.parent_id?.message" matTooltipPosition="after">{{row.parent_id || row._error.parent_id?.value || '-'}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="path">
+				      <th mat-header-cell *matHeaderCellDef>Path</th>
+				      <td mat-cell *matCellDef="let row" [ngClass]="{'cell-error':row._error.path?.value}" [matTooltip]="row._error.path?.message" matTooltipPosition="after">{{row.path || row._error.path?.value || '-'}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="type">
+				      <th mat-header-cell *matHeaderCellDef>Type</th>
+				      <td mat-cell *matCellDef="let row" [ngClass]="{'cell-error':row._error.type?.value}" [matTooltip]="row._error.type?.message" matTooltipPosition="after">{{row.type || row._error.type?.value || '-'}}</td>
+				    </ng-container>
+
+				    <ng-container matColumnDef="Actions">
+				      <th mat-header-cell *matHeaderCellDef>Action</th>   
+				      <td mat-cell *matCellDef="let row"> 
+				       <!--button mat-button *ngIf="passPermission('/pe/sensor/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
+				       <button mat-button *ngIf="passPermission('/pe/sensor/delete')" (click)="deleteLocation(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
+				     </td>
+				   </ng-container>
+
+				   	<tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+				   	<tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+		 		</table>
+	 		</div>
+	 		<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+	  	</mat-step>
+		<mat-step>
+	    	<ng-template matStepLabel>Done</ng-template>
+	    		<p *ngIf="modified_count">{{ modified_count + " item(s) updated successfully." }}</p>
+	    		<p *ngIf="created_count">{{ created_count + " item(s) created successfully." }}</p>
+	    	<div>
+	      		<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+	    	</div>
+	  	</mat-step>
+	 </mat-horizontal-stepper>
+</div>

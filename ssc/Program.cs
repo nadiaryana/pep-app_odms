@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,7 +19,8 @@ namespace ssc
             Thread.CurrentThread.CurrentCulture = culture;
             Thread.CurrentThread.CurrentUICulture = culture;
 
-            CreateWebHostBuilder(args).UseContentRoot(Directory.GetCurrentDirectory()).Build().Run();
+
+      CreateWebHostBuilder(args).UseContentRoot(Directory.GetCurrentDirectory()).Build().Run();
             /*var host = new WebHostBuilder()
             .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
@@ -33,5 +34,7 @@ namespace ssc
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>();
+
+      
     }
 }

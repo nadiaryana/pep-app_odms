@@ -19,31 +19,41 @@ export class PePermissionService {
 
 	private root: Menu[] = [
 
-	new Menu("dashboard", true, ["PeDashboard Read"]),
-	new Menu("activewells", true, ["PeActiveWells Read"]),
+	new Menu("dashboard", true,null, ["PeDashboard Read"]),
 
-	new Menu("daily", true, ["PeDaily Read"]),
-	new Menu("daily/list", true, ["PeDaily Read"]),
-	new Menu("daily/add", true, ["PeDaily Add"]),
-	new Menu("daily/edit", true, ["PeDaily Edit"]),
-	new Menu("daily/delete", true, ["PeDaily Delete"]),
-	new Menu("daily/chart", true, ["PeDaily Read"]),
+	new Menu("daily", true,null, ["PeDaily Read"]),
+	new Menu("daily/list", true, null, ["PeDaily Read"]),
+	new Menu("daily/zonechart-list", true, null, ["PeDaily Read"]),
+	new Menu("daily/manajemen", true, null, ["PeDaily Read"]),
+	new Menu("daily/add", true, null, ["PeDaily Add"]),
+	new Menu("daily/add-osg", true, null, ["PeDaily Add"]),
+	new Menu("daily/edit-osg", true, null, ["PeDaily Add"]),
+	new Menu("daily/edit", true,null, ["PeDaily Edit"]),
+	new Menu("daily/delete", true,null, ["PeDaily Delete"]),
+	new Menu("daily/chart", true, null, ["PeDaily Read"]),
+	new Menu("daily/zonechart", true, null, ["PeDaily Read"]),
+	new Menu("daily/semilog-chart", true, null, ["PeDaily Read"]),
+	new Menu("daily/area-chart", true, null, ["PeDaily Read"]),
+	new Menu("daily/per-area-chart", true, null, ["PeDaily Read"]),
 
-	new Menu("sonolog", true, ["PeSonolog Read"]),
-	new Menu("sonolog/list", true, ["PeSonolog Read"]),
-	new Menu("sonolog/add", true, ["PeSonolog Add"]),
-	new Menu("sonolog/edit", true, ["PeSonolog Edit"]),
-	new Menu("sonolog/delete", true, ["PeSonolog Delete"]),
+	new Menu("production/add", true, null, ["PeProduction Add"]),
 
-	new Menu("sensor", true, ["PeSensor Read"]),
-	new Menu("sensor/list", true, ["PeSensor Read"]),
-	new Menu("sensor/add", true, ["PeSensor Add"]),
-	new Menu("sensor/edit", true, ["PeSensor Edit"]),
-	new Menu("sensor/delete", true, ["PeSensor Delete"]),
+	new Menu("sonolog", true,null, ["PeSonolog Read"]),
+	new Menu("sonolog/list", true,null, ["PeSonolog Read"]),
+	new Menu("sonolog/add", true,null, ["PeSonolog Add"]),
+	new Menu("sonolog/edit", true,null, ["PeSonolog Edit"]),
+	new Menu("sonolog/delete", true,null, ["PeSonolog Delete"]),
+	new Menu("sonolog/sonolog-chart", true, null, ["PeSonolog Read"]),
 
-	new Menu("wellperformance", true, ["PeWellPerformance Read"]),
-	new Menu("ipr", true, ["PeIPR Read"]),
+	
+	new Menu("sensor", true,null, ["PeSensor Read"]),
+	new Menu("sensor/list", true,null, ["PeSensor Read"]),
+	new Menu("sensor/add", true,null, ["PeSensor Add"]),
+	new Menu("sensor/edit", true,null, ["PeSensor Edit"]),
+	new Menu("sensor/delete", true,null, ["PeSensor Delete"]),
+
 	];
+	
 	
 	constructor(
 		private router: Router,
@@ -52,10 +62,18 @@ export class PePermissionService {
 		this.authService.currentUser.subscribe(res => this.currentUser = res);
 	}
 
-	passPermission(path:String) {
-		if(path.charAt(0) == "/") path = path.substring(1);
-        var res:boolean = false;
-        var ms:Menu[] = this.root.filter(m => path == this.basePath+'/'+m.link);
+  passPermission(path: String) {
+
+	console.log('Checking permission for:', path);
+	console.log('Current user:', this.currentUser);
+
+    //if (path.indexOf('/') == -1) path = path.substring(1, path.lastIndexOf('/'))
+    if (path.charAt(0) == "/") path = path.substring(1);
+    if (path.match(/[/]/g).length > 2) path = path.substring(0, path.lastIndexOf('/'))
+    console.log(path)
+      var res: boolean = false;
+      var ms: Menu[] = this.root.filter(m => path == this.basePath + '/' + m.link);
+      console.log(ms)
         if(ms.length > 0) {
             var menu:Menu = ms[0];
             if (this.currentUser != null) {
@@ -80,7 +98,8 @@ export class PePermissionService {
 export class Menu {
 	constructor(
 		public link: string,
-		public auth: boolean,
+    public auth: boolean,
+    public parameter : RegExp,
 		public permission: string[] = []
 		) {}
 }

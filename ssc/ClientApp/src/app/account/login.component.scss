@@ -2,16 +2,26 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  //margin-top: 80px;
+  height: 815px;
+}
+
+::ng-deep .mat-sidenav-content {
+  background: url("src/assets/image/pertamina.png") no-repeat !important;
+  background-position-x: right !important;
+  background-position-y: top !important;
+  //top: 50px;
 }
 
 mat-card { 
-	margin: 2em;
-	width: 300px;
-	display: flex;
+  margin: 2em;
+  width: 300px;
+  display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
 }
+
 
 mat-progress-bar {
 	width: 332px;
@@ -60,3 +70,7 @@ mat-spinner:before {
   height: 100%;
   background-color: rgba(0,0,0,0.3);
 } */
+
+.main-div .example-card {
+  bottom: 100px;
+}

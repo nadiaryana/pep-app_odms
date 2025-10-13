@@ -1,9 +1,11 @@
 <div class="container-top-bar top-flow" fxLayoutGap="10px">
+	
 	<mat-form-field class="field-well" floatLabel="never">
 		<!--mat-label class="select-well">Select Well</mat-label-->
 		<input matInput [(ngModel)]="well_xSelected" disabled>
 		<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
 	</mat-form-field>
+
 	<mat-form-field class="filter" floatLabel="never">
 		<mat-label>Start Date</mat-label>
 		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
@@ -22,7 +24,9 @@
 
 <div class="container-content top-flow">
 	<div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
-		
+		<mat-slide-toggle [(ngModel)]="showAnnotations" (change)="refresh_Daily()">
+			Tampilkan Remarks
+		</mat-slide-toggle>
 	</div>
 	<div #daily_chart_el class="daily_chart"></div>
 </div>

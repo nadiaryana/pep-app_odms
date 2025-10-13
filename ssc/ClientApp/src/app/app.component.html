@@ -1,26 +1,26 @@
-<mat-toolbar color="primary" *ngIf="!fullWindow">
- <div >
-   <button mat-icon-button (click)="sidenav.toggle()">
-    <mat-icon>menu</mat-icon>
-  </button>
-</div>
-<div>
- <a class="mat-display-1" routerLink="/">
-  PEP
-</a>
-</div>
-<div fxFlex fxLayout fxLayoutAlign="flex-end" fxHide fxShow.gt-xs="true">
-  <ul fxLayout fxLayoutGap="20px" class="navigation-items">
-    <ng-container *ngFor="let menu of root">
-      <li *ngIf="menu.permission">
-        <a [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path">
-          <mat-icon class="icon">{{menu.icon}}</mat-icon>
-          <span class="label">{{menu.label}}</span>
-        </a>
-      </li>
-    </ng-container>
-  </ul>
-</div>
+<mat-toolbar class="navbar" color="primary" *ngIf="!fullWindow">
+  <div>
+    <a class="mat-display-1" routerLink="/">
+      <img src="assets/image/pertamina.svg" style="width : 200px" alt="Pertamina EP" />
+    </a>
+  </div>
+  <div>
+    <button mat-icon-button (click)="sidenav.toggle()">
+      <mat-icon>menu</mat-icon>
+    </button> 
+  </div>
+  <div fxFlex fxLayout fxLayoutAlign="flex-end" fxHide fxShow.gt-xs="true">
+    <ul fxLayout fxLayoutGap="20px" class="navigation-items">
+      <ng-container *ngFor="let menu of root">
+        <li *ngIf="menu.permission">
+          <a [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path">
+            <mat-icon class="icon">{{menu.icon}}</mat-icon>
+            <span class="label">{{menu.label}}</span>
+          </a>
+        </li>
+      </ng-container>
+    </ul>
+  </div>
 </mat-toolbar>
 <mat-sidenav-container>
   <mat-sidenav #sidenav role="navigation" [mode]="screenWidth > 599? 'side' : 'over'" [opened]="currentUser!=null && !fullWindow && screenWidth > 599">

@@ -22,21 +22,20 @@ export class AppComponent {
 	root: PanelItem[];
 	fullWindow:boolean;
 	screenWidth: number;
-
+	
 	constructor(
 		private authService: AuthService,
 		private permissionService: PermissionService,
 		private commonService: CommonService,
 		) {
-
 		this.authService.currentUser.subscribe(res => {
 			this.currentUser = res;
 			this.root = [
-			new PanelItem("Home", "", "home", this.permissionService.passPermission("")),
-			new PanelItem("Employee", "employee", "dashboard", this.permissionService.passPermission("employee")),
-			new PanelItem("Enum", "enum", "dashboard", this.permissionService.passPermission("enum")),
-			new PanelItem("Location", "location", "dashboard", this.permissionService.passPermission("location")),
-			new PanelItem("Logout", "logout", "input", this.permissionService.passPermission("logout"), {overlay:"logout"}),
+		//	new PanelItem("Home", "", "home", this.permissionService.passPermission("")),
+		//	new PanelItem("Employee", "employee", "dashboard", this.permissionService.passPermission("employee")),
+		//	new PanelItem("Enum", "enum", "dashboard", this.permissionService.passPermission("enum")),
+		//	new PanelItem("Location", "location", "dashboard", this.permissionService.passPermission("location")),
+			new PanelItem("Logout", "logout", "input", this.permissionService.passPermission("logout"),false,[], {overlay:"logout"}),
 			];
 		});
 		

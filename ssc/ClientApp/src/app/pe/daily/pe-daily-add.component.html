@@ -1,224 +1,262 @@
 <div class="container-content">
-	<mat-horizontal-stepper linear #stepper>
-		<mat-step completed=false>
-			<ng-template matStepLabel>Upload Excel</ng-template>
-			<div>
-				<input style="display: none" (change)="handleFile($event)" type="file" #fileInput/>
-			</div>
-			<button mat-raised-button color="basic"(click)="fileInput.click()">Pick File</button> {{ fileName }}
-			<br/>
-			<div class="loading-shade" *ngIf="isUploading">
-				<mat-spinner></mat-spinner>
-			</div>
-			<div class="progress-bar" *ngIf="isUploading">
-				<mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
-			</div>
-			<button mat-raised-button color="primary" (click)="onUpload()" [disabled]="!fileName">Upload</button>
-			<!--div>
-				<button mat-button matStepperNext>Next</button>
-			</div-->
-		</mat-step>
+  <mat-horizontal-stepper linear #stepper>
+    <mat-step completed=false>
+      <ng-template matStepLabel>Upload Excel</ng-template>
+      <div>
+        <input style="display: none" (change)="handleFile($event)" type="file" #fileInput />
+      </div>
+      <button mat-raised-button color="basic" (click)="fileInput.click()" class="margin-10"><mat-icon>file_open</mat-icon> Pick File</button> {{ fileName }}
+      <div class="loading-shade" *ngIf="isUploading">
+        <mat-spinner></mat-spinner>
+      </div>
+      <span class="margin-10"></span>
+      <button mat-raised-button color="secondary" (click)="onUpload()" *ngIf="fileName"><mat-icon>upload</mat-icon> Upload</button>
+      <!--div>
+      <button mat-button matStepperNext>Next</button>
+    </div-->
+      <div class="progress-bar" *ngIf="isUploading">
+        <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+      </div>
+    </mat-step>
+    <mat-step completed=false>
+      <ng-template matStepLabel>Verify Data</ng-template>
+      <div *ngIf="data_error_count == 0">
+        Save this data ?
+        <button mat-raised-button (click)="stepper.reset();resetData()"><mat-icon>cached</mat-icon> Reset</button>
+        <span class="margin-10"></span>
+        <button mat-raised-button (click)="saveData()"><mat-icon>save</mat-icon> Commit</button>
+      </div>
+      <div *ngIf="data_error_count > 0">
+        <div class="cell-error">There are {{ data_error_count }} error(s) in your data</div>
+        <button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+      </div>
+      <mat-form-field>
+        <mat-select [(value)]="data_mode" (selectionChange)="loadData()">
+          <mat-option value="all">Show All</mat-option>
+          <mat-option value="error">Show error(s) only</mat-option>
+          <mat-option value="warning">Show warning(s) only</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="loading-shade" *ngIf="isSaving || isLoading">
+        <mat-spinner></mat-spinner>
+      </div>
+      <div class="container-table">
+        <table mat-table [dataSource]="data" class="pe-table"
+               matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+          <ng-container matColumnDef="info">
+            <th mat-header-cell *matHeaderCellDef rowspan="3"></th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-warning':row._error._row?.value=='warning','cell-error':row._error._row?.value=='error'}" [matTooltip]="row._error._row?.message" matTooltipPosition="after"><mat-icon>{{row._error._row?.value}}</mat-icon></td>
+          </ng-container>
 
-	    <mat-step completed=false>
-	      	<ng-template matStepLabel>Verify Data</ng-template>
-	      	<div *ngIf="data_error_count == 0">
-	      		Save this data ?
-	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
-	        	<button mat-raised-button (click)="saveData()">Commit</button>
-	      	</div>
-	      	<div *ngIf="data_error_count > 0">
-	      		<div class="cell-error">There are {{ data_error_count }} error(s) in your data</div>
-	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
-	      	</div>
-	      	<mat-form-field>
-	      		<mat-select [(value)]="data_mode" (selectionChange)="loadData()">
-					<mat-option value="all">Show All</mat-option>
-					<mat-option value="error">Show error(s) only</mat-option>
-					<mat-option value="warning">Show warning(s) only</mat-option>
-				</mat-select>
-	      	</mat-form-field>
-	      	<div class="loading-shade" *ngIf="isSaving || isLoading">
-				<mat-spinner></mat-spinner>
-			</div>
-	      	<div class="container-table">
-				<table mat-table [dataSource]="data" class="pe-table"
-				    matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
-
-				    <ng-container matColumnDef="info">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2"></th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-warning':row._error._row?.value=='warning','cell-error':row._error._row?.value=='error'}" [matTooltip]="row._error._row?.message" matTooltipPosition="after"><mat-icon>{{row._error._row?.value}}</mat-icon></td>
-				    </ng-container>
-				    
-				    <ng-container matColumnDef="date">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2">Date</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date?.value}" [matTooltip]="row._error.date?.message" matTooltipPosition="after">{{(row.date | date: 'dd MMM y') || row._error.date?.value || '-'}}</td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="well">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2">Well</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.well?.value}" [matTooltip]="row._error.well?.message" matTooltipPosition="after">{{row.well || row._error.well?.value || '-'}}</td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="zone">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2">Zone</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.zone?.value}" [matTooltip]="row._error.zone?.message" matTooltipPosition="after">{{row.zone? row.zone.join(", ") : (row._error.zone?.value || '-')}}
-				      </td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="interval">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2">Interval</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.interval?.value}" [matTooltip]="row._error.interval?.message" matTooltipPosition="after">{{row.interval? formatInterval(row.interval) : (row._error.interval?.value || '-')}}</td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="test_date">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2">Test Date</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.test_date?.value}" [matTooltip]="row._error.test_date?.message" matTooltipPosition="after">{{(row.test_date | date: 'dd MMM y') || row._error.test_date?.value || '-'}}</td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="test_duration">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2">Test Duration</th>
-				      <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.test_duration?.value}" [matTooltip]="row._error.test_duration?.message" matTooltipPosition="after">{{(row.test_duration | number) || row._error.test_duration?.value || '-'}}</td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="last_prod">
-				      <th mat-header-cell *matHeaderCellDef colspan="4">Last Production</th>
-				    </ng-container>
-
-				    <ng-container matColumnDef="last_prod_hours">
-					  <th mat-header-cell *matHeaderCellDef>Hours</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.last_prod_hours?.value}" [matTooltip]="row._error.last_prod_hours?.message" matTooltipPosition="after">{{(row.last_prod_hours | number) || row._error.last_prod_hours?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="last_prod_gross">
-					  <th mat-header-cell *matHeaderCellDef>Gross</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.last_prod_gross?.value}" [matTooltip]="row._error.last_prod_gross?.message" matTooltipPosition="after">{{(row.last_prod_gross | number) || row._error.last_prod_gross?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="last_prod_net">
-					  <th mat-header-cell *matHeaderCellDef>Net</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.last_prod_net?.value}" [matTooltip]="row._error.last_prod_net?.message" matTooltipPosition="after">{{(row.last_prod_net | number) || row._error.last_prod_net?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="last_prod_wc">
-					  <th mat-header-cell *matHeaderCellDef>WC</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.last_prod_wc?.value}" [matTooltip]="row._error.last_prod_wc?.message" matTooltipPosition="after">{{(row.last_prod_wc/100 | percent) || row._error.last_prod_wc?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="gas">
-					  <th mat-header-cell *matHeaderCellDef rowspan="2">Gas</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.gas?.value}" [matTooltip]="row._error.gas?.message" matTooltipPosition="after">{{(row.gas | number) || row._error.gas?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="art_lift">
-				      <th mat-header-cell *matHeaderCellDef colspan="7">Artificial Lift</th>
-				    </ng-container>
-
-				    <ng-container matColumnDef="art_lift_size">
-				      <th mat-header-cell *matHeaderCellDef>Size</th>
-				      <td mat-cell *matCellDef="let row">{{row.art_lift_size || '-'}}</td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="art_lift_type">
-				      <th mat-header-cell *matHeaderCellDef>Type</th>
-				      <td mat-cell *matCellDef="let row">{{row.art_lift_type || '-'}}</td>
-				    </ng-container>
-
-				    <ng-container matColumnDef="art_lift_sl">
-					  <th mat-header-cell *matHeaderCellDef>SL</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.art_lift_sl?.value}" [matTooltip]="row._error.art_lift_sl?.message" matTooltipPosition="after">{{(row.art_lift_sl | number) || row._error.art_lift_sl?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="art_lift_spm">
-					  <th mat-header-cell *matHeaderCellDef>SPM</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.art_lift_spm?.value}" [matTooltip]="row._error.art_lift_spm?.message" matTooltipPosition="after">{{(row.art_lift_spm | number) || row._error.art_lift_spm?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="art_lift_freq">
-					  <th mat-header-cell *matHeaderCellDef>Frequency</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.art_lift_freq?.value}" [matTooltip]="row._error.art_lift_freq?.message" matTooltipPosition="after">{{(row.art_lift_freq | number) || row._error.art_lift_freq?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="art_lift_load">
-					  <th mat-header-cell *matHeaderCellDef>Load</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.art_lift_load?.value}" [matTooltip]="row._error.art_lift_load?.message" matTooltipPosition="after">{{(row.art_lift_load | number) || row._error.art_lift_load?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="art_lift_bean_size">
-					  <th mat-header-cell *matHeaderCellDef>Bean Size</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.art_lift_bean_size?.value}" [matTooltip]="row._error.art_lift_bean_size?.message" matTooltipPosition="after">{{(row.art_lift_bean_size | number) || row._error.art_lift_bean_size?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="art_lift_efficiency">
-					  <th mat-header-cell *matHeaderCellDef>Efficiency</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.art_lift_efficiency?.value}" [matTooltip]="row._error.art_lift_efficiency?.message" matTooltipPosition="after">{{(row.art_lift_efficiency | number) || row._error.art_lift_efficiency?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="thp">
-					  <th mat-header-cell *matHeaderCellDef rowspan="2">THP</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.thp?.value}" [matTooltip]="row._error.thp?.message" matTooltipPosition="after">{{(row.thp | number) || row._error.thp?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="chp">
-					  <th mat-header-cell *matHeaderCellDef rowspan="2">CHP</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.chp?.value}" [matTooltip]="row._error.chp?.message" matTooltipPosition="after">{{(row.chp | number) || row._error.chp?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="pfl">
-					  <th mat-header-cell *matHeaderCellDef rowspan="2">Pfl</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.pfl?.value}" [matTooltip]="row._error.pfl?.message" matTooltipPosition="after">{{(row.pfl | number) || row._error.pfl?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="psep">
-					  <th mat-header-cell *matHeaderCellDef rowspan="2">Psep</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.psep?.value}" [matTooltip]="row._error.psep?.message" matTooltipPosition="after">{{(row.psep | number) || row._error.psep?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="pump_intake">
-					  <th mat-header-cell *matHeaderCellDef rowspan="2">Pump Intake</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.pump_intake?.value}" [matTooltip]="row._error.pump_intake?.message" matTooltipPosition="after">{{(row.pump_intake | number) || row._error.pump_intake?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="perforation_depth">
-				      <th mat-header-cell *matHeaderCellDef colspan="3">Perforation Depth</th>
-				    </ng-container>
-
-					<ng-container matColumnDef="top">
-					  <th mat-header-cell *matHeaderCellDef>Top</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.top?.value}" [matTooltip]="row._error.top?.message" matTooltipPosition="after">{{(row.top | number) || row._error.top?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="mid">
-					  <th mat-header-cell *matHeaderCellDef>Mid</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.mid?.value}" [matTooltip]="row._error.mid?.message" matTooltipPosition="after">{{(row.mid | number) || row._error.mid?.value || '-'}}</td>
-					</ng-container>
-
-					<ng-container matColumnDef="bottom">
-					  <th mat-header-cell *matHeaderCellDef>Bottom</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.bottom?.value}" [matTooltip]="row._error.bottom?.message" matTooltipPosition="after">{{(row.bottom | number) || row._error.bottom?.value || '-'}}</td>
-					</ng-container>
-
-				    <ng-container matColumnDef="Actions">
-				      <th mat-header-cell *matHeaderCellDef rowspan="2">Action</th>   
-				      <td mat-cell *matCellDef="let row"> 
-				       <!--button mat-button *ngIf="passPermission('/pe/daily/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
-				       <button mat-button *ngIf="passPermission('/pe/daily/delete')" (click)="deletePeDaily(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
-				     </td>
-				   </ng-container>
-
-				   	<tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
-	   				<tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>
-				   	<tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-		 		</table>
-	 		</div>
-	 		<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
-	  	</mat-step>
-		<mat-step>
-	    	<ng-template matStepLabel>Done</ng-template>
-	    		<p *ngIf="modified_count">{{ modified_count + " item(s) updated successfully." }}</p>
-	    		<p *ngIf="created_count">{{ created_count + " item(s) created successfully." }}</p>
-	    	<div>
-	      		<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
-	    	</div>
-	  	</mat-step>
-	 </mat-horizontal-stepper>
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Date</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date?.value}" [matTooltip]="row._error.date?.message" matTooltipPosition="after">{{(row.date | date: 'dd MMM y') || row._error.date?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="nomor">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">No</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.nomor?.value}" [matTooltip]="row._error.nomor?.message" matTooltipPosition="after">{{(row.nomor | number) || row._error.nomor?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="location">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Location</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.location?.value}" [matTooltip]="row._error.location?.message" matTooltipPosition="after">{{row.location || row._error.location?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="well">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Well</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.well?.value}" [matTooltip]="row._error.well?.message" matTooltipPosition="after">{{row.well || row._error.well?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="well_string">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">LS/SS</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.well_string?.value}" [matTooltip]="row._error.well_string?.message" matTooltipPosition="after">{{row.well_string || row._error.well_string?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="zone">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Zone</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.zone?.value}" [matTooltip]="row._error.zone?.message" matTooltipPosition="after">
+              {{row.zone? row.zone.join(", ") : (row._error.zone?.value || '-')}}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="interval">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Interval</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.interval?.value}" [matTooltip]="row._error.interval?.message" matTooltipPosition="after">{{row.interval? formatInterval(row.interval) : (row._error.interval?.value || '-')}}</td>
+          </ng-container>
+          <ng-container matColumnDef="potensi_prod">
+            <th mat-header-cell *matHeaderCellDef colspan="2">Potensi Produksi</th>
+          </ng-container>
+          <ng-container matColumnDef="potensi_prod_gross">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Gross</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.potensi_prod_gross?.value}" [matTooltip]="row._error.potensi_prod_gross?.message" matTooltipPosition="after">{{(row.potensi_prod_gross | number) || row._error.potensi_prod_gross?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="potensi_prod_net">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Net</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.potensi_prod_net?.value}" [matTooltip]="row._error.potensi_prod_net?.message" matTooltipPosition="after">{{(row.potensi_prod_net | number) || row._error.potensi_prod_net?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="tes_prod">
+            <th mat-header-cell *matHeaderCellDef colspan="2">Tes Produksi</th>
+          </ng-container>
+          <ng-container matColumnDef="tes_prod_gross">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Gross</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.tes_prod_gross?.value}" [matTooltip]="row._error.tes_prod_gross?.message" matTooltipPosition="after">{{(row.tes_prod_gross | number) || row._error.tes_prod_gross?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="tes_prod_net">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Net</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.tes_prod_net?.value}" [matTooltip]="row._error.tes_prod_net?.message" matTooltipPosition="after">{{(row.tes_prod_net | number) || row._error.tes_prod_net?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="fig">
+            <th mat-header-cell *matHeaderCellDef colspan="4">Figure</th>
+          </ng-container>
+          <ng-container matColumnDef="last_test">
+          <th mat-header-cell *matHeaderCellDef colspan="2" class="header-sub">Last Tes</th>
+          </ng-container>
+          <ng-container matColumnDef="current_test">
+            <th mat-header-cell *matHeaderCellDef colspan="2" class="header-sub">Current Tes</th>
+          </ng-container>
+          <ng-container matColumnDef="fig_last_gross">
+            <th mat-header-cell *matHeaderCellDef>Gross</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.fig_last_gross?.value}" [matTooltip]="row._error.fig_last_gross?.message" matTooltipPosition="after">{{(row.fig_last_gross | number) || row._error.fig_last_gross?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="fig_last_net">
+            <th mat-header-cell *matHeaderCellDef>Net</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.fig_last_net?.value}" [matTooltip]="row._error.fig_last_net?.message" matTooltipPosition="after">{{(row.fig_last_net | number) || row._error.fig_last_net?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="fig_curr_gross">
+            <th mat-header-cell *matHeaderCellDef>Gross</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.fig_curr_gross?.value}" [matTooltip]="row._error.fig_curr_gross?.message" matTooltipPosition="after">{{(row.fig_curr_gross | number) || row._error.fig_curr_gross?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="fig_curr_net">
+            <th mat-header-cell *matHeaderCellDef>Net</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.fig_curr_net?.value}" [matTooltip]="row._error.fig_curr_net?.message" matTooltipPosition="after">{{(row.fig_curr_net | number) || row._error.fig_curr_net?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="thp_last_fig">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">L/O/G Thp Last Figure</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.thp_last_fig?.value}" [matTooltip]="row._error.thp_last_fig?.message" matTooltipPosition="after">{{(row.thp_last_fig | number) || row._error.thp_last_fig?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="thp_potensi">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">L/O/G Thp potensi</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.thp_potensi?.value}" [matTooltip]="row._error.thp_potensi?.message" matTooltipPosition="after">{{(row.thp_potensi | number) || row._error.thp_potensi?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="wc">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">WC</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.wc?.value}" [matTooltip]="row._error.wc?.message" matTooltipPosition="after">{{(row.wc/100 | percent) || row._error.wc?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="prod_hours">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Production Hours</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.prod_hours?.value}" [matTooltip]="row._error.prod_hours?.message" matTooltipPosition="after">{{(row.prod_hours | number) || row._error.prod_hours?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="wor">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">WOR</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.wor?.value}" [matTooltip]="row._error.wor?.message" matTooltipPosition="after">{{(row.wor | number) || row._error.wor?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="gas">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Q.Gas</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.gas?.value}" [matTooltip]="row._error.gas?.message" matTooltipPosition="after">{{(row.gas | number) || row._error.gas?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="gor">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">GOR</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.gor?.value}" [matTooltip]="row._error.gor?.message" matTooltipPosition="after">{{(row.gor | number) || row._error.gor?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="glr">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">GLR</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.glr?.value}" [matTooltip]="row._error.glr?.message" matTooltipPosition="after">{{(row.glr | number) || row._error.glr?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="lifting_status">
+            <th mat-header-cell *matHeaderCellDef colspan="4">Lifting Status</th>
+          </ng-container>
+          <ng-container matColumnDef="ls_method">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Method</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.ls_method?.value}" [matTooltip]="row._error.ls_method?.message" matTooltipPosition="after">{{row.ls_method || row._error.ls_method?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ls_brandtype">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Brandtype</th>
+            <td mat-cell *matCellDef="let row">{{row.ls_brandtype || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ls_prime_mover">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Prime Mover</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.ls_prime_mover?.value}" [matTooltip]="row._error.ls_prime_mover?.message" matTooltipPosition="after">{{row.ls_prime_mover || row._error.ls_prime_mover?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ls_hp">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">HP/VRG</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ls_hp?.value}" [matTooltip]="row._error.ls_hp?.message" matTooltipPosition="after">{{row.ls_hp || row._error.ls_hp?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="daftar_sumur">
+            <th mat-header-cell *matHeaderCellDef colspan="13">Daftar Sumur</th>
+          </ng-container>
+          <ng-container matColumnDef="ds_bean">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Bean</th>
+            <td mat-cell *matCellDef="let row" [ngClass]="{'cell-error':row._error.ds_bean?.value}" [matTooltip]="row._error.ds_bean?.message">{{row.ds_bean || row._error.ds_bean?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_whp">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">WHP</th>
+            <td mat-cell *matCellDef="let row" [ngClass]="{'cell-error':row._error.ds_whp?.value}" [matTooltip]="row._error.ds_whp?.message">{{row.ds_whp || row._error.ds_whp?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_fl">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">FL</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_fl?.value}" [matTooltip]="row._error.ds_fl?.message" matTooltipPosition="after">{{(row.ds_fl | number) || row._error.ds_fl?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_casing">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Casing</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_casing?.value}" [matTooltip]="row._error.ds_casing?.message" matTooltipPosition="after">{{(row.ds_casing | number) || row._error.ds_casing?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_separator">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Separator</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_separator?.value}" [matTooltip]="row._error.ds_separator?.message" matTooltipPosition="after">{{(row.ds_separator | number) || row._error.ds_separator?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_spm">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">SPM/Freq.</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_spm?.value}" [matTooltip]="row._error.ds_spm?.message" matTooltipPosition="after">{{(row.ds_spm | number) || row._error.ds_spm?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_size">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Pump Size</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_size?.value}" [matTooltip]="row._error.ds_size?.message" matTooltipPosition="after">{{(row.ds_size | number) || row._error.ds_size?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_pump_displace">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Pump Displace</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_pump_displace?.value}" [matTooltip]="row._error.ds_pump_displace?.message" matTooltipPosition="after">{{(row.ds_pump_displace | number) || row._error.ds_pump_displace?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_efficiency">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Pump Efficiency</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_efficiency?.value}" [matTooltip]="row._error.ds_efficiency?.message" matTooltipPosition="after">{{(row.ds_efficiency/100 | percent) || row._error.ds_efficiency?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_sl">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">SL</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_sl?.value}" [matTooltip]="row._error.ds_sl?.message" matTooltipPosition="after">{{(row.ds_sl | number) || row._error.ds_sl?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_kd">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">KD</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ds_kd?.value}" [matTooltip]="row._error.ds_kd?.message" matTooltipPosition="after">{{(row.ds_kd | number) || row._error.ds_kd?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="sm">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">SM</th>
+            <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.sm?.value}" [matTooltip]="row._error.sm?.message" matTooltipPosition="after">{{(row.sm | number) || row._error.sm?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="ds_tgl_pengujian">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">Tanggal Pengujian</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.ds_tgl_pengujian?.value}" [matTooltip]="row._error.ds_tgl_pengujian?.message" matTooltipPosition="after">{{(row.ds_tgl_pengujian | date: 'dd MMM y') || row._error.ds_tgl_pengujian?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="noted">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Remarks</th>
+            <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.noted?.value}" [matTooltip]="row._error.noted?.message" matTooltipPosition="after">{{row.noted || row._error.noted?.value || '-'}}</td>
+          </ng-container>
+          <ng-container matColumnDef="Actions">
+            <th mat-header-cell *matHeaderCellDef rowspan="3">Action</th>
+            <td mat-cell *matCellDef="let row">
+              <!--button mat-button *ngIf="passPermission('/pe/daily/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button>
+            <button mat-button *ngIf="passPermission('/pe/daily/delete')" (click)="deletePeDaily(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button-->
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
+          <tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>
+          <tr mat-header-row *matHeaderRowDef='headerColumns3; sticky: true'></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+      <mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Done</ng-template>
+      <p *ngIf="modified_count">{{ modified_count + " item(s) updated successfully." }}</p>
+      <p *ngIf="created_count">{{ created_count + " item(s) created successfully." }}</p>
+      <div>
+        <button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+      </div>
+    </mat-step>
+  </mat-horizontal-stepper>
 </div>

@@ -2,9 +2,9 @@
   <!--mat-form-field>
     <input matInput placeholder="Filter" [formControl]="filterControl">
   </mat-form-field-->
-  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/sensor/add']" *ngIf="pePermissionService.passPermission('pe/sensor/add')">Add/Edit</button>
-  <button mat-button color="primary" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/sensor/delete')">Delete Selected</button>
-  <button mat-button color="primary" (click)="exportExcel()" [disabled]="isLoadingResults">Export to Excel</button>
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/sensor/add']" *ngIf="pePermissionService.passPermission('pe/sensor/add')"><mat-icon>add</mat-icon> Add/Edit</button>
+  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/sensor/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
+  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
 </div>
 
 <div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
@@ -18,7 +18,7 @@
     <table mat-table [dataSource]="data" class="pe-table"
     matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
 
-    <ng-container matColumnDef="select" sticky>
+    <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef>
         <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
           [checked]="selection.hasValue() && isAllSelected()"
@@ -37,24 +37,24 @@
       </td>
     </ng-container>
     
-    <ng-container matColumnDef="date" sticky>
+    <ng-container matColumnDef="date" >
       <th mat-header-cell *matHeaderCellDef>
         <div fxLayout="row" fxLayoutAlign="start center">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <span mat-sort-header arrowPosition="before">Date</span>
           <app-xfilter title="Date" column="date" format="date" [selected]="date_xSelected"></app-xfilter>
         </div>
      </th>
-      <td mat-cell *matCellDef="let row" class="cell-center">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
     </ng-container>
 
-    <ng-container matColumnDef="well" sticky>
+    <ng-container matColumnDef="well">
       <th mat-header-cell *matHeaderCellDef>
         <div fxLayout="row" fxLayoutAlign="start center">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
+          <span mat-sort-header arrowPosition="before">Well</span>
           <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
         </div>
      </th>
-      <td mat-cell *matCellDef="let row" class="cell-center">{{row.well}}</td>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
     </ng-container>
 
    <ng-container matColumnDef="freq">
@@ -64,7 +64,7 @@
           <app-xfilter title="freq" column="freq" format="number" [selected]="freq_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.freq | number : '1.0-0') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.freq | number : '1.0-0') || '-'}}</td>
    </ng-container>
 
    <ng-container matColumnDef="load">
@@ -74,7 +74,7 @@
           <app-xfilter title="load" column="load" format="number" [selected]="load_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.load | number : '1.0-0') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.load | number : '1.0-0') || '-'}}</td>
    </ng-container>
 
    <ng-container matColumnDef="pi">
@@ -84,7 +84,7 @@
           <app-xfilter title="pi" column="pi" format="number" [selected]="pi_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.pi | number : '1.0-0') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.pi | number : '1.0-0') || '-'}}</td>
    </ng-container>
 
    <ng-container matColumnDef="ti">
@@ -94,7 +94,7 @@
           <app-xfilter title="ti" column="ti" format="number" [selected]="ti_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.ti | number : '1.0-0') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ti | number : '1.0-0') || '-'}}</td>
    </ng-container>
 
     <ng-container matColumnDef="esp">
@@ -104,7 +104,7 @@
           <app-xfilter title="ESP" column="esp" format="number" [selected]="esp_xSelected"></app-xfilter>
         </div>
      </th>
-      <td mat-cell *matCellDef="let row" class="cell-center">{{row.esp}}</td>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.esp}}</td>
     </ng-container>
 
    <ng-container matColumnDef="capacity">
@@ -114,7 +114,7 @@
           <app-xfilter title="Capacity" format="number" column="capacity" [selected]="capacity_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right">{{(row.capacity | number : '1.0-2') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.capacity | number : '1.0-2') || '-'}}</td>
    </ng-container>
 
     <ng-container matColumnDef="Actions">

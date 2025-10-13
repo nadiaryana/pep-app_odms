@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,11 +18,10 @@ using Oracle.ManagedDataAccess.Client;
 using System.Text;
 using System.IO;
 using ssc.Models;
-using ssc.Areas.SSC.Models;
-using ssc.Areas.SSC.Services;
 using ssc.Areas.PE.Models;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
+using Microsoft.Extensions.FileProviders;
 
 namespace ssc
 {
@@ -44,17 +43,12 @@ namespace ssc
             services.AddSingleton<ICommonDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<CommonDatabaseSettings>>().Value);
 
-            services.Configure<SSCDatabaseSettings>(
-                Configuration.GetSection(nameof(SSCDatabaseSettings)));
-
-            services.AddSingleton<ISSCDatabaseSettings>(sp =>
-                sp.GetRequiredService<IOptions<SSCDatabaseSettings>>().Value);
-
             services.Configure<PEDatabaseSettings>(
                 Configuration.GetSection(nameof(PEDatabaseSettings)));
 
             services.AddSingleton<IPEDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<PEDatabaseSettings>>().Value);
+
 
             services.AddHttpClient();
             services.AddCors(options =>
@@ -63,7 +57,7 @@ namespace ssc
                     builder => builder.WithOrigins("*"));
             });
 
-            services.AddSingleton<TicketService>();
+            //services.AddSingleton<TicketService>();
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
@@ -86,18 +80,18 @@ namespace ssc
                     ValidateIssuerSigningKey = true,
                     //Same Secret key will be used while creating the token
                     IssuerSigningKey = new SymmetricSecurityKey(SecretKey),
-                            ValidateIssuer = true,
+                    ValidateIssuer = true,
                     //Usually, this is your application base URL
                     ValidIssuer = "https://localhost:44342/",
-                            ValidateAudience = true,
+                    ValidateAudience = true,
                     //Here, we are creating and using JWT within the same application.
                     //In this case, base URL is fine.
                     //If the JWT is created using a web service, then this would be the consumer URL.
                     ValidAudience = "https://localhost:44342/",
-                            RequireExpirationTime = true,
-                            ValidateLifetime = true,
-                            ClockSkew = TimeSpan.Zero
-                        };
+                    RequireExpirationTime = true,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
             });
 
             System.Text.Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -131,33 +125,48 @@ namespace ssc
             });
             //Add JWToken Authentication service
             app.UseAuthentication();
-            
+
             app.UseCors(builder => builder.WithOrigins("*"));
-            app.UseMvc(routes =>
+
+
+            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions()
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller}/{action=Index}/{id?}");
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Resources")),
+                RequestPath = new PathString("/Resources")
             });
+
+
+            // Use For Development Only
+            app.UseMvc(routes =>
+              {
+                  routes.MapRoute(
+              name: "default",
+              template: "{controller}/{action=Index}/{id?}");
+              }); //*/
+
+            app.UseDefaultFiles();
 
             app.UseSpa(spa =>
-            {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
+                  {
+                      // To learn more about options for serving an Angular SPA from ASP.NET Core,
+                      // see https://go.microsoft.com/fwlink/?linkid=864501
 
-                spa.Options.SourcePath = "ClientApp";
+                      spa.Options.SourcePath = "ClientApp";
+                      spa.Options.StartupTimeout = new TimeSpan(0, 5, 0); // Set timeout to 5 minutes
 
-                if (env.IsDevelopment())
-                {
-                    spa.UseAngularCliServer(npmScript: "start");
-                }
-            });
+                      if (env.IsDevelopment())
+                      {
+                          spa.UseAngularCliServer(npmScript: "start");
+                      }
+                  });
+
 
             app.Run(async (context) =>
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
-            });
+                  {
+                      context.Response.ContentType = "text/html";
+                      await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
+                  });
         }
     }
 }

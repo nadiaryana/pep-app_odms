@@ -1,31 +1,32 @@
 <div class="container-content">
 	<mat-horizontal-stepper linear #stepper>
-		<mat-step completed=false>
-			<ng-template matStepLabel>Upload Excel</ng-template>
-			<div>
-				<input style="display: none" (change)="handleFile($event)" type="file" #fileInput/>
-			</div>
-			<button mat-raised-button color="basic"(click)="fileInput.click()">Pick File</button> {{ fileName }}
-			<br/>
-			<div class="loading-shade" *ngIf="isUploading">
-				<mat-spinner></mat-spinner>
-			</div>
-			<div class="progress-bar" *ngIf="isUploading">
-				<mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
-			</div>
-			<button mat-raised-button color="primary" (click)="onUpload()" [disabled]="!fileName">Upload</button>
-			<!--div>
-				<button mat-button matStepperNext>Next</button>
-			</div-->
-		</mat-step>
+    <mat-step completed=false>
+      <ng-template matStepLabel>Upload Excel</ng-template>
+      <div>
+        <input style="display: none" (change)="handleFile($event)" type="file" #fileInput />
+      </div>
+      <button mat-raised-button color="basic" (click)="fileInput.click()" class="margin-10"><mat-icon>file_open</mat-icon> Pick File</button> {{ fileName }}
+      <div class="loading-shade" *ngIf="isUploading">
+        <mat-spinner></mat-spinner>
+      </div>
+      <span class="margin-10"></span>
+      <button mat-raised-button color="secondary" (click)="onUpload()" *ngIf="fileName"><mat-icon>upload</mat-icon> Upload</button>
+      <!--div>
+    <button mat-button matStepperNext>Next</button>
+  </div-->
+      <div class="progress-bar" *ngIf="isUploading">
+        <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+      </div>
+    </mat-step>
 
 	    <mat-step completed=false>
 	      	<ng-template matStepLabel>Verify Data</ng-template>
-	      	<div *ngIf="data_error_count == 0">
-	      		Save this data ?
-	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
-	        	<button mat-raised-button (click)="saveData()">Commit</button>
-	      	</div>
+					<div *ngIf="data_error_count == 0">
+						Save this data ?
+						<button mat-raised-button (click)="stepper.reset();resetData()"><mat-icon>cached</mat-icon> Reset</button>
+						<span class="margin-10"></span>
+						<button mat-raised-button (click)="saveData()"><mat-icon>save</mat-icon> Commit</button>
+					</div>
 	      	<div *ngIf="data_error_count > 0">
 	      		<div class="cell-error">There are {{ data_error_count }} error(s) in your data</div>
 	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>

@@ -1,5 +1,5 @@
 import { Component, Input, HostListener, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatStepper } from '@angular/material/stepper';
 import { Router } from "@angular/router";
@@ -23,8 +23,9 @@ export class PeDailyAddComponent {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
-	dailyForm: FormGroup;
-	
+  dailyForm: FormGroup;
+  opsogForm: FormGroup;
+  
 	isUploading = false;
 	isLoading = false;
 	isSaving = false;
@@ -44,9 +45,16 @@ export class PeDailyAddComponent {
 	data: PeDaily[] = [];
 	data_error_count: number = 0;
 	
-	displayedColumns: string[] = ["info", "date","well","zone","interval","test_date","test_duration","last_prod_hours","last_prod_gross","last_prod_net","last_prod_wc","gas","art_lift_size","art_lift_type","art_lift_sl","art_lift_spm","art_lift_freq","art_lift_load","art_lift_bean_size","thp","chp","pfl","psep","pump_intake","top","mid","bottom"];
-  	headerColumns1: string[] = ["info", "date","well","zone","interval","test_date","test_duration","last_prod","gas","art_lift","thp","chp","pfl","psep","pump_intake","perforation_depth"];
-  	headerColumns2: string[] = ["last_prod_hours","last_prod_gross","last_prod_net","last_prod_wc","art_lift_size","art_lift_type","art_lift_sl","art_lift_spm","art_lift_freq","art_lift_load","art_lift_bean_size","top","mid","bottom"]
+	displayedColumns: string[] = ["info","date","nomor","location","well","well_string","zone","interval","potensi_prod_gross","potensi_prod_net","tes_prod_gross","tes_prod_net",
+                                "fig_last_gross","fig_last_net","fig_curr_gross","fig_curr_net","thp_last_fig","thp_potensi","wc","prod_hours","wor","gas","gor","glr",
+                                "ls_method","ls_brandtype","ls_prime_mover","ls_hp","ds_bean","ds_whp","ds_fl","ds_casing","ds_separator","ds_spm","ds_size","ds_pump_displace","ds_efficiency",
+                              "ds_sl","ds_kd","sm","ds_tgl_pengujian","noted"];
+  	headerColumns1: string[] = ["info","date","nomor","location","well","well_string","zone","interval","potensi_prod","tes_prod","fig","thp_last_fig","thp_potensi","wc","prod_hours","wor","gas","gor","glr",
+                            	"lifting_status","daftar_sumur","noted"];
+  	headerColumns2: string[] = ["potensi_prod_gross","potensi_prod_net","tes_prod_gross","tes_prod_net","fig_last_gross","fig_last_net","fig_curr_gross","fig_curr_net",
+                              	"ls_method","ls_brandtype","ls_prime_mover","ls_hp","ds_bean","ds_whp","ds_fl","ds_casing","ds_separator","ds_spm","ds_size","ds_pump_displace","ds_efficiency",
+                              	"ds_sl","ds_kd","sm","ds_tgl_pengujian"]
+  	headerColumns3: string[] = ["last_test", "current_test"]
 
 	constructor(
 		private formBuilder: FormBuilder,
@@ -64,12 +72,14 @@ export class PeDailyAddComponent {
 		this.dailyForm.disable();
 	}
 
-	get f() { return this.dailyForm.controls; }
+  get f() { return this.dailyForm.controls; }
+  get opsog_array() { return this.opsogForm.get('opsog_array') }
 
 	ngOnInit() { 
 
 		this.titleService.titleSource.next({
-	      title: "Add Daily", 
+          title: "Add Daily",
+          icon : "add",
 	      breadcrumbs: [
 	        {label: 'Petroleum Engineering', routerLink: ''}, 
 	        {label: 'Daily', routerLink: 'pe/daily'},
@@ -81,11 +91,37 @@ export class PeDailyAddComponent {
 			//daily_id: ['', Validators.required],
 			location_id: [''],
 			is_anchor: [''],
-		});
+        });
+
+      this.opsogForm = this.formBuilder.group({
+        opsog_array: this.formBuilder.array([
+          this.formBuilder.group({
+            date: [''],
+            operation: [''],
+            sot: [''],
+            gas: [''],
+          }),
+        ])
+      });
 
 		this.paginator.page.subscribe(() => this.loadData());
 		//this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
-	};
+  };
+
+  addOpsogForm() {
+    let addForm = this.opsogForm.get('opsog_array') as FormArray;
+    addForm.push(this.formBuilder.group({
+      date: [''],
+      operation: [''],
+      sot: [''],
+      gas: [''],
+    }));
+  }
+
+  removeOpsogForm(index) {
+    let removeForm = this.opsogForm.get('opsog_array') as FormArray;
+    removeForm.removeAt(index);
+  }
 
 	listDaily() {
 		this.router.navigate(['pe', 'daily', 'list']);
@@ -130,8 +166,28 @@ export class PeDailyAddComponent {
 				this.loadData();
 				if(this.data_error_count > 0) this.snackbarService.status.next(new SnackbarApi(true, "There are "+this.data_error_count+" error(s) in your data.", 'dismiss'));
 			}
-		});
-	}
+    }, error => {
+      if (error) {
+        this.isUploading = false;
+        this.resetData();
+        this.snackbarService.status.next(new SnackbarApi(true, "Wrong template file!", 'dismiss'));
+      }
+    });
+    }
+
+  onSaveOpsog() {
+    this.isUploading = true;
+
+  // this.http.post('/api/pe/daily/UploadFiles', this.opsogForm.value, {});
+
+   this.isUploading = false;
+   this.stepper.selected.completed = true;
+   this.stepper.next();
+   this.stepper.selected.completed = true;
+   this.stepper.next();
+   this.stepper.selected.completed = true;
+   this.stepper.next();
+  }
 
 	loadData() {
 		this.isLoading = true;
@@ -180,7 +236,7 @@ export class PeDailyAddComponent {
 		this.modified_count = 0;
 		this.created_count = 0;
 		this.progressPercent = 0;
-		this.fileName = "";
+		this.fileName = null;
 		this.data = [];
 		this.data_error_count = 0;
 		this.resultsLength = 0;

@@ -2,10 +2,13 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule }    from '@angular/forms';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-
+import { LOCALE_ID } from '@angular/core';
+import { CommonModule, registerLocaleData } from '@angular/common';
+import localeId from '@angular/common/locales/id';
+registerLocaleData(localeId, 'id'); 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { MaterialModule } from './material/material.module';
@@ -14,7 +17,6 @@ import { PanelComponent } from './navigation/panel/panel.component';
 import { HeaderComponent } from './navigation/header/header.component';
 import { TitleComponent } from './navigation/title/title.component';
 import { SnackbarComponent } from './snackbar.component';
-
 import { LoginComponent } from './account/login.component';
 import { LogoutComponent } from './account/logout.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -26,7 +28,11 @@ import { xFilterDialogComponent } from './xfilter/xfilter.component';
 import { xFilterDialogNumberComponent } from './xfilter/xfilter.component';
 import { xFilterDialogDateComponent } from './xfilter/xfilter.component';
 import { xFilterDialogTextComponent } from './xfilter/xfilter.component';
-import { AuthInterceptor } from './auth.interceptor'
+import { AuthInterceptor } from './auth.interceptor';
+import { HighchartsChartModule } from 'highcharts-angular';
+import { MatCardModule, MatListModule } from '@angular/material';
+import { SumurComponent } from './pe/sumur/pe-sumur.component';
+import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +48,9 @@ import { AuthInterceptor } from './auth.interceptor'
     LocationComponent,
     LocationListComponent,
     LocationAddComponent,
-    LocationDeleteDialogComponent
+    LocationDeleteDialogComponent,
+    SumurComponent,
+    PeGrafikComponent,
   ],
   imports: [
     BrowserModule,
@@ -54,9 +62,15 @@ import { AuthInterceptor } from './auth.interceptor'
   	MaterialModule,
     FlexLayoutModule,
     xFilterModule,
+    HighchartsChartModule,
+    MatCardModule,
+    MatListModule,
+    CommonModule,
+    HttpClientModule,
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: LOCALE_ID, useValue: 'id-ID' }
   ],
   bootstrap: [AppComponent],
   entryComponents: [
@@ -67,4 +81,5 @@ import { AuthInterceptor } from './auth.interceptor'
   LocationDeleteDialogComponent,
   ],
 })
-export class AppModule { }
+export class AppModule {
+}

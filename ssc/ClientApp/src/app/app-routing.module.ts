@@ -10,19 +10,24 @@ import { LocationComponent } from './location/location.component';
 import { LocationListComponent } from './location/location-list.component';
 import { LocationAddComponent } from './location/location-add.component';
 import { PermissionGuard } from './permission.guard';
+import { PeDashboardComponent } from './pe/dashboard/pe-dashboard.component';
+import { HighchartsChartModule } from 'highcharts-angular';
+import { SumurComponent } from './pe/sumur/pe-sumur.component';
+import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
 
 const appRoutes: Routes = [
-{ path: 'login', component: LoginComponent },
-{ path: 'dashboard', component: DashboardComponent, canActivate: [PermissionGuard] },
-{ path: 'ssc', loadChildren: './ssc/ssc.module#SscModule', data: { preload: true, label: "SSC" }},
-{ path: 'pe', loadChildren: './pe/pe.module#PeModule', data: { preload: true, label: "PE" }},
-{ path: 'logout', component: LogoutComponent, canActivate: [AuthGuard], outlet: "overlay" },
-{ path: 'location', component: LocationComponent, children: [
+  { path: 'login', component: LoginComponent },
+  { path: 'dashboard', redirectTo: 'pe/dashboard', pathMatch: 'full' },
+  { path: 'pe', loadChildren: './pe/pe.module#PeModule', data: { preload: true, label: "PE" } },
+  { path: 'logout', component: LogoutComponent, canActivate: [AuthGuard], outlet: "overlay" },
+  { path: 'location', component: LocationComponent, children: [
   { path: 'list', component: LocationListComponent, canActivate: [PermissionGuard] },
   { path: 'add', component: LocationAddComponent, canActivate: [PermissionGuard] },
   { path: '', redirectTo: 'list', pathMatch:"full" },
 ] },
-{ path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+{ path: '', redirectTo: 'pe/dashboard', pathMatch: 'full' },
+{ path: 'pe/sumur', component: SumurComponent },
+{ path: 'pe/grafik', component: PeGrafikComponent },
 
 ];
 
@@ -31,6 +36,7 @@ const appRoutes: Routes = [
   	{
     	enableTracing: false, // <-- debugging purposes only_
     	preloadingStrategy: SelectivePreloadingStrategyService,
+      // HighchartsChartModule,
   	})],
   exports: [RouterModule]
 })

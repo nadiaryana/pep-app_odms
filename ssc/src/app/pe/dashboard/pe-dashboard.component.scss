@@ -1,0 +1,140 @@
+.oil_chart {
+  height: 330px;
+}
+
+.gas_chart {
+  height: 330px;
+}
+
+.wellstat_chart {
+  height: 290px;
+}
+
+.wellstat_chart_card {
+  padding: 16px 5px;
+}
+
+.structprod_chart {
+  height: 250px;
+}
+
+.wellprod_chart {
+  height: 250px;
+}
+
+.wellrank_chart {
+  height: 290px;
+}
+
+.active_well_chart {
+  height: 290px;
+  text-align: center;
+}
+
+
+.mat-card-title {
+  font-size: 14px;
+  text-align: center;
+  float: inherit;
+}
+
+.value {
+  font-size: 40px;
+  font-weight: bold;
+  //display : inline-flex;
+  text-align: center;
+}
+
+.uom {
+  text-align: center;
+}
+
+/* ds table */
+.ds-table .mat-header-row {
+  height: 40px;
+}
+
+.ds-table .mat-header-cell {
+  white-space: nowrap;
+  padding-right: 7px;
+  padding-left: 7px;
+  text-align: center;
+  min-width: 100px;
+}
+
+.ds-table .mat-row {
+  height: 32px;
+}
+
+.ds-table .mat-cell {
+  white-space: nowrap;
+  padding-right: 7px;
+  padding-left: 7px;
+}
+
+.ds-table .cell-center {
+  text-align: center;
+}
+
+.ds-table .cell-right {
+  text-align: right;
+}
+
+.ds-table .cell-error {
+  color: red;
+}
+
+::ng-deep .mat-form-field-wrapper {
+  padding-bottom: 5px !important;
+}
+
+::ng-deep .mat-form-field-wrapper .mat-form-field-underline {
+  bottom: 5px !important;
+}
+
+::ng-deep .mat-form-field-wrapper .mat-form-field-infix {
+  padding: 5px !important;
+}
+
+.title_dasboard {
+  padding: 5px !important;
+  text-align: center;
+  width: 100px;
+  color: #564646;
+  border-radius: 8px;
+  background-color: #ffc6c2;
+}
+
+.dasboard_card {
+  padding-bottom: 5px;
+}
+
+.gas_dasboard_card {
+  box-shadow: none;
+  background-color: #ffe8d8;
+  color: black;
+  transition: 0.5s all ease;
+}
+
+.gas_dasboard_card:hover {
+  box-shadow: none;
+  background-color: #ffc499;
+  color: black;
+  transition: 0.5s all ease;
+}
+
+.oil_dasboard_card {
+  box-shadow: none;
+  background-color: #d8eeff;
+  transition: 0.5s all ease;
+}
+
+.oil_dasboard_card:hover {
+  box-shadow: none;
+  background-color: #b3deff;
+  transition: 0.5s all ease;
+}
+
+.oil_dasboard_card > .title_dasboard {
+  background-color: #bcdffb;
+}

@@ -1,0 +1,472 @@
+﻿<table mat-table [dataSource]="data" class="pe-table"
+       matSort matSortActive="analysis_date" matSortDisableClear matSortDirection="desc">
+    <ng-container matColumnDef="sample_name" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Sample Name</span>
+                <app-xfilter title="Sample Name" column="sample_name" [selected]="sample_name_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.sample_name}}</td>
+    </ng-container>
+    <ng-container matColumnDef="sample_date">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Sample Date</span>
+                <app-xfilter title="Date" column="sample_date" format="date" [selected]="sample_date_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.sample_date ? (row.sample_date | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="analysis_date" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date of Analysis</span>
+                <app-xfilter title="Date of Analysis" column="analysis_date" format="date" [selected]="analysis_date_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.analysis_date ? (row.analysis_date | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="report_number" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Report Number</span>
+                <app-xfilter title="Report Number" column="report_number" [selected]="report_number_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.report_number}}</td>
+    </ng-container>
+    <ng-container matColumnDef="dissolved_ion">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Dissolved Ion</span>
+                <app-xfilter title="Dissolved Ion" column="dissolved_ion" [selected]="dissolved_ion_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[0].calculation_result }}</td>
+    </ng-container>
+    <ng-container matColumnDef="setara_nacl">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Setara NaCl</span>
+                <app-xfilter title="Setara NaCl" column="setara_nacl" [selected]="setara_nacl_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[12].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="na_plus">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Na⁺</span>
+                <app-xfilter title="Na⁺" column="na_plus" [selected]="na_plus_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[2].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="ca2_plus">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Ca²⁺</span>
+                <app-xfilter title="Ca²⁺" column="ca2_plus" [selected]="ca2_plus_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[7].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="mg2_plus">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Mg²⁺</span>
+                <app-xfilter title="Mg²⁺" column="mg2_plus" [selected]="mg2_plus_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[8].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="co3">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">CO₃²¯</span>
+                <app-xfilter title="CO₃²¯" column="co3" [selected]="co3_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[3].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="hco3">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">HCO3‾</span>
+                <app-xfilter title="HCO3‾" column="hco3" [selected]="hco3_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[4].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="so4">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">SO₄²‾</span>
+                <app-xfilter title="SO₄²‾" column="so4" [selected]="so4_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[6].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="cl_min">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Cl¯</span>
+                <app-xfilter title="Cl¯" column="cl_min" [selected]="cl_min_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[5].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="fe3_plus">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Fe³⁺</span>
+                <app-xfilter title="Fe³⁺" column="fe3_plus" [selected]="fe3_plus_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[9].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="free_co2">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Free CO2</span>
+                <app-xfilter title="Free CO2" column="free_co2" [selected]="free_co2_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[11].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="scale_index">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">SI</span>
+                <app-xfilter title="SI" column="scale_index" [selected]="scale_index_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.data_calculations[13].calculation_result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="ph">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">pH</span>
+                <app-xfilter title="pH" column="ph" [selected]="ph_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.water_tm[3].result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="rw">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">RW</span>
+                <app-xfilter title="RW" column="rw" [selected]="rw_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.water_tm[2].result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="turbidity">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Turbidity</span>
+                <app-xfilter title="Turbidity" column="turbidity" [selected]="turbidity_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.water_tm[4].result}}</td>
+    </ng-container>
+    <ng-container matColumnDef="sg">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">SG</span>
+                <app-xfilter title="SG" column="sg" [selected]="sg_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.water_analysis[2].final_weight}}</td>
+    </ng-container>
+    <ng-container matColumnDef="zone">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Zone</span>
+                <app-xfilter title="Zone" column="zone" [selected]="zone_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.zone}}</td>
+    </ng-container>
+    <ng-container matColumnDef="interval">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Interval</span>
+                <app-xfilter title="Interval" column="interval" [selected]="interval_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.interval? formatInterval(row.interval) : '-'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="sampling_point">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Sampling Point</span>
+                <app-xfilter title="Sampling Point" column="sampling_point" [selected]="sampling_point_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.sampling_point}}</td>
+    </ng-container>
+    <ng-container matColumnDef="document">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                Document
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+            <button mat-stroked-button class="action-button" color="secondary" [disabled]="isLoadingResults" (click)="downloadReport(row.category,row._id)"><mat-icon>download</mat-icon></button>
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="remarks">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remarks</span>
+                <app-xfilter title="Remarks" column="remarks" [selected]="remarks_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.note}}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef='headerColumnsWater; sticky: true'></tr>
+    <tr mat-row *matRowDef='let row; columns: displayedWaterColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+</table>
+<table mat-table [dataSource]="data" class="pe-table"
+       matSort matSortActive="analysis_date" matSortDisableClear matSortDirection="desc">
+    <ng-container matColumnDef="sample_name" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Sample Name</span>
+                <app-xfilter title="Sample Name" column="sample_name" [selected]="sample_name_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.sample_name}}</td>
+    </ng-container>
+    <ng-container matColumnDef="sample_date">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Sample Date</span>
+                <app-xfilter title="Date" column="sample_date" format="date" [selected]="sample_date_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.sample_date ? (row.sample_date | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="analysis_date" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date of Analysis</span>
+                <app-xfilter title="Date of Analysis" column="analysis_date" format="date" [selected]="analysis_date_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.analysis_date ? (row.analysis_date | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="report_number" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Report Number</span>
+                <app-xfilter title="Report Number" column="report_number" [selected]="report_number_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.report_number}}</td>
+    </ng-container>
+    <ng-container matColumnDef="c6_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">C6+ (Mole %)</span>
+                <app-xfilter title="C6+" column="c6_mole" [selected]="c6_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[0].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="propane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Propane (Mole %)</span>
+                <app-xfilter title="Propane" column="propane_mole" [selected]="propane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[1].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="ibutane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">i-butane (Mole %)</span>
+                <app-xfilter title="i-butane" column="ibutane_mole" [selected]="ibutane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[2].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="nbutane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">n-butane (Mole %)</span>
+                <app-xfilter title="n-butane" column="nbutane_mole" [selected]="nbutane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[3].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="neopentane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Neopentane (Mole %)</span>
+                <app-xfilter title="Neopentane" column="neopentane_mole" [selected]="neopentane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[4].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="ipentane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">i-pentane (Mole %)</span>
+                <app-xfilter title="i-pentane" column="ipentane_mole" [selected]="ipentane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[5].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="npentane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">n-pentane (Mole %)</span>
+                <app-xfilter title="n-pentane" column="npentane_mole" [selected]="npentane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[6].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="co2_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">CO2 (Mole %)</span>
+                <app-xfilter title="CO2" column="co2_mole" [selected]="co2_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[7].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="oxygen_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Oxygen (Mole %)</span>
+                <app-xfilter title="Oxygen" column="oxygen_mole" [selected]="oxygen_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[8].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="ethane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Ethane (Mole %)</span>
+                <app-xfilter title="Ethane" column="ethane_mole" [selected]="ethane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[9].mole}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="nitrogen_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Nitrogen (Mole %)</span>
+                <app-xfilter title="Nitrogen" column="nitrogen_mole" [selected]="nitrogen_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[10].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="methane_mole">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Methane (Mole %)</span>
+                <app-xfilter title="Methane" column="methane_mole" [selected]="methane_mole_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_compound[11].mole}}</td>
+    </ng-container>
+    <ng-container matColumnDef="real_gas">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Real Gas Values</span>
+                <app-xfilter title="Real Gas Values" column="real_gas" [selected]="real_gas_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_values.real_gas_values}}</td>
+    </ng-container>
+    <ng-container matColumnDef="gross_heat">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross Heat /CF</span>
+                <app-xfilter title="Gross Heat /CF" column="gross_heat" [selected]="gross_heat_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_values.gross_heat}}</td>
+    </ng-container>
+    <ng-container matColumnDef="net_heat">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net Heat /CF</span>
+                <app-xfilter title="Net Heat /CF" column="net_heat" [selected]="net_heat_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_values.net_heat}}</td>
+    </ng-container>
+    <ng-container matColumnDef="com_factor">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Comp. Factor</span>
+                <app-xfilter title="Comp. Factor" column="com_factor" [selected]="com_factor_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_values.comp_factor}}</td>
+    </ng-container>
+    <ng-container matColumnDef="gas_sg">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">SG</span>
+                <app-xfilter title="SG" column="gas_sg" [selected]="gas_sg_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.gas_values.sg}}</td>
+    </ng-container>
+    <ng-container matColumnDef="zone">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Zone</span>
+                <app-xfilter title="Zone" column="zone" [selected]="zone_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.zone}}</td>
+    </ng-container>
+    <ng-container matColumnDef="interval">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Interval</span>
+                <app-xfilter title="Interval" column="interval" [selected]="interval_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.interval? formatInterval(row.interval) : '-'}}</td>
+    </ng-container>
+    <ng-container matColumnDef="sampling_point">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Sampling Point</span>
+                <app-xfilter title="Sampling Point" column="sampling_point" [selected]="sampling_point_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.sampling_point}}</td>
+    </ng-container>
+    <ng-container matColumnDef="document">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                Document
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+            <button mat-stroked-button class="action-button" color="secondary" [disabled]="isLoadingResults" (click)="downloadReport(row.category,row._id)"><mat-icon>download</mat-icon></button>
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="remarks">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remarks</span>
+                <app-xfilter title="Remarks" column="remarks" [selected]="remarks_xSelected"></app-xfilter>
+            </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.note}}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef='headerColumnsGas;sticky: true'></tr>
+    <tr mat-row *matRowDef='let row; columns: displayedGasColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+</table>

@@ -38,11 +38,17 @@ namespace ssc.Areas.PE.Controllers
                 .Include(t => t.well)
                 .Include(t => t.pump_intake)
                 .Include(t => t.dfl)
-                .Include(t => t.cdfl)
                 .Include(t => t.sfl)
                 .Include(t => t.tglc)
                 .Include(t => t.egfl)
-                .Include(t => t.al);
+                .Include(t => t.al)
+                .Include(t => t.thp)
+                .Include(t => t.spm)
+                .Include(t => t.cp)
+                .Include(t => t.agf)
+                .Include(t => t.pbhp)
+                .Include(t => t.sbhp)
+                .Include(t => t.time);
         }
 
         [Authorize("PeSonolog Read")]
@@ -62,26 +68,44 @@ namespace ssc.Areas.PE.Controllers
                     Builders<Sonolog>.Filter.Regex(t => t.well, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.pump_intake, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.dfl, new BsonRegularExpression(filter, "i")) |
-                    Builders<Sonolog>.Filter.Regex(t => t.cdfl, new BsonRegularExpression(filter, "i")) |
+                    // Builders<Sonolog>.Filter.Regex(t => t.cdfl, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.sfl, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.tglc, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.egfl, new BsonRegularExpression(filter, "i")) |
-                    Builders<Sonolog>.Filter.Regex(t => t.al, new BsonRegularExpression(filter, "i"));
+                    Builders<Sonolog>.Filter.Regex(t => t.al, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.thp, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.spm, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.cp, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.agf, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.pbhp, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.sbhp, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.time, new BsonRegularExpression(filter, "i"));
             }
 
             if (!String.IsNullOrWhiteSpace(columnfilter))
             {
                 xcolfilter = Builders<Sonolog>.Filter.Ne("a", "b");
                 SonologList colfilter = JsonConvert.DeserializeObject<SonologList>(columnfilter);
-                if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Sonolog>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
+                if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) { var tzOffset = TimeZoneInfo.Local.BaseUtcOffset.ToString(@"hh\:mm"); xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Sonolog>.Filter.Eq(t => t.date, new BsonDateTime(((DateTime)c).ToUniversalTime())) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"+0" + tzOffset + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}")); }
+
+                // if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Sonolog>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
                 if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.pump_intake?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.pump_intake.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.pump_intake, Convert.ToDecimal(c))));
                 if (colfilter.dfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.dfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.dfl, Convert.ToDecimal(c))));
-                if (colfilter.cdfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.cdfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.cdfl, Convert.ToDecimal(c))));
+                // if (colfilter.cdfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.cdfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.cdfl, Convert.ToDecimal(c))));
                 if (colfilter.sfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.sfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.sfl, Convert.ToDecimal(c))));
                 if (colfilter.tglc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.tglc.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.tglc, Convert.ToDecimal(c))));
                 if (colfilter.egfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.egfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.egfl, Convert.ToDecimal(c))));
                 if (colfilter.al?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.al.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.al, Convert.ToDecimal(c))));
+                if (colfilter.thp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.thp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.thp, Convert.ToDecimal(c))));
+                if (colfilter.spm?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.spm.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Regex(t => t.spm, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.cp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.cp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.cp, Convert.ToDecimal(c))));
+                if (colfilter.agf?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.agf.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.agf, Convert.ToDecimal(c))));
+                if (colfilter.pbhp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.pbhp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.pbhp, Convert.ToDecimal(c))));
+                if (colfilter.sbhp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.sbhp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.sbhp, Convert.ToDecimal(c))));
+                // if (colfilter.time?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.time.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.spm, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.time?.ToList().Count(c => !(c is JObject)) > 0) { xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.time.ToList().Select(val => (val is DateTime dt) ? Builders<Sonolog>.Filter.Eq(t => t.time, new BsonDateTime(new DateTime(1970, 1, 1, dt.Hour, dt.Minute, dt.Second, DateTimeKind.Utc))) : Builders<Sonolog>.Filter.Eq(t => t.time, new BsonDateTime(DateTime.Parse(val.ToString()).ToUniversalTime())))); }
+
 
                 foreach (string log in DailyCommon._logical)
                 {
@@ -89,11 +113,20 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.well?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.well.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$well\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.pump_intake?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pump_intake.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pump_intake\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.dfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.dfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$dfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.cdfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.cdfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$cdfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    // if (colfilter.cdfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.cdfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$cdfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.sfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.tglc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.tglc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$tglc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.egfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.egfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$egfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.al?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.al.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$al\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.thp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.thp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$thp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.spm?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.spm.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$spm\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.cp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.cp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$cp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.agf?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.agf.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$agf\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.pbhp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pbhp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pbhp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.sbhp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sbhp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sbhp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    // if (colfilter.time?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.time.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$time\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    // if (colfilter.time?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) { xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.time.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$time\",\"{1}\"]}}", ((JObject)c).GetValue("opr"), TimeSpan.Parse(((JObject)c).GetValue("val").ToString()).ToString(@"hh\:mm\:ss"))).ToArray()), log); }
+                    if (colfilter.time?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) { xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.time.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$time\", ISODate(\"1970-01-01T{1}Z\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("HH:mm:ss"))).ToArray()), log); }
                 }
 
                 xfilter = xfilter & xcolfilter;
@@ -108,11 +141,18 @@ namespace ssc.Areas.PE.Controllers
                 case "well": _items = (order == "asc") ? _items.SortBy(t => t.well) : _items.SortByDescending(t => t.well); break;
                 case "pump_intake": _items = (order == "asc") ? _items.SortBy(t => t.pump_intake) : _items.SortByDescending(t => t.pump_intake); break;
                 case "dfl": _items = (order == "asc") ? _items.SortBy(t => t.dfl) : _items.SortByDescending(t => t.dfl); break;
-                case "cdfl": _items = (order == "asc") ? _items.SortBy(t => t.cdfl) : _items.SortByDescending(t => t.cdfl); break;
+                // case "cdfl": _items = (order == "asc") ? _items.SortBy(t => t.cdfl) : _items.SortByDescending(t => t.cdfl); break;
                 case "sfl": _items = (order == "asc") ? _items.SortBy(t => t.sfl) : _items.SortByDescending(t => t.sfl); break;
                 case "tglc": _items = (order == "asc") ? _items.SortBy(t => t.tglc) : _items.SortByDescending(t => t.tglc); break;
                 case "egfl": _items = (order == "asc") ? _items.SortBy(t => t.egfl) : _items.SortByDescending(t => t.egfl); break;
                 case "al": _items = (order == "asc") ? _items.SortBy(t => t.al) : _items.SortByDescending(t => t.al); break;
+                case "thp": _items = (order == "asc") ? _items.SortBy(t => t.thp) : _items.SortByDescending(t => t.thp); break;
+                case "spm": _items = (order == "asc") ? _items.SortBy(t => t.spm) : _items.SortByDescending(t => t.spm); break;
+                case "cp": _items = (order == "asc") ? _items.SortBy(t => t.cp) : _items.SortByDescending(t => t.cp); break;
+                case "agf": _items = (order == "asc") ? _items.SortBy(t => t.agf) : _items.SortByDescending(t => t.agf); break;
+                case "pbhp": _items = (order == "asc") ? _items.SortBy(t => t.pbhp) : _items.SortByDescending(t => t.pbhp); break;
+                case "sbhp": _items = (order == "asc") ? _items.SortBy(t => t.sbhp) : _items.SortByDescending(t => t.sbhp); break;
+                case "time": _items = (order == "asc") ? _items.SortBy(t => t.time) : _items.SortByDescending(t => t.time); break;
             }
 
             switch (mode)
@@ -191,31 +231,59 @@ namespace ssc.Areas.PE.Controllers
             ws.Cells[3, 3].Value = "meter";
 
             ws.Cells[1, 4].Value = "Fluid Level";
-            ws.Cells[1, 4, 1, 6].Merge = true;
+            ws.Cells[1, 4, 1, 5].Merge = true;
             ws.Cells[2, 4].Value = "Dynamic";
             ws.Cells[3, 4].Value = "meter";
-            ws.Cells[2, 5].Value = "Cor. Dynamic";
+            // ws.Cells[2, 5].Value = "Cor. Dynamic";
+            // ws.Cells[3, 5].Value = "meter";
+            ws.Cells[2, 5].Value = "Static";
             ws.Cells[3, 5].Value = "meter";
-            ws.Cells[2, 6].Value = "Static";
+
+            ws.Cells[1, 6].Value = "Total Gaseous Liq. Column";
+            ws.Cells[1, 6, 2, 6].Merge = true;
             ws.Cells[3, 6].Value = "meter";
 
-            ws.Cells[1, 7].Value = "Total Gaseous Liq. Column";
+            ws.Cells[1, 7].Value = "Equivalent Gas Free Liq";
             ws.Cells[1, 7, 2, 7].Merge = true;
             ws.Cells[3, 7].Value = "meter";
 
-            ws.Cells[1, 8].Value = "Equivalent Gas Free Liq";
+            ws.Cells[1, 8].Value = "Liquid";
             ws.Cells[1, 8, 2, 8].Merge = true;
             ws.Cells[3, 8].Value = "meter";
 
-            ws.Cells[1, 9].Value = "Annular Liquid";
+            ws.Cells[1, 9].Value = "THP";
             ws.Cells[1, 9, 2, 9].Merge = true;
             ws.Cells[3, 9].Value = "meter";
 
-            ws.Cells[1, 1, 1, 9].Style.Font.Bold = true;
-            ws.Cells[1, 1, 3, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            ws.Cells[1, 1, 3, 9].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 10].Value = "SPM";
+            ws.Cells[1, 10, 2, 10].Merge = true;
+            ws.Cells[3, 10].Value = "meter";
 
-            for (int c = 1; c <= 9; c++)
+            ws.Cells[1, 11].Value = "Cassing Pressure";
+            ws.Cells[1, 11, 2, 11].Merge = true;
+            ws.Cells[3, 11].Value = "meter";
+
+            ws.Cells[1, 12].Value = "Annular Gas Flow";
+            ws.Cells[1, 12, 2, 12].Merge = true;
+            ws.Cells[3, 12].Value = "meter";
+
+            ws.Cells[1, 13].Value = "PBHP";
+            ws.Cells[1, 13, 2, 13].Merge = true;
+            ws.Cells[3, 13].Value = "meter";
+
+            ws.Cells[1, 14].Value = "SBHP";
+            ws.Cells[1, 14, 2, 14].Merge = true;
+            ws.Cells[3, 14].Value = "meter";
+
+            ws.Cells[1, 15].Value = "TIME";
+            ws.Cells[1, 15, 2, 15].Merge = true;
+            ws.Cells[3, 15].Value = "meter";
+
+            ws.Cells[1, 1, 1, 15].Style.Font.Bold = true;
+            ws.Cells[1, 1, 3, 15].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 3, 15].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+
+            for (int c = 1; c <= 15; c++)
             {
                 //ws.Column(c).AutoFit();
             }
@@ -228,11 +296,18 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[4 + i, 2].Value = t.well;
                 ws.Cells[4 + i, 3].Value = t.pump_intake;
                 ws.Cells[4 + i, 4].Value = t.dfl;
-                ws.Cells[4 + i, 5].Value = t.cdfl;
-                ws.Cells[4 + i, 6].Value = t.sfl;
-                ws.Cells[4 + i, 7].Value = t.tglc;
-                ws.Cells[4 + i, 8].Value = t.egfl;
-                ws.Cells[4 + i, 9].Value = t.al;
+                // ws.Cells[4 + i, 5].Value = t.cdfl;
+                ws.Cells[4 + i, 5].Value = t.sfl;
+                ws.Cells[4 + i, 6].Value = t.tglc;
+                ws.Cells[4 + i, 7].Value = t.egfl;
+                ws.Cells[4 + i, 8].Value = t.al;
+                ws.Cells[4 + i, 9].Value = t.thp;
+                ws.Cells[4 + i, 10].Value = t.spm;
+                ws.Cells[4 + i, 11].Value = t.cp;
+                ws.Cells[4 + i, 12].Value = t.agf;
+                ws.Cells[4 + i, 13].Value = t.pbhp;
+                ws.Cells[4 + i, 14].Value = t.sbhp;
+                ws.Cells[4 + i, 15].Value = t.time;
             }
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
@@ -331,55 +406,155 @@ namespace ssc.Areas.PE.Controllers
                         error_count++;
                     }
 
+                    // try
+                    // {
+                    //     _row.cdfl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 5].Value?.ToString().Trim()) : (decimal?)null;
+                    // }
+                    // catch (Exception e)
+                    // {
+                    //     _row_error.cdfl = new ErrorItem { value = ws.Cells[r, 5].Value?.ToString(), message = e.Message };
+                    //     error_count++;
+                    // }
+
                     try
                     {
-                        _row.cdfl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 5].Value?.ToString().Trim()) : (decimal?)null;
+                        _row.sfl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 5].Value?.ToString().Trim()) : (decimal?)null;
                     }
                     catch (Exception e)
                     {
-                        _row_error.cdfl = new ErrorItem { value = ws.Cells[r, 5].Value?.ToString(), message = e.Message };
+                        _row_error.sfl = new ErrorItem { value = ws.Cells[r, 5].Value?.ToString(), message = e.Message };
                         error_count++;
                     }
 
                     try
                     {
-                        _row.sfl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 6].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 6].Value?.ToString().Trim()) : (decimal?)null;
+                        _row.tglc = (!String.IsNullOrWhiteSpace(ws.Cells[r, 6].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 6].Value?.ToString().Trim()) : (decimal?)null;
                     }
                     catch (Exception e)
                     {
-                        _row_error.sfl = new ErrorItem { value = ws.Cells[r, 6].Value?.ToString(), message = e.Message };
+                        _row_error.tglc = new ErrorItem { value = ws.Cells[r, 6].Value?.ToString(), message = e.Message };
                         error_count++;
                     }
 
                     try
                     {
-                        _row.tglc = (!String.IsNullOrWhiteSpace(ws.Cells[r, 7].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 7].Value?.ToString().Trim()) : (decimal?)null;
+                        _row.egfl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 7].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 7].Value?.ToString().Trim()) : (decimal?)null;
                     }
                     catch (Exception e)
                     {
-                        _row_error.tglc = new ErrorItem { value = ws.Cells[r, 7].Value?.ToString(), message = e.Message };
+                        _row_error.egfl = new ErrorItem { value = ws.Cells[r, 7].Value?.ToString(), message = e.Message };
                         error_count++;
                     }
 
                     try
                     {
-                        _row.egfl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 8].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 8].Value?.ToString().Trim()) : (decimal?)null;
+                        _row.al = (!String.IsNullOrWhiteSpace(ws.Cells[r, 8].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 8].Value?.ToString().Trim()) : (decimal?)null;
                     }
                     catch (Exception e)
                     {
-                        _row_error.egfl = new ErrorItem { value = ws.Cells[r, 8].Value?.ToString(), message = e.Message };
+                        _row_error.al = new ErrorItem { value = ws.Cells[r, 8].Value?.ToString(), message = e.Message };
                         error_count++;
                     }
 
                     try
                     {
-                        _row.al = (!String.IsNullOrWhiteSpace(ws.Cells[r, 9].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 9].Value?.ToString().Trim()) : (decimal?)null;
+                        _row.thp = (!String.IsNullOrWhiteSpace(ws.Cells[r, 9].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 9].Value?.ToString().Trim()) : (decimal?)null;
                     }
                     catch (Exception e)
                     {
-                        _row_error.al = new ErrorItem { value = ws.Cells[r, 9].Value?.ToString(), message = e.Message };
+                        _row_error.thp = new ErrorItem { value = ws.Cells[r, 9].Value?.ToString(), message = e.Message };
                         error_count++;
                     }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 10].Value?.ToString().Trim()))
+                    {
+                        _row.spm = ws.Cells[r, 10].Value?.ToString().Trim();
+                    }
+                    else
+                    {
+                        _row.spm = null;
+                    }
+
+                    try
+                    {
+                        _row.cp = (!String.IsNullOrWhiteSpace(ws.Cells[r, 11].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 11].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.cp = new ErrorItem { value = ws.Cells[r, 11].Value?.ToString(), message = e.Message };
+                        error_count++;
+                    }
+
+                    try
+                    {
+                        _row.agf = (!String.IsNullOrWhiteSpace(ws.Cells[r, 12].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 12].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.agf = new ErrorItem { value = ws.Cells[r, 12].Value?.ToString(), message = e.Message };
+                        error_count++;
+                    }
+
+                    try
+                    {
+                        _row.pbhp = (!String.IsNullOrWhiteSpace(ws.Cells[r, 13].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 13].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.pbhp = new ErrorItem { value = ws.Cells[r, 13].Value?.ToString(), message = e.Message };
+                        error_count++;
+                    }
+
+                    try
+                    {
+                        _row.sbhp = (!String.IsNullOrWhiteSpace(ws.Cells[r, 14].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 14].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.sbhp = new ErrorItem { value = ws.Cells[r, 14].Value?.ToString(), message = e.Message };
+                        error_count++;
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 15].Value?.ToString()))
+                    {
+                        try
+                        {
+                            var cellVal = ws.Cells[r, 15].Value;
+
+                            if (cellVal is DateTime dt)
+                            {
+                                // ambil jam:menit:detik, tanggal pakai dummy 1970-01-01
+                                _row.time = new DateTime(1970, 1, 1, dt.Hour, dt.Minute, dt.Second);
+                            }
+                            else if (double.TryParse(cellVal.ToString().Trim(), out var oa))
+                            {
+                                // kalau OADate (angka pecahan Excel)
+                                var t = DateTime.FromOADate(oa);
+                                _row.time = new DateTime(1970, 1, 1, t.Hour, t.Minute, t.Second);
+                            }
+                            else if (TimeSpan.TryParse(cellVal.ToString().Trim(), out var ts))
+                            {
+                                // kalau string "HH:mm:ss"
+                                _row.time = new DateTime(1970, 1, 1, ts.Hours, ts.Minutes, ts.Seconds);
+                            }
+                            else
+                            {
+                                throw new Exception("Invalid time format");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.time = new ErrorItem { value = ws.Cells[r, 15].Value?.ToString(), message = e.Message };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row_error.time = null;
+                    }
+
+
+
 
                     if (error_count > last_error_count)
                     {
@@ -469,16 +644,24 @@ namespace ssc.Areas.PE.Controllers
                 {
                     item._error = null;
 
-                    var insert = new Sonolog() {
+                    var insert = new Sonolog()
+                    {
                         date = item.date,
                         well = item.well,
                         pump_intake = item.pump_intake,
                         dfl = item.dfl,
-                        cdfl = item.cdfl,
+                        // cdfl = item.cdfl,
                         sfl = item.sfl,
                         tglc = item.tglc,
                         egfl = item.egfl,
                         al = item.al,
+                        thp = item.thp,
+                        spm = item.spm,
+                        cp = item.cp,
+                        agf = item.agf,
+                        pbhp = item.pbhp,
+                        sbhp = item.sbhp,
+                        time = item.time,
                         updated_by = User.Identity.Name,
                         updated_date = DateTime.Now,
                         created_by = User.Identity.Name,

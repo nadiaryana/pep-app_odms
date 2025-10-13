@@ -1,0 +1,53 @@
+<div class="container-content form-report">
+      <h3> Add Operation, SOT & Gas</h3>
+      <div [formGroup]="opsogForm">
+        <ng-container formArrayName="productions">
+          <mat-grid-list cols="16" *ngFor="let opsog of productions.controls; let index=index">
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field floatLabel="never" [formGroupName]="index">
+                <mat-label>Date</mat-label>
+                <input matInput [matDatepicker]="datePicker" formControlName="date" (dateChange)="dateChange($event)" disabled>
+                <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+                <mat-datepicker #datePicker disabled="false"></mat-datepicker>
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="" [formGroupName]="index">
+                <input matInput formControlName="operation" type="number" placeholder="Operation" />
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="" [formGroupName]="index">
+                <input matInput formControlName="sot" type="number" placeholder="SOT" />
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="" [formGroupName]="index">
+                <input matInput formControlName="gas" type="number" placeholder="Gas" />
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="" [formGroupName]="index">
+                <input matInput formControlName="gas_sales" type="number" placeholder="Gas Sales" />
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="1" [rowspan]="1">
+              <button mat-button color="basic" (click)="addOpsogForm()"><mat-icon>add</mat-icon></button>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="1" [rowspan]="1" *ngIf="index > 0">
+              <button mat-button color="basic" (click)="removeOpsogForm(index)"><mat-icon>delete</mat-icon></button>
+            </mat-grid-tile>
+          </mat-grid-list>
+        </ng-container>
+        <div class="loading-shade" *ngIf="isUploading">
+          <mat-spinner></mat-spinner>
+        </div>
+        <button mat-raised-button color="secondary" (click)="onSaveOpsog()" [disabled]="!opsogForm.valid"><mat-icon>save</mat-icon> Save</button>
+        <!--div>
+          <button mat-button matStepperNext>Next</button>
+        </div-->
+        <div class="progress-bar" *ngIf="isUploading">
+          <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+        </div>
+      </div>
+</div>

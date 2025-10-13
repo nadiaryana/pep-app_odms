@@ -1,31 +1,32 @@
 <div class="container-content">
 	<mat-horizontal-stepper linear #stepper>
-		<mat-step completed=false>
-			<ng-template matStepLabel>Upload Excel</ng-template>
-			<div>
-				<input style="display: none" (change)="handleFile($event)" type="file" #fileInput/>
-			</div>
-			<button mat-raised-button color="basic"(click)="fileInput.click()">Pick File</button> {{ fileName }}
-			<br/>
-			<div class="loading-shade" *ngIf="isUploading">
-				<mat-spinner></mat-spinner>
-			</div>
-			<div class="progress-bar" *ngIf="isUploading">
-				<mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
-			</div>
-			<button mat-raised-button color="primary" (click)="onUpload()" [disabled]="!fileName">Upload</button>
-			<!--div>
-				<button mat-button matStepperNext>Next</button>
-			</div-->
-		</mat-step>
+    <mat-step completed=false>
+      <ng-template matStepLabel>Upload Excel</ng-template>
+      <div>
+        <input style="display: none" (change)="handleFile($event)" type="file" #fileInput />
+      </div>
+      <button mat-raised-button color="basic" (click)="fileInput.click()" class="margin-10"><mat-icon>file_open</mat-icon> Pick File</button> {{ fileName }}
+      <div class="loading-shade" *ngIf="isUploading">
+        <mat-spinner></mat-spinner>
+      </div>
+      <span class="margin-10"></span>
+      <button mat-raised-button color="secondary" (click)="onUpload()" *ngIf="fileName"><mat-icon>upload</mat-icon> Upload</button>
+      <!--div>
+    <button mat-button matStepperNext>Next</button>
+  </div-->
+      <div class="progress-bar" *ngIf="isUploading">
+        <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+      </div>
+    </mat-step>
 
 	    <mat-step completed=false>
 	      	<ng-template matStepLabel>Verify Data</ng-template>
-	      	<div *ngIf="data_error_count == 0">
-	      		Save this data ?
-	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
-	        	<button mat-raised-button (click)="saveData()">Commit</button>
-	      	</div>
+					<div *ngIf="data_error_count == 0">
+						Save this data ?
+						<button mat-raised-button (click)="stepper.reset();resetData()"><mat-icon>cached</mat-icon> Reset</button>
+						<span class="margin-10"></span>
+						<button mat-raised-button (click)="saveData()"><mat-icon>save</mat-icon> Commit</button>
+					</div>
 	      	<div *ngIf="data_error_count > 0">
 	      		<div class="cell-error">There are {{ data_error_count }} error(s) in your data</div>
 	        	<button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
@@ -65,7 +66,7 @@
 					</ng-container>
 
 					<ng-container matColumnDef="fluid_level">
-				      <th mat-header-cell *matHeaderCellDef colspan="3">Fluid Level</th>
+				      <th mat-header-cell *matHeaderCellDef colspan="2">Fluid Level</th>
 				    </ng-container>
 
 					<ng-container matColumnDef="dfl">
@@ -73,10 +74,6 @@
 					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.dfl?.value}" [matTooltip]="row._error.dfl?.message" matTooltipPosition="after">{{(row.dfl | number) || row._error.dfl?.value || '-'}}</td>
 					</ng-container>
 
-					<ng-container matColumnDef="cdfl">
-					  <th mat-header-cell *matHeaderCellDef>Cor. Dynamic</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.cdfl?.value}" [matTooltip]="row._error.cdfl?.message" matTooltipPosition="after">{{(row.cdfl | number) || row._error.cdfl?.value || '-'}}</td>
-					</ng-container>
 
 					<ng-container matColumnDef="sfl">
 					  <th mat-header-cell *matHeaderCellDef>Static</th>
@@ -94,9 +91,44 @@
 					</ng-container>
 
 					<ng-container matColumnDef="al">
-					  <th mat-header-cell *matHeaderCellDef rowspan="2">Annular Liquid</th>
+					  <th mat-header-cell *matHeaderCellDef rowspan="2">Liquid</th>
 					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.al?.value}" [matTooltip]="row._error.al?.message" matTooltipPosition="after">{{(row.al | number) || row._error.al?.value || '-'}}</td>
 					</ng-container>
+
+					<ng-container matColumnDef="thp">
+					  <th mat-header-cell *matHeaderCellDef rowspan="2">THP</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.thp?.value}" [matTooltip]="row._error.thp?.message" matTooltipPosition="after">{{(row.thp | number) || row._error.thp?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="spm">
+					  <th mat-header-cell *matHeaderCellDef rowspan="2">SPM</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.spm?.value}" [matTooltip]="row._error.spm?.message" matTooltipPosition="after">{{row.spm || row._error.spm?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="cp">
+					  <th mat-header-cell *matHeaderCellDef rowspan="2">Cassing Pressure</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.cp?.value}" [matTooltip]="row._error.cp?.message" matTooltipPosition="after">{{(row.cp | number) || row._error.cp?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="agf">
+					  <th mat-header-cell *matHeaderCellDef rowspan="2">Annular Gas Flow</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.agf?.value}" [matTooltip]="row._error.agf?.message" matTooltipPosition="after">{{(row.agf | number) || row._error.agf?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="pbhp">
+					  <th mat-header-cell *matHeaderCellDef rowspan="2">PBHP</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.pbhp?.value}" [matTooltip]="row._error.pbhp?.message" matTooltipPosition="after">{{(row.pbhp | number) || row._error.pbhp?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="sbhp">
+					  <th mat-header-cell *matHeaderCellDef rowspan="2">SBHP</th>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.sbhp?.value}" [matTooltip]="row._error.sbhp?.message" matTooltipPosition="after">{{(row.sbhp | number) || row._error.sbhp?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="time">
+				      <th mat-header-cell *matHeaderCellDef rowspan="2">TIME</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.time?.value}" [matTooltip]="row._error.time?.message" matTooltipPosition="after">{{(row.time | date: 'HH:mm:ss') || row._error.time?.value || '-'}}</td>
+				    </ng-container>
 
 				    <ng-container matColumnDef="Actions">
 				      <th mat-header-cell *matHeaderCellDef rowspan="2">Action</th>   

@@ -1,0 +1,28 @@
+<div class="container-top-bar top-flow" fxLayoutGap="10px">
+	<mat-form-field class="field-well" floatLabel="never">
+		<!--mat-label class="select-well">Select Well</mat-label-->
+		<input matInput [(ngModel)]="well_xSelected" disabled>
+		<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
+	</mat-form-field>
+	<mat-form-field class="filter" floatLabel="never">
+		<mat-label>Start Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
+		<input matInput [(ngModel)]="start_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+	<mat-form-field class="filter" floatLabel="never">
+		<mat-label>End Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" disabled>
+		<input matInput [(ngModel)]="end_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+</div>
+
+<div class="container-content top-flow">
+	<div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
+		
+	</div>
+	<div #daily_gas_chart_el class="daily_chart"></div>
+</div>

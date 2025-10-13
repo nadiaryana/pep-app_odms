@@ -1,0 +1,32 @@
+<div fxLayout="row" fxLayout.lt-lg="column" fxLayoutGap="10px" fxLayoutAlign="center">
+  <div fxFlex="100%" fxLayout="column" fxLayoutGap="10px">
+
+    <mat-card fxFlex="100%" class="dasboard_card">
+      <mat-card-content>
+        <h4 class="title_awy" align="center">Daftar Sumur</h4>
+        <h5 class="tanggal_awy" align="center">{{ todayDate }}</h5>
+        <hr class="garis_aw">
+
+        <mat-list>
+          <mat-list-item *ngFor="let well of wells" (click)="selectWell(well)" class="well-item">
+            <span>{{ well.name }}</span>
+            <span [ngClass]="well.status === 'ON' ? 'status-on' : 'status-off'">
+              ● {{ well.status }}
+            </span>
+          </mat-list-item>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card *ngIf="selectedWell" fxFlex="100%" class="dasboard_card">
+      <mat-card-content>
+        <highcharts-chart
+          *ngIf="chartOptions"
+          [Highcharts]="Highcharts"
+          [options]="chartOptions"
+          style="width: 100%; height: 320px; display: block;">
+        </highcharts-chart>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

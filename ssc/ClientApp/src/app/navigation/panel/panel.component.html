@@ -1,15 +1,30 @@
 <mat-expansion-panel  *ngFor="let panel of panels; let i=index" [expanded]="i==1 ?  true : false" >
   <mat-expansion-panel-header>
-    <mat-panel-title>
+    <mat-panel-title class="main-panel">
       {{panel.title}}
     </mat-panel-title>
   </mat-expansion-panel-header>
   <mat-nav-list>
-    <ng-container *ngFor="let menu of panel.items">
-      <a mat-list-item [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path" *ngIf="menu.permission">
+    <ng-container *ngFor="let menu of panel.items; let j=index" >
+      <!--<a mat-list-item [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path" *ngIf="menu.permission">-->
+      <a mat-list-item [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path" *ngIf="!menu.hasSubitem" class="main-panel-item">
         <mat-icon class="icon">{{menu.icon}}</mat-icon>
-        <span class="label">{{menu.label}}</span>
+        <span class="label"> {{menu.label}}</span>
       </a>
+      <mat-expansion-panel *ngIf="menu.hasSubitem" [expanded]="step === j" (opened)="setStep(j)">
+        <mat-expansion-panel-header class="sub-panel">
+          <mat-panel-title class="main-panel-sub">
+            <mat-icon class="icon">{{menu.icon}}</mat-icon>{{menu.label}}
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <ng-container *ngFor="let submenu of menu.items" >
+          <!--<a mat-list-item [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path" *ngIf="menu.permission">-->
+          <a mat-list-item [routerLink]="submenu.outlet ? [{outlets:submenu.outlet}] : submenu.path" class="sub-panel-item">
+            <mat-icon class="icon">{{submenu.icon}}</mat-icon>
+            <span class="label">{{submenu.label}}</span>
+          </a>
+          </ng-container>
+      </mat-expansion-panel>
     </ng-container>
   </mat-nav-list>
 </mat-expansion-panel>

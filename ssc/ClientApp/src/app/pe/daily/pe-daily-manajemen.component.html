@@ -1,0 +1,191 @@
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <!--mat-form-field>
+    <input matInput placeholder="Filter" [formControl]="filterControl">
+  </mat-form-field-->
+
+
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" style="margin-top : 50px">
+  <div class="table-action-header">
+    <h3 class="table-title" style="flex-grow:2"><mat-icon>update</mat-icon> Operation, Sot, Oil dan Gas Productions</h3>
+    <button mat-stroked-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/add-osg']" *ngIf="pePermissionService.passPermission('pe/daily/add')"><mat-icon>add</mat-icon> Update Operation, SOT & Gas </button>
+    <button mat-stroked-button color="secondary" [disabled]="isLoadingResults" [routerLink]="['/pe/production/add']" *ngIf="pePermissionService.passPermission('pe/production/add')"><mat-icon>add</mat-icon> Upload Production</button>
+    <button mat-stroked-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
+  </div>
+
+  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
+
+    <table mat-table [dataSource]="data" class="pe-table"
+           matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+      <!-- <ng-container matColumnDef="date" > -->
+        <!-- <th mat-header-cell *matHeaderCellDef rowspan="2"> -->
+          <!-- <div fxLayout="row" fxLayoutAlign="center center"> -->
+            <!-- <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span> -->
+            <!-- <app-xfilter title="Date" column="date" [selected]="date_xSelected"></app-xfilter> -->
+          <!-- </div> -->
+        <!-- </th> -->
+        <!-- <td mat-cell *matCellDef="let row" class="cell-center">{{row.date | date : 'd MMMM y'}}</td> -->
+      <!-- </ng-container> -->
+	  <ng-container matColumnDef="settings">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <mat-icon>settings</mat-icon> Actions
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" width="50px">
+          <button mat-stroked-button class="action-button" style="margin:2px" color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/edit-osg',row._id]"><mat-icon>edit</mat-icon> {{row.report_status == 'On Review'? 'Review': row.report_status == 'On Revise'? 'Revise' : 'Edit'}}</button>
+        </td>
+      </ng-container>
+	  <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef >
+            <div fxLayout="row" fxLayoutAlign="center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+              <app-xfilter title="Date" column="date" format="date" [selected]="date_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
+      </ng-container>
+      <ng-container matColumnDef="sot">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SOT</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sot? row.sot : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+      <ng-container matColumnDef="operation" >
+        <th mat-header-cell *matHeaderCellDef rowspan="5" >
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Operation</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.operation? row.operation : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+      <ng-container matColumnDef="figure" >
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Figure</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.figure? row.figure : 0)| number : '1.0-2'}}</td>
+      </ng-container>
+      
+      <ng-container matColumnDef="gas">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.gas? row.gas : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+      <ng-container matColumnDef="gas_sales" sticky>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas Sales</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.gas_sales? row.gas_sales : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+    <ng-container matColumnDef="sgt_sot">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT SOT</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sgt_sot? row.sgt_sot : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="sbr_sot">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR SOT</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sbr_sot? row.sbr_sot : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="bd_sot">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD SOT</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.bd_sot? row.bd_sot : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="sgt_opr">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT Operation</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sgt_opr? row.sgt_opr : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="sbr_opr">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR Operation</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sbr_opr? row.sbr_opr : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="bd_opr">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD Operation</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.bd_opr? row.bd_opr : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+    <ng-container matColumnDef="sgt_fig">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT Figure</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sgt_fig? row.sgt_fig : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="sbr_fig">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR Figure</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sbr_fig? row.sbr_fig : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="bd_fig">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD Figure</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.bd_fig? row.bd_fig : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="rkap">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.rkap? row.rkap : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="wpnb">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.wpnb? row.wpnb : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
+      <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+    </table>
+
+  </div>
+
+  <mat-paginator [length]="resultsLength" [pageSizeOptions]="[10, 25, 50]"></mat-paginator>
+  <router-outlet></router-outlet>
+  <router-outlet name="overlay2"></router-outlet>
+</div>
+

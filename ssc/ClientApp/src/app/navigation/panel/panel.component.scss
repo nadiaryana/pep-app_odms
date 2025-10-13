@@ -1,10 +1,29 @@
 ::ng-deep .mat-expansion-panel-header {
-	height: 48px !important;
+  padding-left : 15px !important;
+  height: 48px !important;
+  background-color: rgb(239 239 239 / 40%);
+  font-weight: 500 !important;
 }
 
-::ng-deep .mat-expansion-panel-body {
-	padding: 0 0 16px !important;
+.sub-panel {
+  height: 35px !important;
+  line-height: 2;
+  background-color: transparent;
+
 }
+
+.sub-panel-item .icon{
+  font-size : 22px;
+  padding-right : 5px;
+}
+
+
+
+::ng-deep .mat-expansion-panel-body {
+  padding: 0 0 16px !important;
+  color: white !important;
+}
+
 
 ::ng-deep .mat-nav-list {
 	padding-top: 0px !important;
@@ -15,6 +34,54 @@
 }
 
 ::ng-deep .mat-list-item-content {
-	padding: 0 24px !important;
-	font-size: 15px	;
+  padding: 0 15px !important;
+  font-size: 14px;
+}
+
+::ng-deep .mat-expansion-panel {
+  box-shadow : none !important;
+}
+
+::ng-deep .icon {
+  padding-right : 12px;
+  color: #bfbfbf;
+}
+
+::ng-deep .icon:hover {
+  color: #ed2626;
+}
+
+::ng-deep .sub-panel-item {
+  font-weight: 400 !important;
+  padding-left : 28px !important;
+  color: #666666 !important;
+}
+
+::ng-deep .sub-panel-item:hover {
+  color: #180202 !important;
+}
+
+::ng-deep .main-panel-item {
+  font-weight: 500 !important;
+  color: #4d4d4d !important;
+}
+
+::ng-deep .main-panel-item:hover {
+  color: #180202 !important;
+}
+
+::ng-deep .main-panel {
+  color: #4d4d4d !important;
+}
+
+::ng-deep .main-panel:hover {
+  color: #180202 !important;
+}
+
+::ng-deep .main-panel-sub {
+  color: #4d4d4d !important;
+}
+
+::ng-deep .main-panel-sub:hover {
+  color: #180202 !important;
 }

@@ -1,10 +1,21 @@
 mat-sidenav-container, mat-sidenav-content, mat-sidenav {
-  min-height: 100vh;
+  //min-height: 100vh;
   overflow: hidden;
 }
 
 mat-sidenav {
-  width: 200px;
+  margin-top: 80px;
+  height: 865px;
+  width: 250px;
+  position: fixed;
+  box-shadow: rgba(0, 0, 0, 0.14) 0rem 0.25rem 1.25rem 0rem, rgba(0, 187, 212, 0.4) 0rem 0.4375rem 0.625rem -0.3125rem;
+}
+
+::ng-deep .mat-sidenav-content {
+  background: url("src/assets/image/pertamina.png") no-repeat !important;
+  background-position-x: right !important;
+  background-position-y: top !important;
+  //margin-top: 50px;
 }
 
 a {
@@ -37,7 +48,8 @@ a:active {
 }
 
 .fullWindow {
-  margin: 0 !important; 
+  margin: 0 !important;
+  padding : 10px;
 }
 
 .container-top-bar {
@@ -57,5 +69,21 @@ a:active {
 }
 
 mat-toolbar {
-  height: 48px;
+  height: 65px;
+  position: fixed;
+  z-index: 110;
+  box-shadow: rgba(0, 0, 0, 0.14) 0rem 0.25rem 1.25rem 0rem, rgba(0, 187, 212, 0.4) 0rem 0.4375rem 0.625rem -0.3125rem;
+}
+
+.mat-toolbar.mat-primary {
+  background: #ed2626;
+  color: #fff;
+}
+
+.mat-display-1 {
+  color : black;
+}
+
+main {
+   margin-top: 80px;
 }

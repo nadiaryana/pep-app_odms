@@ -1,0 +1,10 @@
+* Username Password
+pe.viewer - Pertamina@2025
+pe.admin - Pertamina@2025
+
+* Requirement
+- Microsoft .NET Core 2.1.30 Windows server hosting
+- MongoDB 6.0.25
+- MongoDB Compass 1.35.0
+- Visual Studio 2022
+- angular 16.2.2

@@ -1,0 +1,111 @@
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <!--mat-form-field>
+    <input matInput placeholder="Filter" [formControl]="filterControl">
+  </mat-form-field-->
+  <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/chan-plot-chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+
+  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
+
+    <table mat-table [dataSource]="data" class="pe-table"
+           matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+      <ng-container matColumnDef="select" >
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
+                        [checked]="selection.hasValue() && isAllSelected()"
+                        [indeterminate]="selection.hasValue() && !isAllSelected()"
+                        [aria-label]="checkboxLabel()"
+                        [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox (click)="$event.stopPropagation()"
+                        (change)="($event && !isEditing) ? selection.toggle(row) : null"
+                        [checked]="selection.isSelected(row)"
+                        [aria-label]="checkboxLabel(row)"
+                        [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="date" >
+		  <th mat-header-cell *matHeaderCellDef rowspan="2">
+			<div fxLayout="row" fxLayoutAlign="start center">
+			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+			  <app-xfilter title="Date" column="date" format="date" [selected]="date_xSelected"></app-xfilter>
+			</div>
+		  </th>
+		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
+	  </ng-container>
+		<ng-container matColumnDef="well" >
+		  <th mat-header-cell *matHeaderCellDef rowspan="2">
+			<div fxLayout="row" fxLayoutAlign="start center">
+			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
+			  <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
+			</div>
+		  </th>
+		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
+		</ng-container>
+		<!-- <ng-container matColumnDef="last_prod"> -->
+		  <!-- <th mat-header-cell *matHeaderCellDef colspan="3">Last Production</th> -->
+		<!-- </ng-container> -->
+		<ng-container matColumnDef="last_prod_gross">
+		  <th mat-header-cell *matHeaderCellDef>
+			<div fxLayout="row" fxLayoutAlign="start center">
+			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+			  <app-xfilter title="Last Production Gross" column="last_prod_gross" format="number" [selected]="last_prod_gross_xSelected"></app-xfilter>
+			</div>
+		  </th>
+		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.last_prod_gross | number : '1.0-0') || '-'}}</td>
+		</ng-container>
+		<ng-container matColumnDef="last_prod_net">
+		  <th mat-header-cell *matHeaderCellDef>
+			<div fxLayout="row" fxLayoutAlign="start center">
+			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+			  <app-xfilter title="Last Production Net" column="last_prod_net" format="number" [selected]="last_prod_net_xSelected"></app-xfilter>
+			</div>
+		  </th>
+		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.last_prod_net | number : '1.0-0') || '-'}}</td>
+		</ng-container>
+		<ng-container matColumnDef="gas">
+		  <th mat-header-cell *matHeaderCellDef>
+			<div fxLayout="row" fxLayoutAlign="start center">
+			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+			  <app-xfilter title="Last Production WC" column="last_prod_wc" format="number" [selected]="last_prod_wc_xSelected"></app-xfilter>
+			</div>
+		  </th>
+		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.gas | number : '1.0-2') || '-'}}</td>
+		</ng-container>
+		<ng-container matColumnDef="wor">
+		  <th mat-header-cell *matHeaderCellDef>
+			<div fxLayout="row" fxLayoutAlign="start center">
+			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">WOR</span>
+			  <app-xfilter title="WOR" column="wor" format="number" [selected]="wor_xSelected"></app-xfilter>
+			</div>
+		  </th>
+		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wor | number : '1.0-2') || '-'}}</td>
+		</ng-container>
+		
+      <ng-container matColumnDef="Actions">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">Action</th>
+        <td mat-cell *matCellDef="let row">
+          <!--button mat-button *ngIf="passPermission('/pe/daily/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button>
+      <button mat-button *ngIf="passPermission('/pe/daily/delete')" (click)="deletePeDaily(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button-->
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
+      <!--<tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr> -->
+      <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+    </table>
+
+  </div>
+
+  <mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+  <router-outlet></router-outlet>
+  <router-outlet name="overlay2"></router-outlet>
+</div>

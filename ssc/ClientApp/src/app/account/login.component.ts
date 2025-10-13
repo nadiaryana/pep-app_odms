@@ -2,7 +2,6 @@ import { Component, Input } from '@angular/core';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material';
-
 import { Login }    from '../login';
 import { AuthService } from '../auth.service';
 //import { Company } from '../company';
@@ -14,7 +13,7 @@ import { TitleService } from '../navigation/title/title.service';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-	@Input() companies;
+	// @Input() companies;
 	submitting = false;
 	loginForm: FormGroup;
 	
@@ -31,7 +30,7 @@ export class LoginComponent {
 		this.snackBar.dismiss();
 		this.loginForm.disable();
 		this.authService.login({
-			company_id:this.loginForm.controls.company_id.value, 
+			// company_id:this.loginForm.controls.company_id.value, 
 			username: this.loginForm.controls.username.value,
 			password: this.loginForm.controls.password.value
 		}).subscribe(res => {
@@ -53,14 +52,14 @@ export class LoginComponent {
 		this.titleService.titleSource.next(null);
 
 		this.loginForm = this.formBuilder.group({
-			company_id: ['', Validators.required],
+			// company_id: ['', Validators.required],
 			username: ['', Validators.required],
 			password: ['', Validators.required],
 		});
-		this.http.get<any>('api/account/company').subscribe(res => {
-			this.companies = res.items;
-			this.loginForm.controls.company_id.setValue(this.companies[0]._id);
-		}); 
+		// this.http.get<any>('api/account/company').subscribe(res => {
+			// this.companies = res.items;
+			// this.loginForm.controls.company_id.setValue(this.companies[0]._id);
+		// }); 
 	};
 
 }
