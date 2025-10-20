@@ -223,18 +223,21 @@ namespace ssc.Areas.PE.Controllers
         //     return Ok(new { options });
         // }
         [HttpGet("dynamic")]
-        public async Task<IActionResult> GetDynamicChart([FromQuery] string x, [FromQuery] string y1, [FromQuery] string y2)
+        public async Task<IActionResult> GetDynamicChart([FromQuery] string y1, [FromQuery] string y2, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
-            if (string.IsNullOrEmpty(x) || string.IsNullOrEmpty(y1) || string.IsNullOrEmpty(y2))
-                return BadRequest("x, y1, dan y2 parameter harus diisi");
+            if (string.IsNullOrEmpty(y1) || string.IsNullOrEmpty(y2))
+                return BadRequest("y1 dan y2 parameter harus diisi");
 
-            // Ambil data dari MongoDB hanya field yang dipilih
+            if (endDate < startDate)
+                return BadRequest("endDate harus sama atau setelah startDate");
+
+            // Ambil data dari MongoDB hanya field yang dipilih (sertakan date)
             var projection = Builders<Daily>.Projection
-                .Include(x) // field X
+                .Include("date")
                 .Include(y1) // field Y1
                 .Include(y2); // field Y2
 
-            var data = await _rows.Find(_ => true)
+            var data = await _rows.Find(r => r.date >= startDate && r.date <= endDate)
                                 .Project<Dictionary<string, object>>(projection)
                                 .ToListAsync();
 
@@ -247,18 +250,17 @@ namespace ssc.Areas.PE.Controllers
 
             foreach (var doc in data)
             {
-                if (doc.TryGetValue(x, out var val) && DateTime.TryParse(val?.ToString(), out DateTime dateVal))
-                // if (DateTime.TryParse(doc[x]?.ToString(), out DateTime dateVal))
+                if (doc.TryGetValue("date", out var val) && DateTime.TryParse(val?.ToString(), out DateTime dateVal))
                 {
                     var utcDate = DateTime.SpecifyKind(dateVal, DateTimeKind.Utc);
                     long unixTime = new DateTimeOffset(utcDate).ToUnixTimeMilliseconds();
 
-                    if (doc.ContainsKey(y1) && double.TryParse(doc[y1]?.ToString(), out double y1Val))
+                    if (doc.TryGetValue(y1, out var v1) && double.TryParse(v1?.ToString(), out double y1Val))
                     {
                         series1.Add(new object[] { unixTime, y1Val });
                     }
 
-                    if (doc.ContainsKey(y2) && double.TryParse(doc[y2]?.ToString(), out double y2Val))
+                    if (doc.TryGetValue(y2, out var v2) && double.TryParse(v2?.ToString(), out double y2Val))
                     {
                         series2.Add(new object[] { unixTime, y2Val });
                     }
@@ -268,8 +270,8 @@ namespace ssc.Areas.PE.Controllers
             // Bentuk Highcharts options
             var options = new
             {
-                chart = new { type = "line" },
-                title = new { text = $"{y1} & {y2} vs {x}" },
+                chart = new { type = "column" },
+                title = new { text = $"{y1} & {y2}" },
                 xAxis = new { type = "datetime" },
                 yAxis = new object[]
                 {

@@ -21,6 +21,8 @@ export class PeGrafikComponent implements OnInit {
   selectedX: string = "date";
   selectedY1: string = "ds_pump_displace";
   selectedY2: string = "ds_kd";
+  startDate?: string | Date;
+  endDate?: string | Date;
 
   
     dynamicChartOptions: Highcharts.Options = {};
@@ -36,15 +38,47 @@ export class PeGrafikComponent implements OnInit {
       ],
     });
 
+    // set startDate default value first day of current month
+    const now = new Date();
+    this.startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    this.endDate = now;
     this.updateChart();
   }
+  updateChart(): void {
+    // alert if startDate or endDate is empty
+    if (!this.startDate || !this.endDate) {
+      alert("Please select both start date and end date.");
+      return;
+    }
 
-updateChart() {
-  const url = `/api/pe/chart/dynamic?x=${this.selectedX}&y1=${this.selectedY1}&y2=${this.selectedY2}`;
-  this.http.get<any>(url).subscribe(res => {
-    this.chartOptions = res.options;
-  });
-}
+    const params = new URLSearchParams();
+    // removed x parameter — only send y1, y2 and optional date range
+    params.set("y1", this.selectedY1);
+    params.set("y2", this.selectedY2);
+
+    const formatDate = (d?: string | Date) => {
+      if (!d) return null;
+      if (d instanceof Date) return d.toISOString();
+      return d;
+    };
+
+    const s = formatDate(this.startDate);
+    const e = formatDate(this.endDate);
+    if (s) params.set("startDate", s);
+    if (e) params.set("endDate", e);
+
+    const url = `/api/pe/chart/dynamic?${params.toString()}`;
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        this.chartOptions = res.options;
+      },
+      error: (err) => {
+        // console.error("Gagal ambil data chart", err.error);
+        alert("Terjadi kesalahan: " + err.error);
+        this.chartOptions = null;
+      },
+    });
+  }
 
   onXYChange() {
     this.updateChart();

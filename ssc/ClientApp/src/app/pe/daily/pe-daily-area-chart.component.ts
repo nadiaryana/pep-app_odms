@@ -26,10 +26,42 @@ export class PeDailyAreaChartComponent implements OnInit {
 
   daily_chart_options: object = {
     chart: {
-	  type: 'area',
+    type: 'area',
       zoomType: 'x',
       style: {
         fontFamily: 'Roboto, Helvetica Neue, sans-serif'
+      },
+      events: {
+        // reorder series so the series with the smaller total value is drawn on top
+        load: function () {
+          try {
+            var chart = this;
+            var sums = chart.series.map(function (s: any) {
+              var tot = 0;
+              s.data.forEach(function (p: any) {
+                var val = 0;
+                if (typeof p.y === 'number') val = p.y;
+                else if (Array.isArray(p.options)) val = p.options[1];
+                else if (typeof p.options === 'number') val = p.options;
+                else if (p.options && typeof p.options.y === 'number') val = p.options.y;
+                tot += (isFinite(val) ? val : 0);
+              });
+              return tot;
+            });
+            var order = sums.map(function (sum: number, i: number) { return { i: i, sum: sum }; })
+              .sort(function (a: any, b: any) { return a.sum - b.sum; });
+
+            // give smaller-sum series higher zIndex so they're drawn on top
+            for (var k = 0; k < order.length; k++) {
+              var seriesIdx = order[k].i;
+              var z = order.length - k; // smaller sum -> larger zIndex
+              if (chart.series[seriesIdx]) chart.series[seriesIdx].update({ zIndex: z }, false);
+            }
+            chart.redraw();
+          } catch (e) {
+            // silent
+          }
+        }
       }
     },
     title: {
@@ -88,10 +120,10 @@ export class PeDailyAreaChartComponent implements OnInit {
         Highcharts.defaultOptions.legend.backgroundColor || // theme
         'rgba(255,255,255,0.25)'
     },
-	plotOptions: {
+  plotOptions: {
         area: {
             // stacking: 'normal',
-			lineWidth: 0,
+      lineWidth: 0,
             marker: {
                 enabled: false
             }
@@ -137,7 +169,7 @@ export class PeDailyAreaChartComponent implements OnInit {
       name: 'SM',
       type: 'line',
       yAxis: 1,
-	  dashStyle: 'shortdot',
+    dashStyle: 'shortdot',
       data: [],
       color: '#C55A11',
       zIndex: 4,
@@ -146,7 +178,7 @@ export class PeDailyAreaChartComponent implements OnInit {
         valueDecimals: 2
       }
     }],
-	
+  
     responsive: {
       rules: [{
         condition: {

@@ -29,7 +29,7 @@
     </mat-card> -->
 <div fxLayout="column" fxLayoutGap="10px">
   <!-- Pilih X -->
-  <mat-form-field appearance="fill">
+  <!-- <mat-form-field appearance="fill">
     <mat-label>Pilih X</mat-label>
     <mat-select [(value)]="selectedX" (selectionChange)="onXYChange()">
       <mat-option *ngFor="let col of xColumns" [value]="col">
@@ -50,8 +50,58 @@
   <mat-select [(ngModel)]="selectedY2" (selectionChange)="onXYChange()">
     <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
   </mat-select>
-</mat-form-field>
+</mat-form-field> -->
+  <div class="container-top-bar top-flow" fxLayoutGap="10px">
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="30%">
+      <mat-label>Y Axis 1</mat-label>
+      <mat-select [(ngModel)]="selectedY1" (selectionChange)="onXYChange()">
+        <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
+      </mat-select>
+    </mat-form-field>
 
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="30%">
+      <mat-label>Y Axis 2</mat-label>
+      <mat-select [(ngModel)]="selectedY2" (selectionChange)="onXYChange()">
+        <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="20%">
+      <mat-label>Start Date</mat-label>
+      <input
+        matInput
+        [matDatepicker]="start_datePicker"
+        [(ngModel)]="startDate"
+        name="startDate"
+        (dateChange)="onXYChange()"
+        [disabled]="isLoadingResults"
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="start_datePicker"
+        [disabled]="isLoadingResults"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #start_datePicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="20%">
+      <mat-label>End Date</mat-label>
+      <input
+        matInput
+        [matDatepicker]="end_datePicker"
+        [(ngModel)]="endDate"
+        name="endDate"
+        (dateChange)="onXYChange()"
+        [disabled]="isLoadingResults"
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="end_datePicker"
+        [disabled]="isLoadingResults"
+      ></mat-datepicker-toggle>
+      <mat-datepicker #end_datePicker></mat-datepicker>
+    </mat-form-field>
+  </div>
 
   <!-- Chart -->
   <mat-card>
@@ -60,7 +110,7 @@
         *ngIf="chartOptions"
         [Highcharts]="Highcharts"
         [options]="chartOptions"
-        style="width: 100%; height: 400px; display: block;"
+        style="width: 100%; height: 400px; display: block"
       ></highcharts-chart>
     </mat-card-content>
   </mat-card>
