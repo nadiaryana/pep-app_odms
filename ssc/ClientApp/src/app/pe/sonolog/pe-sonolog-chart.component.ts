@@ -34,7 +34,7 @@ export class PeSonologChartComponent {
     },
     title: {
       text: null,
-	  align: 'center',
+      align: 'center',
       verticalAlign: 'top'
     },
     caption: {
@@ -46,7 +46,7 @@ export class PeSonologChartComponent {
       categories: [],
       crosshair: true,
       autoRotation: true,
-	  // offset: -275,
+      // offset: -275,
       labels: {
         // step: 7
       }
@@ -58,8 +58,8 @@ export class PeSonologChartComponent {
           color: '#666666'
         }
       },
-	  reversed: true,
-	  showFirstLabel: true,
+      reversed: true,
+      showFirstLabel: true,
       showLastLabel: true,
       labels: {
         format: '{value}',
@@ -69,9 +69,9 @@ export class PeSonologChartComponent {
       }
     }],
     tooltip: {
-		headerFormat: '<b>{series.name}</b><br />',
-		pointFormat: '{point.y}',
-		shared: true
+      headerFormat: '<b>{series.name}</b><br />',
+      pointFormat: '{point.y}',
+      shared: true
     },
     legend: {
       layout: 'horizontal',
@@ -91,10 +91,10 @@ export class PeSonologChartComponent {
         valueSuffix: ' m',
         valueDecimals: 2
       },
-	  marker: {
-		  symbol: 'circle', // Set the default marker type for the series
-		  radius: 3 // Set the default marker radius
-	  }
+      marker: {
+        symbol: 'circle', // Set the default marker type for the series
+        radius: 3 // Set the default marker radius
+      }
 
     }, {
       name: 'DFL',
@@ -106,10 +106,10 @@ export class PeSonologChartComponent {
         valueSuffix: ' m',
         valueDecimals: 2
       },
-	  marker: {
-		  symbol: 'circle', // Set the default marker type for the series
-		  radius: 3 // Set the default marker radius
-	  }
+      marker: {
+        symbol: 'circle', // Set the default marker type for the series
+        radius: 3 // Set the default marker radius
+      }
 
     }, {
       name: 'SFL',
@@ -121,59 +121,59 @@ export class PeSonologChartComponent {
         valueSuffix: ' m',
         valueDecimals: 2
       },
-	  marker: {
-		  symbol: 'circle', // Set the default marker type for the series
-		  radius: 3 // Set the default marker radius
-	  }
+      marker: {
+        symbol: 'circle', // Set the default marker type for the series
+        radius: 3 // Set the default marker radius
+      }
 
     }
-	// , {
+      // , {
       // name: 'TGLC',
       // type: 'scatter',
       // yAxis: 1,
       // data: [],
       // color: '#7030A0',
       // tooltip: {
-        // valueSuffix: ' m',
-        // valueDecimals: 2
+      // valueSuffix: ' m',
+      // valueDecimals: 2
       // },
-	  // marker: {
-		  // symbol: 'circle', // Set the default marker type for the series
-		  // radius: 3 // Set the default marker radius
-	  // }
+      // marker: {
+      // symbol: 'circle', // Set the default marker type for the series
+      // radius: 3 // Set the default marker radius
+      // }
 
-    // }, {
+      // }, {
       // name: 'EGFL',
       // type: 'scatter',
       // yAxis: 1,
       // data: [],
       // color: '#C55A11',
       // tooltip: {
-        // valueSuffix: ' m',
-        // valueDecimals: 2
+      // valueSuffix: ' m',
+      // valueDecimals: 2
       // },
-	  // marker: {
-		  // symbol: 'circle', // Set the default marker type for the series
-		  // radius: 3 // Set the default marker radius
-	  // }
-    // }, {
+      // marker: {
+      // symbol: 'circle', // Set the default marker type for the series
+      // radius: 3 // Set the default marker radius
+      // }
+      // }, {
       // name: 'AL',
       // type: 'scatter',
       // yAxis: 1,
       // data: [],
       // color: '#91e30e',
       // tooltip: {
-        // valueSuffix: ' m',
-        // valueDecimals: 2
+      // valueSuffix: ' m',
+      // valueDecimals: 2
       // },
-	  // marker: {
-		  // symbol: 'circle', // Set the default marker type for the series
-		  // radius: 3 // Set the default marker radius
-	  // }
+      // marker: {
+      // symbol: 'circle', // Set the default marker type for the series
+      // radius: 3 // Set the default marker radius
+      // }
 
-    // }
-	],
-	
+      // }
+    ],
+
     responsive: {
       rules: [{
         condition: {
@@ -259,7 +259,7 @@ export class PeSonologChartComponent {
       this.refresh_Daily();
     })
   }
-  
+
   getColumnValues(param: any) {
     var column = param["column"];
     var filter = param["filter"];
@@ -311,15 +311,15 @@ export class PeSonologChartComponent {
       this.sonolog_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
       this.sonolog_chart_options["xAxis"][0]["categories"] = res["data"].map(d => formatDate(d["date"], "dd-MMM-yy", "en-US"));
       this.sonolog_chart_options["series"][0]["data"] = res["data"].map(d => d["pump_intake"]);
-      // this.sonolog_chart_options["series"][1]["data"] = res["data"].map(d => d["dfl"]);
-      this.sonolog_chart_options["series"][1]["data"] = res["data"].map(d => d["cdfl"]);
+      this.sonolog_chart_options["series"][1]["data"] = res["data"].map(d => d["dfl"]);
+      // this.sonolog_chart_options["series"][1]["data"] = res["data"].map(d => d["cdfl"]);
       this.sonolog_chart_options["series"][2]["data"] = res["data"].map(d => d["sfl"]);
       // this.sonolog_chart_options["series"][4]["data"] = res["data"].map(d => d["tglc"]);
       // this.sonolog_chart_options["series"][5]["data"] = res["data"].map(d => d["egfl"]);
       // this.sonolog_chart_options["series"][6]["data"] = res["data"].map(d => d["al"]);
 
       console.log(res["data"].length)
-	  
+
       Highcharts.chart(this.sonolog_chart_el.nativeElement, this.sonolog_chart_options);
 
     }, error => {
@@ -328,7 +328,7 @@ export class PeSonologChartComponent {
 
     });
   }
-  
+
 }
 
 export interface PeWellApi {

@@ -156,11 +156,11 @@ namespace ssc.Areas.PE.Controllers
         private ActionResult Data_WellStatus()
         {
             var res = _rows.Find(
-                r => r.date == DateTime.Parse("2019-09-25") && r.ls_brandtype.Length > 0
+                r => r.date == DateTime.Parse("2019-09-25") && r.ls_method.Length > 0
             ).Project<Daily>(_fields).ToList().GroupBy(r => new
             {
                 //name = r.art_lift_type?.Substring(0, 1).ToUpper()
-                name = status.FirstOrDefault(s => s.Value.Contains(r.ls_brandtype?.Substring(0, 1).ToUpper())).Key
+                name = status.FirstOrDefault(s => s.Value.Contains(r.ls_method?.Substring(0, 1).ToUpper())).Key
             }).Select(s => new
             {
                 status = s.Key.name,
@@ -247,7 +247,8 @@ namespace ssc.Areas.PE.Controllers
 
             foreach (var doc in data)
             {
-                if (DateTime.TryParse(doc[x]?.ToString(), out DateTime dateVal))
+                if (doc.TryGetValue(x, out var val) && DateTime.TryParse(val?.ToString(), out DateTime dateVal))
+                // if (DateTime.TryParse(doc[x]?.ToString(), out DateTime dateVal))
                 {
                     var utcDate = DateTime.SpecifyKind(dateVal, DateTimeKind.Utc);
                     long unixTime = new DateTimeOffset(utcDate).ToUnixTimeMilliseconds();

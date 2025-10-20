@@ -23,7 +23,7 @@ export class SumurComponent implements OnInit {
       status: "ON",
       channelId: "2817240",
       apiKey: "5QNHFDXBQHSSEMEM",
-    },
+    },  
     {
       id: 2,
       name: "ST-092",

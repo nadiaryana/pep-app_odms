@@ -64,7 +64,18 @@ export class PeDashboardComponent   {
         maxPadding: 0.5
       },
       yAxis: {
-        title: "Net (BOPD)"
+        title: {
+        text: 'BOPD',
+        style: {
+          color: '#666666'
+        }
+      },
+      labels: {
+      formatter: function () {
+        // Format angka agar tampil penuh (tanpa singkatan)
+        return this.value.toLocaleString('id-ID'); // hasil: 1.000, 2.000, dst.
+        }
+      }
       },
 		  tooltip: {
 			  pointFormat: "{series.name}: <b>{point.y:.2f}</b>"
@@ -116,7 +127,12 @@ export class PeDashboardComponent   {
       maxPadding: 0.5
     },
     yAxis: {
-      title: "Gas Rate (MMSCFD)"
+      title: {
+        text: 'MMSCFD',
+        style: {
+          color: '#666666'
+        }
+      },
     },
     tooltip: {
       pointFormat: "{series.name}: <b>{point.y:.2f}</b>"
@@ -140,8 +156,10 @@ export class PeDashboardComponent   {
       },
     ]
   };
+  
 
   @ViewChild('active_well_chart_el', { static: true }) public active_well_chart_el: ElementRef;
+  
   active_well_chart_options: object = {
     chart: {
       type: 'spline',
@@ -155,11 +173,15 @@ export class PeDashboardComponent   {
     subtitle: {
       text: "Active Well History"
     },
+    time: {
+      timezoneOffset: -8 * 60 // untuk GMT+8 (menggeser waktu agar tidak muncul GMT)
+    },
     xAxis: {
       categories: [],
       labels: {
-        type: "datetime",
-        format:'{value:%d-%b-%y}',
+        formatter: function () {
+          return Highcharts.dateFormat('%e %b %Y', this.value); 
+        },
         autoRotation: [-45],
         style: {
           fontSize: 10
@@ -167,11 +189,17 @@ export class PeDashboardComponent   {
       }
     },
     yAxis: {
-      title: "null",
+     title: {
+        text: 'Well',
+        style: {
+          color: '#666666'
+        }
+      },
       tickInterval: 1
     },
     tooltip: {
       useHTML: true,
+      useUTC : false,
       headerFormat: '{point.x:%d %b %Y}',
       pointFormat: "</br>{series.name}: <b>{point.y}</b>"
     },
@@ -839,8 +867,8 @@ export class PeDashboardComponent   {
         if (this.dateControl.value.toLocaleDateString("id-ID") == new Date(d.date).toLocaleDateString("id-ID")) {
           this.valueSOT = d.sot;
           this.valueFigure = d.figure;
-          this.valueGas = d.gas / 1000;
-          this.valueGasSales = d.gas_sales / 1000;
+          this.valueGas = d.gas;
+          this.valueGasSales = d.gas_sales;
           this.valueOperation = d.operation;
         } else {
           this.valueSOT = 0;
@@ -901,8 +929,8 @@ export class PeDashboardComponent   {
         series_operation.push({ name: dt, y: d.operation });
         series_sot.push({ name: dt, y: d.sot });
         series_figure.push({ name: dt, y: d.figure });
-        series_gas.push({ name: dt, y: d.gas / 1000 });
-        series_gas_sales.push({ name: dt, y: d.gas_sales / 1000 });
+        series_gas.push({ name: dt, y: d.gas });
+        series_gas_sales.push({ name: dt, y: d.gas_sales });
         console.log(this.dateControl.value.toLocaleDateString("id-ID"));
         console.log(new Date(d.date).toLocaleDateString("id-ID"));
 
@@ -1273,35 +1301,22 @@ export class PeDashboardComponent   {
 	  var opr = res["items"].map(d => d["operation"]);
 	  var sgt_opr = res["items"].map(d => d["sgt_opr"]);
 	  var sbr_opr = res["items"].map(d => d["sbr_opr"]);
-	  var sbj_opr = res["items"].map(d => d["sbj_opr"]);
-	  var borderless_nkl_opr = res["items"].map(d => d["borderless_nkl_opr"]);
-	  var borderless_sbj_opr = res["items"].map(d => d["borderless_sbj_opr"]);
+	  var bd_opr = res["items"].map(d => d["bd_opr"]);
 	  var sgt_sot = res["items"].map(d => d["sgt_sot"]);
 	  var sbr_sot = res["items"].map(d => d["sbr_sot"]);
-	  var sbj_sot = res["items"].map(d => d["sbj_sot"]);
-	  var borderless_nkl_sot = res["items"].map(d => d["borderless_nkl_sot"]);
-	  var borderless_sbj_sot = res["items"].map(d => d["borderless_sbj_sot"]);
+	  var bd_sot = res["items"].map(d => d["bd_sot"]);
 	  let sgt_opr_current = 0;
 	  let sbr_opr_current = 0;
-	  let sbj_opr_current = 0;
-	  let borderless_nkl_opr_current = 0;
-	  let borderless_sbj_opr_current = 0;
+	  let bd_opr_current = 0;
 	  let sgt_sot_current = 0;
 	  let sbr_sot_current = 0;
-	  let sbj_sot_current = 0;
-	  let borderless_nkl_sot_current = 0;
-	  let borderless_sbj_sot_current = 0;
-	  let sot_mtd = 0;
+	  let bd_sot_current = 0;
 	  let sgt_opr_last = 0;
 	  let sbr_opr_last = 0;
-	  let sbj_opr_last = 0;
-	  let borderless_nkl_opr_last = 0;
-	  let borderless_sbj_opr_last = 0;
+	  let bd_opr_last = 0;
 	  let sgt_sot_last = 0;
 	  let sbr_sot_last = 0;
-	  let sbj_sot_last = 0;
-	  let borderless_nkl_sot_last = 0;
-	  let borderless_sbj_sot_last = 0;
+	  let bd_sot_last = 0;
 	      
 	  
 	  // *LAST WEEK*
@@ -1346,20 +1361,16 @@ export class PeDashboardComponent   {
 		console.log("brp tanggal: "+cat1[yy]+" - "+cat[yy]);
 		sgt_opr_last = sgt_opr_last + sgt_opr[yy];
 		sbr_opr_last = sbr_opr_last + sbr_opr[yy];
-		sbj_opr_last = sbj_opr_last + sbj_opr[yy];
-		borderless_nkl_opr_last = borderless_nkl_opr_last + borderless_nkl_opr[yy];
-		borderless_sbj_opr_last = borderless_sbj_opr_last + borderless_sbj_opr[yy];
+		bd_opr_last = bd_opr_last + bd_opr[yy];
 		sgt_sot_last = sgt_sot_last + sgt_sot[yy];
 		sbr_sot_last = sbr_sot_last + sbr_sot[yy];
-		sbj_sot_last = sbj_sot_last + sbj_sot[yy];
-		borderless_nkl_sot_last = borderless_nkl_sot_last + borderless_nkl_sot[yy];
-		borderless_sbj_sot_last = borderless_sbj_sot_last + borderless_sbj_sot[yy];
+		bd_sot_last = bd_sot_last + bd_sot[yy];
 		
 		start_last = cat[gain];
 		end_last = cat[gain+6];
 	  }
 	  // console.log("bor sbj last: "+Math.round(borderless_sbj_opr_last/7));
-	  console.log("bor sbj last: "+borderless_sbj_opr);
+	  // console.log("bor bd last: "+borderless_bd_opr);
 	  
 	  // *CURRENT WEEK*
 	  let codee = opr.length;
@@ -1383,14 +1394,10 @@ export class PeDashboardComponent   {
 		console.log("sgt : "+sgt_opr[y]);
 		sgt_opr_current = sgt_opr_current + sgt_opr[y];
 		sbr_opr_current = sbr_opr_current + sbr_opr[y];
-		sbj_opr_current = sbj_opr_current + sbj_opr[y];
-		borderless_nkl_opr_current = borderless_nkl_opr_current + borderless_nkl_opr[y];
-		borderless_sbj_opr_current = borderless_sbj_opr_current + borderless_sbj_opr[y];
+		bd_opr_current = bd_opr_current + bd_opr[y];
 		sgt_sot_current = sgt_sot_current + sgt_sot[y];
 		sbr_sot_current = sbr_sot_current + sbr_sot[y];
-		sbj_sot_current = sbj_sot_current + sbj_sot[y];
-		borderless_nkl_sot_current = borderless_nkl_sot_current + borderless_nkl_sot[y];
-		borderless_sbj_sot_current = borderless_sbj_sot_current + borderless_sbj_sot[y];
+		bd_sot_current = bd_sot_current + bd_sot[y];
 		
 		current_length++;
 	  }
@@ -1402,11 +1409,9 @@ export class PeDashboardComponent   {
 	  
 	  
       this.perform_production_chart_options["subtitle"]["text"] = "Last Week : " + formatDate(start_last, 'EEEE, d MMM y', 'id-ID') + " - " + formatDate(end_last, 'EEEE, d MMM y', 'id-ID') + "<br>Current Week : " + formatDate(start_date, 'EEEE, d MMM y', 'id-ID') + " - " + formatDate(end_date, 'EEEE, d MMM y', 'id-ID') ;
-      this.perform_production_chart_options["series"][0]["data"] = [Math.round(borderless_sbj_opr_last/7), Math.round(borderless_sbj_sot_last/7), Math.round(borderless_sbj_opr_current/current_length), Math.round(borderless_sbj_sot_current/current_length)];
-      this.perform_production_chart_options["series"][1]["data"] = [Math.round(borderless_nkl_opr_last/7), Math.round(borderless_nkl_sot_last/7), Math.round(borderless_nkl_opr_current/current_length), Math.round(borderless_nkl_sot_current/current_length)];
-      this.perform_production_chart_options["series"][2]["data"] = [Math.round(sbj_opr_last/7), Math.round(sbj_sot_last/7), Math.round(sbj_opr_current/current_length), Math.round(sbj_sot_current/current_length)];
-      this.perform_production_chart_options["series"][3]["data"] = [Math.round(sgt_opr_last/7), Math.round(sgt_sot_last/7), Math.round(sgt_opr_current/current_length), Math.round(sgt_sot_current/current_length)];
-      this.perform_production_chart_options["series"][4]["data"] = [Math.round(sbr_opr_last/7), Math.round(sbr_sot_last/7), Math.round(sbr_opr_current/current_length), Math.round(sbr_sot_current/current_length)];
+      this.perform_production_chart_options["series"][0]["data"] = [Math.round(bd_opr_last/7), Math.round(bd_sot_last/7), Math.round(bd_opr_current/current_length), Math.round(bd_sot_current/current_length)];
+      this.perform_production_chart_options["series"][1]["data"] = [Math.round(sgt_opr_last/7), Math.round(sgt_sot_last/7), Math.round(sgt_opr_current/current_length), Math.round(sgt_sot_current/current_length)];
+      this.perform_production_chart_options["series"][2]["data"] = [Math.round(sbr_opr_last/7), Math.round(sbr_sot_last/7), Math.round(sbr_opr_current/current_length), Math.round(sbr_sot_current/current_length)];
       Highcharts.chart(this.perform_production_chart_el.nativeElement, this.perform_production_chart_options);
 
     }, error => {

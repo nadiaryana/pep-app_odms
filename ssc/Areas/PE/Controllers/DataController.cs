@@ -56,7 +56,7 @@ namespace ssc.Areas.PE.Controllers
                 // return Data_WellProduction(date);
 
                 case "well_rank":
-                // return Data_WellRank(date);
+                    return Data_WellRank(date);
 
                 case "well_performance_daily":
                     return Data_WelPerformance(type, date, end_date, well);
@@ -85,11 +85,11 @@ namespace ssc.Areas.PE.Controllers
         private ActionResult Data_WellStatus(DateTime? date, DateTime? end_date)
         {
             var res = _daily.Find(
-                r => r.date == end_date && r.ls_brandtype.Length > 0
+                r => r.date == end_date && r.ls_method.Length > 0
             ).Project<Daily>(_fields_daily).ToList().GroupBy(r => new
             {
                 //name = status.FirstOrDefault(s => s.Value.Contains(r.art_lift_type?.Substring(0, 1).ToUpper())).Key
-                status = Filter_WellStatus(r.ls_brandtype, r.fig_curr_gross, r.gas)
+                status = Filter_WellStatus(r.ls_method, r.tes_prod_gross, r.gas)
             }).Where(w => !String.IsNullOrEmpty(w.Key.status)).Select(s => new
             {
                 status = s.Key.status,
@@ -97,7 +97,7 @@ namespace ssc.Areas.PE.Controllers
             });
 
             var weekly_well = _daily.Find(d => d.date <= date && d.date >= date.Value.AddDays(-6)
-               ).Project<Daily>(_fields_daily).ToList().Where(s => s.fig_curr_gross > 0 || s.gas > 0).GroupBy(r => r.date
+               ).Project<Daily>(_fields_daily).ToList().Where(s => s.tes_prod_gross > 0 || s.gas > 0 || s.prod_hours > 0).GroupBy(r => r.date
                ).OrderBy(d => d.Key).Select(s => new
                {
                    dates = TimeZoneInfo.ConvertTimeFromUtc(s.Key.Value, TimeZoneInfo.Local),
@@ -134,29 +134,37 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-        private string Filter_WellStatus(string ls_brandtype, decimal? gross, decimal? gas)
+        private string Filter_WellStatus(string ls_method, decimal? tes_prod_gross, decimal? gas)
         {
-            string prefix = ls_brandtype?.Substring(0, 1).ToUpper();
+            string prefix = ls_method?.Substring(0, 1).ToUpper();
             if (gas == null) gas = 0;
-            if (gross == null) gross = 0;
+            if (tes_prod_gross == null) tes_prod_gross = 0;
 
-            if ((prefix == "C" || prefix == "T" || prefix == "L") && gross > 0)
+            if ((prefix == "S") && tes_prod_gross > 0)
             {
                 return "SRP";
             }
-            else if (prefix == "E" && (gross > 0 || gross > 0))
+            else if (prefix == "E" && (tes_prod_gross > 0 || tes_prod_gross > 0))
             {
                 return "ESP";
             }
-            else if (prefix == "H" && (gross > 0 || gross > 0))
+            else if (prefix == "G" && (tes_prod_gross > 0 || tes_prod_gross > 0))
+            {
+                return "GL";
+            }
+            else if (prefix == "W" && (tes_prod_gross > 0 || tes_prod_gross > 0))
+            {
+                return "WI";
+            }
+            else if (prefix == "H" && (tes_prod_gross > 0 || tes_prod_gross > 0))
             {
                 return "HPU";
             }
-            else if (prefix == "N" && gas > 0 && (gross == 0 || gas / gross > (decimal)0.005))
+            else if (prefix == "N" && gas > 0 && (tes_prod_gross == 0 || gas / tes_prod_gross > (decimal)0.005))
             {
                 return "Gas";
             }
-            else if (prefix == "N" && gross > 0 && gas / gross <= (decimal)0.005)
+            else if (prefix == "N" && tes_prod_gross > 0 && gas / tes_prod_gross <= (decimal)0.005)
             {
                 return "Natural Flow";
             }
@@ -199,11 +207,11 @@ namespace ssc.Areas.PE.Controllers
                         gross = s.fig_curr_gross,
                         net = s.fig_curr_net,
                         wc = s.wc,
-                        thp = s.thp,
+                        // thp = s.thp,
                         sm = s.sm,
-                        dfl = s.sonolog_dfl,
+                        // dfl = s.sonolog_dfl,
                         //cdfl = s.sono,
-                        sfl = s.sonolog_sfl,
+                        // sfl = s.sonolog_sfl,
                         // sgmix = s.sgmix,
                         // ps = s.ps,
                         // pwf = s.pwf,
@@ -230,6 +238,7 @@ namespace ssc.Areas.PE.Controllers
                           well = s.well,
                           gross = s.fig_curr_gross,
                           net = s.fig_curr_net,
+                          location = s.location,
                       });
 
                     return Ok(new { data = daily_area });
@@ -260,9 +269,9 @@ namespace ssc.Areas.PE.Controllers
                         dfl = s.dfl,
                         // cdfl = s.cdfl,
                         sfl = s.sfl,
-                        tglc = s.tglc,
-                        egfl = s.egfl,
-                        al = s.al
+                        // tglc = s.tglc,
+                        // egfl = s.egfl,
+                        // al = s.al
 
                     });
 
@@ -286,23 +295,14 @@ namespace ssc.Areas.PE.Controllers
                       {
                           date = TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, TimeZoneInfo.Local),
                           well = s.well,
-                          // gross = s.last_prod_gross,
-                          // net = s.last_prod_net,
-                          // wc = s.last_prod_wc,
-                          thp = s.thp,
+                          //   thp = s.thp,
                           sm = s.sm,
-                          dfl = s.sonolog_dfl,
-                          //cdfl = s.sono,
-                          sfl = s.sonolog_sfl,
-                          sgmix = s.sgmix,
-                          ps = s.ps,
-                          pwf = s.pwf,
-                          qmax = s.qmax,
-                          // bean_size = s.art_lift_bean_size,
-                          // gas_rates = s.gas,
-                          // sl = s.art_lift_sl,
-                          // spm = s.art_lift_spm,
-                          // freq = s.art_lift_freq,
+                          //   dfl = s.sonolog_dfl,
+                          //   sfl = s.sonolog_sfl,
+                          //   sgmix = s.sgmix,
+                          //   ps = s.ps,
+                          //   pwf = s.pwf,
+                          //   qmax = s.qmax,
                           zone = s.zone
 
 
@@ -336,20 +336,21 @@ namespace ssc.Areas.PE.Controllers
         // }
 
 
-        // private ActionResult Data_WellRank(DateTime? date)
-        // {
-        //     var res = _daily.Find(
-        //         //     r => r.date == date && r.last_prod_gross > 0 && (r.gas == null || r.gas < (decimal)0.5)
-        //         // ).Project<Daily>(_fields_daily).ToList().OrderByDescending(r => r.last_prod_net).Take(20).Select(s => new {
-        //         well = s.well,
-        //         net = s.last_prod_net
-        //             });
+        private ActionResult Data_WellRank(DateTime? date)
+        {
+            var res = _daily.Find(
+                r => r.date == date && r.fig_curr_gross > 0 && (r.gas == null || r.gas < (decimal)0.5)
+                ).Project<Daily>(_fields_daily).ToList().OrderByDescending(r => r.fig_curr_net).Take(20).Select(s => new
+                {
+                    well = s.well,
+                    net = s.fig_curr_net,
+                });
 
-        //             return Ok(new
-        //             {
-        //                 data = res
-        // });
-        // }
+            return Ok(new
+            {
+                data = res
+            });
+        }
         // }
         // }
     }

@@ -104,26 +104,7 @@ namespace ssc.Areas.PE.Controllers
                         Builders<Daily>.Filter.Regex(t => t.ds_kd, new BsonRegularExpression(filter, "i")) |
                         Builders<Daily>.Filter.Regex(t => t.sm, new BsonRegularExpression(filter, "i")) |
                         Builders<Daily>.Filter.Regex(t => t.ds_tgl_pengujian, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.noted, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.last_prod_hours, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.last_prod_gross, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.last_prod_net, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.last_prod_wc, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_size, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_type, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_sl, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_spm, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_freq, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_load, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_bean_size, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.art_lift_efficiency, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.chp, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.pfl, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.psep, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.pump_intake, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.top, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.mid, new BsonRegularExpression(filter, "i")) |
-                        Builders<Daily>.Filter.Regex(t => t.bottom, new BsonRegularExpression(filter, "i"));
+                        Builders<Daily>.Filter.Regex(t => t.noted, new BsonRegularExpression(filter, "i"));
 
                 }
             }
@@ -159,7 +140,21 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.gas?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.gas.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.gas, Convert.ToDecimal(c))));
                 if (colfilter.gor?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.gor.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.gor, Convert.ToDecimal(c))));
                 if (colfilter.glr?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.glr.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.glr, Convert.ToDecimal(c))));
-                if (colfilter.ls_method?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.ls_method.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.ls_method, new BsonRegularExpression((string)c, "i"))));
+                // if (colfilter.ls_method?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.ls_method.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.ls_method, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.ls_method?.ToList().Count(c => !(c is JObject)) > 0)
+                {
+                    var validMethods = colfilter.ls_method
+                        .ToList()
+                        .Where(c => !(c is JObject) && c != null && !string.IsNullOrEmpty(c.ToString()))
+                        .Select(c => Builders<Daily>.Filter.Regex(
+                            t => t.ls_method,
+                            new BsonRegularExpression(c.ToString(), "i")
+                        ));
+
+                    if (validMethods.Any())
+                        xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(validMethods);
+                }
+
                 if (colfilter.ls_brandtype?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.ls_brandtype.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.ls_brandtype, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.ls_prime_mover?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.ls_prime_mover.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.ls_prime_mover, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.ls_hp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.ls_hp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.ls_hp, new BsonRegularExpression((string)c, "i"))));
@@ -177,10 +172,6 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.sm?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.sm.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.sm, Convert.ToDecimal(c))));
                 if (colfilter.ds_tgl_pengujian?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.ds_tgl_pengujian.ToList().Select(c => (c is DateTime) ? Builders<Daily>.Filter.Eq(t => t.ds_tgl_pengujian, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$ds_tgl_pengujian\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
                 if (colfilter.noted?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.noted.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.noted, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.last_prod_hours?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.last_prod_hours.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.last_prod_hours, Convert.ToDecimal(c))));
-                if (colfilter.last_prod_gross?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.last_prod_gross.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.last_prod_gross, Convert.ToDecimal(c))));
-                if (colfilter.last_prod_net?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.last_prod_net.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.last_prod_net, Convert.ToDecimal(c))));
-                if (colfilter.last_prod_wc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.last_prod_wc.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.last_prod_wc, Convert.ToDecimal(c))));
                 //if(filter == "wor")
                 //{
                 //    if (colfilter.last_prod_gross?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.last_prod_gross.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => (t.last_prod_gross - t.last_prod_net) / t.last_prod_net, Convert.ToDecimal(c))));
@@ -197,34 +188,6 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.gas?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.gas.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.gas, Convert.ToDecimal(c))));
 
                 }
-
-                if (colfilter.art_lift_size?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_size.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.art_lift_size, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.art_lift_type?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_type.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.art_lift_type, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.art_lift_sl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_sl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.art_lift_sl, Convert.ToDecimal(c))));
-                if (colfilter.art_lift_spm?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_spm.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.art_lift_spm, Convert.ToDecimal(c))));
-                if (colfilter.art_lift_freq?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_freq.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.art_lift_freq, Convert.ToDecimal(c))));
-                if (colfilter.art_lift_load?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_load.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.art_lift_load, Convert.ToDecimal(c))));
-                if (colfilter.art_lift_bean_size?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_bean_size.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.art_lift_bean_size, Convert.ToDecimal(c))));
-                if (colfilter.art_lift_efficiency?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.art_lift_efficiency.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.art_lift_efficiency, Convert.ToDecimal(c))));
-                if (colfilter.thp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.thp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.thp, Convert.ToDecimal(c))));
-                if (colfilter.chp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.chp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.chp, Convert.ToDecimal(c))));
-                if (colfilter.pfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.pfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.pfl, Convert.ToDecimal(c))));
-                if (colfilter.psep?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.psep.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.psep, Convert.ToDecimal(c))));
-                if (colfilter.pump_intake?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.pump_intake.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.pump_intake, Convert.ToDecimal(c))));
-                if (colfilter.top?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.top.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.top, Convert.ToDecimal(c))));
-                if (colfilter.mid?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.mid.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.mid, Convert.ToDecimal(c))));
-                if (colfilter.bottom?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.bottom.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.bottom, Convert.ToDecimal(c))));
-
-                if (colfilter.pump_capacity?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.pump_capacity.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.pump_capacity, Convert.ToDecimal(c))));
-                if (colfilter.pump_efficiency?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.pump_efficiency.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.pump_efficiency, Convert.ToDecimal(c))));
-                if (colfilter.sonolog_date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.sonolog_date.ToList().Select(c => (c is DateTime) ? Builders<Daily>.Filter.Eq(t => t.sonolog_date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
-                if (colfilter.sonolog_dfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.sonolog_dfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.sonolog_dfl, Convert.ToDecimal(c))));
-                if (colfilter.sonolog_sfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.sonolog_sfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.sonolog_sfl, Convert.ToDecimal(c))));
-                if (colfilter.sgmix?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.sgmix.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.sgmix, Convert.ToDecimal(c))));
-                if (colfilter.ps?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.ps.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.ps, Convert.ToDecimal(c))));
-                if (colfilter.pwf?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.pwf.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.pwf, Convert.ToDecimal(c))));
-                if (colfilter.qmax?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.qmax.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.qmax, Convert.ToDecimal(c))));
-                if (colfilter.well_efficiency?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.well_efficiency.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq(t => t.well_efficiency, Convert.ToDecimal(c))));
 
                 foreach (string log in DailyCommon._logical)
                 {
@@ -271,39 +234,7 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.sm?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sm.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sm\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.ds_tgl_pengujian?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$ds_tgl_pengujian\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
                     if (colfilter.noted?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.noted.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$noted\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.last_prod_hours?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.last_prod_hours.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$last_prod_hours\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.last_prod_gross?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.last_prod_gross.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$last_prod_gross\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.last_prod_net?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.last_prod_net.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$last_prod_net\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.last_prod_wc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.last_prod_wc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$last_prod_wc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.gas?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.gas.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$gas\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.art_lift_size?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_size.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$art_lift_size\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.art_lift_type?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_type.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$art_lift_type\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.art_lift_sl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_sl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$art_lift_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.art_lift_spm?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_spm.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$art_lift_spm\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.art_lift_freq?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_freq.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$art_lift_freq\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.art_lift_load?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_load.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$art_lift_load\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.art_lift_bean_size?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_bean_size.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$art_lift_bean_size\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.art_lift_efficiency?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.art_lift_efficiency.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$art_lift_efficiency\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.thp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.thp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$thp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.chp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.chp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$chp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.pfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.psep?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.psep.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$psep\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.pump_intake?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pump_intake.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pump_intake\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.top?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.top.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$top\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.mid?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.mid.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$mid\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.bottom?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.bottom.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$bottom\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-
-                    if (colfilter.pump_capacity?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pump_capacity.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pump_capacity\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.pump_efficiency?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pump_efficiency.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pump_efficiency\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.sonolog_date?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sonolog_date.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$sonolog_date\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
-                    if (colfilter.sonolog_dfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sonolog_dfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sonolog_dfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.sonolog_sfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sonolog_sfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sonolog_sfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    // if (colfilter.sm?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sm.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sm\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.sgmix?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sgmix.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sgmix\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.ps?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.ps.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$ps\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.pwf?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pwf.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pwf\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.qmax?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.qmax.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$qmax\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.well_efficiency?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.well_efficiency.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$well_efficiency\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    // if (colfilter.gas?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.gas.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$gas\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                 }
 
                 xfilter = xfilter & xcolfilter;
@@ -359,34 +290,6 @@ namespace ssc.Areas.PE.Controllers
                 case "sm": _items = (order == "asc") ? _items.SortBy(t => t.sm) : _items.SortByDescending(t => t.sm); break;
                 case "ds_tgl_pengujian": _items = (order == "asc") ? _items.SortBy(t => t.ds_tgl_pengujian) : _items.SortByDescending(t => t.ds_tgl_pengujian); break;
                 case "noted": _items = (order == "asc") ? _items.SortBy(t => t.noted) : _items.SortByDescending(t => t.noted); break;
-                case "last_prod_hours": _items = (order == "asc") ? _items.SortBy(t => t.last_prod_hours) : _items.SortByDescending(t => t.last_prod_hours); break;
-                case "last_prod_gross": _items = (order == "asc") ? _items.SortBy(t => t.last_prod_gross) : _items.SortByDescending(t => t.last_prod_gross); break;
-                case "last_prod_net": _items = (order == "asc") ? _items.SortBy(t => t.last_prod_net) : _items.SortByDescending(t => t.last_prod_net); break;
-                case "last_prod_wc": _items = (order == "asc") ? _items.SortBy(t => t.last_prod_wc) : _items.SortByDescending(t => t.last_prod_wc); break;
-                case "art_lift_size": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_size) : _items.SortByDescending(t => t.art_lift_size); break;
-                case "art_lift_type": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_type) : _items.SortByDescending(t => t.art_lift_type); break;
-                case "art_lift_sl": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_sl) : _items.SortByDescending(t => t.art_lift_sl); break;
-                case "art_lift_spm": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_spm) : _items.SortByDescending(t => t.art_lift_spm); break;
-                case "art_lift_freq": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_freq) : _items.SortByDescending(t => t.art_lift_freq); break;
-                case "art_lift_load": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_load) : _items.SortByDescending(t => t.art_lift_load); break;
-                case "art_lift_bean_size": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_bean_size) : _items.SortByDescending(t => t.art_lift_bean_size); break;
-                case "art_lift_efficiency": _items = (order == "asc") ? _items.SortBy(t => t.art_lift_efficiency) : _items.SortByDescending(t => t.art_lift_efficiency); break;
-                case "chp": _items = (order == "asc") ? _items.SortBy(t => t.chp) : _items.SortByDescending(t => t.chp); break;
-                case "pfl": _items = (order == "asc") ? _items.SortBy(t => t.pfl) : _items.SortByDescending(t => t.pfl); break;
-                case "psep": _items = (order == "asc") ? _items.SortBy(t => t.psep) : _items.SortByDescending(t => t.psep); break;
-                case "pump_intake": _items = (order == "asc") ? _items.SortBy(t => t.pump_intake) : _items.SortByDescending(t => t.pump_intake); break;
-                case "top": _items = (order == "asc") ? _items.SortBy(t => t.top) : _items.SortByDescending(t => t.top); break;
-                case "mid": _items = (order == "asc") ? _items.SortBy(t => t.mid) : _items.SortByDescending(t => t.mid); break;
-                case "bottom": _items = (order == "asc") ? _items.SortBy(t => t.bottom) : _items.SortByDescending(t => t.bottom); break;
-                case "pump_capacity ": _items = (order == "asc") ? _items.SortBy(t => t.pump_capacity) : _items.SortByDescending(t => t.pump_capacity); break;
-                case "pump_efficiency ": _items = (order == "asc") ? _items.SortBy(t => t.pump_efficiency) : _items.SortByDescending(t => t.pump_efficiency); break;
-                case "sonolog_date ": _items = (order == "asc") ? _items.SortBy(t => t.sonolog_date) : _items.SortByDescending(t => t.sonolog_date); break;
-                case "sonolog_dfl ": _items = (order == "asc") ? _items.SortBy(t => t.sonolog_dfl) : _items.SortByDescending(t => t.sonolog_dfl); break;
-                case "sonolog_sfl ": _items = (order == "asc") ? _items.SortBy(t => t.sonolog_sfl) : _items.SortByDescending(t => t.sonolog_sfl); break;
-                case "ps ": _items = (order == "asc") ? _items.SortBy(t => t.ps) : _items.SortByDescending(t => t.ps); break;
-                case "pwf ": _items = (order == "asc") ? _items.SortBy(t => t.pwf) : _items.SortByDescending(t => t.pwf); break;
-                case "qmax ": _items = (order == "asc") ? _items.SortBy(t => t.qmax) : _items.SortByDescending(t => t.qmax); break;
-                case "well_efficiency": _items = (order == "asc") ? _items.SortBy(t => t.well_efficiency) : _items.SortByDescending(t => t.well_efficiency); break;
             }
 
             switch (mode)
@@ -426,7 +329,7 @@ namespace ssc.Areas.PE.Controllers
                         case "well_string":
                         case "zone":
                         case "art_lift_size":
-                        case "art_lift_type":
+                        case "ls_method":
                             res = _daily.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
                             break;
                         //case "test_duration":
@@ -452,7 +355,18 @@ namespace ssc.Areas.PE.Controllers
                             }
                             break;
                         default:
-                            res = _daily.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            // res = _daily.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            // break;
+                            try
+                            {
+                                // coba ambil sebagai angka
+                                res = _daily.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            }
+                            catch (FormatException)
+                            {
+                                // kalau gagal, fallback ke string
+                                res = _daily.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            }
                             break;
                     }
 
@@ -1099,6 +1013,7 @@ namespace ssc.Areas.PE.Controllers
             }
 
             DailyTmp _tmp = new DailyTmp
+
             {
                 error_count = error_count,
                 items = items.ToArray()
@@ -1148,8 +1063,6 @@ namespace ssc.Areas.PE.Controllers
             {
                 return BadRequest();
             }
-
-
         }
 
         [Authorize("PeDaily Add")]
@@ -1211,7 +1124,7 @@ namespace ssc.Areas.PE.Controllers
                 foreach (Daily item in items)
                 {
                     item._error = null;
-                    daily = DailyCommon.CalculateFields(item);
+                    // daily = DailyCommon.CalculateFields(item);
 
                     var update = Builders<Daily>.Update.Set(t => t.date, item.date)
                         .Set(t => t.nomor, item.nomor)
@@ -1220,8 +1133,6 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.well_string, item.well_string)
                         .Set(t => t.zone, item.zone)
                         .Set(t => t.interval, item.interval)
-                        // .Set(t => t.test_date, item.test_date)
-                        // .Set(t => t.test_duration, item.test_duration)
                         .Set(t => t.potensi_prod_gross, item.potensi_prod_gross)
                         .Set(t => t.potensi_prod_net, item.potensi_prod_net)
                         .Set(t => t.tes_prod_gross, item.tes_prod_gross)
@@ -1255,38 +1166,7 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.ds_kd, item.ds_kd)
                         .Set(t => t.sm, item.sm)
                         .Set(t => t.ds_tgl_pengujian, item.ds_tgl_pengujian)
-                        .Set(t => t.noted, daily.noted)
-                        .Set(t => t.last_prod_hours, item.last_prod_hours)
-                        .Set(t => t.last_prod_gross, item.last_prod_gross)
-                        .Set(t => t.last_prod_net, item.last_prod_net)
-                        .Set(t => t.last_prod_wc, item.last_prod_wc)
-                        .Set(t => t.art_lift_size, item.art_lift_size)
-                        .Set(t => t.art_lift_type, item.art_lift_type)
-                        .Set(t => t.art_lift_sl, item.art_lift_sl)
-                        .Set(t => t.art_lift_spm, item.art_lift_spm)
-                        .Set(t => t.art_lift_freq, item.art_lift_freq)
-                        .Set(t => t.art_lift_load, item.art_lift_load)
-                        .Set(t => t.art_lift_bean_size, item.art_lift_bean_size)
-                        .Set(t => t.art_lift_efficiency, item.art_lift_efficiency)
-                        .Set(t => t.thp, item.thp)
-                        .Set(t => t.chp, item.chp)
-                        .Set(t => t.pfl, item.pfl)
-                        .Set(t => t.psep, item.psep)
-                        .Set(t => t.pump_intake, item.pump_intake)
-                        .Set(t => t.top, item.top)
-                        .Set(t => t.mid, item.mid)
-                        .Set(t => t.bottom, item.bottom)
-                        .Set(t => t.structure, item.structure)
-
-                        .Set(t => t.pump_capacity, daily.pump_capacity)
-                        .Set(t => t.pump_efficiency, daily.pump_efficiency)
-                        .Set(t => t.sonolog_date, daily.sonolog_date)
-                        .Set(t => t.sonolog_dfl, daily.sonolog_dfl)
-                        .Set(t => t.sonolog_sfl, daily.sonolog_sfl)
-                        .Set(t => t.ps, daily.ps)
-                        .Set(t => t.pwf, daily.pwf)
-                        .Set(t => t.qmax, daily.qmax)
-                        .Set(t => t.well_efficiency, daily.well_efficiency)
+                        .Set(t => t.noted, item.noted)
 
                         .Set(t => t.updated_by, User.Identity.Name)
                         .Set(t => t.updated_date, DateTime.Now)

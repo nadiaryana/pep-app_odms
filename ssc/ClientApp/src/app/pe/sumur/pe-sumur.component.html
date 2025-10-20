@@ -8,9 +8,11 @@
         <hr class="garis_aw">
 
         <mat-list>
-          <mat-list-item *ngFor="let well of wells" (click)="selectWell(well)" class="well-item">
-            <span>{{ well.name }}</span>
-            <span [ngClass]="well.status === 'ON' ? 'status-on' : 'status-off'">
+          <mat-list-item *ngFor="let well of wells" (click)="selectWell(well)" class="well-item" style="justify-content: space-between;">
+            <span style="flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ well.name }}
+            </span>
+            <span [ngClass]="well.status === 'ON' ? 'status-on' : 'status-off'" style="margin-left: 12px; font-weight: bold;">
               ● {{ well.status }}
             </span>
           </mat-list-item>

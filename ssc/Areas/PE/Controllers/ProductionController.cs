@@ -438,6 +438,19 @@ namespace ssc.Areas.PE.Controllers
             {
               if (decimal.TryParse(strValue, out decimal num))
               {
+                // 🔹 Tambahkan pembulatan sesuai nama kolom
+                switch (mapping.key)
+                {
+                  case "operation":
+                  case "sot":
+                  case "figure":
+                    num = Math.Round(num, 0); // tanpa koma
+                    break;
+                  case "gas":
+                  case "gas_sales":
+                    num = Math.Round(num, 2); // 2 angka di belakang koma
+                    break;
+                }
                 var prop = typeof(Production).GetProperty(mapping.key);
                 if (prop != null)
                   prop.SetValue(_row, num);
@@ -592,6 +605,12 @@ namespace ssc.Areas.PE.Controllers
       {
         if (item.date == null)
           continue;
+        // 🔹 Terapkan pembulatan sebelum update
+        var sot = item.sot.HasValue ? Math.Round(item.sot.Value, 0) : (decimal?)null;
+        var operation = item.operation.HasValue ? Math.Round(item.operation.Value, 0) : (decimal?)null;
+        var figure = item.figure.HasValue ? Math.Round(item.figure.Value, 0) : (decimal?)null;
+        var gas = item.gas.HasValue ? Math.Round(item.gas.Value, 2) : (decimal?)null;
+        var gas_sales = item.gas_sales.HasValue ? Math.Round(item.gas_sales.Value, 2) : (decimal?)null;
 
         var filter = Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToUniversalTime());
         var update = Builders<Production>.Update

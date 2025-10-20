@@ -13,8 +13,6 @@ import { xFilterService } from '../../xfilter/xfilter.component';
 import { MatSnackBar } from '@angular/material';
 
 
-
-
 @Component({
   selector: 'app-pe-daily-area-chart',
   templateUrl: './pe-daily-area-chart.component.html',
@@ -104,7 +102,8 @@ export class PeDailyAreaChartComponent implements OnInit {
       // type: 'line',
       yAxis: 0,
       data: [],
-      color: '#000000',
+      color: '#B4846C',
+      zIndex: 1,
       tooltip: {
         valueSuffix: ' bfpd',
         valueDecimals: 2
@@ -115,7 +114,8 @@ export class PeDailyAreaChartComponent implements OnInit {
       // type: 'line',
       yAxis: 0,
       data: [],
-      color: '#0166ff',
+      color: '#5b9bd5',
+      zIndex: 2,
       tooltip: {
         valueSuffix: ' bwpd',
         valueDecimals: 2
@@ -126,7 +126,8 @@ export class PeDailyAreaChartComponent implements OnInit {
       // type: 'line',
       yAxis: 0,
       data: [],
-      color: '#66ff33',
+      color: '#5A3E36',
+      zIndex: 3,
       tooltip: {
         valueSuffix: ' bopd',
         valueDecimals: 2
@@ -139,6 +140,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 	  dashStyle: 'shortdot',
       data: [],
       color: '#C55A11',
+      zIndex: 4,
       tooltip: {
         valueSuffix: ' m',
         valueDecimals: 2

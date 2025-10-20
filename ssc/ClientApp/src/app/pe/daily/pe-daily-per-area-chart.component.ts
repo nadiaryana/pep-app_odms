@@ -238,6 +238,7 @@ export class PeDailyPerAreaChartComponent {
 	  let gross = res["data"].map(d => d["gross"]);
 	  let net = res["data"].map(d => d["net"]);
 	  let well = res["data"].map(d => d["well"]);
+	  let location = res["data"].map(d => d["location"]);
 	  let tgl_cek = 0;
 	  
 	  
@@ -322,7 +323,18 @@ export class PeDailyPerAreaChartComponent {
 	  
 	  
 	  for (var i = 0; i < tgl.length; i++){
-			if(well[i].includes("NKL")){
+
+			// Cek Area SGT
+			const sgtAreaCodes = [
+				"GS-1", 
+				"GS-2", 
+				"GS-3", 
+				"GS-4", 
+				"GS-5", 
+				"GS-6", 
+				"TOS",
+			];
+			if (sgtAreaCodes.includes(location[i])) {
 				well_sgt[o] = well[i];
 				g_sgt[o] = gross[i];
 				n_sgt[o] = net[i];
@@ -330,76 +342,26 @@ export class PeDailyPerAreaChartComponent {
 				
 				o++;
 			}
-			else if(well[i].includes("SKL")){
-				well_sgt[o] = well[i];
-				g_sgt[o] = gross[i];
-				n_sgt[o] = net[i];
-				tgl_sgt[o] = tgl[i];
-				
-				o++;
-			}
-			else if(well[i].includes("ANG")){
-				well_sgt[o] = well[i];
-				g_sgt[o] = gross[i];
-				n_sgt[o] = net[i];
-				tgl_sgt[o] = tgl[i];
-				
-				o++;
-			}
-			else if(well[i].includes("TJU")){
-				well_sgt[o] = well[i];
-				g_sgt[o] = gross[i];
-				n_sgt[o] = net[i];
-				tgl_sgt[o] = tgl[i];
-				
-				o++;
-			}
-			
-			else if(well[i].includes("LSE")){
+			// Cek Area SBR
+			const sbrAreaCodes = ["MINI-P", "SBR-P", "TJ-BT", "TOS-SBT"];
+			if (sbrAreaCodes.includes(location[i])) {
 				well_sbr[k] = well[i];
 				g_sbr[k] = gross[i];
 				n_sbr[k] = net[i];
 				tgl_sbr[k] = tgl[i];
-				
+
 				k++;
 			}
-			else if(well[i].includes("MRA")){
-				well_sbr[k] = well[i];
-				g_sbr[k] = gross[i];
-				n_sbr[k] = net[i];
-				tgl_sbr[k] = tgl[i];
-				
-				k++;
-			}
-			else if(well[i].includes("MT")){
-				well_sbr[k] = well[i];
-				g_sbr[k] = gross[i];
-				n_sbr[k] = net[i];
-				tgl_sbr[k] = tgl[i];
-				
-				k++;
-			}
-			else if(well[i].includes("NNY")){
-				well_sbr[k] = well[i];
-				g_sbr[k] = gross[i];
-				n_sbr[k] = net[i];
-				tgl_sbr[k] = tgl[i];
-				
-				k++;
-			}
-		
-			else if(well[i].includes("SBJ")){
+			// Cek Area BD
+			const bdAreaCodes = ["BD"];
+			if (bdAreaCodes.includes(location[i])) {
 				well_bd[q] = well[i];
 				g_bd[q] = gross[i];
 				n_bd[q] = net[i];
 				tgl_bd[q] = tgl[i];
-				
+
 				q++;
 			}
-			// console.log("Nilai nya: "+i+". "+tgl[i]+" - "+well[i]+" - "+g[i]+" - "+n[i]);
-			// console.log("sgt "+tgl[i]+" - Gross: "+g_sgt[i]+", Net: "+n_sgt[i]);
-			// console.log("nilai grss: "+i+". "+dt_grs[i]);
-		
 		}
 		
 		

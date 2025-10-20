@@ -215,7 +215,7 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeSensor Add")]
         [HttpPost("UploadFiles")]
-        public async Task<IActionResult> Post(List<IFormFile> files)    
+        public async Task<IActionResult> Post(List<IFormFile> files)
         {
             long size = files.Sum(f => f.Length);
 
@@ -253,10 +253,11 @@ namespace ssc.Areas.PE.Controllers
                     {
                         try
                         {
-                            if(ws.Cells[r, 1].Value.GetType() == DateTime.Now.GetType())
+                            if (ws.Cells[r, 1].Value.GetType() == DateTime.Now.GetType())
                             {
                                 _row.date = (DateTime?)ws.Cells[r, 1].Value;
-                            } else
+                            }
+                            else
                             {
                                 _row.date = DateTime.FromOADate(double.Parse(ws.Cells[r, 1].Value?.ToString().Trim()));
                             }
@@ -457,7 +458,7 @@ namespace ssc.Areas.PE.Controllers
                 }
                 _sensor_tmp.DeleteOne(d => d._id == _id);
 
-                modified_count += DailyCommon.RecalculateFields(min_date, wells, User.Identity.Name);
+                // modified_count += DailyCommon.RecalculateFields(min_date, wells, User.Identity.Name);
 
                 return Ok(new
                 {

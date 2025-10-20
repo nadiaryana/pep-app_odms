@@ -672,12 +672,12 @@ namespace ssc.Areas.PE.Controllers
                 }
                 _sonolog_tmp.DeleteOne(d => d._id == _id);
 
-                long modified_count = DailyCommon.RecalculateFields(min_date, wells, User.Identity.Name);
+                // long modified_count = DailyCommon.RecalculateFields(min_date, wells, User.Identity.Name);
 
                 return Ok(new
                 {
                     created_count = created_count,
-                    modified_count = modified_count,
+                    // modified_count = modified_count,
                     total_count = items.Count()
                 });
             }

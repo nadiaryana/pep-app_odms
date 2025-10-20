@@ -126,7 +126,9 @@ export class PeDailyChartComponent {
       data: [],
       color: '#000000',
       zIndex: 9,
-      tooltip: {
+      marker: {
+        enabled: false
+      },tooltip: {
         valueSuffix: ' bfpd',
         valueDecimals: 2
       }
@@ -138,6 +140,9 @@ export class PeDailyChartComponent {
       data: [],
       color: '#00B050',
       zIndex: 8,
+      marker: {
+        enabled: false
+      },
       tooltip: {
         valueSuffix: ' bopd',
         valueDecimals: 2
@@ -163,6 +168,9 @@ export class PeDailyChartComponent {
       data: [],
       color: '#0070C0',
       zIndex: 6,
+      marker: {
+        enabled: false
+      },
       tooltip: {
         valueSuffix: ' %',
         valueDecimals: 2
@@ -186,7 +194,7 @@ export class PeDailyChartComponent {
       type: 'area',
       yAxis: 1,
       data: [],
-      color: '#D5FFFF',
+      color: '#5b9bd5',
       zIndex: 4,
       tooltip: {
         valueSuffix: ' m',
@@ -654,7 +662,7 @@ export class PeDailyChartComponent {
 				dt_smm[i] = dt_sm[x];
 				dt_sll[i] = dt_sl[x];
 				dt_spmm[i] = dt_spm[x];
-        dt_kddd[i] = dt_kd[x];
+        dt_kdd[i] = dt_kd[x];
 				
 				// console.log("nilai grss2: "+dt_grss);
 				i++;
