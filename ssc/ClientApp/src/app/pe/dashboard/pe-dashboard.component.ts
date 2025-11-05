@@ -84,17 +84,20 @@ export class PeDashboardComponent   {
 			
 		  },
 		  series: [{
-			  name: "Operation",
-			  color: '#5b9bd5',
-			  data: []
-		  },{
         name: "SOT",
         color: '#ed7d31',
-        data: []
+        data: [],
+        zIndex: 1
+		  },{
+        name: "Operation",
+        color: '#5b9bd5',
+			  data: [],
+         zIndex: 2
       },{
         name: "Figure",
         color: '#a9d18e',
-        data: []
+        data: [],
+         zIndex: 3
       }]
 	}
 
@@ -263,7 +266,8 @@ export class PeDashboardComponent   {
       enabled: true,
       align : 'right',
       itemStyle: {
-        fontWeight: 'normal'
+        fontWeight: 'normal',
+        fontSize: '18px'
       }
       //align: 'right',
     },

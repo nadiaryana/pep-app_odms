@@ -204,7 +204,7 @@ export class PeProductionAddComponent {
 		}
 
 		this.isLoading = true;
-		var httpOption = {
+		var httpOption = { 
 			params: {
 				_id: this.tmp_id,
 				page: this.paginator.pageIndex.toString(),

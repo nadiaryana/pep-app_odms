@@ -1,7 +1,6 @@
-<div fxLayout="row" fxLayout.lt-lg="column" fxLayoutGap="10px" fxLayoutAlign="center">
-  <div fxFlex="100%" fxLayout="column" fxLayoutGap="10px">
+<div fxLayout="row" fxLayout.lt-lg="column" fxLayoutGap="10px" fxLayoutAlign="start stretch">
 
-    <mat-card fxFlex="100%" class="dasboard_card">
+    <mat-card fxFlex="35" class="dasboard_card">
       <mat-card-content>
         <h4 class="title_awy" align="center">Daftar Sumur</h4>
         <h5 class="tanggal_awy" align="center">{{ todayDate }}</h5>
@@ -20,7 +19,7 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card *ngIf="selectedWell" fxFlex="100%" class="dasboard_card">
+    <mat-card *ngIf="selectedWell" fxFlex="65" class="dasboard_card">
       <mat-card-content>
         <highcharts-chart
           *ngIf="chartOptions"
@@ -30,5 +29,4 @@
         </highcharts-chart>
       </mat-card-content>
     </mat-card>
-  </div>
 </div>

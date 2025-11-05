@@ -3,6 +3,14 @@ import { TitleService } from "src/app/navigation/title/title.service";
 import { HttpClient } from "@angular/common/http";
 import * as Highcharts from "highcharts";
 
+interface Well {
+  id: number;
+  name: string;
+  status: "ON" | "OFF" | "UNKNOWN";
+  channelId: string;
+  apiKey: string;
+}
+
 @Component({
   selector: "app-sumur",
   templateUrl: "./pe-sumur.component.html",
@@ -12,57 +20,53 @@ export class SumurComponent implements OnInit {
   Highcharts: typeof Highcharts = Highcharts;
   chartOptions: Highcharts.Options | null = null;
 
-
+  constructor(private titleService: TitleService, private http: HttpClient) {}
   todayDate: string = new Date().toLocaleDateString("id-ID");
 
-  // list sumur
-  wells = [
-    {
-      id: 1,
-      name: "ST-182",
-      status: "ON",
-      channelId: "2817240",
-      apiKey: "5QNHFDXBQHSSEMEM",
-    },  
-    {
-      id: 2,
-      name: "ST-092",
-      status: "ON",
-      channelId: "2817838",
-      apiKey: "Y6S3WJA4ZEIG67OA",
-    },
-    {
-      id: 3,
-      name: "ST-159",
-      status: "OFF",
-      channelId: "2826853",
-      apiKey: "VGBBTAVANY97BLWQ",
-    },
-    {
-      id: 4,
-      name: "ST-161",
-      status: "ON",
-      channelId: "2987295",
-      apiKey: "TRI6GE6UIE89CFQ5",
-    },
+  wells: Well[] = [
+    { id: 1, name: "ST-182", status: "UNKNOWN", channelId: "2817240", apiKey: "5QNHFDXBQHSSEMEM" },
+    { id: 2, name: "ST-092", status: "UNKNOWN", channelId: "2817838", apiKey: "Y6S3WJA4ZEIG67OA" },
+    { id: 3, name: "ST-159", status: "UNKNOWN", channelId: "2826853", apiKey: "VGBBTAVANY97BLWQ" },
+    { id: 4, name: "ST-161", status: "UNKNOWN", channelId: "2987295", apiKey: "TRI6GE6UIE89CFQ5" },
   ];
 
-  selectedWell: { id: number; name: string; status: "ON" | "OFF" } | null = null;
+  selectedWell: Well | null = null;
 
-  constructor(private titleService: TitleService, private http: HttpClient) {}
-
-  ngOnInit() {
-    this.titleService.titleSource.next({
-      title: "Sumur",
-      icon: "waves",
-      breadcrumbs: [
-        { label: "Petroleum Engineering", routerLink: "" },
-        { label: "Dashboard", routerLink: "" },
-      ],
-    });
+  ngOnInit(): void {
+    // refresh statuses on init
+    this.refreshAllWellStatuses();
   }
 
-  selectWell(well: any) {
+  private evaluateStatusFromValue(value: number): "ON" | "OFF" {
+    return value > 1 ? "ON" : "OFF";
+  }
+
+  // Fetch latest field1 value from ThingSpeak and update the well status.
+  // Uses the same rule: ON if field1 > 1, OFF if field1 <= 1.
+  fetchLatestField1FromThingSpeak(well: Well): void {
+    const url = `https://api.thingspeak.com/channels/${well.channelId}/fields/1.json?results=1&api_key=${well.apiKey}`;
+    this.http.get<any>(url).subscribe(
+      (res: any) => {
+        const feeds = (res && res.feeds) || [];
+        const latestField = feeds.length ? parseFloat(feeds[feeds.length - 1].field1) || 0 : 0;
+        const newStatus = this.evaluateStatusFromValue(latestField);
+        well.status = newStatus;
+        if (this.selectedWell && this.selectedWell.id === well.id) {
+          this.selectedWell.status = newStatus;
+        }
+      },
+      (err: any) => {
+        console.error(`Failed to fetch latest field1 for ${well.name}`, err);
+      }
+    );
+  }
+
+  // Convenience: refresh statuses for all wells (call this from ngOnInit if desired)
+  refreshAllWellStatuses(): void {
+    this.wells.forEach((w: Well) => this.fetchLatestField1FromThingSpeak(w));
+  }
+
+  selectWell(well: Well): void {
     this.selectedWell = well;
 
     // Call backend instead of full ThingSpeak API
@@ -76,15 +80,31 @@ export class SumurComponent implements OnInit {
     };
 
     this.http.get<any>(backendUrl, httpOptions).subscribe(
-      (res) => {
-        const feeds = res.feeds;
+      (res: any) => {
+        const feeds = (res && res.feeds) || [];
 
-        const chartData: [number, number][] = feeds.map((f) => {
+        const chartData: [number, number][] = feeds.map((f: any) => {
           const ts = Date.parse(f.created_at);
           const val = parseFloat(f.field1) || 0;
           return [ts, val];
         });
 
+        // set well status based on latest field1 value (>1 => ON, <=1 => OFF)
+        if (chartData.length > 0) {
+          const latestVal = chartData[chartData.length - 1][1];
+          if (latestVal > 1) {
+            well.status = "ON";
+          } else {
+            // <= 1: treat as OFF
+            well.status = "OFF";
+          }
+
+          if (this.selectedWell && this.selectedWell.id === well.id) {
+            this.selectedWell.status = well.status as "ON" | "OFF";
+          }
+        }
+
+        // Uncomment and set this.chartOptions if you want to render the chart with Highcharts
         this.chartOptions = {
           chart: { type: "line", backgroundColor: "#fff" },
           title: { text: well.name },
@@ -102,65 +122,9 @@ export class SumurComponent implements OnInit {
           ],
         };
       },
-      (error) => {
-        console.error(error);
+      (err: any) => {
+        console.error(`Failed to fetch data for ${well.name}`, err);
       }
     );
-
-    // Tetap ambil data langsung ke ThingSpeak untuk chart
-    const url = `https://api.thingspeak.com/channels/${well.channelId}/fields/1.json?api_key=${well.apiKey}&results=100`;
-    this.http.get<any>(url).subscribe(res => {
-    const feeds = res.feeds;
-
-    const chartData: [number, number][] = feeds.map(f => {
-      const ts = Date.parse(f.created_at);
-      const val = parseFloat(f.field1) || 0;
-      return [ts, val];
-    });
-
-    this.chartOptions = {
-      chart: { type: 'line', backgroundColor: '#fff' },
-      title: { text: well.name },
-      time: { useUTC: false },
-      xAxis: { type: 'datetime' },
-      yAxis: { title: { text: 'Arus (A)' } },
-      tooltip: { valueSuffix: ' A' },
-      legend: { enabled: false },
-      series: [{
-        type: 'line',
-        name: 'Arus',
-        data: chartData
-      }]
-    };
-    });
   }
-  // Dummy dataset
-  // dataset = [
-  //   { date: "2025-09-01", oil: 120, gas: 80, water: 20 },
-  //   { date: "2025-09-02", oil: 150, gas: 60, water: 30 },
-  //   { date: "2025-09-03", oil: 180, gas: 90, water: 40 },
-  //   { date: "2025-09-04", oil: 100, gas: 70, water: 25 },
-  //   { date: "2025-09-05", oil: 200, gas: 100, water: 50 },
-  // ];
-
-  // columns = ["date", "oil", "gas", "water"];
-  // selectedX = "date";
-  // selectedY = "oil";
-
-  // // chart dari dropdown
-  // updateChart() {
-  //   const categories = this.dataset.map(
-  //     (d) => d[this.selectedX as keyof typeof d].toString()
-  //   );
-  //   const values = this.dataset.map(
-  //     (d) => Number(d[this.selectedY as keyof typeof d])
-  //   );
-
-  //   this.chartOptions = {
-  //     chart: { type: "line", backgroundColor: "#fff" },
-  //     title: { text: `${this.selectedY} vs ${this.selectedX}` },
-  //     xAxis: { categories, title: { text: this.selectedX } },
-  //     yAxis: { title: { text: this.selectedY } },
-  //     series: [{ type: "line", name: this.selectedY, data: values }],
-  //   };
 }

@@ -1040,7 +1040,15 @@ namespace ssc.Areas.PE.Controllers
             }
             else if (mode == "warning")
             {
-                _tmpitems = _tmpitems.Where(r => r._error._row?.value == "warning").ToList();
+                _tmpitems = _tmpitems.Where(r => r._error._row?.value == "warning").OrderByDescending(r => r._error != null).ToList();
+            }
+            else
+            {
+                _tmpitems = _tmpitems
+                .OrderByDescending(r => r._error._row?.value == "error") // error paling atas
+                .ThenByDescending(r => r._error._row?.value == "warning") // lanjut warning
+                .ThenByDescending(r => r.date) // lalu normal pakai date
+                .ToList();
             }
             int total_count = _tmpitems.Count();
             if (pagesize * (page + 1) > total_count) pagesize = total_count - (page * pagesize);

@@ -182,8 +182,9 @@ export class PeDashboardComponent {
     legend: {
       enabled: true,
       align : 'center',
+      useHTML: true,
       itemStyle: {
-        fontWeight: 'normal'
+        fontWeight: 'normal',
       }
       //align: 'right',
     },

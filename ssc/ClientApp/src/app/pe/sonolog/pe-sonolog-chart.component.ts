@@ -30,7 +30,7 @@ export class PeSonologChartComponent {
       zoomType: 'xy',
       style: {
         fontFamily: 'Roboto, Helvetica Neue, sans-serif'
-      }
+      },
     },
     title: {
       text: null,
@@ -58,7 +58,7 @@ export class PeSonologChartComponent {
           color: '#666666'
         }
       },
-      reversed: true,
+      reversed: false,
       showFirstLabel: true,
       showLastLabel: true,
       labels: {
@@ -83,10 +83,11 @@ export class PeSonologChartComponent {
     },
     series: [{
       name: 'Pump Intake',
-      type: 'scatter',
+      type: 'line',
       yAxis: 0,
       data: [],
       color: '#008000',
+      zIndex: 3,
       tooltip: {
         valueSuffix: ' m',
         valueDecimals: 2
@@ -98,10 +99,11 @@ export class PeSonologChartComponent {
 
     }, {
       name: 'DFL',
-      type: 'scatter',
+      type: 'area',
       yAxis: 0,
       data: [],
       color: '#ff3300',
+      zIndex: 2,
       tooltip: {
         valueSuffix: ' m',
         valueDecimals: 2
@@ -117,6 +119,7 @@ export class PeSonologChartComponent {
       yAxis: 0,
       data: [],
       color: '#5c00e6',
+      zIndex: 1,
       tooltip: {
         valueSuffix: ' m',
         valueDecimals: 2

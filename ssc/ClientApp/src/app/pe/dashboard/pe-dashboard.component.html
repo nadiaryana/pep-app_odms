@@ -16,18 +16,18 @@
 
   <div fxLayout="row" fxLayout.lt-md="column" fxLayoutWrap fxLayoutGap="5px" fxLayoutAlign="center">
 
-    <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_operation">
-      <mat-card-title class="title_dasboard">Operation</mat-card-title>
-      <mat-card-content>
-        <div class="value">{{(valueOperation | number : '1.0-2') || '-'}} </div>
-        <div class="uom"><b>BOPD</b></div>
-      </mat-card-content>
-    </mat-card>
     <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_sot">
       <mat-card-title class="title_dasboard">SOT</mat-card-title>
       <mat-card-content>
         <div class="value" *ngIf="!isLoadingSOT">{{(valueSOT | number : '1.0-2') || '-'}}</div>
         <div class="uom" *ngIf="!isLoadingSOT"><b>BOPD</b></div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_operation">
+      <mat-card-title class="title_dasboard">Operation</mat-card-title>
+      <mat-card-content>
+        <div class="value">{{(valueOperation | number : '1.0-2') || '-'}} </div>
+        <div class="uom"><b>BOPD</b></div>
       </mat-card-content>
     </mat-card>
     <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_figure">

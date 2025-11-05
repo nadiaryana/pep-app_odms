@@ -158,7 +158,7 @@ export class PeDailyAreaChartComponent implements OnInit {
       // type: 'line',
       yAxis: 0,
       data: [],
-      color: '#5A3E36',
+      color: '#BBD8A3',
       zIndex: 3,
       tooltip: {
         valueSuffix: ' bopd',
