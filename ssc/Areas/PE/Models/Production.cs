@@ -28,8 +28,10 @@ namespace ssc.Areas.PE.Models
     public decimal? sgt_fig { get; set; }
     public decimal? sbr_fig { get; set; }
     public decimal? bd_fig { get; set; }
-    public decimal? rkap { get; set; }
-    public decimal? wpnb { get; set; }
+    public decimal? rkap_oil { get; set; }
+    public decimal? wpnb_oil { get; set; }
+    public decimal? rkap_gas { get; set; }
+    public decimal? wpnb_gas { get; set; }
     public string created_by { get; set; }
     public DateTime? created_date { get; set; }
     public string updated_by { get; set; }
@@ -64,8 +66,10 @@ namespace ssc.Areas.PE.Models
     public ErrorItem sgt_fig { get; set; }
     public ErrorItem sbr_fig { get; set; }
     public ErrorItem bd_fig { get; set; }
-    public ErrorItem rkap { get; set; }
-    public ErrorItem wpnb { get; set; }
+    public ErrorItem rkap_oil { get; set; }
+    public ErrorItem wpnb_oil { get; set; }
+    public ErrorItem rkap_gas { get; set; }
+    public ErrorItem wpnb_gas { get; set; }
   }
 
   public class ProductionList
@@ -92,8 +96,10 @@ namespace ssc.Areas.PE.Models
     public Object[] bd_fig { get; set; }
     // public Object[] borderless_nkl_sot { get; set; }
     // public Object[] borderless_sbj_sot { get; set; }
-    public Object[] rkap { get; set; }
-    public Object[] wpnb { get; set; }
+    public Object[] rkap_oil { get; set; }
+    public Object[] wpnb_oil { get; set; }
+    public Object[] rkap_gas { get; set; }
+    public Object[] wpnb_gas { get; set; }
   }
 
   public class ListProduction

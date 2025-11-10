@@ -306,8 +306,10 @@ namespace ssc.Areas.PE.Models
                .Include(t => t.sgt_fig)
                .Include(t => t.sbr_fig)
                .Include(t => t.bd_fig)
-               .Include(t => t.rkap)
-               .Include(t => t.wpnb);
+               .Include(t => t.rkap_oil)
+               .Include(t => t.wpnb_oil)
+               .Include(t => t.rkap_gas)
+               .Include(t => t.wpnb_gas);
 
 
             _logical = new string[]{
@@ -317,25 +319,28 @@ namespace ssc.Areas.PE.Models
 
         // public static Daily CalculateFields(Daily daily)
         // {
-        //     DateTime? sensor_date = _sensor.Find(t => t.well == daily.well && t.date <= daily.date && t.pi != null)
-        //         .Project<Sensor>(_fields_sensor).ToList()?.Select(u => u.date).DefaultIfEmpty().Max() ?? null;
+        // //     DateTime? sensor_date = _sensor.Find(t => t.well == daily.well && t.date <= daily.date && t.pi != null)
+        // //         .Project<Sensor>(_fields_sensor).ToList()?.Select(u => u.date).DefaultIfEmpty().Max() ?? null;
 
-        //     DateTime? sonolog_cdfl_date = _sonolog.Find(t => t.well == daily.well && t.date <= daily.date && t.cdfl != null)
-        //         .Project<Sonolog>(_fields_sonolog).ToList()?.Select(u => u.date).DefaultIfEmpty().Max() ?? null;
+        // DateTime? sonolog_dfl_date = _sonolog.Find(t => t.well == daily.well && t.date <= daily.date && t.dfl != null)
+        //     .Project<Sonolog>(_fields_sonolog).ToList()?.Select(u => u.date).DefaultIfEmpty().Max() ?? null;
 
-        //     DateTime? sonolog_sfl_date = _sonolog.Find(t => t.well == daily.well && t.date <= daily.date && t.sfl != null)
-        //         .Project<Sonolog>(_fields_sonolog).ToList()?.Select(u => u.date).DefaultIfEmpty().Max() ?? null;
+        // DateTime? sonolog_sfl_date = _sonolog.Find(t => t.well == daily.well && t.date <= daily.date && t.sfl != null)
+        //     .Project<Sonolog>(_fields_sonolog).ToList()?.Select(u => u.date).DefaultIfEmpty().Max() ?? null;
 
-        //     DateTime? sonolog_date;
+        //     // DateTime? sonolog_date;
 
-        //     decimal? pi = _sensor.Find(t => t.well == daily.well && t.date == sensor_date && t.pi != null).FirstOrDefault()?.pi;
-        //     decimal? sgmix = daily.last_prod_wc / 100 * (decimal)1.01 + (1 - daily.last_prod_wc / 100) * (decimal)0.878;
+        // //     decimal? pi = _sensor.Find(t => t.well == daily.well && t.date == sensor_date && t.pi != null).FirstOrDefault()?.pi;
+        // //     decimal? sgmix = daily.last_prod_wc / 100 * (decimal)1.01 + (1 - daily.last_prod_wc / 100) * (decimal)0.878;
 
-        //     decimal? cdfl = _sonolog.Find(t => t.well == daily.well && t.date == sonolog_cdfl_date)
-        //         .Project<Sonolog>(_fields_sonolog).ToList()?.Average(i => i.cdfl);
+        // decimal? dfl = _sonolog.Find(t => t.well == daily.well && t.date == sonolog_dfl_date)
+        // .Project<Sonolog>(_fields_sonolog).ToList()?.Average(i => i.dfl);
 
-        //     decimal? sfl = _sonolog.Find(t => t.well == daily.well && t.date == sonolog_sfl_date)
-        //         .Project<Sonolog>(_fields_sonolog).ToList()?.Average(i => i.sfl);
+        // decimal? sfl = _sonolog.Find(t => t.well == daily.well && t.date == sonolog_sfl_date)
+        // .Project<Sonolog>(_fields_sonolog).ToList()?.Average(i => i.sfl);
+
+        // decimal? wc = _daily.Find(t => t.well == daily.well && t.date == daily_wc_date)
+        // .Project<Daily>(_fields_daily).ToList()?.Average(i => i.wc);
 
         //     decimal? dfl;
         //     decimal? pump_capacity;
@@ -434,6 +439,10 @@ namespace ssc.Areas.PE.Models
 
         //     decimal? pump_efficiency = (pump_capacity != 0) ? daily.last_prod_gross / pump_capacity : 0;
         //     decimal? pwf = (daily.mid - dfl) * (decimal)3.281 * sgmix * (decimal)0.433;
+        // decimal? pwf = (0.433 * daily.wc) + (0.346 * (1 - daily.wc)) * (bop - dfl);
+        // decimal? ps = (0.433 * daily.wc) + (0.346 * (1 - daily.wc)) * (bop - sfl);
+        // decimal? pi = daily.fig_curr_gross / (ps - pwf);
+        // decimal? qmax = pi * ps;
         //     decimal? ps = (daily.mid - sfl) * (decimal)3.281 * sgmix * (decimal)0.433;
         //     // decimal? sm = daily.pump_intake - dfl;
         //     decimal? qmaxth = 1 - (decimal)0.2 * pwf / ps - (decimal)0.8 * (pwf * pwf) / (ps * ps);

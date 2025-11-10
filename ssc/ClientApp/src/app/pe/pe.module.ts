@@ -143,10 +143,12 @@ export class PeModule {
             new PanelSubItem("Daily Production", "pe/daily", "list", this.pePermission.passPermission("pe/daily")),
             new PanelSubItem("Sonolog", "pe/sonolog", "graphic_eq", this.pePermission.passPermission("pe/sonolog")),
             //new PanelSubItem("Sonolog Add", "pe/sonolog/add", "playlist_add", this.pePermission.passPermission("pe/sonolog/add")),
-			      new PanelSubItem("Downhole Sensor", "pe/sensor", "sensors", this.pePermission.passPermission("pe/sensor")),
+			      new PanelSubItem("BHP", "pe/sensor", "sensors", this.pePermission.passPermission("pe/sensor")),
             //new PanelSubItem("Sensor Add", "pe/sensor/add", "playlist_add", this.pePermission.passPermission("pe/sensor/add")),
             ]),
-        new PanelItem("iSRP PCM", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur")),
+        new PanelItem("iSRP PCM", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur"), true, [
+            // new PanelSubItem("Daily Current", "pe/sumur/daily-current", this.pePermission.passPermission("pe/sumur/daily-current")),
+        ]),
         new PanelItem("Diagnostic Chart", "pe/grafik", "assessment", this.pePermission.passPermission("pe/grafik")),
         
       

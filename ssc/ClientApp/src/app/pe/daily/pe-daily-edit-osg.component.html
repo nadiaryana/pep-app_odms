@@ -31,7 +31,6 @@
               </mat-form-field>
             </mat-grid-tile>
           </mat-grid-list>
-		  
 		  <mat-grid-list cols="16">
 			<h3> Add SGT, SBR, BD</h3>
 			<mat-grid-tile [colspan]="2" [rowspan]="1">
@@ -64,30 +63,55 @@
                 <input matInput formControlName="bd_sot" type="number" placeholder="BD SOT" />
               </mat-form-field>
             </mat-grid-tile>
+			<mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="">
+                <input matInput formControlName="sgt_fig" type="number" placeholder="SGT FIG" />
+              </mat-form-field>
+            </mat-grid-tile>
+			<mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="">
+                <input matInput formControlName="sbr_fig" type="number" placeholder="SBR FIG" />
+              </mat-form-field>
+            </mat-grid-tile>
+			<mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="">
+                <input matInput formControlName="bd_fig" type="number" placeholder="BD FIG" />
+              </mat-form-field>
+            </mat-grid-tile>
           </mat-grid-list>
 		  
 		  <mat-grid-list cols="16">
 			<h3> Add RKAP & WP&B</h3>
 			<mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field class="example-full-width" appearance="">
-                <input matInput formControlName="rkap" type="number" placeholder="RKAP" />
+                <input matInput formControlName="rkap_oil" type="number" placeholder="RKAP Oil" />
               </mat-form-field>
             </mat-grid-tile>
 			<mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field class="example-full-width" appearance="">
-                <input matInput formControlName="wpnb" type="number" placeholder="WP&B" />
+                <input matInput formControlName="wpnb_oil" type="number" placeholder="WP&B Oil" />
               </mat-form-field>
             </mat-grid-tile>
-          </mat-grid-list>
-        <div class="loading-shade" *ngIf="isUploading">
-          <mat-spinner></mat-spinner>
-        </div>
-        <button mat-raised-button color="secondary" (click)="onSaveOpsog()" [disabled]="!opsogForm.valid"><mat-icon>save</mat-icon> Save</button>
-        <!--div>
-          <button mat-button matStepperNext>Next</button>
-        </div-->
-        <div class="progress-bar" *ngIf="isUploading">
-          <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
-        </div>
+			<mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="">
+                <input matInput formControlName="rkap_gas" type="number" placeholder="RKAP Gas" />
+              </mat-form-field>
+            </mat-grid-tile>
+			<mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field class="example-full-width" appearance="">
+                <input matInput formControlName="wpnb_gas" type="number" placeholder="WP&B Gas" />
+              </mat-form-field>
+            </mat-grid-tile>
+      </mat-grid-list>
+      <div class="loading-shade" *ngIf="isUploading">
+        <mat-spinner></mat-spinner>
       </div>
+      <button mat-raised-button color="secondary" (click)="onSaveOpsog()" [disabled]="!opsogForm.valid"><mat-icon>save</mat-icon> Save</button>
+      <!--div>
+        <button mat-button matStepperNext>Next</button>
+      </div-->
+      <div class="progress-bar" *ngIf="isUploading">
+        <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+      </div>
+    </div>
 </div>

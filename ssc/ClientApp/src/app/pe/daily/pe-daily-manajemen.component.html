@@ -162,21 +162,37 @@
         </th>
         <td mat-cell *matCellDef="let row" class="cell-center">{{(row.bd_fig? row.bd_fig : 0 )| number : '1.0-2'}}</td>
       </ng-container>
-	  <ng-container matColumnDef="rkap">
+	  <ng-container matColumnDef="rkap_oil">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
           <div fxLayout="row" fxLayoutAlign="center center">
-            <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP</span>
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP Oil</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.rkap? row.rkap : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.rkap_oil? row.rkap_oil : 0 )| number : '1.0-2'}}</td>
       </ng-container>
-	  <ng-container matColumnDef="wpnb">
+	  <ng-container matColumnDef="wpnb_oil">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
           <div fxLayout="row" fxLayoutAlign="center center">
-            <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B</span>
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B Oil</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.wpnb? row.wpnb : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.wpnb_oil? row.wpnb_oil : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="rkap_gas">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP Gas</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.rkap_gas? row.rkap_gas : 0 )| number : '1.0-2'}}</td>
+      </ng-container>
+	  <ng-container matColumnDef="wpnb_gas">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B Gas</span>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.wpnb_gas? row.wpnb_gas : 0 )| number : '1.0-2'}}</td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
       <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>

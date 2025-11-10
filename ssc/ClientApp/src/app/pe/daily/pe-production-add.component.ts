@@ -45,8 +45,8 @@ export class PeProductionAddComponent {
 	data: PeProduction[] = [];
 	data_error_count: number = 0;
 	
-	displayedColumns: string[] = ["info","date","sot","operation","figure",  "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap", "wpnb"];
-  	headerColumns1: string[] = ["info","date","sot","operation","figure",  "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap", "wpnb"];
+	displayedColumns: string[] = ["info","date","sot","operation","figure",  "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  	headerColumns1: string[] = ["info","date","sot","operation","figure",  "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
 
 	constructor(
 		private formBuilder: FormBuilder,

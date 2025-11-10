@@ -93,8 +93,9 @@ export class PeSonologChartComponent {
         valueDecimals: 2
       },
       marker: {
-        symbol: 'circle', // Set the default marker type for the series
-        radius: 3 // Set the default marker radius
+        enabled: false
+        // symbol: 'circle', // Set the default marker type for the series
+        // radius: 3 // Set the default marker radius
       }
 
     }, {
@@ -109,8 +110,9 @@ export class PeSonologChartComponent {
         valueDecimals: 2
       },
       marker: {
-        symbol: 'circle', // Set the default marker type for the series
-        radius: 3 // Set the default marker radius
+        enabled: false
+        // symbol: 'circle', // Set the default marker type for the series
+        // radius: 3 // Set the default marker radius
       }
 
     }, {

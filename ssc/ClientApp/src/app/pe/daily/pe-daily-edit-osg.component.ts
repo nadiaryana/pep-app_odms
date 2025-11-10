@@ -44,8 +44,8 @@ export class PeDailyEditOsgComponent implements OnInit {
   data: any[] = [];
   data_error_count: number = 0;
 
-  displayedColumns: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "rkap", "wpnb"];
-  headerColumns1: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "rkap", "wpnb"];
+  displayedColumns: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  headerColumns1: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "sgt_fig", "sbr_fig", "bd_fig", "rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -79,8 +79,13 @@ export class PeDailyEditOsgComponent implements OnInit {
         bd_sot: ['', Validators.required],
         // borderless_nkl_sot: ['', Validators.required],
         // borderless_sbj_sot: ['', Validators.required],
-        rkap: ['', Validators.required],
-        wpnb: ['', Validators.required],
+    sgt_fig: ['', Validators.required],
+    sbr_fig: ['', Validators.required],
+    bd_fig: ['', Validators.required],
+        rkap_oil: ['', Validators.required],
+        wpnb_oil: ['', Validators.required],
+        rkap_gas: ['', Validators.required],
+        wpnb_gas: ['', Validators.required],
       });
 
   ngOnInit() {
@@ -114,8 +119,15 @@ export class PeDailyEditOsgComponent implements OnInit {
         bd_sot: res.item[0].bd_sot,
         // borderless_nkl_sot: res.item[0].borderless_nkl_sot,
         // borderless_sbj_sot: res.item[0].borderless_sbj_sot,
-        rkap: res.item[0].rkap,
-        wpnb: res.item[0].wpnb
+    sgt_fig: res.item[0].sgt_fig,
+        sbr_fig: res.item[0].sbr_fig,
+        bd_fig: res.item[0].bd_fig,
+        
+        rkap_oil: res.item[0].rkap_oil,
+        wpnb_oil: res.item[0].wpnb_oil,
+        rkap_gas: res.item[0].rkap_gas,
+        wpnb_gas: res.item[0].wpnb_gas,
+
       });
     });
  }

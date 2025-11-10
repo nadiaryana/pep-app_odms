@@ -64,6 +64,9 @@ namespace ssc.Areas.PE.Controllers
                 case "well_area_performance":
                     return Data_WelPerformance(type, date, end_date, well);
 
+                case "well_off":
+                    return Data_WelPerformance(type, date, end_date, well);
+
                 case "well_performance_sonolog":
                     return Data_WelPerformance_Sonolog(type, date, end_date, well);
 
@@ -242,6 +245,19 @@ namespace ssc.Areas.PE.Controllers
                       });
 
                     return Ok(new { data = daily_area });
+
+                case "well_off":
+
+                    var daily_off = _daily.Find(r => r.date >= start && r.date <= end).
+                    Project<Daily>(_fields_daily).ToList().OrderBy(t => t.date).Select(s => new
+                    {
+                        date = TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, TimeZoneInfo.Local),
+                        well = s.well,
+                        gross = s.fig_curr_gross,
+                        log_figure = s.thp_last_fig,
+                        hours = s.prod_hours,
+                    });
+                    return Ok(new { data = daily_off });
 
                 case "well_performance_weekly":
 

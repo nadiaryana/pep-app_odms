@@ -84,20 +84,31 @@ export class PeDashboardComponent   {
 			
 		  },
 		  series: [{
-        name: "SOT",
-        color: '#ed7d31',
-        data: [],
-        zIndex: 1
-		  },{
         name: "Operation",
         color: '#5b9bd5',
 			  data: [],
-         zIndex: 2
+		  },{
+        name: "SOT",
+        color: '#ed7d31',
+        data: [],
       },{
         name: "Figure",
         color: '#a9d18e',
         data: [],
-         zIndex: 3
+      },{
+        name: "RKAP Oil",
+        color: '#313647',
+        data: [],
+        marker: {
+          enabled: false
+        }
+      },{
+        name: "WP&B Oil",
+        color: '#FF8F8F',
+        data: [],
+        marker: {
+          enabled: false
+        }
       }]
 	}
 
@@ -141,7 +152,7 @@ export class PeDashboardComponent   {
       pointFormat: "{series.name}: <b>{point.y:.2f}</b>"
     },
     legend: {
-      reversed: true
+      reversed: false
     },
     plotOptions: {
       
@@ -157,6 +168,22 @@ export class PeDashboardComponent   {
         color: '#e6e600',
         data: []
       },
+      {
+        name: "RKAP Gas",
+        color: '#313647',
+        data: [],
+        marker: {
+          enabled: false
+        }
+      },
+      {
+        name: "WP&B Gas",
+        color: '#FF8F8F',
+        data: [],
+        marker: {
+          enabled: false
+        }
+      }
     ]
   };
   
@@ -441,6 +468,78 @@ export class PeDashboardComponent   {
     },
     series: []
   }
+
+  @ViewChild('off_well_chart', { static: true }) public off_well_chart: ElementRef;
+  
+  off_well_chart_options: object = {
+    chart: {
+      type: 'spline',
+      style: {
+        fontFamily: 'Roboto, Helvetica Neue, sans-serif'
+      }
+    },
+    title: {
+      text: 'OFF Well'
+    },
+    subtitle: {
+      text: "OFF Well"
+    },
+    time: {
+      timezoneOffset: -8 * 60 // untuk GMT+8 (menggeser waktu agar tidak muncul GMT)
+    },
+    xAxis: {
+      categories: [],
+      labels: {
+        formatter: function () {
+          return Highcharts.dateFormat('%e %b %Y', this.value); 
+        },
+        autoRotation: [-45],
+        style: {
+          fontSize: 10
+        }
+      }
+    },
+    yAxis: {
+     title: {
+        text: 'Well',
+        style: {
+          color: '#666666'
+        }
+      },
+      tickInterval: 1
+    },
+    tooltip: {
+      useHTML: true,
+      useUTC : false,
+      headerFormat: '{point.x:%d %b %Y}',
+      pointFormat: "</br>{series.name}: <b>{point.y}</b>"
+    },
+    plotOptions: {
+      series: {
+        dataLabels: {
+          enabled: true,
+          y: -10,
+          format: '{point.y}',
+          style: {
+            fontWeight: 'small'
+          },
+        },
+        marker: {
+          lineWidth: 5,
+          lineColor: null // inherit from series
+        },
+      }
+      
+    },
+    legend: {
+      enabled: false,
+    },
+    series: [{
+      name: "Active Well",
+      color: '#008040',
+      data: []
+    }]
+  };
   
   @ViewChild('production_chart_el', { static: true }) public production_chart_el: ElementRef;
   	production_chart_options:object = {
@@ -683,13 +782,13 @@ export class PeDashboardComponent   {
 		data: []
 	  },{
 		  name: "RKAP",
-		  type: 'spline',
+		  type: 'line',
 		  color: '#151515',
 		  data: []
 	  }
 	  ,{
 		name: "WP&B",
-		type: 'spline',
+		type: 'line',
 		color: '#77B0AA',
 		data: []
 	  }
@@ -919,8 +1018,12 @@ export class PeDashboardComponent   {
       var series_operation = [];
       var series_sot = [];
       var series_figure = [];
+      var series_rkap_oil = [];
+      var series_wpnb_oil = [];
       var series_gas = [];
       var series_gas_sales = [];
+      var series_rkap_gas = [];
+      var series_wpnb_gas = [];
 
       res["items"].map(d => {
         console.log("this" + d);
@@ -933,8 +1036,13 @@ export class PeDashboardComponent   {
         series_operation.push({ name: dt, y: d.operation });
         series_sot.push({ name: dt, y: d.sot });
         series_figure.push({ name: dt, y: d.figure });
+        series_rkap_oil.push({ name: dt, y: d.rkap_oil });
+        series_wpnb_oil.push({ name: dt, y: d.wpnb_oil });
         series_gas.push({ name: dt, y: d.gas });
         series_gas_sales.push({ name: dt, y: d.gas_sales });
+        series_rkap_gas.push({ name: dt, y: d.rkap_gas });
+        series_wpnb_gas.push({ name: dt, y: d.wpnb_gas });
+
         console.log(this.dateControl.value.toLocaleDateString("id-ID"));
         console.log(new Date(d.date).toLocaleDateString("id-ID"));
 
@@ -961,6 +1069,8 @@ export class PeDashboardComponent   {
       this.oil_chart_options["series"][0]["data"] = series_operation;
       this.oil_chart_options["series"][1]["data"] = series_sot;
       this.oil_chart_options["series"][2]["data"] = series_figure;
+      this.oil_chart_options["series"][3]["data"] = series_rkap_oil;
+      this.oil_chart_options["series"][4]["data"] = series_wpnb_oil;
       Highcharts.chart(this.oil_chart_el.nativeElement, this.oil_chart_options);
 
 
@@ -969,6 +1079,8 @@ export class PeDashboardComponent   {
       this.gas_chart_options["xAxis"]["categories"] = categories;
       this.gas_chart_options["series"][0]["data"] = series_gas;
       this.gas_chart_options["series"][1]["data"] = series_gas_sales;
+      this.gas_chart_options["series"][2]["data"] = series_rkap_gas;
+      this.gas_chart_options["series"][3]["data"] = series_wpnb_gas;
       Highcharts.chart(this.gas_chart_el.nativeElement, this.gas_chart_options);
 
 
@@ -1058,6 +1170,67 @@ export class PeDashboardComponent   {
 	  console.log("Tgl Berapa ini: "+active_well_date);
 	  console.log("Ini apalagi: "+act_well_series_data);
 	  
+    }, error => {
+
+    }, () => {
+
+    });
+  }
+  
+  refresh_WellOff() {
+    this.http.get('/api/pe/data', { params: { type: "well_off", date: this.dateControl2.value.toISOString(), end_date: this.dateControl3.value.toISOString() } }).subscribe(res => {
+    
+      var series_data = [];
+      res["data"].map(function (d) {
+        d.count < 10 ? series_data.push({ name: d.status, y: d.count, dataLabels: { distance: 10 } }) : series_data.push({ name: d.status, y: d.count })
+		console.log(d.status+" : "+d.count);
+      });
+	  
+      this.wellstat_chart_options["subtitle"]["text"] = "( " +  this.dateControl3.value.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" }) + " )";
+      this.wellstat_chart_options["series"][0]["data"] = series_data;
+      Highcharts.chart(this.wellstat_chart_el.nativeElement, this.wellstat_chart_options);
+      
+	  
+	  //console.log("Nilai2: "+[series_data]);
+	  
+      
+	  var act_well_series_data = [];
+      var date_category = [];
+      res["data_active_well"].map(function (daw) {
+        console.log(new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate()));
+        var xdt = new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate() + 1);
+        //var dt = [xdt.getDate(), xdt.getMonth() + 1, xdt.getFullYear().toString().substr(-2)].join("/");
+        date_category.push(xdt);
+		//console.log("Ini apalagiii: "+date_category.push(xdt));
+        act_well_series_data.push(Math.round(daw.count));
+      });
+	  
+	  var length = act_well_series_data.length;
+	  var active_well = 0;
+	  var active_well_date = "";
+	  
+	  for(var x = 0; x < length ; x++){
+		active_well = act_well_series_data[length-1];
+		active_well_date = date_category[length-2];
+	  }
+	  
+	  // this.active_wells_count = res["active_wells_count"];
+	  this.active_wells_count = active_well;
+	  
+      // this.dateActiveWell = "( " +  active_well_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" }) + " )";
+      this.dateActiveWell = formatDate(active_well_date, "dd MMM yyyy", "en-US");
+      this.active_well_chart_options["subtitle"]["text"] = "( " + this.dateControl2.value.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" }) + " - " + this.dateControl3.value.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" }) + " )";
+      
+      this.active_well_chart_options["xAxis"]["categories"] = date_category;
+      this.active_well_chart_options["series"][0]["data"] = act_well_series_data;
+      Highcharts.chart(this.active_well_chart_el.nativeElement, this.active_well_chart_options);
+	
+      this.isLoadingProduction = false;
+      console.log("well aktif: "+active_well);
+      // console.log("well tdk aktif: "+res["inactive_wells_count"]);
+      console.log("Tgl Berapa ini: "+active_well_date);
+      console.log("Ini apalagi: "+act_well_series_data);
+      
     }, error => {
 
     }, () => {

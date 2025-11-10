@@ -148,6 +148,8 @@ namespace ssc.Areas.PE.Controllers
             {
                 case "well_status":
                     return Data_WellStatus();
+                case "well_off":
+                    return Data_WellOff();
                 default:
                     return Ok(new { });
             }
@@ -168,62 +170,25 @@ namespace ssc.Areas.PE.Controllers
             });
             return Ok(new { data = res });
         }
+        private ActionResult Data_WellOff()
+        {
+            var res = _rows.Find(
+                r => r.date == DateTime.Parse("2019-09-25") && r.ls_method.Length > 0
+            ).Project<Daily>(_fields).ToList().GroupBy(r => new
+            {
+                //name = r.art_lift_type?.Substring(0, 1).ToUpper()
+                name = status.FirstOrDefault(s => s.Value.Contains(r.ls_method?.Substring(0, 1).ToUpper())).Key
+            }).Select(s => new
+            {
+                status = s.Key.name,
+                total = s.Count()
+            });
+            return Ok(new { data = res });
+        }
 
-        //  
-        // [HttpGet("dynamic")]
-        // public async Task<IActionResult> GetDynamicChart([FromQuery] string x, [FromQuery] string y)
-        // {
-        //     if (string.IsNullOrEmpty(x) || string.IsNullOrEmpty(y))
-        //         return BadRequest("x dan y parameter harus diisi");
-
-        //     // Ambil data dari MongoDB hanya field yang dipilih
-        //     var projection = Builders<Daily>.Projection
-        //         .Include(x) // field X
-        //         .Include(y); // field Y
-
-        //     var data = await _rows.Find(_ => true)
-        //                           .Project<Dictionary<string, object>>(projection)
-        //                           .ToListAsync();
-
-        //     // Convert data jadi array untuk chart
-        //     var categories = new List<string>(); // untuk X (date atau lainnya)
-        //     var values = new List<double>();     // untuk Y
-
-        //     foreach (var doc in data)
-        //     {
-        //         if (doc.ContainsKey(x) && doc.ContainsKey(y))
-        //         {
-        //             string xVal = doc[x]?.ToString() ?? "";
-        //             double yVal;
-
-        //             // parsing nilai Y
-        //             if (double.TryParse(doc[y]?.ToString(), out yVal))
-        //             {
-        //                 categories.Add(xVal);
-        //                 values.Add(yVal);
-        //             }
-        //         }
-        //     }
-
-        //     // Bentuk Highcharts options
-        //     var options = new
-        //     {
-        //         chart = new { type = "line" },
-        //         title = new { text = $"Chart {y} vs {x}" },
-        //         xAxis = new { categories = categories },
-        //         yAxis = new { title = new { text = y } },
-        //         series = new dynamic[]
-        //         {
-        //     new {
-        //         name = y, 
-        //         data = values
-        //     }
-        //         }
-        //     };
-        //     return Ok(new { options });
-        // }
-        [HttpGet("dynamic")]
-        public async Task<IActionResult> GetDynamicChart([FromQuery] string y1, [FromQuery] string y2, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        [HttpGet("DynamicChart")]
+        public async Task<IActionResult> GetDynamicChart([FromQuery] string y1, [FromQuery] string y2,
+        [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             if (string.IsNullOrEmpty(y1) || string.IsNullOrEmpty(y2))
                 return BadRequest("y1 dan y2 parameter harus diisi");
@@ -231,76 +196,122 @@ namespace ssc.Areas.PE.Controllers
             if (endDate < startDate)
                 return BadRequest("endDate harus sama atau setelah startDate");
 
-            // Ambil data dari MongoDB hanya field yang dipilih (sertakan date)
             var projection = Builders<Daily>.Projection
                 .Include("date")
-                .Include(y1) // field Y1
-                .Include(y2); // field Y2
+                .Include(y1)
+                .Include(y2);
 
             var data = await _rows.Find(r => r.date >= startDate && r.date <= endDate)
-                                .Project<Dictionary<string, object>>(projection)
-                                .ToListAsync();
+                                  .Project<Dictionary<string, object>>(projection)
+                                  .ToListAsync();
 
             var series1 = new List<object[]>();
             var series2 = new List<object[]>();
 
-            // Convert data jadi array untuk chart
-            // var categories = new List<string>(); // untuk X (date atau lainnya)
-            // var values = new List<double>();     // untuk Y
-
+            int i = 0;
             foreach (var doc in data)
             {
                 if (doc.TryGetValue("date", out var val) && DateTime.TryParse(val?.ToString(), out DateTime dateVal))
                 {
+                    // tambahkan offset menit supaya timestamp beda
+                    dateVal = dateVal.AddMinutes(i);
+                    i++;
+
                     var utcDate = DateTime.SpecifyKind(dateVal, DateTimeKind.Utc);
                     long unixTime = new DateTimeOffset(utcDate).ToUnixTimeMilliseconds();
 
                     if (doc.TryGetValue(y1, out var v1) && double.TryParse(v1?.ToString(), out double y1Val))
-                    {
                         series1.Add(new object[] { unixTime, y1Val });
-                    }
 
                     if (doc.TryGetValue(y2, out var v2) && double.TryParse(v2?.ToString(), out double y2Val))
-                    {
                         series2.Add(new object[] { unixTime, y2Val });
-                    }
                 }
-            }
 
-            // Bentuk Highcharts options
-            var options = new
-            {
-                chart = new { type = "column" },
-                title = new { text = $"{y1} & {y2}" },
-                xAxis = new { type = "datetime" },
-                yAxis = new object[]
-                {
-                    new {
-                        title = new { text = y1 },
-                        opposite = false // kiri
-                    },
-                    new {
-                        title = new { text = y2 },
-                        opposite = true // kanan
-                    }
-                },
-                series = new object[]
-                {
-                    new {
-                        type = "line",
-                        name = y1,
-                        data = series1,
-                        yAxis = 0
-                    },
-                    new {
-                        type = "line",
-                        name = y2,
-                        data = series2,
-                        yAxis = 1
-                    }
-                }
-            };
-            return Ok(new { options });
+                series1 = series1.OrderBy(a => a[0]).ToList();
+                series2 = series2.OrderBy(a => a[0]).ToList();
+            }
+            return Ok(new { y1, y2, series1, series2 });
+
+            //     public async Task<IActionResult> GetDynamicChart([FromQuery] string y1, [FromQuery] string y2, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+            //     {
+            //         if (string.IsNullOrEmpty(y1) || string.IsNullOrEmpty(y2))
+            //             return BadRequest("y1 dan y2 parameter harus diisi");
+
+            //         if (endDate < startDate)
+            //             return BadRequest("endDate harus sama atau setelah startDate");
+
+            //         // Ambil data dari MongoDB hanya field yang dipilih (sertakan date)
+            //         var projection = Builders<Daily>.Projection
+            //             .Include("date")
+            //             .Include(y1) // field Y1
+            //             .Include(y2); // field Y2
+
+            //         var data = await _rows.Find(r => r.date >= startDate && r.date <= endDate)
+            //                             .Project<Dictionary<string, object>>(projection)
+            //                             .ToListAsync();
+
+            //         var series1 = new List<object[]>();
+            //         var series2 = new List<object[]>();
+
+            //         // Convert data jadi array untuk chart
+            //         // var categories = new List<string>(); // untuk X (date atau lainnya)
+            //         // var values = new List<double>();     // untuk Y
+
+            //         foreach (var doc in data)
+            //         {
+            //             if (doc.TryGetValue("date", out var val) && DateTime.TryParse(val?.ToString(), out DateTime dateVal))
+            //             {
+            //                 var utcDate = DateTime.SpecifyKind(dateVal, DateTimeKind.Utc);
+            //                 long unixTime = new DateTimeOffset(utcDate).ToUnixTimeMilliseconds();
+
+            //                 if (doc.TryGetValue(y1, out var v1) && double.TryParse(v1?.ToString(), out double y1Val))
+            //                 {
+            //                     series1.Add(new object[] { unixTime, y1Val });
+            //                 }
+
+            //                 if (doc.TryGetValue(y2, out var v2) && double.TryParse(v2?.ToString(), out double y2Val))
+            //                 {
+            //                     series2.Add(new object[] { unixTime, y2Val });
+            //                 }
+            //             }
+            //         }
+
+            //         // Bentuk Highcharts options
+            //         var options = new
+            //         {
+            //             chart = new { type = "column" },
+            //             title = new { text = $"{y1} & {y2}" },
+            //             xAxis = new { type = "datetime" },
+            //             yAxis = new object[]
+            //             {
+            //                 new {
+            //                     title = new { text = y1 },
+            //                     opposite = false // kiri
+            //                 },
+            //                 new {
+            //                     title = new { text = y2 },
+            //                     opposite = true // kanan
+            //                 }
+            //             },
+            //             series = new object[]
+            //             {
+            //                 new {
+            //                     type = "line",
+            //                     name = y1,
+            //                     data = series1,
+            //                     yAxis = 0
+            //                 },
+            //                 new {
+            //                     type = "line",
+            //                     name = y2,
+            //                     data = series2,
+            //                     yAxis = 1
+            //                 }
+            //             }
+            //         };
+            //         return Ok(new { options });
+            //     }
+            // }
         }
     }
 }

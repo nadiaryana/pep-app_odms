@@ -11,6 +11,19 @@ mat-card {
   flex-direction: column;
 }
 
+.container-content {
+  width: 100%;
+}
+
+.chart-card {
+  width: 100%;
+  display: block;
+}
+
+.per_area_chart, .per_area_chart_off {
+  width: 100%;
+  height: 380px;
+}
 mat-progress-bar {
   width: 332px;
 }

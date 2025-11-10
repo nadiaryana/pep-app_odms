@@ -68,8 +68,10 @@ namespace ssc.Areas.PE.Controllers
             Builders<Production>.Filter.Regex(t => t.sgt_fig, new BsonRegularExpression(filter, "i")) |
             Builders<Production>.Filter.Regex(t => t.sbr_fig, new BsonRegularExpression(filter, "i")) |
             Builders<Production>.Filter.Regex(t => t.bd_fig, new BsonRegularExpression(filter, "i")) |
-            Builders<Production>.Filter.Regex(t => t.rkap, new BsonRegularExpression(filter, "i")) |
-            Builders<Production>.Filter.Regex(t => t.wpnb, new BsonRegularExpression(filter, "i"));
+            Builders<Production>.Filter.Regex(t => t.rkap_oil, new BsonRegularExpression(filter, "i")) |
+            Builders<Production>.Filter.Regex(t => t.wpnb_oil, new BsonRegularExpression(filter, "i")) |
+            Builders<Production>.Filter.Regex(t => t.rkap_gas, new BsonRegularExpression(filter, "i")) |
+            Builders<Production>.Filter.Regex(t => t.wpnb_gas, new BsonRegularExpression(filter, "i"));
       }
 
       if (!String.IsNullOrWhiteSpace(columnfilter))
@@ -92,8 +94,10 @@ namespace ssc.Areas.PE.Controllers
         if (colfilter.sgt_fig?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.sgt_fig.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.sgt_fig, Convert.ToDecimal(c))));
         if (colfilter.sbr_fig?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.sbr_fig.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.sbr_fig, Convert.ToDecimal(c))));
         if (colfilter.bd_fig?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.bd_fig.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.bd_fig, Convert.ToDecimal(c))));
-        if (colfilter.rkap?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.rkap.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.rkap, Convert.ToDecimal(c))));
-        if (colfilter.wpnb?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.wpnb.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.wpnb, Convert.ToDecimal(c))));
+        if (colfilter.rkap_oil?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.rkap_oil.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.rkap_oil, Convert.ToDecimal(c))));
+        if (colfilter.wpnb_oil?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.wpnb_oil.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.wpnb_oil, Convert.ToDecimal(c))));
+        if (colfilter.rkap_gas?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.rkap_gas.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.rkap_gas, Convert.ToDecimal(c))));
+        if (colfilter.wpnb_gas?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Production>.Filter.Or(colfilter.wpnb_gas.ToList().Where(c => !(c is JObject)).Select(c => Builders<Production>.Filter.Eq(t => t.wpnb_gas, Convert.ToDecimal(c))));
 
         foreach (string log in DailyCommon._logical)
         {
@@ -112,8 +116,10 @@ namespace ssc.Areas.PE.Controllers
           if (colfilter.sgt_fig?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sgt_fig.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sgt_fig\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
           if (colfilter.sbr_fig?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sbr_fig.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sbr_fig\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
           if (colfilter.bd_fig?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.bd_fig.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$bd_fig\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-          if (colfilter.rkap?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.rkap.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$rkap\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-          if (colfilter.wpnb?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wpnb.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$wpnb\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+          if (colfilter.rkap_oil?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.rkap_oil.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$rkap_oil\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+          if (colfilter.wpnb_oil?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wpnb_oil.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$wpnb_oil\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+          if (colfilter.rkap_gas?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.rkap_gas.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$rkap_gas\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+          if (colfilter.wpnb_gas?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wpnb_gas.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$wpnb_gas\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
         }
 
         xfilter = xfilter & xcolfilter;
@@ -143,8 +149,10 @@ namespace ssc.Areas.PE.Controllers
         case "sgt_fig": _items = (order == "asc") ? _items.SortBy(t => t.sgt_fig) : _items.SortByDescending(t => t.sgt_fig); break;
         case "sbr_fig": _items = (order == "asc") ? _items.SortBy(t => t.sbr_fig) : _items.SortByDescending(t => t.sbr_fig); break;
         case "bd_fig": _items = (order == "asc") ? _items.SortBy(t => t.bd_fig) : _items.SortByDescending(t => t.bd_fig); break;
-        case "rkap": _items = (order == "asc") ? _items.SortBy(t => t.rkap) : _items.SortByDescending(t => t.rkap); break;
-        case "wpnb": _items = (order == "asc") ? _items.SortBy(t => t.wpnb) : _items.SortByDescending(t => t.wpnb); break;
+        case "rkap_oil": _items = (order == "asc") ? _items.SortBy(t => t.rkap_oil) : _items.SortByDescending(t => t.rkap_oil); break;
+        case "wpnb_oil": _items = (order == "asc") ? _items.SortBy(t => t.wpnb_oil) : _items.SortByDescending(t => t.wpnb_oil); break;
+        case "rkap_gas": _items = (order == "asc") ? _items.SortBy(t => t.rkap_gas) : _items.SortByDescending(t => t.rkap_gas); break;
+        case "wpnb_gas": _items = (order == "asc") ? _items.SortBy(t => t.wpnb_gas) : _items.SortByDescending(t => t.wpnb_gas); break;
       }
 
       switch (mode)
@@ -238,16 +246,21 @@ namespace ssc.Areas.PE.Controllers
       ws.Cells[1, 15].Value = "BD Figure";
       ws.Cells[2, 15].Value = "bopd";
 
-      ws.Cells[1, 16].Value = "RKAP";
+      ws.Cells[1, 16].Value = "RKAP Oil";
       ws.Cells[2, 16].Value = "";
 
-      ws.Cells[1, 17].Value = "WP&B";
+      ws.Cells[1, 17].Value = "WP&B Oil";
       ws.Cells[2, 17].Value = "";
 
+      ws.Cells[1, 18].Value = "RKAP Gas";
+      ws.Cells[2, 18].Value = "";
 
-      ws.Cells[1, 1, 1, 17].Style.Font.Bold = true;
-      ws.Cells[1, 1, 2, 17].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-      ws.Cells[1, 1, 2, 17].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+      ws.Cells[1, 19].Value = "WP&B Gas";
+      ws.Cells[2, 19].Value = "";
+
+      ws.Cells[1, 1, 1, 19].Style.Font.Bold = true;
+      ws.Cells[1, 1, 2, 19].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+      ws.Cells[1, 1, 2, 19].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
       for (int c = 1; c <= 27; c++)
       {
@@ -273,14 +286,16 @@ namespace ssc.Areas.PE.Controllers
         ws.Cells[3 + i, 13].Value = t.sgt_fig;
         ws.Cells[3 + i, 14].Value = t.sbr_fig;
         ws.Cells[3 + i, 15].Value = t.bd_fig;
-        ws.Cells[3 + i, 16].Value = t.rkap;
-        ws.Cells[3 + i, 17].Value = t.wpnb;
+        ws.Cells[3 + i, 16].Value = t.rkap_oil;
+        ws.Cells[3 + i, 17].Value = t.wpnb_oil;
+        ws.Cells[3 + i, 18].Value = t.rkap_gas;
+        ws.Cells[3 + i, 19].Value = t.wpnb_gas;
 
       }
 
-      //ws.Cells[3, 6, 3 + items.Count(), 18].Style.Numberformat.Format = "#,###";
-      ws.Cells[3, 17, 3 + items.Count(), 17].Style.Numberformat.Format = "#,###";
-      ws.Cells[3, 17, 3 + items.Count(), 17].Style.Numberformat.Format = "#,###.0";
+      //ws.Cells[3, 6, 3 + items.Count(), 19].Style.Numberformat.Format = "#,###";
+      ws.Cells[3, 19, 3 + items.Count(), 19].Style.Numberformat.Format = "#,###";
+      ws.Cells[3, 19, 3 + items.Count(), 19].Style.Numberformat.Format = "#,###.0";
 
       MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
       memoryStream.Position = 0;
@@ -309,10 +324,14 @@ namespace ssc.Areas.PE.Controllers
             .Set(t => t.sgt_fig, item.sgt_fig)
             .Set(t => t.sbr_fig, item.sbr_fig)
             .Set(t => t.bd_fig, item.bd_fig)
-            .Set(t => t.rkap, item.rkap)
-            .Set(t => t.wpnb, item.wpnb);
+            .Set(t => t.rkap_oil, item.rkap_oil)
+            .Set(t => t.wpnb_oil, item.wpnb_oil)
+            .Set(t => t.rkap_gas, item.rkap_gas)
+            .Set(t => t.wpnb_gas, item.wpnb_gas);
+        if (!item.date.HasValue) continue;
+        var targetDate = item.date.Value.ToUniversalTime();
         UpdateResult res = _production.UpdateOne(
-            Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToUniversalTime()),
+            Builders<Production>.Filter.Eq(t => t.date, targetDate),
             update, new UpdateOptions() { IsUpsert = true });
 
       }
@@ -425,8 +444,10 @@ namespace ssc.Areas.PE.Controllers
                 new { key = "sgt_fig", col = 13 },
                 new { key = "sbr_fig", col = 14 },
                 new { key = "bd_fig", col = 15 },
-                new { key = "rkap", col = 16 },
-                new { key = "wpnb", col = 17 },
+                new { key = "rkap_oil", col = 16 },
+                new { key = "wpnb_oil", col = 17 },
+                new { key = "rkap_gas", col = 18 },
+                new { key = "wpnb_gas", col = 19 },
             };
 
           foreach (var mapping in mappings)
@@ -628,8 +649,10 @@ namespace ssc.Areas.PE.Controllers
             .Set(t => t.sgt_fig, item.sgt_fig)
             .Set(t => t.sbr_fig, item.sbr_fig)
             .Set(t => t.bd_fig, item.bd_fig)
-            .Set(t => t.rkap, item.rkap)
-            .Set(t => t.wpnb, item.wpnb)
+            .Set(t => t.rkap_oil, item.rkap_oil)
+            .Set(t => t.wpnb_oil, item.wpnb_oil)
+            .Set(t => t.rkap_gas, item.rkap_gas)
+            .Set(t => t.wpnb_gas, item.wpnb_gas)
             .Set(t => t.figure, item.figure)
             .Set(t => t.updated_by, User.Identity.Name)
             .Set(t => t.updated_date, DateTime.Now)

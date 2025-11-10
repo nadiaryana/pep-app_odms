@@ -7,6 +7,7 @@ import { merge, Observable, of as observableOf, forkJoin } from 'rxjs';
 import { catchError, map, startWith, switchMap, debounceTime, take, mergeAll } from 'rxjs/operators';
 import { Chart } from 'angular-highcharts';
 import * as Highcharts from 'highcharts';
+
 // import { annotations } from 'highcharts/modules/annotations';
 
 import { MatSnackBar } from '@angular/material';
@@ -170,6 +171,74 @@ export class PeDailyPerAreaChartComponent {
     }
   }
 
+  per_area_chart_off_options: any = {
+	chart: {
+		zoomType: 'x',
+		style: {
+		fontFamily: 'Roboto, Helvetica Neue, sans-serif'
+		}
+	},
+	title: { text: null },
+	xAxis: [{
+		categories: [],
+		crosshair: true
+	}],
+	yAxis: [{
+		title: {
+		text: 'Sum Last Figure',
+		style: { color: '#666666' }
+		},
+		labels: { format: '{value}' }
+	}, {
+		title: {
+		text: 'Count Condition',
+		style: { color: '#666666' }
+		},
+		labels: { format: '{value}' },
+		opposite: true
+	}],
+	tooltip: { shared: true },
+	legend: {
+		layout: 'horizontal',
+		align: 'center',
+		verticalAlign: 'top',
+		backgroundColor: 'rgba(255,255,255,0.25)'
+	},
+	plotOptions: {
+      column: {
+        dataLabels: {
+          enabled: true,
+          format: '{point.y:.0f}',
+          rotation: 0,
+          x: 0,
+          y: -2,
+          style: {
+            fontWeight: 'normal'
+          }
+        }
+      },
+      series: {
+        borderRadius: 10,
+      },
+     
+    },
+	series: [
+		{
+		name: 'SUM',
+		type: 'column',
+		yAxis: 0,
+		data: []
+		},
+		{
+		name: 'COUNT',
+		type: 'line',
+		yAxis: 1,
+		data: []
+		}
+	]
+}
+
+
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
   start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 4)));
   start_dateInput = this.start_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
@@ -189,6 +258,9 @@ export class PeDailyPerAreaChartComponent {
     private xfilterService: xFilterService,
   ) { }
 
+  @ViewChild('per_area_chart_off_el', { static: true }) public per_area_chart_off_el: ElementRef;
+
+
   ngOnInit() {
 
     this.exampleDatabase = new ExampleHttpDao(this.http);
@@ -207,9 +279,11 @@ export class PeDailyPerAreaChartComponent {
 
     this.start_dateControl.valueChanges.subscribe(r => {
       this.refresh_Daily();
+	  this.refresh_Daily_Off();
     })
     this.end_dateControl.valueChanges.subscribe(r => {
       this.refresh_Daily();
+	  this.refresh_Daily_Off();
     })
   }
 
@@ -232,8 +306,9 @@ export class PeDailyPerAreaChartComponent {
       // console.log("Well Parameter: "+w);
     // }
 
-    this.http.get('/api/pe/data', { params: params }).subscribe(res => {
-	  
+	this.http.get('/api/pe/data', { params: params }).subscribe((res: any) => {
+	  console.log("resp",res.data);
+
 	  let tgl = res["data"].map(d => formatDate(d["date"], "dd-MMM-yy", "en-US"));
 	  let gross = res["data"].map(d => d["gross"]);
 	  let net = res["data"].map(d => d["net"]);
@@ -482,13 +557,7 @@ export class PeDailyPerAreaChartComponent {
 		// console.log("nilai date out: "+dt_date);
 		// console.log("nilai grss out: "+dt_grs_sbr);
 		// console.log("nilai nett out: "+dt_net_sbj);
-		
-		
-		
-		
-		
-		
-		
+
 		
 		// -- FIXX --
 		this.per_area_chart_options["xAxis"][0]["categories"] = dt_datee;
@@ -516,12 +585,9 @@ export class PeDailyPerAreaChartComponent {
 				// }
 				
 			// }
-	  
-	  
-	  
-	        
-	  
+
 		Highcharts.chart(this.per_area_chart_el.nativeElement, this.per_area_chart_options);
+
 
     }, error => {
 
@@ -529,8 +595,58 @@ export class PeDailyPerAreaChartComponent {
 
     });
   }
+  refresh_Daily_Off() {
+
+  let params = new HttpParams()
+    .append("type","well_off")
+    .append("date", this.start_dateControl.value.toISOString())
+    .append("end_date", this.end_dateControl.value.toISOString());
+
+  this.http.get('/api/pe/data', {params}).subscribe((res:any)=>{
+	console.log("resp",res.data);
+
+
+    const group:any = {};
+    res.data.forEach((x=>{
+		const d = new Date(x.date);
+		const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      
+      if(!group[key]) group[key] = { sum:0, count:0 };
+
+      if(x.log_figure != null && x.log_figure != 0){
+        group[key].sum += x.log_figure;
+      }
+
+      if(x.hours < 24 && x.gross > 0){
+        group[key].count += 1;
+      }
+
+    }));
+
+    let kategori_date:string[]=[];
+    let sumArr:number[]=[];
+    let countArr:number[]=[];
+
+    Object.keys(group).sort().forEach(k=>{
+	const d = new Date(k);
+      kategori_date.push(d.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}));
+      sumArr.push(group[k].sum);
+      countArr.push(group[k].count);
+    });
+
+    this.per_area_chart_off_options.xAxis[0].categories = kategori_date;
+    this.per_area_chart_off_options.series[0].data = sumArr;
+    this.per_area_chart_off_options.series[1].data = countArr;
+
+    Highcharts.chart(this.per_area_chart_off_el.nativeElement, this.per_area_chart_off_options);
+
+  });
 
 }
+
+
+}
+
 
 export interface PeWellApi {
   items: any[];

@@ -44,41 +44,99 @@ export class PeGrafikComponent implements OnInit {
     this.endDate = now;
     this.updateChart();
   }
+  // updateChart(): void {
+  //   // alert if startDate or endDate is empty
+  //   if (!this.startDate || !this.endDate) {
+  //     alert("Please select both start date and end date.");
+  //     return;
+  //   }
+
+  //   const params = new URLSearchParams();
+  //   // removed x parameter — only send y1, y2 and optional date range
+  //   params.set("y1", this.selectedY1);
+  //   params.set("y2", this.selectedY2);
+
+  //   const formatDate = (d?: string | Date) => {
+  //     if (!d) return null;
+  //     if (d instanceof Date) return d.toISOString();
+  //     return d;
+  //   };
+
+  //   const s = formatDate(this.startDate);
+  //   const e = formatDate(this.endDate);
+  //   if (s) params.set("startDate", s);
+  //   if (e) params.set("endDate", e);
+
+  //   const url = `/api/pe/chart/dynamic?${params.toString()}`;
+  //   this.http.get<any>(url).subscribe({
+  //     next: (res) => {
+  //       this.chartOptions = res.options;
+  //     },
+  //     error: (err) => {
+  //       // console.error("Gagal ambil data chart", err.error);
+  //       alert("Terjadi kesalahan: " + err.error);
+  //       this.chartOptions = null;
+  //     },
   updateChart(): void {
-    // alert if startDate or endDate is empty
-    if (!this.startDate || !this.endDate) {
-      alert("Please select both start date and end date.");
-      return;
-    }
-
-    const params = new URLSearchParams();
-    // removed x parameter — only send y1, y2 and optional date range
-    params.set("y1", this.selectedY1);
-    params.set("y2", this.selectedY2);
-
-    const formatDate = (d?: string | Date) => {
-      if (!d) return null;
-      if (d instanceof Date) return d.toISOString();
-      return d;
-    };
-
-    const s = formatDate(this.startDate);
-    const e = formatDate(this.endDate);
-    if (s) params.set("startDate", s);
-    if (e) params.set("endDate", e);
-
-    const url = `/api/pe/chart/dynamic?${params.toString()}`;
-    this.http.get<any>(url).subscribe({
-      next: (res) => {
-        this.chartOptions = res.options;
-      },
-      error: (err) => {
-        // console.error("Gagal ambil data chart", err.error);
-        alert("Terjadi kesalahan: " + err.error);
-        this.chartOptions = null;
-      },
-    });
+  if (!this.startDate || !this.endDate) {
+    alert("Please select both start date and end date.");
+    return;
   }
+
+  const params = new URLSearchParams();
+  params.set("y1", this.selectedY1);
+  params.set("y2", this.selectedY2);
+
+  const formatDate = (d?: string | Date) => {
+    if (!d) return null;
+    if (d instanceof Date) return d.toISOString();
+    return d;
+  };
+
+  const s = formatDate(this.startDate);
+  const e = formatDate(this.endDate);
+  if (s) params.set("startDate", s);
+  if (e) params.set("endDate", e);
+
+  const url = `/api/pe/chart/DynamicChart?${params.toString()}`;
+
+  this.http.get<any>(url).subscribe({
+    next: (res) => {
+
+      this.chartOptions = {
+        chart: { type: 'line' },
+        title: { text: `${res.y1} & ${res.y2}` },
+        xAxis: { type: 'datetime' },
+        yAxis: [{
+          title: { text: res.y1 }
+        },{
+          title: { text: res.y2 },
+          opposite: true
+        }],
+        series: [{
+          type: 'line',
+          name: res.y1,
+          data: res.series1,
+          yAxis: 0,
+          step: 'center', 
+          marker: { enabled: false }
+        },{
+          type: 'line',
+          name: res.y2,
+          data: res.series2,
+          yAxis: 1,
+          step: 'center', 
+          marker: { enabled: false }
+        }]
+      };
+
+    },
+    error: (err) => {
+      alert("Terjadi kesalahan: " + err.error);
+      this.chartOptions = null;
+    },
+  });
+}
 
   onXYChange() {
     this.updateChart();
