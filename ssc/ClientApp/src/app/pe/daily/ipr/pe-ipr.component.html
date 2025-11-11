@@ -1,30 +1,219 @@
 <!-- <p>ipr works!</p> -->
-<div class="container-top-bar top-flow" fxLayoutGap="10px">
-	
-	<mat-form-field class="field-well" floatLabel="never">
-		<!--mat-label class="select-well">Select Well</mat-label-->
-		<input matInput [(ngModel)]="well_xSelected" disabled>
-		<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
-	</mat-form-field>
+<div
+  fxLayout="row"
+  fxLayout.lt-lg="column"
+  fxLayoutGap="10px"
+  fxLayoutAlign="start stretch"
+>
+  <mat-card fxFlex="35" class="dasboard_card">
+    <mat-card-content>
+      <h3>Perforation Depth</h3>
+      <!-- Filter Form Section -->
+      <div
+        class="filter-form"
+        fxLayout="column"
+        fxLayoutGap="10px"
+        fxLayoutAlign="start start"
+        fxLayout.lt-md="column"
+      >
+        <!-- well -->
+        <mat-form-field class="field-well">
+          <mat-label>Well</mat-label>
+          <input matInput [(ngModel)]="well_xSelected" disabled />
+          <app-xfilter
+            title="Well"
+            column="well"
+            [selected]="well_xSelected"
+          ></app-xfilter>
+        </mat-form-field>
+        <!-- end well -->
 
-	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>Start Date</mat-label>
-		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
-		<input matInput [(ngModel)]="start_dateInput" disabled>
-		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
-	</mat-form-field>
-	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>End Date</mat-label>
-		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" disabled>
-		<input matInput [(ngModel)]="end_dateInput" disabled>
-		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
-	</mat-form-field>
-</div>
-<div class="container-content top-flow">
-	<div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
-		
-	</div>
-	<!-- <div #daily_chart_el class="daily_chart"></div> -->
+        <!-- well date -->
+        <mat-form-field class="filter">
+          <mat-label>Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="well_datePicker"
+            formControlName="well_dateControl"
+            (dateChange)="well_dateChange($event)"
+            disabled
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="well_datePicker"
+            [disabled]="isLoadingResults"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #well_datePicker disabled="false"></mat-datepicker>
+        </mat-form-field>
+        <!-- end well date -->
+
+        <!-- Top Perforation Depth -->
+        <mat-form-field class="filter">
+          <mat-label>Top Perforation Depth</mat-label>
+          <input
+            matInput
+            [formControl]="top_perforation_depth"
+            type="number"
+            placeholder="Top Perforation Depth"
+            (change)="perforationChange()"
+          />
+        </mat-form-field>
+
+        <!-- Bottom Perforation Depth -->
+        <mat-form-field class="filter">
+          <mat-label>Bottom Perforation Depth</mat-label>
+          <input
+            matInput
+            [formControl]="bottom_perforation_depth"
+            type="number"
+            placeholder="Bottom Perforation Depth"
+            (change)="perforationChange()"
+          />
+        </mat-form-field>
+
+        <!-- Perforation Depth Reference (disabled input; keep binding to its FormControl) -->
+        <mat-form-field class="filter">
+          <mat-label>Perforation Depth Reference</mat-label>
+          <input
+            matInput
+            [value]="perforation_depth_reference?.value"
+            type="number"
+            placeholder="Perforation Depth Reference"
+            disabled
+          />
+        </mat-form-field>
+
+        <!-- <mat-form-field class="filter">
+          <mat-label>Start Date</mat-label>
+          <input
+            matInput
+            class="input-hidden"
+            [matDatepicker]="start_datePicker"
+            [formControl]="start_dateControl"
+            (dateChange)="start_dateChange($event)"
+            disabled
+          />
+          <input matInput [(ngModel)]="start_dateInput" disabled />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="start_datePicker"
+            [disabled]="isLoadingResults"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field class="filter">
+          <mat-label>End Date</mat-label>
+          <input
+            matInput
+            class="input-hidden"
+            [matDatepicker]="end_datePicker"
+            [formControl]="end_dateControl"
+            (dateChange)="end_dateChange($event)"
+            disabled
+          />
+          <input matInput [(ngModel)]="end_dateInput" disabled />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="end_datePicker"
+            [disabled]="isLoadingResults"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
+        </mat-form-field> -->
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card fxFlex="65" class="dasboard_card" style="width: 100%">
+    <mat-card-content>
+      <h3>Daily Well Result</h3>
+
+      <ng-container *ngIf="loadingGetDailyData">
+        <div
+          style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+          "
+        >
+          <mat-spinner></mat-spinner>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="!loadingGetDailyData">
+        <ng-container
+          *ngIf="daily_data && daily_data.length > 0; else noDailyData"
+        >
+          <!-- single scrolling container (both axis) so position:sticky works -->
+          <div style="overflow: auto; width: 100%; max-height: 360px">
+            <table
+              mat-table
+              [dataSource]="daily_data"
+              class="mat-elevation-z2"
+              style="
+                width: 100%;
+                min-width: 100%;
+                table-layout: fixed;
+                border-radius: 8px;
+              "
+            >
+              <!-- Well Column -->
+              <ng-container matColumnDef="well">
+                <th mat-header-cell *matHeaderCellDef sticky>Well</th>
+                <td mat-cell *matCellDef="let element">
+                  {{
+                    element.well || element.well_name || element.wellName || "-"
+                  }}
+                </td>
+              </ng-container>
+
+              <!-- Date Column -->
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef sticky>Date</th>
+                <td mat-cell *matCellDef="let element">
+                  {{ formatDate(element.date) }}
+                </td>
+              </ng-container>
+
+              <!-- Zone -->
+              <ng-container matColumnDef="zone">
+                <th mat-header-cell *matHeaderCellDef sticky>Zone</th>
+                <td mat-cell *matCellDef="let element">
+                  {{ element.zone?.join(", ") || "-" }}
+                </td>
+              </ng-container>
+
+              <!-- Interval -->
+              <ng-container matColumnDef="interval">
+                <th mat-header-cell *matHeaderCellDef sticky>Interval</th>
+                <td mat-cell *matCellDef="let element">
+                  {{ formatInterval(element.interval) }}
+                </td>
+              </ng-container>
+
+              <tr
+                mat-header-row
+                *matHeaderRowDef="
+                  ['well', 'date', 'zone', 'interval'];
+                  sticky: true
+                "
+              ></tr>
+              <tr
+                mat-row
+                *matRowDef="
+                  let row;
+                  columns: ['well', 'date', 'zone', 'interval']
+                "
+              ></tr>
+            </table>
+          </div>
+        </ng-container>
+
+        <ng-template #noDailyData>
+          <p>No daily data available.</p>
+        </ng-template>
+      </ng-container>
+    </mat-card-content>
+  </mat-card>
 </div>

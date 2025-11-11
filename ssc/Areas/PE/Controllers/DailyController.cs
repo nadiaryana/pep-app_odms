@@ -396,6 +396,8 @@ namespace ssc.Areas.PE.Controllers
                         gross = s.fig_curr_gross,
                         net = s.fig_curr_net,
                         sm = s.sm,
+                        zone = s.zone,
+                        interval = s.interval,
                     });
 
                     return Ok(new { data = daily_area });
