@@ -333,7 +333,7 @@ export class IprComponent implements OnInit {
     let startDate = new Date(this.well_dateInput);
     // end date +1 after start date
     const endDate = new Date(startDate); // clone
-    endDate.setDate(startDate.getDate() + 1);
+    endDate.setDate(startDate.getDate());
 
     params = params
       .append("type", "well_performance_daily")
