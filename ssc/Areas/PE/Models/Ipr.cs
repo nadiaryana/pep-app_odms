@@ -55,10 +55,10 @@ namespace ssc.Areas.PE.Models
         public double? PI { get; set; }
         public double? AOFP { get; set; }
 
+        public List<IprCurvePoint> PwfCurve { get; set; }
 
         // optional notes / metadata
         public string Remark { get; set; }
-
 
         // Audit
         public string CreatedBy { get; set; }
@@ -66,5 +66,10 @@ namespace ssc.Areas.PE.Models
         public string UpdatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
+    }
+    public class IprCurvePoint
+    {
+        public double Pwf { get; set; }
+        public double LiquidRate { get; set; }
     }
 }
