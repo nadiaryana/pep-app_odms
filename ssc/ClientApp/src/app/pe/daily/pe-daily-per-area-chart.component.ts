@@ -185,13 +185,13 @@ export class PeDailyPerAreaChartComponent {
 	}],
 	yAxis: [{
 		title: {
-		text: 'Sum Last Figure',
+		text: 'Total LPO Off',
 		style: { color: '#666666' }
 		},
 		labels: { format: '{value}' }
 	}, {
 		title: {
-		text: 'Count Condition',
+		text: 'Well Off',
 		style: { color: '#666666' }
 		},
 		labels: { format: '{value}' },
@@ -224,13 +224,13 @@ export class PeDailyPerAreaChartComponent {
     },
 	series: [
 		{
-		name: 'SUM',
+		name: 'LPO',
 		type: 'column',
 		yAxis: 0,
 		data: []
 		},
 		{
-		name: 'COUNT',
+		name: 'Well',
 		type: 'line',
 		yAxis: 1,
 		data: []
@@ -595,54 +595,124 @@ export class PeDailyPerAreaChartComponent {
 
     });
   }
-  refresh_Daily_Off() {
 
-  let params = new HttpParams()
-    .append("type","well_off")
+  refresh_Daily_Off() {
+  const params = new HttpParams()
+    .append("type", "well_off")
     .append("date", this.start_dateControl.value.toISOString())
     .append("end_date", this.end_dateControl.value.toISOString());
 
-  this.http.get('/api/pe/data', {params}).subscribe((res:any)=>{
-	console.log("resp",res.data);
+  this.http.get('/api/pe/data', { params }).subscribe((res: any) => {
 
+    const group: { [k: string]: { sum: number, count: number } } = {};
 
-    const group:any = {};
-    res.data.forEach((x=>{
-		const d = new Date(x.date);
-		const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      
-      if(!group[key]) group[key] = { sum:0, count:0 };
+    (res.data || []).forEach((x: any) => {
+      const d = new Date(x.date);
+      const key = d.getFullYear() + '-' +
+                  String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(d.getDate()).padStart(2, '0');
 
-      if(x.log_figure != null && x.log_figure != 0){
-        group[key].sum += x.log_figure;
+      if (!group[key]) {
+        group[key] = { sum: 0, count: 0 };
       }
 
-      if(x.hours < 24 && x.gross > 0){
+      if (x.hours < 24 && x.gross > 0) {
+
         group[key].count += 1;
+
+        if (x.log_figure != null && x.log_figure !== 0) {
+          group[key].sum += Number(x.log_figure);
+        }
       }
+    });
 
-    }));
+    // prepare arrays untuk chart, sorted by date asc
+    const keys = Object.keys(group).sort();
+    const kategori_date: string[] = [];
+    const sumArr: number[] = [];
+    const countArr: number[] = [];
 
-    let kategori_date:string[]=[];
-    let sumArr:number[]=[];
-    let countArr:number[]=[];
+    keys.forEach(k => {
+      // format label: "DD-MMM" (mis. 08-Nov)
+      const parts = k.split('-'); // k = "YYYY-MM-DD"
+      const y = Number(parts[0]), m = Number(parts[1]) - 1, dd = Number(parts[2]);
+      const dateObj = new Date(y, m, dd);
+      kategori_date.push(dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
 
-    Object.keys(group).sort().forEach(k=>{
-	const d = new Date(k);
-      kategori_date.push(d.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}));
       sumArr.push(group[k].sum);
       countArr.push(group[k].count);
     });
 
+    // update chart options (pastikan series index sesuai: 0 = column sum, 1 = line/count)
     this.per_area_chart_off_options.xAxis[0].categories = kategori_date;
+
+    // jika series belum terdefinisi, inisialisasi struktur yang benar
+    if (!this.per_area_chart_off_options.series || this.per_area_chart_off_options.series.length < 2) {
+      this.per_area_chart_off_options.series = [
+        { name: 'SUM (condition)', type: 'column', yAxis: 0, data: [] },
+        { name: 'COUNT (condition)', type: 'line', yAxis: 1, data: [], marker: { enabled: true } }
+      ];
+    }
+
     this.per_area_chart_off_options.series[0].data = sumArr;
     this.per_area_chart_off_options.series[1].data = countArr;
 
+    // render chart ke element container
+    // Pastikan kamu punya ViewChild per_area_chart_off_el: ElementRef
     Highcharts.chart(this.per_area_chart_off_el.nativeElement, this.per_area_chart_off_options);
-
+  }, err => {
+    console.error('refresh_Daily_Off error', err);
   });
-
 }
+
+//   refresh_Daily_Off() {
+
+//   let params = new HttpParams()
+//     .append("type","well_off")
+//     .append("date", this.start_dateControl.value.toISOString())
+//     .append("end_date", this.end_dateControl.value.toISOString());
+
+//   this.http.get('/api/pe/data', {params}).subscribe((res:any)=>{
+// 	console.log("resp",res.data);
+
+
+//     const group:any = {};
+//     res.data.forEach((x=>{
+// 		const d = new Date(x.date);
+// 		const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      
+//       if(!group[key]) group[key] = { sum:0, count:0 };
+
+//       if(x.log_figure != null && x.log_figure != 0){
+//         group[key].sum += x.log_figure;
+//       }
+
+//       if(x.hours < 24 && x.gross > 0){
+//         group[key].count += 1;
+//       }
+
+//     }));
+
+//     let kategori_date:string[]=[];
+//     let sumArr:number[]=[];
+//     let countArr:number[]=[];
+
+//     Object.keys(group).sort().forEach(k=>{
+// 	const d = new Date(k);
+//       kategori_date.push(d.toLocaleDateString('en-GB', {day:'2-digit', month:'short'}));
+//       sumArr.push(group[k].sum);
+//       countArr.push(group[k].count);
+//     });
+
+//     this.per_area_chart_off_options.xAxis[0].categories = kategori_date;
+//     this.per_area_chart_off_options.series[0].data = sumArr;
+//     this.per_area_chart_off_options.series[1].data = countArr;
+
+//     Highcharts.chart(this.per_area_chart_off_el.nativeElement, this.per_area_chart_off_options);
+
+//   });
+
+// }
 
 
 }

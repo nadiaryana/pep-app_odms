@@ -10,8 +10,8 @@ import * as Highcharts from 'highcharts';
 
 import { MatSnackBar } from '@angular/material';
 
-import { TitleService } from '../../navigation/title/title.service';
-import { xFilterService } from '../../xfilter/xfilter.component';
+import { TitleService } from '../../../navigation/title/title.service';
+import { xFilterService } from '../../../xfilter/xfilter.component';
 
 
 @Component({

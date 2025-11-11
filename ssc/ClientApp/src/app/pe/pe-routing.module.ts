@@ -43,6 +43,7 @@ import { PeDailyZonechartListComponent } from './daily/pe-daily-zonechart-list.c
 import { PeDailySemilogChartComponent } from './daily/pe-daily-semilog-chart.component';
 import { PeDailyAreaChartComponent } from './daily/pe-daily-area-chart.component';
 import { PeDailyPerAreaChartComponent } from './daily/pe-daily-per-area-chart.component';
+import { IprComponent } from './daily/ipr/pe-ipr.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -75,6 +76,7 @@ const peRoutes: Routes = [
       { path: 'add', component: PeSensorAddComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
+    { path: 'ipr', component: IprComponent},
   ]},
 ]; 
 

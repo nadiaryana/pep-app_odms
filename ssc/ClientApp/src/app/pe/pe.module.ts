@@ -55,6 +55,7 @@ import { PeDailyAreaChartComponent } from './daily/pe-daily-area-chart.component
 import { PeSonologChartComponent } from './sonolog/pe-sonolog-chart.component';
 import { PeDailyPerAreaChartComponent } from './daily/pe-daily-per-area-chart.component';
 import { PeProductionAddComponent } from './daily/pe-production-add.component';
+import { IprComponent } from './daily/ipr/pe-ipr.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -90,6 +91,7 @@ import { PeProductionAddComponent } from './daily/pe-production-add.component';
   PeSonologChartComponent,
   PeDailyAreaChartComponent,
   PeDailyPerAreaChartComponent,
+  IprComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -144,6 +146,7 @@ export class PeModule {
             new PanelSubItem("Sonolog", "pe/sonolog", "graphic_eq", this.pePermission.passPermission("pe/sonolog")),
             //new PanelSubItem("Sonolog Add", "pe/sonolog/add", "playlist_add", this.pePermission.passPermission("pe/sonolog/add")),
 			      new PanelSubItem("BHP", "pe/sensor", "sensors", this.pePermission.passPermission("pe/sensor")),
+            new PanelSubItem("IPR", "pe/ipr", "show_chart"),
             //new PanelSubItem("Sensor Add", "pe/sensor/add", "playlist_add", this.pePermission.passPermission("pe/sensor/add")),
             ]),
         new PanelItem("iSRP PCM", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur"), true, [
