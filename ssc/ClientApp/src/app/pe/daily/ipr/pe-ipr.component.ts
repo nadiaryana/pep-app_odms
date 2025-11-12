@@ -40,6 +40,7 @@ import {
 } from "rxjs/operators";
 // import { ExampleHttpDao } from '../pe-daily-list.component';
 import { xFilterService } from "src/app/xfilter/xfilter.component";
+import * as Highcharts from 'highcharts';
 
 // import { PeSonolog }    from './pe-sonolog';
 // import { SnackbarService } from './../snackbar.service';
@@ -68,25 +69,25 @@ export class IprComponent implements OnInit {
 
   @ViewChild("start_datePicker", { static: true })
   start_datePicker: MatDatepicker<any>;
-  start_dateControl = new FormControl(
-    new Date(new Date().setDate(new Date().getDate() - 4))
-  );
-  start_dateInput = this.start_dateControl.value.toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-    day: "numeric",
-  });
+  start_dateControl = new FormControl(new Date("1 February 2025"));
+  start_dateInput = this.start_dateControl.value
+    ? this.start_dateControl.value.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+        day: "numeric",
+      })
+    : "";
 
   @ViewChild("end_datePicker", { static: true })
   end_datePicker: MatDatepicker<any>;
-  end_dateControl = new FormControl(
-    new Date(new Date().setDate(new Date().getDate() - 1))
-  );
-  end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-    day: "numeric",
-  });
+  end_dateControl = new FormControl(new Date("20 February 2025"));
+  end_dateInput = this.end_dateControl.value
+    ? this.end_dateControl.value.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+        day: "numeric",
+      })
+    : "";
 
   top_perforation_depth = new FormControl("");
   bottom_perforation_depth = new FormControl("");
@@ -97,9 +98,7 @@ export class IprComponent implements OnInit {
   dynamic_fluid_level = new FormControl("");
   static_botthomhole_pressure = new FormControl("");
   flowing_bottomhole_pressure = new FormControl("");
-  ps = new FormControl("");
-  pwf = new FormControl("");
-  
+
   @ViewChild("ipr_chart_el", { static: true }) public ipr_chart_el: ElementRef;
   daily_table_data = [];
   daily_table_columns: string[] = ["status", "count"];
@@ -164,6 +163,10 @@ export class IprComponent implements OnInit {
   isLoadingResults: boolean = false;
 
   daily_data: any[] = [];
+  data_pwf: any[] = [];
+  data_liquid_rate: any[] = [];
+
+  showChart: boolean = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -272,6 +275,8 @@ export class IprComponent implements OnInit {
       year: "numeric",
       day: "numeric",
     });
+
+    this.getDailyData();
   }
 
   end_dateChange(evt) {
@@ -280,6 +285,8 @@ export class IprComponent implements OnInit {
       year: "numeric",
       day: "numeric",
     });
+
+    this.getDailyData();
   }
 
   onWellSelectionChange() {
@@ -315,8 +322,12 @@ export class IprComponent implements OnInit {
   }
 
   // dailyAverages: { date: string, grossAvg: number, netAvg: number, wcAvg: string }[] = [];
-  dailyAverages: { well: string; grossAvg: number; netAvg: number; wcAvg: number }[] = [];
-
+  dailyAverages: {
+    well: string;
+    grossAvg: number;
+    netAvg: number;
+    wcAvg: number;
+  }[] = [];
 
   loadingGetDailyData: boolean = false;
   getDailyData() {
@@ -341,12 +352,12 @@ export class IprComponent implements OnInit {
     if (!this.start_dateInput || !this.end_dateInput) {
       this.snackbarService.status.next(
         new SnackbarApi(true, "Please select start and end date.", "dismiss", {
-        duration: 3000,
-      })
-    );
-    return;
+          duration: 3000,
+        })
+      );
+      return;
     }
-    
+
     this.loadingGetDailyData = true;
 
     let params = new HttpParams();
@@ -357,13 +368,13 @@ export class IprComponent implements OnInit {
     // endDate.setDate(startDate.getDate());
 
     if (!this.well_xSelected || this.well_xSelected.length === 0) {
-    this.snackbarService.status.next(
-      new SnackbarApi(true, "Please select at least one well.", "dismiss", {
-        duration: 3000,
-      })
-    );
-    return;
-  }
+      this.snackbarService.status.next(
+        new SnackbarApi(true, "Please select at least one well.", "dismiss", {
+          duration: 3000,
+        })
+      );
+      return;
+    }
 
     params = params
       .append("type", "well_performance_daily")
@@ -372,45 +383,66 @@ export class IprComponent implements OnInit {
 
     for (const w of this.well_xSelected) {
       params = params.append("well", w);
-      console.log(w);
+      // console.log(w);
     }
 
+    // get api data daily
     this.http
       .get<any>("/api/pe/daily/GetAreaChart", { params: params })
-      .subscribe((res) => {
-        // this.daily_data = res.data;
+      .subscribe(
+        (res) => {
+          const allData = res.data || [];
 
-        // // Hitung rata-rata per tanggal
-        // this.dailyAverages = this.calculateDailyAverages(filteredData);
+          // Filter hanya data sumur yang dipilih
+          const filteredData = allData.filter((d) =>
+            this.well_xSelected.includes(d.well)
+          );
 
-        // this.daily_data = filteredData; // optional: simpan untuk tabel original
+          // Simpan daily data untuk tabel
+          this.daily_data = filteredData;
 
-        const allData = res.data || [];
+          // Hitung rata-rata per tanggal untuk gross, net, wc
+          this.dailyAverages = this.calculateWellAverages(
+            filteredData,
+            this.start_dateInput,
+            this.end_dateInput
+          );
 
-        // Filter hanya data sumur yang dipilih
-        const filteredData = allData.filter(d => this.well_xSelected.includes(d.well));
+          // order data by date ascending
+          const dataSortedDate = filteredData.sort((a, b) => {
+            return new Date(a.date).getTime() - new Date(b.date).getTime();
+          });
+          // get latest zone and interval from data
+          const latestData = dataSortedDate[dataSortedDate.length - 1];
 
-        // Simpan daily data untuk tabel
-        this.daily_data = filteredData;
+          const zone = latestData ? this.formatZone(latestData.zone) : "";
+          const interval = latestData
+            ? this.formatInterval(latestData.interval)
+            : "";
 
-        // Hitung rata-rata per tanggal untuk gross, net, wc
-        this.dailyAverages = this.calculateWellAverages(filteredData, this.start_dateInput, this.end_dateInput);
+          //ambil zona dari data
+          this.zone.setValue(zone);
+          // console.log("zone:", zone);
+          // console.log("this.zone.value:", this.zone.value);
 
-        this.loadingGetDailyData = false;
-        // fallback: clear loading state and notify user if request takes too long
-        setTimeout(() => {
+          //interval
+          this.interval.setValue(interval);
+          // console.log("interval:", interval);
+          // console.log("this.interval.value:", this.interval.value);
+
           this.loadingGetDailyData = false;
-        }, 2000);
-      },
-      (err) => {
-      this.daily_data = [];
-      this.dailyAverages = [];
-      this.loadingGetDailyData = false;
-    }
-    );
-    
-    
-}
+          // fallback: clear loading state and notify user if request takes too long
+          setTimeout(() => {
+            this.loadingGetDailyData = false;
+          }, 2000);
+        },
+        (err) => {
+          this.daily_data = [];
+          this.dailyAverages = [];
+          this.loadingGetDailyData = false;
+        }
+      );
+  }
 
   formatInterval(interval: any): string {
     if (!interval || !Array.isArray(interval)) return "-";
@@ -440,14 +472,6 @@ export class IprComponent implements OnInit {
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
     const reference = this.perforation_depth_reference.value;
-    const zone = this.zone.value;
-    const interval = this.interval.value;
-
-    //ambil zona dari data
-    this.zone.setValue(zone);
-
-    //interval
-    this.interval.setValue(interval)
 
     // coerce to number safely
     const topDepth = topRaw === null || topRaw === "" ? NaN : Number(topRaw);
@@ -467,14 +491,14 @@ export class IprComponent implements OnInit {
     // now safe to use topDepth and bottomDepth
     // (example) set the reference to average:
     const avg = (topDepth + bottomDepth) / 2;
-    this.perforation_depth_reference.setValue(avg);
+    this.perforation_depth_reference.setValue(avg.toFixed(2));
 
     // any other logic
     // console.log("Perforation Change:", topDepth, bottomDepth, reference);
   }
 
-  testData(){
-    if (!this.start_dateInput || this.end_dateInput) {
+  testData() {
+    if (!this.start_dateInput || !this.end_dateInput) {
       this.snackbarService.status.next(
         new SnackbarApi(true, "Please select a well date.", "dismiss", {
           duration: 3000,
@@ -482,151 +506,206 @@ export class IprComponent implements OnInit {
       );
       return;
     }
-    this.loadingGetDailyData = true;
 
-    let params = new HttpParams();
-    // start date
-    let startDate = new Date(this.start_dateInput);
-    // end date +1 after start date
-    let endDate = new Date(this.end_dateInput); // clone
-    // endDate.setDate(startDate.getDate());
-
-    params = params
-      .append("type", "well_performance_daily")
-      .append("date", new Date(startDate).toISOString())
-      .append("end_date", new Date(endDate).toISOString());
-
-    for (const w of this.well_xSelected) {
-      params = params.append("well", w);
-      console.log(w);
+    if (!this.static_fluid_level.value || !this.dynamic_fluid_level.value) {
+      this.snackbarService.status.next(
+        new SnackbarApi(
+          true,
+          "Please enter static and dynamic fluid levels.",
+          "dismiss",
+          {
+            duration: 3000,
+          }
+        )
+      );
+      return;
     }
+
+    console.log("daily data :", this.daily_data);
+    const dailyData = this.daily_data;
+    // config data
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
     const static_fl = this.static_fluid_level.value;
     const dynamic_fl = this.dynamic_fluid_level.value;
-    const static_bhp = this.static_botthomhole_pressure.value;
-    const flowing_bhp = this.flowing_bottomhole_pressure.value;
-    
-    // 🔹 Ambil data daily dari API
-    this.http.get<any>("/api/pe/daily/GetAreaChart", { params }).subscribe({
-      next: (res) => {
-        const data = res.data || [];
-        if (data.length === 0) {
-          console.warn("No daily data found");
-          this.loadingGetDailyData = false;
-          return;
-        }
 
-        // Ambil data terakhir dalam rentang tanggal
-        const lastData = data[data.length - 1];
+    const dailyAverages = this.dailyAverages;
 
-        // Ambil wc dari daily (misal '93%' atau 93)
-        const wcRaw = lastData.wc;
-        const wcVal = wcRaw ? parseFloat(wcRaw.toString().replace('%', '').trim()) / 100 : 0; // ubah ke desimal (0.93)
+    // ambil per average
+    const wcAvg = dailyAverages.length > 0 ? dailyAverages[0].wcAvg : 0;
+    const grossAvg = dailyAverages.length > 0 ? dailyAverages[0].grossAvg : 0;
 
-        // // 🔹 Hitung PS dan PWF
-        // const ps = (0.433 * wcVal + 0.346 * (1 - wcVal)) * (bottomRaw - static_fl);
-        // const pwf = (0.433 * wcVal + 0.346 * (1 - wcVal)) * (bottomRaw - dynamic_fl);
+    // 🔹 Hitung PS (sbhp) dan PWF (fbhp)
+    const ps = (0.433 * wcAvg + 0.346 * (1 - wcAvg)) * (bottomRaw - static_fl);
+    this.static_botthomhole_pressure.setValue(ps.toFixed(2));
+    const pwf =
+      (0.433 * wcAvg + 0.346 * (1 - wcAvg)) * (bottomRaw - dynamic_fl);
+    this.flowing_bottomhole_pressure.setValue(pwf.toFixed(2));
 
-        const ps = bottomRaw + static_fl;
-        const pwf = bottomRaw - dynamic_fl;
+    // hitung IPR
+    const pi = grossAvg / (ps - pwf);
+    const qmax = pi * ps;
 
-        console.log("Well:", lastData.well);
-        console.log("WC (%):", wcVal * 100);
-        console.log("PS:", ps.toFixed(2));
-        console.log("PWF:", pwf.toFixed(2));
+    console.log(`pi = ${grossAvg} / ${ps} - ${pwf} = ${pi}`);
+    console.log(`qmax = ${pi} * ${ps} = ${qmax}`);
 
-        this.loadingGetDailyData = false;
-      },
-      error: (err) => {
-        console.error("Error fetching daily data:", err);
-        this.loadingGetDailyData = false;
-      },
-    });
+    // get pwf values
+    const pwf_values = this.getPwf(this.static_botthomhole_pressure.value);
+    console.log("pwf_values:", pwf_values);
+    this.data_pwf = pwf_values;
 
-    
+    // get liquid rate values
+    const liquid_rate_values = this.getLiquidRate(
+      this.static_botthomhole_pressure.value,
+      pi
+    );
+    this.data_liquid_rate = liquid_rate_values;
+    console.log("liquid_rate_values:", liquid_rate_values);
 
-    //
-
+    if(this.data_pwf.length > 0 && this.data_liquid_rate.length > 0){
+      this.generateChart();
+      this.showChart = true;
+    }else{
+      // this.showChart = false;
+    }
   }
 
-  // calculateDailyAverages(data: any[]){
-  //   const grouped: { [date: string]: any[] } = {};
+  getPwf(sbhp: any, iteration = 1) {
+    const pwf_values = [];
 
-  //   data.forEach(d => {
-  //     const dateStr = new Date(d.date).toISOString().split('T')[0];
-  //     if (!grouped[dateStr]) grouped[dateStr] = [];
-  //     grouped[dateStr].push(d);
-  //   });
+    for (let i = iteration; i >= 0; i -= 0.1) {
+      let rounded = parseFloat(i.toFixed(1));
 
-  //   const averages: { date: string, grossAvg: number, netAvg: number, wcAvg: string }[] = [];
+      // Fix floating-point drift: anything near 0 becomes exactly 0
+      if (Math.abs(rounded) < 1e-10) {
+        rounded = 0;
+      }
 
-  //   Object.keys(grouped).forEach(date => {
-  //     const items = grouped[date];
-  //     const grossAvg = items.reduce((sum, i) => sum + (i.fig_curr_gross || 0), 0) / items.length;
-  //     const netAvg = items.reduce((sum, i) => sum + (i.fig_curr_net || 0), 0) / items.length;
-  //     // const wcAvg = items.reduce((sum, i) => sum + (i.wc || 0), 0) / items.length;
-  //     const wcAvg = items.reduce((sum, i) => {
-  //       let wcVal = 0;
-  //       if (i.wc) {
-  //         // Hilangkan '%' dan ubah ke number
-  //         wcVal = parseFloat(i.wc.toString().replace('%', ''));
-  //       }
-  //       return sum + wcVal;
-  //     }, 0) / items.length;
+      const result = rounded * sbhp;
+      pwf_values.push(result);
+    }
 
-  //     averages.push({
-  //       date,
-  //       grossAvg: parseFloat(grossAvg.toFixed(2)),
-  //       netAvg: parseFloat(netAvg.toFixed(2)),
-  //       wcAvg: parseFloat(wcAvg.toFixed(2)) + '%',
-  //     });
-  //   });
+    return pwf_values;
+  }
 
-  //   averages.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  getLiquidRate(sbhp: any, pi: any, iteration = 1) {
+    const liquid_rates = [];
 
-  //   return averages;
-  //   }
+    for (let i = iteration; i >= 0; i -= 0.1) {
+      let rounded = parseFloat(i.toFixed(1));
+
+      const result =
+        pi *
+        (1 - 0.2 * ((i * sbhp) / sbhp) - 0.8 * Math.pow((i * sbhp) / sbhp, 2));
+
+      liquid_rates.push(result);
+    }
+
+    return liquid_rates;
+  }
+
+  generateChart() {
+    this.ipr_chart_options = {
+      chart: {
+        type: "area",
+        zoomType: "x",
+        style: {
+          fontFamily: "Roboto, Helvetica Neue, sans-serif",
+        },
+      },
+      title: {
+        text: null,
+      },
+      series: [
+        {
+          name: "Pwf",
+          data: this.data_pwf.map((y: any, index: number) => {
+            return { x: index * 0.1, y: y };
+          }),
+          color: "#1E88E5",
+          zIndex: 2,
+        },
+        {
+          name: "Liquid Rate",
+          data: this.data_liquid_rate.map((q: any, index: number) => {
+            return { x: index * 0.1, y: q };
+          }),
+          color: "#43A047",
+          zIndex: 1,
+          type: "line",
+          marker: { enabled: true, radius: 3 },
+        },
+      ],
+      xAxis: {
+        title: { text: "Fraction (relative Pwf)" },
+        labels: {
+          formatter: function () {
+            return this.value.toFixed(1);
+          },
+        },
+      },
+      yAxis: {
+        title: { text: "Value" },
+      },
+      tooltip: {
+        shared: true,
+        crosshairs: true,
+        valueDecimals: 2,
+      },
+    };
+
+    Highcharts.chart(this.ipr_chart_el.nativeElement, this.ipr_chart_options);
+  }
 
   calculateWellAverages(data: any[], startDate: string, endDate: string) {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
     // 1️⃣ Filter data sesuai tanggal
-    const filtered = data.filter(d => {
+    const filtered = data.filter((d) => {
       const date = new Date(d.date);
       return date >= start && date <= end;
     });
 
     // 2️⃣ Group berdasarkan well
     const grouped: { [well: string]: any[] } = {};
-    filtered.forEach(d => {
+    filtered.forEach((d) => {
       const wellName = d.well;
       if (!grouped[wellName]) grouped[wellName] = [];
       grouped[wellName].push(d);
     });
 
     // 3️⃣ Hitung average untuk tiap well
-    const averages: { well: string, grossAvg: number, netAvg: number, wcAvg: number }[] = [];
+    const averages: {
+      well: string;
+      grossAvg: number;
+      netAvg: number;
+      wcAvg: number;
+    }[] = [];
 
-    Object.keys(grouped).forEach(well => {
+    Object.keys(grouped).forEach((well) => {
       const items = grouped[well];
 
-      const grossAvg = items.reduce((sum, i) => sum + (parseFloat(i.gross) || 0), 0) / items.length;
-      const netAvg   = items.reduce((sum, i) => sum + (parseFloat(i.net) || 0), 0) / items.length;
+      const grossAvg =
+        items.reduce((sum, i) => sum + (parseFloat(i.gross) || 0), 0) /
+        items.length;
+      const netAvg =
+        items.reduce((sum, i) => sum + (parseFloat(i.net) || 0), 0) /
+        items.length;
 
       const validWc = items
-        .map(i => {
-          const val = i.wc ? parseFloat(i.wc.toString().replace('%', '').trim()) : NaN;
+        .map((i) => {
+          const val = i.wc
+            ? parseFloat(i.wc.toString().replace("%", "").trim())
+            : NaN;
           return val;
         })
-        .filter(v => !isNaN(v));
+        .filter((v) => !isNaN(v));
 
-      const wcAvg = validWc.length > 0
-        ? validWc.reduce((sum, v) => sum + v, 0) / validWc.length
-        : 0;
-
-
+      const wcAvg =
+        validWc.length > 0
+          ? validWc.reduce((sum, v) => sum + v, 0) / validWc.length
+          : 0;
 
       // const wcAvg = items.reduce((sum, i) => {
       //   let wcVal = 0;
@@ -643,13 +722,12 @@ export class IprComponent implements OnInit {
         well,
         grossAvg: parseFloat(grossAvg.toFixed(2)),
         netAvg: parseFloat(netAvg.toFixed(2)),
-        wcAvg: parseFloat(wcAvg.toFixed(2))
+        wcAvg: parseFloat(wcAvg.toFixed(2)),
       });
     });
 
     return averages;
-}
-
+  }
 }
 
 export interface PeWellApi {
