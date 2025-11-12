@@ -90,8 +90,16 @@ export class IprComponent implements OnInit {
 
   top_perforation_depth = new FormControl("");
   bottom_perforation_depth = new FormControl("");
+  zone = new FormControl("");
+  interval = new FormControl("");
   perforation_depth_reference = new FormControl("");
-
+  static_fluid_level = new FormControl("");
+  dynamic_fluid_level = new FormControl("");
+  static_botthomhole_pressure = new FormControl("");
+  flowing_bottomhole_pressure = new FormControl("");
+  ps = new FormControl("");
+  pwf = new FormControl("");
+  
   @ViewChild("ipr_chart_el", { static: true }) public ipr_chart_el: ElementRef;
   daily_table_data = [];
   daily_table_columns: string[] = ["status", "count"];
@@ -306,6 +314,10 @@ export class IprComponent implements OnInit {
       });
   }
 
+  // dailyAverages: { date: string, grossAvg: number, netAvg: number, wcAvg: string }[] = [];
+  dailyAverages: { well: string; grossAvg: number; netAvg: number; wcAvg: number }[] = [];
+
+
   loadingGetDailyData: boolean = false;
   getDailyData() {
     // if (this.well_xSelected.length == null || this.well_xSelected.length != 1) {
@@ -318,22 +330,40 @@ export class IprComponent implements OnInit {
     //   return;
     // }
 
-    if (!this.well_dateInput) {
+    // if (!this.well_dateInput) {
+    //   this.snackbarService.status.next(
+    //     new SnackbarApi(true, "Please select a well date.", "dismiss", {
+    //       duration: 3000,
+    //     })
+    //   );
+    //   return;
+    // }
+    if (!this.start_dateInput || !this.end_dateInput) {
       this.snackbarService.status.next(
-        new SnackbarApi(true, "Please select a well date.", "dismiss", {
-          duration: 3000,
-        })
-      );
-      return;
+        new SnackbarApi(true, "Please select start and end date.", "dismiss", {
+        duration: 3000,
+      })
+    );
+    return;
     }
+    
     this.loadingGetDailyData = true;
 
     let params = new HttpParams();
     // start date
-    let startDate = new Date(this.well_dateInput);
+    let startDate = new Date(this.start_dateInput);
     // end date +1 after start date
-    const endDate = new Date(startDate); // clone
-    endDate.setDate(startDate.getDate());
+    let endDate = new Date(this.end_dateInput); // clone
+    // endDate.setDate(startDate.getDate());
+
+    if (!this.well_xSelected || this.well_xSelected.length === 0) {
+    this.snackbarService.status.next(
+      new SnackbarApi(true, "Please select at least one well.", "dismiss", {
+        duration: 3000,
+      })
+    );
+    return;
+  }
 
     params = params
       .append("type", "well_performance_daily")
@@ -348,15 +378,39 @@ export class IprComponent implements OnInit {
     this.http
       .get<any>("/api/pe/daily/GetAreaChart", { params: params })
       .subscribe((res) => {
-        this.daily_data = res.data;
+        // this.daily_data = res.data;
+
+        // // Hitung rata-rata per tanggal
+        // this.dailyAverages = this.calculateDailyAverages(filteredData);
+
+        // this.daily_data = filteredData; // optional: simpan untuk tabel original
+
+        const allData = res.data || [];
+
+        // Filter hanya data sumur yang dipilih
+        const filteredData = allData.filter(d => this.well_xSelected.includes(d.well));
+
+        // Simpan daily data untuk tabel
+        this.daily_data = filteredData;
+
+        // Hitung rata-rata per tanggal untuk gross, net, wc
+        this.dailyAverages = this.calculateWellAverages(filteredData, this.start_dateInput, this.end_dateInput);
 
         this.loadingGetDailyData = false;
         // fallback: clear loading state and notify user if request takes too long
         setTimeout(() => {
           this.loadingGetDailyData = false;
         }, 2000);
-      });
-  }
+      },
+      (err) => {
+      this.daily_data = [];
+      this.dailyAverages = [];
+      this.loadingGetDailyData = false;
+    }
+    );
+    
+    
+}
 
   formatInterval(interval: any): string {
     if (!interval || !Array.isArray(interval)) return "-";
@@ -386,6 +440,14 @@ export class IprComponent implements OnInit {
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
     const reference = this.perforation_depth_reference.value;
+    const zone = this.zone.value;
+    const interval = this.interval.value;
+
+    //ambil zona dari data
+    this.zone.setValue(zone);
+
+    //interval
+    this.interval.setValue(interval)
 
     // coerce to number safely
     const topDepth = topRaw === null || topRaw === "" ? NaN : Number(topRaw);
@@ -410,6 +472,184 @@ export class IprComponent implements OnInit {
     // any other logic
     // console.log("Perforation Change:", topDepth, bottomDepth, reference);
   }
+
+  testData(){
+    if (!this.start_dateInput || this.end_dateInput) {
+      this.snackbarService.status.next(
+        new SnackbarApi(true, "Please select a well date.", "dismiss", {
+          duration: 3000,
+        })
+      );
+      return;
+    }
+    this.loadingGetDailyData = true;
+
+    let params = new HttpParams();
+    // start date
+    let startDate = new Date(this.start_dateInput);
+    // end date +1 after start date
+    let endDate = new Date(this.end_dateInput); // clone
+    // endDate.setDate(startDate.getDate());
+
+    params = params
+      .append("type", "well_performance_daily")
+      .append("date", new Date(startDate).toISOString())
+      .append("end_date", new Date(endDate).toISOString());
+
+    for (const w of this.well_xSelected) {
+      params = params.append("well", w);
+      console.log(w);
+    }
+    const topRaw = this.top_perforation_depth.value;
+    const bottomRaw = this.bottom_perforation_depth.value;
+    const static_fl = this.static_fluid_level.value;
+    const dynamic_fl = this.dynamic_fluid_level.value;
+    const static_bhp = this.static_botthomhole_pressure.value;
+    const flowing_bhp = this.flowing_bottomhole_pressure.value;
+    
+    // 🔹 Ambil data daily dari API
+    this.http.get<any>("/api/pe/daily/GetAreaChart", { params }).subscribe({
+      next: (res) => {
+        const data = res.data || [];
+        if (data.length === 0) {
+          console.warn("No daily data found");
+          this.loadingGetDailyData = false;
+          return;
+        }
+
+        // Ambil data terakhir dalam rentang tanggal
+        const lastData = data[data.length - 1];
+
+        // Ambil wc dari daily (misal '93%' atau 93)
+        const wcRaw = lastData.wc;
+        const wcVal = wcRaw ? parseFloat(wcRaw.toString().replace('%', '').trim()) / 100 : 0; // ubah ke desimal (0.93)
+
+        // // 🔹 Hitung PS dan PWF
+        // const ps = (0.433 * wcVal + 0.346 * (1 - wcVal)) * (bottomRaw - static_fl);
+        // const pwf = (0.433 * wcVal + 0.346 * (1 - wcVal)) * (bottomRaw - dynamic_fl);
+
+        const ps = bottomRaw + static_fl;
+        const pwf = bottomRaw - dynamic_fl;
+
+        console.log("Well:", lastData.well);
+        console.log("WC (%):", wcVal * 100);
+        console.log("PS:", ps.toFixed(2));
+        console.log("PWF:", pwf.toFixed(2));
+
+        this.loadingGetDailyData = false;
+      },
+      error: (err) => {
+        console.error("Error fetching daily data:", err);
+        this.loadingGetDailyData = false;
+      },
+    });
+
+    
+
+    //
+
+  }
+
+  // calculateDailyAverages(data: any[]){
+  //   const grouped: { [date: string]: any[] } = {};
+
+  //   data.forEach(d => {
+  //     const dateStr = new Date(d.date).toISOString().split('T')[0];
+  //     if (!grouped[dateStr]) grouped[dateStr] = [];
+  //     grouped[dateStr].push(d);
+  //   });
+
+  //   const averages: { date: string, grossAvg: number, netAvg: number, wcAvg: string }[] = [];
+
+  //   Object.keys(grouped).forEach(date => {
+  //     const items = grouped[date];
+  //     const grossAvg = items.reduce((sum, i) => sum + (i.fig_curr_gross || 0), 0) / items.length;
+  //     const netAvg = items.reduce((sum, i) => sum + (i.fig_curr_net || 0), 0) / items.length;
+  //     // const wcAvg = items.reduce((sum, i) => sum + (i.wc || 0), 0) / items.length;
+  //     const wcAvg = items.reduce((sum, i) => {
+  //       let wcVal = 0;
+  //       if (i.wc) {
+  //         // Hilangkan '%' dan ubah ke number
+  //         wcVal = parseFloat(i.wc.toString().replace('%', ''));
+  //       }
+  //       return sum + wcVal;
+  //     }, 0) / items.length;
+
+  //     averages.push({
+  //       date,
+  //       grossAvg: parseFloat(grossAvg.toFixed(2)),
+  //       netAvg: parseFloat(netAvg.toFixed(2)),
+  //       wcAvg: parseFloat(wcAvg.toFixed(2)) + '%',
+  //     });
+  //   });
+
+  //   averages.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  //   return averages;
+  //   }
+
+  calculateWellAverages(data: any[], startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // 1️⃣ Filter data sesuai tanggal
+    const filtered = data.filter(d => {
+      const date = new Date(d.date);
+      return date >= start && date <= end;
+    });
+
+    // 2️⃣ Group berdasarkan well
+    const grouped: { [well: string]: any[] } = {};
+    filtered.forEach(d => {
+      const wellName = d.well;
+      if (!grouped[wellName]) grouped[wellName] = [];
+      grouped[wellName].push(d);
+    });
+
+    // 3️⃣ Hitung average untuk tiap well
+    const averages: { well: string, grossAvg: number, netAvg: number, wcAvg: number }[] = [];
+
+    Object.keys(grouped).forEach(well => {
+      const items = grouped[well];
+
+      const grossAvg = items.reduce((sum, i) => sum + (parseFloat(i.gross) || 0), 0) / items.length;
+      const netAvg   = items.reduce((sum, i) => sum + (parseFloat(i.net) || 0), 0) / items.length;
+
+      const validWc = items
+        .map(i => {
+          const val = i.wc ? parseFloat(i.wc.toString().replace('%', '').trim()) : NaN;
+          return val;
+        })
+        .filter(v => !isNaN(v));
+
+      const wcAvg = validWc.length > 0
+        ? validWc.reduce((sum, v) => sum + v, 0) / validWc.length
+        : 0;
+
+
+
+      // const wcAvg = items.reduce((sum, i) => {
+      //   let wcVal = 0;
+      //   if (i.wc !== undefined && i.wc !== null) {
+      //     if (typeof i.wc === 'string') wcVal = parseFloat(i.wc.replace('%',''));
+      //     else wcVal = i.wc;
+      //   } else if (i.gross && i.net) {
+      //     wcVal = (1 - (i.net / i.gross)) * 100; // auto hitung kalau belum ada
+      //   }
+      //   return sum + wcVal;
+      // }, 0) / items.length;
+
+      averages.push({
+        well,
+        grossAvg: parseFloat(grossAvg.toFixed(2)),
+        netAvg: parseFloat(netAvg.toFixed(2)),
+        wcAvg: parseFloat(wcAvg.toFixed(2))
+      });
+    });
+
+    return averages;
+}
+
 }
 
 export interface PeWellApi {

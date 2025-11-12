@@ -398,6 +398,7 @@ namespace ssc.Areas.PE.Controllers
                         sm = s.sm,
                         zone = s.zone,
                         interval = s.interval,
+                        wc = s.wc,
                     });
 
                     return Ok(new { data = daily_area });
