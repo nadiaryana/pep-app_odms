@@ -44,6 +44,8 @@ import { PeDailySemilogChartComponent } from './daily/pe-daily-semilog-chart.com
 import { PeDailyAreaChartComponent } from './daily/pe-daily-area-chart.component';
 import { PeDailyPerAreaChartComponent } from './daily/pe-daily-per-area-chart.component';
 import { IprComponent } from './daily/ipr/pe-ipr.component';
+import { PeSumurCurrentComponent } from './current/pe-sumur-current-list.component';
+import { SumurComponent } from './sumur/pe-sumur.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -77,6 +79,9 @@ const peRoutes: Routes = [
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
     { path: 'ipr', component: IprComponent},
+    // { path: 'sumur', component: SumurComponent},
+    { path: 'current', component: PeSumurCurrentComponent},
+
   ]},
 ]; 
 

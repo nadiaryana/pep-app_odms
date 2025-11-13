@@ -1,26 +1,6 @@
-import {
-  Component,
-  Input,
-  HostListener,
-  ViewChild,
-  OnInit,
-  ElementRef,
-} from "@angular/core";
-import {
-  FormBuilder,
-  FormGroup,
-  FormControl,
-  Validators,
-} from "@angular/forms";
-import {
-  MatPaginator,
-  MatSort,
-  MatDialog,
-  MatSnackBar,
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-  MatDatepicker,
-} from "@angular/material";
+import { Component, Input, HostListener, ViewChild, OnInit,ElementRef,} from "@angular/core";
+import {FormBuilder,FormGroup,FormControl,Validators,} from "@angular/forms";
+import {MatPaginator,MatSort,MatDialog,MatSnackBar,MatDialogRef,MAT_DIALOG_DATA,MatDatepicker,} from "@angular/material";
 import { MatStepper } from "@angular/material/stepper";
 import { Router, RouterLink } from "@angular/router";
 import { Observable, of } from "rxjs";
@@ -28,16 +8,7 @@ import { HttpClient, HttpEventType, HttpParams } from "@angular/common/http";
 import { TitleService } from "src/app/navigation/title/title.service";
 import { SnackbarApi, SnackbarService } from "src/app/snackbar.service";
 import { title } from "process";
-import {
-  catchError,
-  map,
-  startWith,
-  switchMap,
-  debounceTime,
-  take,
-  mergeAll,
-  timeout,
-} from "rxjs/operators";
+import {catchError,map,startWith,switchMap,debounceTime,take,mergeAll,timeout,} from "rxjs/operators";
 // import { ExampleHttpDao } from '../pe-daily-list.component';
 import { xFilterService } from "src/app/xfilter/xfilter.component";
 import * as Highcharts from 'highcharts';
@@ -69,7 +40,7 @@ export class IprComponent implements OnInit {
 
   @ViewChild("start_datePicker", { static: true })
   start_datePicker: MatDatepicker<any>;
-  start_dateControl = new FormControl(new Date("1 February 2025"));
+  start_dateControl = new FormControl("");
   start_dateInput = this.start_dateControl.value
     ? this.start_dateControl.value.toLocaleDateString("en-US", {
         month: "short",
@@ -80,7 +51,7 @@ export class IprComponent implements OnInit {
 
   @ViewChild("end_datePicker", { static: true })
   end_datePicker: MatDatepicker<any>;
-  end_dateControl = new FormControl(new Date("20 February 2025"));
+  end_dateControl = new FormControl("");
   end_dateInput = this.end_dateControl.value
     ? this.end_dateControl.value.toLocaleDateString("en-US", {
         month: "short",
@@ -331,24 +302,6 @@ export class IprComponent implements OnInit {
 
   loadingGetDailyData: boolean = false;
   getDailyData() {
-    // if (this.well_xSelected.length == null || this.well_xSelected.length != 1) {
-    //   this.daily_data = [];
-    //   this.snackbarService.status.next(
-    //     new SnackbarApi(true, "Please select at least one well.", "dismiss", {
-    //       duration: 3000,
-    //     })
-    //   );
-    //   return;
-    // }
-
-    // if (!this.well_dateInput) {
-    //   this.snackbarService.status.next(
-    //     new SnackbarApi(true, "Please select a well date.", "dismiss", {
-    //       duration: 3000,
-    //     })
-    //   );
-    //   return;
-    // }
     if (!this.start_dateInput || !this.end_dateInput) {
       this.snackbarService.status.next(
         new SnackbarApi(true, "Please select start and end date.", "dismiss", {
@@ -488,7 +441,6 @@ export class IprComponent implements OnInit {
       return;
     }
 
-    // now safe to use topDepth and bottomDepth
     // (example) set the reference to average:
     const avg = (topDepth + bottomDepth) / 2;
     this.perforation_depth_reference.setValue(avg.toFixed(2));
@@ -536,10 +488,9 @@ export class IprComponent implements OnInit {
     const grossAvg = dailyAverages.length > 0 ? dailyAverages[0].grossAvg : 0;
 
     // 🔹 Hitung PS (sbhp) dan PWF (fbhp)
-    const ps = (0.433 * wcAvg + 0.346 * (1 - wcAvg)) * (bottomRaw - static_fl);
+    const ps = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - static_fl) * 3.281;
     this.static_botthomhole_pressure.setValue(ps.toFixed(2));
-    const pwf =
-      (0.433 * wcAvg + 0.346 * (1 - wcAvg)) * (bottomRaw - dynamic_fl);
+    const pwf = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - dynamic_fl) * 3.281;
     this.flowing_bottomhole_pressure.setValue(pwf.toFixed(2));
 
     // hitung IPR
@@ -588,15 +539,15 @@ export class IprComponent implements OnInit {
     return pwf_values;
   }
 
-  getLiquidRate(sbhp: any, pi: any, iteration = 1) {
+  getLiquidRate(sbhp: any, qmax: any, iteration = 1) {
     const liquid_rates = [];
 
     for (let i = iteration; i >= 0; i -= 0.1) {
       let rounded = parseFloat(i.toFixed(1));
 
       const result =
-        pi *
-        (1 - 0.2 * ((i * sbhp) / sbhp) - 0.8 * Math.pow((i * sbhp) / sbhp, 2));
+        qmax *
+        (1 - 0.2 * ((i * sbhp) / sbhp) - Math.pow(0.8 * (i * sbhp) / sbhp, 2));
 
       liquid_rates.push(result);
     }
@@ -604,58 +555,103 @@ export class IprComponent implements OnInit {
     return liquid_rates;
   }
 
-  generateChart() {
-    this.ipr_chart_options = {
-      chart: {
-        type: "area",
-        zoomType: "x",
-        style: {
-          fontFamily: "Roboto, Helvetica Neue, sans-serif",
-        },
-      },
-      title: {
-        text: null,
-      },
-      series: [
-        {
-          name: "Pwf",
-          data: this.data_pwf.map((y: any, index: number) => {
-            return { x: index * 0.1, y: y };
-          }),
-          color: "#1E88E5",
-          zIndex: 2,
-        },
-        {
-          name: "Liquid Rate",
-          data: this.data_liquid_rate.map((q: any, index: number) => {
-            return { x: index * 0.1, y: q };
-          }),
-          color: "#43A047",
-          zIndex: 1,
-          type: "line",
-          marker: { enabled: true, radius: 3 },
-        },
-      ],
-      xAxis: {
-        title: { text: "Fraction (relative Pwf)" },
-        labels: {
-          formatter: function () {
-            return this.value.toFixed(1);
-          },
-        },
-      },
-      yAxis: {
-        title: { text: "Value" },
-      },
-      tooltip: {
-        shared: true,
-        crosshairs: true,
-        valueDecimals: 2,
-      },
-    };
+  // generateChart() {
+  //   this.ipr_chart_options = {
+  //     chart: {
+  //       type: "line",
+  //       zoomType: "x",
+  //       style: {
+  //         fontFamily: "Roboto, Helvetica Neue, sans-serif",
+  //       },
+  //     },
+  //     title: {
+  //       text: null,
+  //     },
+  //     series: [
+  //       {
+  //         name: "Pwf",
+  //         data: this.data_pwf.map((y: any, index: number) => {
+  //           return { x: index * 0.1, y: y };
+  //         }),
+  //         color: "#1E88E5",
+  //         zIndex: 2,
+  //       },
+  //       {
+  //         name: "Liquid Rate",
+  //         data: this.data_liquid_rate.map((q: any, index: number) => {
+  //           return { x: index * 0.1, y: q };
+  //         }),
+  //         color: "#43A047",
+  //         zIndex: 1,
+  //         type: "line",
+  //         marker: { enabled: true, radius: 3 },
+  //       },
+  //     ],
+  //     xAxis: {
+  //       title: { text: "Value" },
+  //     },
+  //     tooltip: {
+  //       shared: true,
+  //       crosshairs: true,
+  //       valueDecimals: 2,
+  //     },
+  //     yAxis: {
+  //       title: { text: "Fraction (relative Pwf)" },
+  //       labels: {
+  //         formatter: function () {
+  //           return this.value.toFixed(1);
+  //         },
+  //       },
+  //     },
+  //   };
 
-    Highcharts.chart(this.ipr_chart_el.nativeElement, this.ipr_chart_options);
-  }
+  //   Highcharts.chart(this.ipr_chart_el.nativeElement, this.ipr_chart_options);
+  // }
+
+  generateChart() {
+  this.ipr_chart_options = {
+    chart: {
+      type: "line",
+      zoomType: "x",
+      style: {
+        fontFamily: "Roboto, Helvetica Neue, sans-serif",
+      },
+    },
+    title: {
+      text: "IPR Curve",
+    },
+    series: [
+      {
+        name: "IPR Curve",
+        data: this.data_liquid_rate.map((q: number, i: number) => {
+          return { x: q, y: this.data_pwf[i] };
+        }),
+        color: "#1E88E5",
+        marker: {
+          enabled: true,
+          radius: 3,
+        },
+        zIndex: 2,
+      },
+    ],
+    xAxis: {
+      title: { text: "Qmax (Liquid Rate)" },
+    },
+    yAxis: {
+      title: { text: "Pwf (psi)" },
+    },
+    tooltip: {
+      headerFormat: "",
+      pointFormat: "Q: {point.x:.2f} <br>Pwf: {point.y:.2f}",
+    },
+  };
+
+  Highcharts.chart(this.ipr_chart_el.nativeElement, this.ipr_chart_options);
+}
+
+
+
+
 
   calculateWellAverages(data: any[], startDate: string, endDate: string) {
     const start = new Date(startDate);

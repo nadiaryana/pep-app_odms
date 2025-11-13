@@ -1,32 +1,70 @@
 <!-- <p>ipr works!</p> -->
 <div
-  fxLayout="row"
-  fxLayout.lt-lg="column"
-  fxLayoutGap="10px"
-  fxLayoutAlign="start stretch"
+fxLayout="row"
+fxLayout.lt-lg="column"
+fxLayoutGap="10px"
+fxLayoutAlign="start stretch"
 >
-  <mat-card fxFlex="35" class="dasboard_card">
-    <mat-card-content>
-      <!-- Filter Form Section -->
-      <div
-        class="filter-form"
-        fxLayout="column"
-        fxLayoutGap="10px"
-        fxLayoutAlign="start start"
-        fxLayout.lt-md="column"
-      >
-        <h3>Perforation Depth</h3>
-
-        <mat-form-field class="field-well">
-          <mat-label>Well</mat-label>
-          <input matInput [(ngModel)]="well_xSelected" disabled />
-          <app-xfilter
-            title="Well"
-            column="well"
-            [selected]="well_xSelected"
-          ></app-xfilter>
-        </mat-form-field>
-
+<mat-card fxFlex="35" class="dasboard_card">
+  <mat-card-content>
+    <!-- Filter Form Section -->
+    <div
+    class="filter-form"
+    fxLayout="column"
+    fxLayoutGap="10px"
+    fxLayoutAlign="start start"
+    fxLayout.lt-md="column"
+    >
+    <h3>Perforation Depth</h3>
+    
+    <mat-form-field class="field-well">
+      <mat-label>Well</mat-label>
+      <input matInput [(ngModel)]="well_xSelected" disabled />
+      <app-xfilter
+      title="Well"
+      column="well"
+      [selected]="well_xSelected"
+      ></app-xfilter>
+    </mat-form-field>
+    
+      <mat-form-field class="filter">
+        <mat-label>Start Date</mat-label>
+        <input
+          matInput
+          class="input-hidden"
+          [matDatepicker]="start_datePicker"
+          [formControl]="start_dateControl"
+          (dateChange)="start_dateChange($event)"
+          disabled
+        />
+        <input matInput [(ngModel)]="start_dateInput" disabled />
+        <mat-datepicker-toggle
+          matSuffix
+          [for]="start_datePicker"
+          [disabled]="isLoadingResults"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+      </mat-form-field>
+      
+      <mat-form-field class="filter">
+        <mat-label>End Date</mat-label>
+        <input
+          matInput
+          class="input-hidden"
+          [matDatepicker]="end_datePicker"
+          [formControl]="end_dateControl"
+          (dateChange)="end_dateChange($event)"
+          disabled
+        />
+        <input matInput [(ngModel)]="end_dateInput" disabled />
+        <mat-datepicker-toggle
+          matSuffix
+          [for]="end_datePicker"
+          [disabled]="isLoadingResults"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
+      </mat-form-field>
+      
         <mat-form-field class="filter">
           <mat-label>Zone</mat-label>
           <input matInput [formControl]="zone" placeholder="Zone" readonly />
@@ -53,6 +91,7 @@
             placeholder="Top Perforation Depth"
             (change)="perforationChange()"
           />
+          <span matSuffix>m</span>
         </mat-form-field>
 
         <!-- Bottom Perforation Depth -->
@@ -67,6 +106,7 @@
             placeholder="Bottom Perforation Depth"
             (change)="perforationChange()"
           />
+          <span matSuffix>m</span>
         </mat-form-field>
 
         <!-- Perforation Depth Reference (disabled input; keep binding to its FormControl) -->
@@ -81,47 +121,11 @@
             placeholder="Perforation Depth Reference"
             disabled
           />
+          <span matSuffix>m</span>
         </mat-form-field>
 
         <h3>Test Data</h3>
 
-        <mat-form-field class="filter">
-          <mat-label>Start Date</mat-label>
-          <input
-            matInput
-            class="input-hidden"
-            [matDatepicker]="start_datePicker"
-            [formControl]="start_dateControl"
-            (dateChange)="start_dateChange($event)"
-            disabled
-          />
-          <input matInput [(ngModel)]="start_dateInput" disabled />
-          <mat-datepicker-toggle
-            matSuffix
-            [for]="start_datePicker"
-            [disabled]="isLoadingResults"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
-        </mat-form-field>
-
-        <mat-form-field class="filter">
-          <mat-label>End Date</mat-label>
-          <input
-            matInput
-            class="input-hidden"
-            [matDatepicker]="end_datePicker"
-            [formControl]="end_dateControl"
-            (dateChange)="end_dateChange($event)"
-            disabled
-          />
-          <input matInput [(ngModel)]="end_dateInput" disabled />
-          <mat-datepicker-toggle
-            matSuffix
-            [for]="end_datePicker"
-            [disabled]="isLoadingResults"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
-        </mat-form-field>
 
         <!-- Gross Average -->
         <mat-form-field class="filter">
@@ -131,6 +135,7 @@
             [value]="dailyAverages?.length ? dailyAverages[0]?.grossAvg : ''"
             disabled
           />
+          <span matSuffix>BFPD</span>
         </mat-form-field>
 
         <!-- Net Average -->
@@ -141,6 +146,7 @@
             [value]="dailyAverages?.length ? dailyAverages[0]?.netAvg : ''"
             disabled
           />
+          <span matSuffix>BOPD</span>
         </mat-form-field>
 
         <!-- WC Average -->
@@ -148,9 +154,10 @@
           <mat-label>WC Average</mat-label>
           <input
             matInput
-            [value]="dailyAverages?.length ? dailyAverages[0]?.wcAvg : ''"
+            [value]="dailyAverages?.length ? dailyAverages[0]?.wcAvg + '%': ''"
             disabled
           />
+          <span matSuffix>%</span>
         </mat-form-field>
 
         <mat-form-field class="filter">
@@ -164,6 +171,7 @@
             placeholder="Static Fluid Level"
             (change)="testData()"
           />
+          <span matSuffix>m</span>
         </mat-form-field>
 
         <!-- Bottom Perforation Depth -->
@@ -178,6 +186,7 @@
             placeholder="Dynamic Fluid Level"
             (change)="testData()"
           />
+          <span matSuffix>m</span>
         </mat-form-field>
         <mat-form-field class="filter">
           <mat-label>Static Bottomhole Pressure</mat-label>
@@ -190,6 +199,7 @@
             placeholder="Static Bottomhole Pressure"
             disabled
           />
+          <span matSuffix>psi</span>
         </mat-form-field>
         <mat-form-field class="filter">
           <mat-label>Flowing Bottomhole Pressure</mat-label>
@@ -202,6 +212,7 @@
             placeholder="Flowing Bottomhole Pressure"
             disabled
           />
+          <span matSuffix>psi</span>
         </mat-form-field>
       </div>
     </mat-card-content>
@@ -210,7 +221,7 @@
   <!-- right: IPR chart -->
   <mat-card fxFlex="65" class="dasboard_card" style="width: 100%;">
     <mat-card-content
-      style="height: 420px; display: flex; flex-direction: column; width: 100%"
+      style="height: 500px; display: flex; flex-direction: column; width: 100%"
     >
       <h3>IPR Chart</h3>
       <!-- chart container grows to fill card content -->

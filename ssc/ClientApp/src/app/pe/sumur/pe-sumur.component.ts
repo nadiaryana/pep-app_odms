@@ -1,7 +1,9 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { TitleService } from "src/app/navigation/title/title.service";
 import { HttpClient } from "@angular/common/http";
 import * as Highcharts from "highcharts";
+import { FormControl } from "@angular/forms";
+import { MatDatepicker } from "@angular/material";
 
 interface Well {
   id: number;
@@ -126,5 +128,17 @@ export class SumurComponent implements OnInit {
         console.error(`Failed to fetch data for ${well.name}`, err);
       }
     );
+  }
+
+  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
+    start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 4)));
+    start_dateInput = this.start_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  
+  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
+  end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+
+  dailyCurrent(){
+
   }
 }
