@@ -19,7 +19,7 @@ import { TitleService } from '../../navigation/title/title.service';
     styleUrls: ['./pe-current.scss']
 })
 
-export class PeSumurAddComponent {
+export class PeSumurCurrentAddComponent {
 
     @Input() locations: Location[];
         //company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];

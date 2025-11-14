@@ -2,8 +2,8 @@
   <!--mat-form-field>
     <input matInput placeholder="Filter" [formControl]="filterControl">
   </mat-form-field-->
-  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/sumur/add']" *ngIf="pePermissionService.passPermission('pe/sumur/add')"><mat-icon>add</mat-icon> Add/Edit</button>
-  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/sumur/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/current/add']" *ngIf="pePermissionService.passPermission('pe/current/add')"><mat-icon>add</mat-icon> Add/Edit</button>
+  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/current/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
   <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
 </div>
 

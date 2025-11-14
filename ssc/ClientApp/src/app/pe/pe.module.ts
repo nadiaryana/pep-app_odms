@@ -57,6 +57,7 @@ import { PeDailyPerAreaChartComponent } from './daily/pe-daily-per-area-chart.co
 import { PeProductionAddComponent } from './daily/pe-production-add.component';
 import { IprComponent } from './daily/ipr/pe-ipr.component';
 import { PeSumurCurrentComponent } from './current/pe-sumur-current-list.component';
+import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -94,6 +95,7 @@ import { PeSumurCurrentComponent } from './current/pe-sumur-current-list.compone
   PeDailyPerAreaChartComponent,
   IprComponent,
   PeSumurCurrentComponent,
+  PeSumurCurrentAddComponent,
   // PeGrafikComponent,
   ],
   imports: [
