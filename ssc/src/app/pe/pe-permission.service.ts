@@ -51,6 +51,12 @@ export class PePermissionService {
 	new Menu("wellperformance", true,null, ["PeWellPerformance Read"]),
   new Menu("ipr", true,null, ["PeIPR Read"]),
 
+  new Menu("current", true, null, ["PeSumur Read"]),
+  new Menu("current/list", true, null, ["PeSumur Read"]),
+  new Menu("current/add", true, null, ["PeSumur Add"]),
+  new Menu("current/edit", true, null, ["PeSumur Edit"]),
+  new Menu("current/delete", true, null, ["PeSumur Delete"]),
+
   new Menu("lab", true,null, ["PeLab Read"]),
   new Menu("lab/list", true,null, ["PeLab Read"]),
   new Menu("lab/reports", true,null, ["PeLab Read"]),

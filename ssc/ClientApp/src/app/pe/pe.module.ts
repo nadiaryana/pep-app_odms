@@ -152,7 +152,7 @@ export class PeModule {
             //new PanelSubItem("Sensor Add", "pe/sensor/add", "playlist_add", this.pePermission.passPermission("pe/sensor/add")),
             ]),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [
-          new PanelSubItem("iSRP", "pe/sumur", "list", this.pePermission.passPermission("pe/sumur")),
+          new PanelSubItem("iSRP", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur")),
           new PanelSubItem("Daily Current", "pe/current", "table_chart"),
         ]),
         new PanelItem("Diagnostic Chart", "pe/grafik", "assessment", this.pePermission.passPermission("pe/grafik")),

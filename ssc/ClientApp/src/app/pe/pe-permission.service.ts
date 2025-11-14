@@ -52,6 +52,12 @@ export class PePermissionService {
 	new Menu("sensor/edit", true,null, ["PeSensor Edit"]),
 	new Menu("sensor/delete", true,null, ["PeSensor Delete"]),
 
+	new Menu("current", true, null, ["PeSumur Read"]),
+	new Menu("current/list", true, null, ["PeSumur Read"]),
+	new Menu("current/add", true, null, ["PeSumur Add"]),
+	new Menu("current/edit", true, null, ["PeSumur Edit"]),
+	new Menu("current/delete", true, null, ["PeSumur Delete"]),
+
 	];
 	
 	

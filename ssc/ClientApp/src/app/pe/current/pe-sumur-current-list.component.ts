@@ -23,16 +23,8 @@ import { PeSumur } from './pe-sumur';
 })
 export class PeSumurCurrentComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "date","entry_id", "field_1", "field_2"];
-  headerColumns1: string[] = [
-  'select',
-  'date',
-  'entry_id',
-  'field_1',
-  'field_2',
-  ];
-
-
+    displayedColumns: string[] = ["select", "date","entry_id", "field_1", "field_2"];
+    headerColumns1: string[] = ['select','date','entry_id','field_1','field_2'];
     exampleDatabase: ExampleHttpDao | null;
     data: PeSumur[] = [];
   
@@ -80,14 +72,6 @@ export class PeSumurCurrentComponent implements OnInit {
         private xfilterService: xFilterService,
         public commonService: CommonService,
   ) {}
-
-  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
-    start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 4)));
-    start_dateInput = this.start_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
-  
-    @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
-    end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
-    end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
   ngOnInit() {
     this.titleService.titleSource.next({
@@ -359,7 +343,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) {}
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeSonologApi> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeCurrentApi> {
 
     var params = {};
     if(sort!=null) params["sort"] = sort;

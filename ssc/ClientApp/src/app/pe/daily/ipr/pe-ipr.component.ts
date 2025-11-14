@@ -506,10 +506,7 @@ export class IprComponent implements OnInit {
     this.data_pwf = pwf_values;
 
     // get liquid rate values
-    const liquid_rate_values = this.getLiquidRate(
-      this.static_botthomhole_pressure.value,
-      pi
-    );
+    const liquid_rate_values = this.getLiquidRate(this.static_botthomhole_pressure.value, qmax );
     this.data_liquid_rate = liquid_rate_values;
     console.log("liquid_rate_values:", liquid_rate_values);
 
@@ -547,7 +544,7 @@ export class IprComponent implements OnInit {
 
       const result =
         qmax *
-        (1 - 0.2 * ((i * sbhp) / sbhp) - Math.pow(0.8 * (i * sbhp) / sbhp, 2));
+        (1 - 0.2 * ((i * sbhp) / sbhp) - 0.8 *( Math.pow((i * sbhp) / sbhp, 2)));
 
       liquid_rates.push(result);
     }

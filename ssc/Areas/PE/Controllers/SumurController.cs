@@ -33,15 +33,100 @@ namespace ssc.Areas.PE.Controllers
 
             // projection field1 yang mau diambil
             _fields = Builders<Sumur>.Projection
+                .Include(t => t.WellName)
+                .Include(t => t.Current)
+                .Include(t => t.Timestamp)
                 .Include(t => t.date)
                 .Include(t => t.entry_id)
                 .Include(t => t.field_1)
                 .Include(t => t.field_2);
         }
 
+        // GET: api/pe/well/latest?limit=100
+        [HttpGet("latest")]
+        public async Task<IActionResult> GetLatest([FromQuery] int limit = 100)
+        {
+            var data = await _sumur.Find(Builders<Sumur>.Filter.Empty)
+                                    .SortByDescending(x => x.Timestamp)
+                                    .Limit(limit)
+                                    .ToListAsync();
+
+            return Ok(data);
+        }
+
+        // POST: api/pe/well/save
+        [HttpPost("save")]
+        public async Task<IActionResult> SaveData([FromBody] Sumur request)
+        {
+            if (request == null) return BadRequest("Invalid data");
+
+            await _sumur.InsertOneAsync(request);
+            return Ok(new { message = "Data inserted", data = request });
+        }
+
+        // GET api/pe/well/fetch
+        [HttpGet("fetch")]
+        public async Task<IActionResult> FetchFromThingSpeak(
+            [FromQuery] string channelId,
+            [FromQuery] string apiKey,
+            [FromQuery] string wellName)
+        {
+            if (string.IsNullOrEmpty(channelId) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(wellName))
+            {
+                return BadRequest(new { message = "channelId, apiKey, dan wellName wajib diisi" });
+            }
+
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    var url = $"https://api.thingspeak.com/channels/{channelId}/fields/1.json?api_key={apiKey}&results=100";
+                    var response = await httpClient.GetStringAsync(url);
+                    var json = JObject.Parse(response);
+                    var feeds = json["feeds"];
+
+                    if (feeds == null || !feeds.Any())
+                        return BadRequest(new { message = "Tidak ada data dari ThingSpeak" });
+
+                    var list = new List<Sumur>();
+
+                    foreach (var f in feeds)
+                    {
+                        list.Add(new Sumur
+                        {
+                            WellName = wellName,
+                            Current = double.TryParse((string)f["field1"], out double val) ? val : 0,
+                            Timestamp = DateTime.TryParse((string)f["created_at"], out DateTime ts) ? ts : DateTime.UtcNow
+                        });
+                    }
+
+                    // simpan ke TMP collection
+                    var tmp = new SumurTmp
+                    {
+                        items = list.ToArray(),
+                        error_count = 0
+                    };
+
+                    await _sumur_tmp.InsertOneAsync(tmp);
+
+                    return Ok(new
+                    {
+                        message = $"Data fetched untuk {wellName}",
+                        tmp_id = tmp._id,
+                        count = list.Count,
+                        feeds = feeds,
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [Authorize("PeSumur Read")]
         [HttpGet]
-        public ActionResult Get(String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
+        public IActionResult Get(String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
         {
 
             //var _items = _tickets.Find(t => true);
@@ -225,15 +310,15 @@ namespace ssc.Areas.PE.Controllers
         //     var ws = workbook.Workbook.Worksheets.First();
         //     int rowCount = ws.Dimension.End.Row;
 
-        //     List<Sensor> items = new List<Sensor>();
+        //     List<Sumur> items = new List<Sumur>();
         //     int error_count = 0;
 
         //     for (var r = 2; r <= rowCount; r++)
         //     {
         //         if (!string.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
         //         {
-        //             Sensor _row = new Sensor();
-        //             SensorError _row_error = new SensorError();
+        //             Sumur _row = new Sumur();
+        //             SumurError _row_error = new SumurError();
         //             int last_error_count = error_count;
 
         //             if (!String.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
@@ -261,84 +346,59 @@ namespace ssc.Areas.PE.Controllers
         //                 error_count++;
         //             }
 
-        //             if (!String.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString().Trim()))
+        // if (!String.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString().Trim()))
+        // {
+        //     _row.well = ws.Cells[r, 2].Value?.ToString().Trim();
+        // }
+        // else
+        // {
+        //     _row_error.well = new ErrorItem { value = "(Blank)", message = "Blank Well name is not allowed" };
+        //     error_count++;
+        // }
+
+        //             try
         //             {
-        //                 _row.well = ws.Cells[r, 2].Value?.ToString().Trim();
+        //                 _row.entry_id = (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 3].Value?.ToString().Trim()) : (decimal?)null;
         //             }
-        //             else
+        //             catch (Exception e)
         //             {
-        //                 _row_error.well = new ErrorItem { value = "(Blank)", message = "Blank Well name is not allowed" };
+        //                 _row_error.entry_id = new ErrorItem { value = ws.Cells[r, 3].Value?.ToString(), message = e.Message };
         //                 error_count++;
         //             }
 
         //             try
         //             {
-        //                 _row.freq = (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 3].Value?.ToString().Trim()) : (decimal?)null;
+        //                 _row.field_1 = (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 4].Value?.ToString().Trim()) : (decimal?)null;
         //             }
         //             catch (Exception e)
         //             {
-        //                 _row_error.freq = new ErrorItem { value = ws.Cells[r, 3].Value?.ToString(), message = e.Message };
+        //                 _row_error.field_1 = new ErrorItem { value = ws.Cells[r, 4].Value?.ToString(), message = e.Message };
         //                 error_count++;
         //             }
 
         //             try
         //             {
-        //                 _row.load = (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 4].Value?.ToString().Trim()) : (decimal?)null;
+        //                 _row.field_2 = (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 5].Value?.ToString().Trim()) : (decimal?)null;
         //             }
         //             catch (Exception e)
         //             {
-        //                 _row_error.load = new ErrorItem { value = ws.Cells[r, 4].Value?.ToString(), message = e.Message };
+        //                 _row_error.field_2 = new ErrorItem { value = ws.Cells[r, 5].Value?.ToString(), message = e.Message };
         //                 error_count++;
         //             }
 
-        //             try
-        //             {
-        //                 _row.pi = (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 5].Value?.ToString().Trim()) : (decimal?)null;
-        //             }
-        //             catch (Exception e)
-        //             {
-        //                 _row_error.pi = new ErrorItem { value = ws.Cells[r, 5].Value?.ToString(), message = e.Message };
-        //                 error_count++;
-        //             }
+        // if (_row_error.date == null && _row_error.well == null)
+        // {
+        //     if (_sensor.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
+        //     {
+        //         _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
+        //     }
+        // }
+        // if (error_count > last_error_count)
+        // {
+        //     _row_error._row = new ErrorItem { value = "error", message = "Error found" };
+        // }
 
-        //             try
-        //             {
-        //                 _row.ti = (!String.IsNullOrWhiteSpace(ws.Cells[r, 6].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 6].Value?.ToString().Trim()) : (decimal?)null;
-        //             }
-        //             catch (Exception e)
-        //             {
-        //                 _row_error.ti = new ErrorItem { value = ws.Cells[r, 6].Value?.ToString(), message = e.Message };
-        //                 error_count++;
-        //             }
-
-        //             if (!String.IsNullOrWhiteSpace(ws.Cells[r, 7].Value?.ToString().Trim()))
-        //             {
-        //                 _row.esp = ws.Cells[r, 7].Value?.ToString().Trim();
-        //             }
-
-        //             try
-        //             {
-        //                 _row.capacity = (!String.IsNullOrWhiteSpace(ws.Cells[r, 8].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 8].Value?.ToString().Trim()) : (decimal?)null;
-        //             }
-        //             catch (Exception e)
-        //             {
-        //                 _row_error.capacity = new ErrorItem { value = ws.Cells[r, 8].Value?.ToString(), message = e.Message };
-        //                 error_count++;
-        //             }
-
-        //             if (_row_error.date == null && _row_error.well == null)
-        //             {
-        //                 if (_sensor.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
-        //                 {
-        //                     _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
-        //                 }
-        //             }
-        //             if (error_count > last_error_count)
-        //             {
-        //                 _row_error._row = new ErrorItem { value = "error", message = "Error found" };
-        //             }
-
-        //             _row._error = _row_error;
+        // _row._error = _row_error;
 
         //             items.Add(_row);
         //         }

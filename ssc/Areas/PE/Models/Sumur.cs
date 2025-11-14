@@ -13,10 +13,11 @@ namespace ssc.Areas.PE.Models
         [BsonRepresentation(BsonType.ObjectId)]
         // public string Id { get; set; }
         public string _id { get; set; }
-        // public DateTime Timestamp { get; set; } // Waktu dari ThingSpeak
+        public DateTime Timestamp { get; set; } // Waktu dari ThingSpeak
         public DateTime? date { get; set; }
-        public string wellName { get; set; }   // Nama sumur
-        // public double current { get; set; }    // Nilai arus
+        public string WellName { get; set; }   // Nama sumur
+
+        public double Current { get; set; }    // Nilai arus
         public decimal? entry_id { get; set; }
         public decimal? field_1 { get; set; }
         public decimal? field_2 { get; set; }
