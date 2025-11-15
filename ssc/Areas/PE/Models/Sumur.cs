@@ -26,7 +26,7 @@ namespace ssc.Areas.PE.Models
         public DateTime? created_date { get; set; }
         public string updated_by { get; set; }
         public DateTime? updated_date { get; set; }
-        public SensorError _error { get; set; }
+        public SumurError _error { get; set; }
 
 
 

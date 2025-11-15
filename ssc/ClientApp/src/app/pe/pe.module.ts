@@ -56,7 +56,8 @@ import { PeSonologChartComponent } from './sonolog/pe-sonolog-chart.component';
 import { PeDailyPerAreaChartComponent } from './daily/pe-daily-per-area-chart.component';
 import { PeProductionAddComponent } from './daily/pe-production-add.component';
 import { IprComponent } from './daily/ipr/pe-ipr.component';
-import { PeSumurCurrentComponent } from './current/pe-sumur-current-list.component';
+import { PeSumurCurrentComponent } from './current/pe-sumur-current.component';
+import { PeSumurCurrentListComponent } from './current/pe-sumur-current-list.component';
 import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
@@ -95,6 +96,7 @@ import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.compo
   PeDailyPerAreaChartComponent,
   IprComponent,
   PeSumurCurrentComponent,
+  PeSumurCurrentListComponent,
   PeSumurCurrentAddComponent,
   // PeGrafikComponent,
   ],

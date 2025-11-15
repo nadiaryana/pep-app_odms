@@ -74,7 +74,7 @@
           <app-xfilter title="field_1" column="field_1" format="number" [selected]="field_1_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.field_1 | number : '1.0-0') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.field_1 | number : '1.0-5') || '-'}}</td>
    </ng-container>
 
    <ng-container matColumnDef="field_2">
@@ -84,7 +84,7 @@
           <app-xfilter title="field_2" column="field_2" format="number" [selected]="field_2_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.field_2 | number : '1.0-0') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.field_2 | number : '1.0-5') || '-'}}</td>
    </ng-container>
 
     <ng-container matColumnDef="Actions" rowspan="2">

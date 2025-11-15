@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PeSumurCurrentComponent } from './pe-sumur-current-list.component';
+import { PeSumurCurrentListComponent } from './pe-sumur-current-list.component';
 
-describe('PeSumurCurrentComponent', () => {
-  let component: PeSumurCurrentComponent;
-  let fixture: ComponentFixture<PeSumurCurrentComponent>;
+describe('PeSumurCurrentListComponent', () => {
+  let component: PeSumurCurrentListComponent;
+  let fixture: ComponentFixture<PeSumurCurrentListComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PeSumurCurrentComponent ]
+      declarations: [ PeSumurCurrentListComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PeSumurCurrentComponent);
+    fixture = TestBed.createComponent(PeSumurCurrentListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

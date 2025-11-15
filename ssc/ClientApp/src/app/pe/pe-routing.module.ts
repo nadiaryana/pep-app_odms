@@ -44,9 +44,10 @@ import { PeDailySemilogChartComponent } from './daily/pe-daily-semilog-chart.com
 import { PeDailyAreaChartComponent } from './daily/pe-daily-area-chart.component';
 import { PeDailyPerAreaChartComponent } from './daily/pe-daily-per-area-chart.component';
 import { IprComponent } from './daily/ipr/pe-ipr.component';
-import { PeSumurCurrentComponent } from './current/pe-sumur-current-list.component';
+import { PeSumurCurrentListComponent } from './current/pe-sumur-current-list.component';
 import { SumurComponent } from './sumur/pe-sumur.component';
 import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.component';
+import { PeSumurCurrentComponent } from './current/pe-sumur-current.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -82,7 +83,7 @@ const peRoutes: Routes = [
     { path: 'ipr', component: IprComponent},
     // { path: 'sumur', component: SumurComponent},
     { path: 'current', component: PeSumurCurrentComponent, children: [
-      { path: 'list', component: PeSumurCurrentComponent, canActivate: [PePermissionGuard] },
+      { path: 'list', component: PeSumurCurrentListComponent, canActivate: [PePermissionGuard] },
       { path: 'add', component: PeSumurCurrentAddComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},

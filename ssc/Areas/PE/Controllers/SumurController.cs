@@ -10,6 +10,12 @@ using System.Net.Http;
 using MongoDB.Bson;
 using Newtonsoft.Json.Linq;
 using ssc.Areas.PE.Models;
+using System.Web.Http;
+using Newtonsoft.Json;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using System.IO;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 
 namespace ssc.Areas.PE.Controllers
 {
@@ -285,139 +291,183 @@ namespace ssc.Areas.PE.Controllers
         //     return File(memoryStream, "application/vnd.ms-excel", "Sensor.xlsx");
         // }
 
-        // [Authorize("PeSumur Add")]
-        // [HttpPost("UploadFiles")]
-        // public async Task<IActionResult> Post(List<IFormFile> files)
-        // {
-        //     long size = files.Sum(f => f.Length);
+        [Authorize("PeSumur Add")]
+        [HttpPost("UploadFiles")]
+        public async Task<IActionResult> Post(List<IFormFile> files)
+        {
+            long size = files.Sum(f => f.Length);
 
-        //     // full path to file in temp location
-        //     var filePath = Path.GetTempFileName();
+            // full path to file in temp location
+            var filePath = Path.GetTempFileName();
 
-        //     foreach (var formFile in files)
-        //     {
-        //         if (formFile.Length > 0)
-        //         {
-        //             using (var stream = new FileStream(filePath, FileMode.Create))
-        //             {
-        //                 await formFile.CopyToAsync(stream);
-        //             }
-        //         }
-        //     }
+            foreach (var formFile in files)
+            {
+                if (formFile.Length > 0)
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await formFile.CopyToAsync(stream);
+                    }
+                }
+            }
 
-        //     var fi = new FileInfo(filePath);
-        //     var workbook = new ExcelPackage(fi);
-        //     var ws = workbook.Workbook.Worksheets.First();
-        //     int rowCount = ws.Dimension.End.Row;
 
-        //     List<Sumur> items = new List<Sumur>();
-        //     int error_count = 0;
+            var fi = new FileInfo(filePath);
+            var workbook = new ExcelPackage(fi);
+            var ws = workbook.Workbook.Worksheets.First();
+            int rowCount = ws.Dimension.End.Row;
 
-        //     for (var r = 2; r <= rowCount; r++)
-        //     {
-        //         if (!string.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
-        //         {
-        //             Sumur _row = new Sumur();
-        //             SumurError _row_error = new SumurError();
-        //             int last_error_count = error_count;
+            List<Sumur> items = new List<Sumur>();
+            int error_count = 0;
 
-        //             if (!String.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
-        //             {
-        //                 try
-        //                 {
-        //                     if (ws.Cells[r, 1].Value.GetType() == DateTime.Now.GetType())
-        //                     {
-        //                         _row.date = (DateTime?)ws.Cells[r, 1].Value;
-        //                     }
-        //                     else
-        //                     {
-        //                         _row.date = DateTime.FromOADate(double.Parse(ws.Cells[r, 1].Value?.ToString().Trim()));
-        //                     }
-        //                 }
-        //                 catch (Exception e)
-        //                 {
-        //                     _row_error.date = new ErrorItem { value = ws.Cells[r, 1].Value?.ToString(), message = e.Message };
-        //                     error_count++;
-        //                 }
-        //             }
-        //             else
-        //             {
-        //                 _row_error.date = new ErrorItem { value = "(Blank)", message = "Blank date is not allowed" };
-        //                 error_count++;
-        //             }
+            var startRow = 2; // assume first row is header
+            for (var r = startRow; r <= rowCount; r++)
+            {
+                Sumur _row = new Sumur();
+                SumurError _row_error = new SumurError();
+                int last_error_count = error_count;
 
-        // if (!String.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString().Trim()))
-        // {
-        //     _row.well = ws.Cells[r, 2].Value?.ToString().Trim();
-        // }
-        // else
-        // {
-        //     _row_error.well = new ErrorItem { value = "(Blank)", message = "Blank Well name is not allowed" };
-        //     error_count++;
-        // }
+                // Define mappings for date property
+                var dateMapping = new[]
+                {
+                    new { key = "date", col = 1, required = true, errorMsg = "Blank date is not allowed" },
+                };
+                // loop through date mappings
+                foreach (var mapping in dateMapping)
+                {
+                    var rawValue = ws.Cells[r, mapping.col].Value;
+                    var strValue = rawValue?.ToString().Trim();
 
-        //             try
-        //             {
-        //                 _row.entry_id = (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 3].Value?.ToString().Trim()) : (decimal?)null;
-        //             }
-        //             catch (Exception e)
-        //             {
-        //                 _row_error.entry_id = new ErrorItem { value = ws.Cells[r, 3].Value?.ToString(), message = e.Message };
-        //                 error_count++;
-        //             }
+                    var prop = typeof(Sumur).GetProperty(mapping.key);
+                    var errorProp = typeof(SumurError).GetProperty(mapping.key);
 
-        //             try
-        //             {
-        //                 _row.field_1 = (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 4].Value?.ToString().Trim()) : (decimal?)null;
-        //             }
-        //             catch (Exception e)
-        //             {
-        //                 _row_error.field_1 = new ErrorItem { value = ws.Cells[r, 4].Value?.ToString(), message = e.Message };
-        //                 error_count++;
-        //             }
+                    if (!string.IsNullOrWhiteSpace(strValue))
+                    {
+                        try
+                        {
+                            DateTime dateValue;
+                            if (rawValue.GetType() == DateTime.Now.GetType())
+                            {
+                                dateValue = (DateTime)rawValue;
+                            }
+                            // if type is string
+                            else if (rawValue.GetType() == "".GetType())
+                            {
+                                dateValue = DateTime.Parse(strValue);
+                            }
+                            else
+                            {
+                                dateValue = DateTime.FromOADate(double.Parse(strValue));
+                            }
+                            prop?.SetValue(_row, dateValue);
+                        }
+                        catch (Exception e)
+                        {
+                            errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        if (mapping.required)
+                        {
+                            errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
+                            error_count++;
+                        }
+                        prop?.SetValue(_row, null);
+                    }
+                }
 
-        //             try
-        //             {
-        //                 _row.field_2 = (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 5].Value?.ToString().Trim()) : (decimal?)null;
-        //             }
-        //             catch (Exception e)
-        //             {
-        //                 _row_error.field_2 = new ErrorItem { value = ws.Cells[r, 5].Value?.ToString(), message = e.Message };
-        //                 error_count++;
-        //             }
+                // define mappings for decimal properties with their corresponding column indexes
+                var decimalMappings = new[]
+                {
+                    new { key = "entry_id", col = 2, required = false, errorMsg = "Invalid decimal value" },
+                    new { key = "field_1", col = 3, required = false, errorMsg = "Invalid decimal value" },
+                    new { key = "field_2", col = 4, required = false, errorMsg = "Invalid decimal value" },
+                };
+                // loop through decimal mappings
+                foreach (var mapping in decimalMappings)
+                {
+                    var rawValue = ws.Cells[r, mapping.col].Value;
+                    var strValue = rawValue?.ToString().Trim();
 
-        // if (_row_error.date == null && _row_error.well == null)
-        // {
-        //     if (_sensor.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
-        //     {
-        //         _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
-        //     }
-        // }
-        // if (error_count > last_error_count)
-        // {
-        //     _row_error._row = new ErrorItem { value = "error", message = "Error found" };
-        // }
+                    var prop = typeof(Sumur).GetProperty(mapping.key);
+                    var errorProp = typeof(SumurError).GetProperty(mapping.key);
 
-        // _row._error = _row_error;
+                    if (!string.IsNullOrWhiteSpace(strValue))
+                    {
+                        try
+                        {
+                            decimal decimalValue = decimal.Parse(strValue);
+                            prop?.SetValue(_row, decimalValue);
+                        }
+                        catch (Exception e)
+                        {
+                            errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        prop?.SetValue(_row, null);
+                    }
+                }
 
-        //             items.Add(_row);
-        //         }
-        //     }
 
-        //     SumurTmp _tmp = new SumurTmp
-        //     {
-        //         error_count = error_count,
-        //         items = items.ToArray()
-        //     };
-        //     _sumur_tmp.InsertOne(_tmp);
+                // Define mappings for string properties with their corresponding column indexes
+                // strings
+                dynamic[] stringMappings = new dynamic[]
+                {
+                    //new { key = "well", col = 2, required = true, errorMsg = "Blank well is not allowed" },
+                };
 
-        //     return Ok(new
-        //     {
-        //         _id = _tmp._id,
-        //         //items = items,
-        //         error_count = error_count
-        //     });
-        // }
+                foreach (var mapping in stringMappings)
+                {
+                    var rawValue = ws.Cells[r, mapping.col].Value;
+                    var strValue = rawValue?.ToString().Trim();
+
+                    var prop = typeof(Sumur).GetProperty(mapping.key);
+                    var errorProp = typeof(SumurError).GetProperty(mapping.key);
+
+                    if (!string.IsNullOrWhiteSpace(strValue))
+                    {
+                        prop?.SetValue(_row, strValue);
+                    }
+                    else
+                    {
+                        if (mapping.required)
+                        {
+                            errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
+                            error_count++;
+                        }
+                        prop?.SetValue(_row, null);
+                    }
+                }
+
+                if (error_count > last_error_count)
+                {
+                    _row_error._row = new ErrorItem { value = "error", message = "Error found" };
+                }
+
+                _row._error = _row_error;
+
+                items.Add(_row);
+            }
+
+            SumurTmp _tmp = new SumurTmp
+            {
+                error_count = error_count,
+                items = items.ToArray()
+            };
+            _sumur_tmp.InsertOne(_tmp);
+
+            return Ok(new
+            {
+                _id = _tmp._id,
+                //items = items,
+                error_count = error_count
+            });
+        }
 
         [Authorize("PeSumur Add")]
         [HttpGet("Tmp")]
@@ -458,67 +508,70 @@ namespace ssc.Areas.PE.Controllers
 
         }
 
-        // [Authorize("PeSumur Add")]
-        // [HttpGet("SaveData")]
-        // public ActionResult SaveData(string _id)
-        // {
-        //     try
-        //     {
-        //         SumurTmp _tmp = _sumur_tmp.Find(t => t._id == _id).FirstOrDefault();
+        [Authorize("PeSumur Add")]
+        [HttpGet("SaveData")]
+        public ActionResult SaveData(string _id)
+        {
+            try
+            {
+                SumurTmp _tmp = _sumur_tmp.Find(t => t._id == _id).FirstOrDefault();
 
-        //         if (_tmp == null || _tmp.error_count > 0)
-        //         {
-        //             throw new Exception();
-        //         }
+                if (_tmp == null || _tmp.error_count > 0)
+                {
+                    throw new Exception();
+                }
 
-        //         List<Sumur> items = _tmp.items.ToList();
+                List<Sumur> items = _tmp.items.ToList();
 
-        //         DateTime? min_date = items.Select(m => m.date).Min();
-        //         // string[] wells = items.Select(m => m.well).ToArray();
+                DateTime? min_date = items.Select(m => m.date).Min();
+                // string[] wells = items.Select(m => m.well).ToArray();
 
-        //         long modified_count = 0;
-        //         long created_count = items.Count();
+                long modified_count = 0;
+                long created_count = items.Count();
 
-        //         foreach (Sumur item in items)
-        //         {
-        //             item._error = null;
+                foreach (Sumur item in items)
+                {
+                    item._error = null;
 
-        //             var update = Builders<Sensor>.Update.Set(t => t.date, item.date)
-        //                 .Set(t => t.well, item.well)
-        //                 .Set(t => t.freq, item.freq)
-        //                 .Set(t => t.load, item.load)
-        //                 .Set(t => t.pi, item.pi)
-        //                 .Set(t => t.ti, item.ti)
-        //                 .Set(t => t.esp, item.esp)
-        //                 .Set(t => t.capacity, item.capacity)
-        //                 .Set(t => t.updated_by, User.Identity.Name)
-        //                 .Set(t => t.updated_date, DateTime.Now)
-        //                 .SetOnInsert(t => t.created_by, User.Identity.Name)
-        //                 .SetOnInsert(t => t.created_date, DateTime.Now);
+                    var update = Builders<Sumur>.Update.Set(t => t.date, item.date)
+                        .Set(t => t.entry_id, item.entry_id)
+                        .Set(t => t.field_1, item.field_1)
+                        .Set(t => t.field_2, item.field_2)
 
-        //             // UpdateResult res = _sumur.UpdateOne(
-        //             // Builders<Sumur>.Filter.Eq(t => t.date, item.date) & Builders<Sumur>.Filter.Eq(t => t.well, item.well),
-        //             // update, new UpdateOptions() { IsUpsert = true });
+                        // other fields if exists set, if not set null
+                        .Set(t => t.WellName, item.WellName)
+                        .Set(t => t.Current, item.Current)
+                        .Set(t => t.Timestamp, item.Timestamp)
 
-        //             // modified_count += res.ModifiedCount;
-        //             // created_count -= res.ModifiedCount;
-        //         }
-        //         _sumur_tmp.DeleteOne(d => d._id == _id);
+                        // audit trail
+                        .Set(t => t.updated_by, User.Identity.Name)
+                        .Set(t => t.updated_date, DateTime.Now)
+                        .SetOnInsert(t => t.created_by, User.Identity.Name)
+                        .SetOnInsert(t => t.created_date, DateTime.Now);
 
-        //         // modified_count += DailyCommon.RecalculateFields(min_date, wells, User.Identity.Name);
+                    UpdateResult res = _sumur.UpdateOne(
+                        Builders<Sumur>.Filter.Eq(t => t.date, item.date),
+                        update, new UpdateOptions() { IsUpsert = true });
 
-        //         return Ok(new
-        //         {
-        //             modified_count = modified_count,
-        //             created_count = created_count,
-        //             total_count = items.Count()
-        //         });
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest();
-        //     }
-        // }
+                    modified_count += res.ModifiedCount;
+                    created_count -= res.ModifiedCount;
+                }
+                _sumur_tmp.DeleteOne(d => d._id == _id);
+
+                // modified_count += DailyCommon.RecalculateFields(min_date, wells, User.Identity.Name);
+
+                return Ok(new
+                {
+                    modified_count = modified_count,
+                    created_count = created_count,
+                    total_count = items.Count()
+                });
+            }
+            catch (Exception e)
+            {
+                return BadRequest();
+            }
+        }
 
         [Authorize("PeSumur Delete")]
         [HttpDelete]

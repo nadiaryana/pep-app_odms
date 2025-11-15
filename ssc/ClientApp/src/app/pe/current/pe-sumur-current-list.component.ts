@@ -21,7 +21,7 @@ import { PeSumur } from './pe-sumur';
   templateUrl: './pe-sumur-current-list.component.html',
   styleUrls: ['./pe-sumur-current-list.component.scss']
 })
-export class PeSumurCurrentComponent implements OnInit {
+export class PeSumurCurrentListComponent implements OnInit {
 
     displayedColumns: string[] = ["select", "date","entry_id", "field_1", "field_2"];
     headerColumns1: string[] = ['select','date','entry_id','field_1','field_2'];

@@ -44,7 +44,8 @@ export class PeSumurCurrentAddComponent {
     
         data: PeSumur[] = [];
         data_error_count: number = 0;
-        displayedColumns: string[] = ["info", "date","entry_id", "field_1", "field_2"];
+        displayedColumns: string[] = ["date", "entry_id", "field_1", "field_2"];
+        headerColumns1: string[] = ["date", "entry_id", "field_1", "field_2"];
     
         constructor(
             private formBuilder: FormBuilder,
@@ -109,6 +110,21 @@ export class PeSumurCurrentAddComponent {
         }
     
         onUpload() {
+            const file = this.fileInput.nativeElement.files[0];
+
+            if (!file) {
+                this.snackbarService.status.next(new SnackbarApi(true, "No file selected.", 'dismiss'));
+                return;
+            }
+
+            const allowed = ['.xlsx'];
+            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+            if (!allowed.includes(ext)) {
+                this.snackbarService.status.next(new SnackbarApi(true, "Invalid file type. Only .xlsx allowed.", 'dismiss'));
+                return;
+            }
+
             const fd = new FormData();
             this.isUploading = true;
             fd.append('files', this.fileInput.nativeElement.files[0]);
@@ -143,7 +159,7 @@ export class PeSumurCurrentAddComponent {
                 }
             }
             
-            this.http.get<any>('/api/pe/sensor/Tmp', httpOption).subscribe(res => {
+            this.http.get<any>('/api/pe/sumur/Tmp', httpOption).subscribe(res => {
                 this.isLoading = false;
                 this.data = res['items'];
                 this.data_error_count = res['error_count'];
@@ -158,7 +174,7 @@ export class PeSumurCurrentAddComponent {
     
         saveData() {
             this.isSaving = true;
-            this.http.get<any>('/api/pe/sensor/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+            this.http.get<any>('/api/pe/sumur/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
                 this.isSaving = false;
                 this.modified_count = res["modified_count"];
                 this.created_count = res["created_count"];
