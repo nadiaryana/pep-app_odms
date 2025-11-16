@@ -172,12 +172,23 @@ export class IprComponent implements OnInit {
       this.getColumnValues(res);
     });
     this.xfilterService.selected.subscribe((res) => {
-      this[res["column"] + "_xSelected"] = res["selected"];
-      // console.log(res["column"] + "_xSelected");
-      // console.log(res["selected"]);
-      // console.log(this[res["column"] + "_xSelected"]);
+      // if res["selected"] is array and more than 1 then reset selected
+      if (Array.isArray(res["selected"]) && res["selected"].length > 1) {
+        this.well_xSelected = [];
+        // error message
+        this.snackbarService.status.next(
+          new SnackbarApi(
+            true,
+            "Please select only one well at a time.",
+            "dismiss",
+            { duration: 3000 }
+          )
+        );
+      } else {
+        this[res["column"] + "_xSelected"] = res["selected"];
+        this.getDailyData();
+      }
 
-      this.getDailyData();
     });
 
     // this.well_dateControl.valueChanges.subscribe((r) => {
@@ -615,7 +626,7 @@ export class IprComponent implements OnInit {
       },
     },
     title: {
-      text: "IPR Curve",
+      text: "IPR Curve : " + (this.well_xSelected.length > 0 ? this.well_xSelected[0] : ""),
     },
     series: [
       {

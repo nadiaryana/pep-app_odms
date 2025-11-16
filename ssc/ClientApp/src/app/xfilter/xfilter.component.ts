@@ -79,7 +79,7 @@ export class xFilterComponent implements OnInit {
 			width: '250px',
       data: { column: this.column, selected: this.selected, title: this.title, format: this.format }
       });
-      console.log(this.selected)
+    //   console.log(this.selected)
 		dialogRef.afterClosed().subscribe(res => {
 			if(res) this.xfilterService.updateSelected({ column: this.column, selected: res});
 		});
@@ -164,21 +164,21 @@ export class xFilterDialogComponent {
 		this.title = this.data["title"] ? this.data["title"] : this.data["column"];
 		this.format = this.data["format"] ? this.data["format"] : "string";
       this.xfilterService.updateFilter({ column: this.data["column"] });
-      console.log("sampai sini kah" + this.data["column"])
+    //   console.log("sampai sini kah" + this.data["column"])
 
       this.itemFilter.valueChanges.pipe(debounceTime(300)).subscribe(res => {
-        console.log("sampai sini kah 2" + this.data["column"])
+        // console.log("sampai sini kah 2" + this.data["column"])
           this.isLoadingResults = true;
 			this.xfilterService.updateFilter({column: this.data["column"], filter: res});
 		});
       this.filterSubscription = this.xfilterService.update.subscribe(res => {
-        console.log("sampai sini kah 3" + res)
+        // console.log("sampai sini kah 3" + res)
 			this.isLoadingResults = false;
           if (res["column"] == this.data["column"]) {
             this.list_items = res["items"];
-              console.log(this.list_items);
+            //   console.log(this.list_items);
 				this.select_all.checked = (this.list.selectedOptions.selected.length == this.list.options.length);
-				console.log(this.data["column"] + ' '+ this.list.selectedOptions.selected.length + ' ' + this.list.options.length + ' ' + this.list_items.length);
+				// console.log(this.data["column"] + ' '+ this.list.selectedOptions.selected.length + ' ' + this.list.options.length + ' ' + this.list_items.length);
 			}
 		})
 	}
