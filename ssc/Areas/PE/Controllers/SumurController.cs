@@ -295,178 +295,187 @@ namespace ssc.Areas.PE.Controllers
         [HttpPost("UploadFiles")]
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
-            long size = files.Sum(f => f.Length);
-
-            // full path to file in temp location
-            var filePath = Path.GetTempFileName();
-
-            foreach (var formFile in files)
+            try
             {
-                if (formFile.Length > 0)
+                long size = files.Sum(f => f.Length);
+
+                // full path to file in temp location
+                var filePath = Path.GetTempFileName();
+
+                foreach (var formFile in files)
                 {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    if (formFile.Length > 0)
                     {
-                        await formFile.CopyToAsync(stream);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await formFile.CopyToAsync(stream);
+                        }
                     }
                 }
-            }
 
 
-            var fi = new FileInfo(filePath);
-            var workbook = new ExcelPackage(fi);
-            var ws = workbook.Workbook.Worksheets.First();
-            int rowCount = ws.Dimension.End.Row;
+                var fi = new FileInfo(filePath);
+                var workbook = new ExcelPackage(fi);
+                var ws = workbook.Workbook.Worksheets.First();
+                int rowCount = ws.Dimension.End.Row;
 
-            List<Sumur> items = new List<Sumur>();
-            int error_count = 0;
+                List<Sumur> items = new List<Sumur>();
+                int error_count = 0;
 
-            var startRow = 2; // assume first row is header
-            for (var r = startRow; r <= rowCount; r++)
-            {
-                Sumur _row = new Sumur();
-                SumurError _row_error = new SumurError();
-                int last_error_count = error_count;
-
-                // Define mappings for date property
-                var dateMapping = new[]
+                var startRow = 2; // assume first row is header
+                for (var r = startRow; r <= rowCount; r++)
                 {
+                    Sumur _row = new Sumur();
+                    SumurError _row_error = new SumurError();
+                    int last_error_count = error_count;
+
+                    // Define mappings for date property
+                    var dateMapping = new[]
+                    {
                     new { key = "date", col = 1, required = true, errorMsg = "Blank date is not allowed" },
                 };
-                // loop through date mappings
-                foreach (var mapping in dateMapping)
-                {
-                    var rawValue = ws.Cells[r, mapping.col].Value;
-                    var strValue = rawValue?.ToString().Trim();
-
-                    var prop = typeof(Sumur).GetProperty(mapping.key);
-                    var errorProp = typeof(SumurError).GetProperty(mapping.key);
-
-                    if (!string.IsNullOrWhiteSpace(strValue))
+                    // loop through date mappings
+                    foreach (var mapping in dateMapping)
                     {
-                        try
+                        var rawValue = ws.Cells[r, mapping.col].Value;
+                        var strValue = rawValue?.ToString().Trim();
+
+                        var prop = typeof(Sumur).GetProperty(mapping.key);
+                        var errorProp = typeof(SumurError).GetProperty(mapping.key);
+
+                        if (!string.IsNullOrWhiteSpace(strValue))
                         {
-                            DateTime dateValue;
-                            if (rawValue.GetType() == DateTime.Now.GetType())
+                            try
                             {
-                                dateValue = (DateTime)rawValue;
+                                DateTime dateValue;
+                                if (rawValue.GetType() == DateTime.Now.GetType())
+                                {
+                                    dateValue = (DateTime)rawValue;
+                                }
+                                // if type is string
+                                else if (rawValue.GetType() == "".GetType())
+                                {
+                                    dateValue = DateTime.Parse(strValue);
+                                }
+                                else
+                                {
+                                    dateValue = DateTime.FromOADate(double.Parse(strValue));
+                                }
+                                prop?.SetValue(_row, dateValue);
                             }
-                            // if type is string
-                            else if (rawValue.GetType() == "".GetType())
+                            catch (Exception e)
                             {
-                                dateValue = DateTime.Parse(strValue);
+                                errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
+                                error_count++;
                             }
-                            else
-                            {
-                                dateValue = DateTime.FromOADate(double.Parse(strValue));
-                            }
-                            prop?.SetValue(_row, dateValue);
                         }
-                        catch (Exception e)
+                        else
                         {
-                            errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
-                            error_count++;
+                            if (mapping.required)
+                            {
+                                errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
+                                error_count++;
+                            }
+                            prop?.SetValue(_row, null);
                         }
                     }
-                    else
-                    {
-                        if (mapping.required)
-                        {
-                            errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
-                            error_count++;
-                        }
-                        prop?.SetValue(_row, null);
-                    }
-                }
 
-                // define mappings for decimal properties with their corresponding column indexes
-                var decimalMappings = new[]
-                {
+                    // define mappings for decimal properties with their corresponding column indexes
+                    var decimalMappings = new[]
+                    {
                     new { key = "entry_id", col = 2, required = false, errorMsg = "Invalid decimal value" },
                     new { key = "field_1", col = 3, required = false, errorMsg = "Invalid decimal value" },
                     new { key = "field_2", col = 4, required = false, errorMsg = "Invalid decimal value" },
                 };
-                // loop through decimal mappings
-                foreach (var mapping in decimalMappings)
-                {
-                    var rawValue = ws.Cells[r, mapping.col].Value;
-                    var strValue = rawValue?.ToString().Trim();
-
-                    var prop = typeof(Sumur).GetProperty(mapping.key);
-                    var errorProp = typeof(SumurError).GetProperty(mapping.key);
-
-                    if (!string.IsNullOrWhiteSpace(strValue))
+                    // loop through decimal mappings
+                    foreach (var mapping in decimalMappings)
                     {
-                        try
+                        var rawValue = ws.Cells[r, mapping.col].Value;
+                        var strValue = rawValue?.ToString().Trim();
+
+                        var prop = typeof(Sumur).GetProperty(mapping.key);
+                        var errorProp = typeof(SumurError).GetProperty(mapping.key);
+
+                        if (!string.IsNullOrWhiteSpace(strValue))
                         {
-                            decimal decimalValue = decimal.Parse(strValue);
-                            prop?.SetValue(_row, decimalValue);
+                            try
+                            {
+                                decimal decimalValue = decimal.Parse(strValue);
+                                prop?.SetValue(_row, decimalValue);
+                            }
+                            catch (Exception e)
+                            {
+                                errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
+                                error_count++;
+                            }
                         }
-                        catch (Exception e)
+                        else
                         {
-                            errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
-                            error_count++;
+                            prop?.SetValue(_row, null);
                         }
                     }
-                    else
+
+
+                    // Define mappings for string properties with their corresponding column indexes
+                    // strings
+                    dynamic[] stringMappings = new dynamic[]
                     {
-                        prop?.SetValue(_row, null);
+                        //new { key = "well", col = 2, required = true, errorMsg = "Blank well is not allowed" },
+                    };
+
+                    foreach (var mapping in stringMappings)
+                    {
+                        var rawValue = ws.Cells[r, mapping.col].Value;
+                        var strValue = rawValue?.ToString().Trim();
+
+                        var prop = typeof(Sumur).GetProperty(mapping.key);
+                        var errorProp = typeof(SumurError).GetProperty(mapping.key);
+
+                        if (!string.IsNullOrWhiteSpace(strValue))
+                        {
+                            prop?.SetValue(_row, strValue);
+                        }
+                        else
+                        {
+                            if (mapping.required)
+                            {
+                                errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
+                                error_count++;
+                            }
+                            prop?.SetValue(_row, null);
+                        }
                     }
+
+                    if (error_count > last_error_count)
+                    {
+                        _row_error._row = new ErrorItem { value = "error", message = "Error found" };
+                    }
+
+                    _row._error = _row_error;
+
+                    items.Add(_row);
                 }
 
-
-                // Define mappings for string properties with their corresponding column indexes
-                // strings
-                dynamic[] stringMappings = new dynamic[]
+                SumurTmp _tmp = new SumurTmp
                 {
-                    //new { key = "well", col = 2, required = true, errorMsg = "Blank well is not allowed" },
+                    error_count = error_count,
+                    items = items.ToArray()
                 };
+                _sumur_tmp.InsertOne(_tmp);
 
-                foreach (var mapping in stringMappings)
+                return Ok(new
                 {
-                    var rawValue = ws.Cells[r, mapping.col].Value;
-                    var strValue = rawValue?.ToString().Trim();
+                    _id = _tmp._id,
+                    //items = items,
+                    error_count = error_count
+                });
 
-                    var prop = typeof(Sumur).GetProperty(mapping.key);
-                    var errorProp = typeof(SumurError).GetProperty(mapping.key);
-
-                    if (!string.IsNullOrWhiteSpace(strValue))
-                    {
-                        prop?.SetValue(_row, strValue);
-                    }
-                    else
-                    {
-                        if (mapping.required)
-                        {
-                            errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
-                            error_count++;
-                        }
-                        prop?.SetValue(_row, null);
-                    }
-                }
-
-                if (error_count > last_error_count)
-                {
-                    _row_error._row = new ErrorItem { value = "error", message = "Error found" };
-                }
-
-                _row._error = _row_error;
-
-                items.Add(_row);
             }
-
-            SumurTmp _tmp = new SumurTmp
+            catch (Exception ex)
             {
-                error_count = error_count,
-                items = items.ToArray()
-            };
-            _sumur_tmp.InsertOne(_tmp);
-
-            return Ok(new
-            {
-                _id = _tmp._id,
-                //items = items,
-                error_count = error_count
-            });
+                // PENTING: kirim error asli
+                return StatusCode(500, ex.ToString());
+            }
         }
 
         [Authorize("PeSumur Add")]

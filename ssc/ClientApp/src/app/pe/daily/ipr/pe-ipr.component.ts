@@ -626,7 +626,7 @@ export class IprComponent implements OnInit {
       },
     },
     title: {
-      text: "IPR Curve : " + (this.well_xSelected.length > 0 ? this.well_xSelected[0] : ""),
+      text: "Inflow Performance Relationship  : " + (this.well_xSelected.length > 0 ? this.well_xSelected[0] : ""),
     },
     series: [
       {

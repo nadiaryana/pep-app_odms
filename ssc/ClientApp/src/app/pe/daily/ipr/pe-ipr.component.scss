@@ -90,9 +90,30 @@ mat-card-actions {
   padding-right: 10px !important;
 }
 
+.mat-input-element {
+  color: #000 !important;        /* warna teks hitam */
+  font-size: 14px !important;
+}
+
+.mat-form-field-ripple {
+  background-color: #000 !important;
+}
+
+/* Label di atas input */
+.mat-form-field-label {
+  color: #000 !important;        /* agar tidak blur abu-abu */
+  font-weight: 500;
+}
+
+/* Placeholder */
+.mat-form-field-placeholder {
+  color: #000 !important;
+}
+
 
 ::ng-deep .mat-form-field-wrapper .mat-form-field-underline {
   bottom: 5px !important;
+  background-color: #000 !important;
 }
 
 ::ng-deep .mat-form-field-wrapper .mat-form-field-infix {
