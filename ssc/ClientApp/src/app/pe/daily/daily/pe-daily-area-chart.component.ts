@@ -16,7 +16,7 @@ import { xFilterService } from '../../../xfilter/xfilter.component';
 
 @Component({
   selector: 'app-pe-daily-area-chart',
-  templateUrl: './pe-daily-area-chart.component.html',
+  templateUrl: '../pe-daily-area-chart.component.html',
   styleUrls: ['./pe-daily.scss']
 })
 export class PeDailyAreaChartComponent implements OnInit {

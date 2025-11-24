@@ -83,7 +83,7 @@ export class PeSensorListComponent implements OnInit {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Downhole Sensor",
+      title: "BHP",
       icon: "sensors",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 

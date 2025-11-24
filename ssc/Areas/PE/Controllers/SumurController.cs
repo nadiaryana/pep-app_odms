@@ -150,29 +150,29 @@ namespace ssc.Areas.PE.Controllers
 
             }
 
-            // if (!String.IsNullOrWhiteSpace(columnfilter))
-            // {
-            //     xcolfilter = Builders<Sumur>.Filter.Ne("a", "b");
-            //     SumurList colfilter = JsonConvert.DeserializeObject<SensorList>(columnfilter);
+            if (!String.IsNullOrWhiteSpace(columnfilter))
+            {
+                xcolfilter = Builders<Sumur>.Filter.Ne("a", "b");
+                SumurList colfilter = JsonConvert.DeserializeObject<SumurList>(columnfilter);
 
-            //     if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Sumur>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
-            //     // if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sensor>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sensor>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
-            //     if (colfilter.entry_id?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.entry_id.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.entry_id, Convert.ToDecimal(c))));
-            //     if (colfilter.field_1?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.field_1.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.field_1, Convert.ToDecimal(c))));
-            //     if (colfilter.field_2?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.field_2.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.field_2, Convert.ToDecimal(c))));
+                if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Sumur>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
+                // if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sensor>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sensor>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.entry_id?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.entry_id.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.entry_id, Convert.ToDecimal(c))));
+                if (colfilter.field_1?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.field_1.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.field_1, Convert.ToDecimal(c))));
+                if (colfilter.field_2?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.field_2.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.field_2, Convert.ToDecimal(c))));
 
-            //     foreach (string log in DailyCommon._logical)
-            //     {
-            //         if (colfilter.date?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
-            //         // if (colfilter.well?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.well.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$well\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-            //         if (colfilter.entry_id?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.entry_id.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$entry_id\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-            //         if (colfilter.field_1?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.field_1.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$field_1\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-            //         if (colfilter.field_2?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.field_2.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$field_2\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                foreach (string log in DailyCommon._logical)
+                {
+                    if (colfilter.date?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
+                    // if (colfilter.well?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.well.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$well\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.entry_id?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.entry_id.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$entry_id\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.field_1?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.field_1.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$field_1\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.field_2?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.field_2.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$field_2\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
 
-            //     }
+                }
 
-            //     xfilter = xfilter & xcolfilter;
-            // }
+                xfilter = xfilter & xcolfilter;
+            }
 
             var _items = _sumur.Find(xfilter, new FindOptions() { Collation = new Collation("en_US", numericOrdering: true) });
             var total_count = _items.CountDocuments();
@@ -205,10 +205,10 @@ namespace ssc.Areas.PE.Controllers
                         StatusCode = StatusCodes.Status200OK
                     };
 
-                // case "excel":
-                //     return GetExcel(_items
-                //     //.Limit(10000)
-                //     .Project<Sensor>(_fields).ToList());
+                case "excel":
+                    return GetExcel(_items
+                    //.Limit(10000)
+                    .Project<Sumur>(_fields).ToList());
 
                 default:
                     dynamic res;
@@ -250,46 +250,38 @@ namespace ssc.Areas.PE.Controllers
             return str;
         }
 
-        // public ActionResult GetExcel(List<Sensor> items)
-        // {
-        //     var workbook = new ExcelPackage();
-        //     var ws = workbook.Workbook.Worksheets.Add("Sensor");
-        //     ws.Cells[1, 1].Value = "Date";
-        //     ws.Cells[1, 2].Value = "Well";
-        //     ws.Cells[1, 3].Value = "Freq (Hz)";
-        //     ws.Cells[1, 4].Value = "Load (A)";
-        //     ws.Cells[1, 5].Value = "PI (psi)";
-        //     ws.Cells[1, 6].Value = "TI (F)";
-        //     ws.Cells[1, 7].Value = "ESP";
-        //     ws.Cells[1, 8].Value = "Capacity";
+        public ActionResult GetExcel(List<Sumur> items)
+        {
+            var workbook = new ExcelPackage();
+            var ws = workbook.Workbook.Worksheets.Add("Sumur");
+            ws.Cells[1, 1].Value = "Date";
+            ws.Cells[1, 2].Value = "Entry ID";
+            ws.Cells[1, 3].Value = "Field 1";
+            ws.Cells[1, 4].Value = "Field 2";
 
-        //     ws.Cells[1, 1, 1, 8].Style.Font.Bold = true;
-        //     ws.Cells[1, 1, 1, 8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-        //     ws.Cells[1, 1, 1, 8].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 1, 1, 4].Style.Font.Bold = true;
+            ws.Cells[1, 1, 1, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 1, 4].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
-        //     for (int c = 1; c <= 6; c++)
-        //     {
-        //         //ws.Column(c).AutoFit();
-        //     }
+            for (int c = 1; c <= 4; c++)
+            {
+                //ws.Column(c).AutoFit();
+            }
 
-        //     for (int i = 0; i < items.Count(); i++)
-        //     {
-        //         var t = items.ElementAt(i);
-        //         ws.Cells[2 + i, 1].Style.Numberformat.Format = "d-MMM-yy";
-        //         ws.Cells[2 + i, 1].Value = t.date.HasValue ? t.date.Value.ToLocalTime().ToOADate() : (double?)null;
-        //         ws.Cells[2 + i, 2].Value = t.well;
-        //         ws.Cells[2 + i, 3].Value = t.freq;
-        //         ws.Cells[2 + i, 4].Value = t.load;
-        //         ws.Cells[2 + i, 5].Value = t.pi;
-        //         ws.Cells[2 + i, 6].Value = t.ti;
-        //         ws.Cells[2 + i, 7].Value = t.esp;
-        //         ws.Cells[2 + i, 8].Value = t.capacity;
-        //     }
+            for (int i = 0; i < items.Count(); i++)
+            {
+                var t = items.ElementAt(i);
+                ws.Cells[2 + i, 1].Style.Numberformat.Format = "d-MMM-yy";
+                ws.Cells[2 + i, 1].Value = t.date.HasValue ? t.date.Value.ToLocalTime().ToOADate() : (double?)null;
+                ws.Cells[2 + i, 2].Value = t.entry_id;
+                ws.Cells[2 + i, 3].Value = t.field_1;
+                ws.Cells[2 + i, 4].Value = t.field_2;
+            }
 
-        //     MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
-        //     memoryStream.Position = 0;
-        //     return File(memoryStream, "application/vnd.ms-excel", "Sensor.xlsx");
-        // }
+            MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
+            memoryStream.Position = 0;
+            return File(memoryStream, "application/vnd.ms-excel", "Sumur.xlsx");
+        }
 
         [Authorize("PeSumur Add")]
         [HttpPost("UploadFiles")]
