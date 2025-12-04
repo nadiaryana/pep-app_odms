@@ -60,7 +60,9 @@ export class PeDailyAddOsgComponent {
 
   }
 
-  get productions() { return this.opsogForm.get('productions') }
+  get productions(): FormArray {
+    return this.opsogForm.get('productions') as FormArray;
+  }
 
   ngOnInit() {
 

@@ -2,7 +2,7 @@
       <h3> Add Operation, SOT & Gas</h3>
       <div [formGroup]="opsogForm">
         <ng-container formArrayName="productions">
-          <mat-grid-list cols="16" *ngFor="let opsog of productions.controls; let index=index">
+          <mat-grid-list cols="16" *ngFor="let opsog of productions?.controls; let index=index">
             <mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field floatLabel="never" [formGroupName]="index">
                 <mat-label>Date</mat-label>

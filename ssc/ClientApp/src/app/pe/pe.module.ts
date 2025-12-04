@@ -49,7 +49,7 @@ import { PePermissionService } from './pe-permission.service';
 
 import { ChartModule } from 'angular-highcharts';
 import { PeDailyZonechartComponent } from './daily/pe-daily-zonechart.component';
-import { PeDailyZonechartListComponent } from './daily/pe-daily-zonechart-list.component';
+import { PeDailyZoneChartDeleteDialogComponent, PeDailyZonechartListComponent } from './daily/pe-daily-zonechart-list.component';
 import { PeDailySemilogChartComponent } from './daily/pe-daily-semilog-chart.component';
 import { PeDailyAreaChartComponent } from './daily/pe-daily-area-chart.component';
 import { PeSonologChartComponent } from './sonolog/pe-sonolog-chart.component';
@@ -57,8 +57,12 @@ import { PeDailyPerAreaChartComponent } from './daily/pe-daily-per-area-chart.co
 import { PeProductionAddComponent } from './daily/pe-production-add.component';
 import { IprComponent } from './daily/ipr/pe-ipr.component';
 import { PeSumurCurrentComponent } from './current/pe-sumur-current.component';
-import { PeSumurCurrentListComponent } from './current/pe-sumur-current-list.component';
+import { PeSumurCurrentListComponent, PeSumurDeleteDialogComponent } from './current/pe-sumur-current-list.component';
 import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.component';
+import { PeDailyGasDeleteDialogComponent, PeDailyGasListComponent } from './daily/pe-daily-gas-list.component';
+import { PeDailyChanPlotListComponent, PeDailyChanPlotDeleteDialogComponent } from './daily/pe-daily-chan-plot-list.component';
+import { PeDailyGasChartComponent } from './daily/pe-daily-gaschart.component';
+import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -88,8 +92,17 @@ import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.compo
   PeSensorListComponent,
   PeSensorAddComponent,
   PeSensorDeleteDialogComponent,
+  PeDailyGasListComponent,
+  PeDailyGasDeleteDialogComponent,
+  PeDailyGasChartComponent,
+
+  PeDailyChanPlotChartComponent,
+  PeDailyChanPlotListComponent,
+  PeDailyChanPlotDeleteDialogComponent,
   PeDailyZonechartComponent,
   PeDailyZonechartListComponent,
+  PeDailyZoneChartDeleteDialogComponent,
+
   PeDailySemilogChartComponent,
   PeSonologChartComponent,
   PeDailyAreaChartComponent,
@@ -98,6 +111,7 @@ import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.compo
   PeSumurCurrentComponent,
   PeSumurCurrentListComponent,
   PeSumurCurrentAddComponent,
+  PeSumurDeleteDialogComponent,
   // PeGrafikComponent,
   ],
   imports: [

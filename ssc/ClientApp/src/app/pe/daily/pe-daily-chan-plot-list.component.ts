@@ -407,7 +407,7 @@ export class PeDailyChanPlotListComponent implements OnInit {
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-    const dialogRef = this.dialog.open(PeDailyGasDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeDailyChanPlotDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
     });
@@ -486,10 +486,10 @@ export class ExampleHttpDao {
   styleUrls: ['./pe-daily.scss']
 })
 
-export class PeDailyGasDeleteDialogComponent {
+export class PeDailyChanPlotDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeDailyGasDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeDailyChanPlotDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) { }
 
   onNoClick(): void {

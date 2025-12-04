@@ -96,7 +96,7 @@
    </ng-container>
 
    <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
-   <tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>
+   <!-- <tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr> -->
    <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
  </table>
 </div>

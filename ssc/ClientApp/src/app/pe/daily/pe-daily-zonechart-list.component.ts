@@ -402,7 +402,7 @@ export class PeDailyZonechartListComponent implements OnInit {
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-    const dialogRef = this.dialog.open(PeDailyDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeDailyZoneChartDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
     });
@@ -481,10 +481,10 @@ export class ExampleHttpDao {
   styleUrls: ['./pe-daily.scss']
 })
 
-export class PeDailyDeleteDialogComponent {
+export class PeDailyZoneChartDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeDailyDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeDailyZoneChartDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) {}
 
   onNoClick(): void {

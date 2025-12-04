@@ -74,12 +74,10 @@
         [(ngModel)]="startDate"
         name="startDate"
         (dateChange)="onXYChange()"
-        [disabled]="isLoadingResults"
       />
       <mat-datepicker-toggle
         matSuffix
         [for]="start_datePicker"
-        [disabled]="isLoadingResults"
       ></mat-datepicker-toggle>
       <mat-datepicker #start_datePicker></mat-datepicker>
     </mat-form-field>
@@ -92,12 +90,10 @@
         [(ngModel)]="endDate"
         name="endDate"
         (dateChange)="onXYChange()"
-        [disabled]="isLoadingResults"
       />
       <mat-datepicker-toggle
         matSuffix
         [for]="end_datePicker"
-        [disabled]="isLoadingResults"
       ></mat-datepicker-toggle>
       <mat-datepicker #end_datePicker></mat-datepicker>
     </mat-form-field>
