@@ -17,11 +17,11 @@ namespace ssc.Areas.PE.Controllers
     {
         private readonly IMongoCollection<Daily> _daily;
         private readonly IMongoCollection<Sonolog> _sonolog;
-        private readonly IMongoCollection<Sensor> _sensor;
+        private readonly IMongoCollection<Bhp> _bhp;
         private readonly IMongoCollection<Production> _production;
         private ProjectionDefinition<Daily> _fields_daily;
         private ProjectionDefinition<Sonolog> _fields_sonolog;
-        private ProjectionDefinition<Sensor> _fields_sensor;
+        private ProjectionDefinition<Bhp> _fields_bhp;
         private ProjectionDefinition<Production> _fields_production;
         Dictionary<string, string[]> status;
 
@@ -29,12 +29,12 @@ namespace ssc.Areas.PE.Controllers
         {
             _daily = DailyCommon._daily;
             _sonolog = DailyCommon._sonolog;
-            _sensor = DailyCommon._sensor;
+            _bhp = DailyCommon._bhp;
             _production = DailyCommon._production;
 
             _fields_daily = DailyCommon._fields_daily;
             _fields_sonolog = DailyCommon._fields_sonolog;
-            _fields_sensor = DailyCommon._fields_sensor;
+            _fields_bhp = DailyCommon._fields_bhp;
             _fields_production = DailyCommon._fields_production;
         }
 

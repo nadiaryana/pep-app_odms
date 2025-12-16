@@ -43,8 +43,8 @@ export class PeSonologAddComponent {
 
 	data: PeSonolog[] = [];
 	data_error_count: number = 0;
-	displayedColumns: string[] = ["info", "date","well","pump_intake","dfl","sfl","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time"];
-  	headerColumns1: string[] = ["info", "date","well","pump_intake","fluid_level","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time"];
+	displayedColumns: string[] = ["info", "date","well","pump_intake","dfl","sfl","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time", "keterangan"];
+  	headerColumns1: string[] = ["info", "date","well","pump_intake","fluid_level","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time", "keterangan"];
   	headerColumns2: string[] = ["dfl","sfl"];
 
 	constructor(

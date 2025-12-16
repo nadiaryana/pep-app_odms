@@ -97,7 +97,7 @@
 
 					<ng-container matColumnDef="thp">
 					  <th mat-header-cell *matHeaderCellDef rowspan="2">THP</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.thp?.value}" [matTooltip]="row._error.thp?.message" matTooltipPosition="after">{{(row.thp | number) || row._error.thp?.value || '-'}}</td>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.thp?.value}" [matTooltip]="row._error.thp?.message" matTooltipPosition="after">{{row.thp || row._error.thp?.value || '-'}}</td>
 					</ng-container>
 
 					<ng-container matColumnDef="spm">
@@ -129,6 +129,12 @@
 				      <th mat-header-cell *matHeaderCellDef rowspan="2">TIME</th>
 				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.time?.value}" [matTooltip]="row._error.time?.message" matTooltipPosition="after">{{(row.time | date: 'HH:mm:ss') || row._error.time?.value || '-'}}</td>
 				    </ng-container>
+
+					<ng-container matColumnDef="keterangan">
+						<th mat-header-cell *matHeaderCellDef rowspan="2">Keterangan</th>
+						<td mat-cell *matCellDef="let row"class="cell-left" [ngClass]="{'cell-error': row._error.keterangan?.value}" [matTooltip]="row._error.keterangan?.message" matTooltipPosition="after">{{ row.keterangan || row._error.keterangan?.value || '-' }}</td>
+					</ng-container>
+
 
 				    <ng-container matColumnDef="Actions">
 				      <th mat-header-cell *matHeaderCellDef rowspan="2">Action</th>   

@@ -46,11 +46,11 @@ export class PePermissionService {
 	new Menu("sonolog/sonolog-chart", true, null, ["PeSonolog Read"]),
 
 	
-	new Menu("sensor", true,null, ["PeSensor Read"]),
-	new Menu("sensor/list", true,null, ["PeSensor Read"]),
-	new Menu("sensor/add", true,null, ["PeSensor Add"]),
-	new Menu("sensor/edit", true,null, ["PeSensor Edit"]),
-	new Menu("sensor/delete", true,null, ["PeSensor Delete"]),
+	new Menu("bhp", true,null, ["PeBhp Read"]),
+	new Menu("bhp/list", true,null, ["PeBhp Read"]),
+	new Menu("bhp/add", true,null, ["PeBhp Add"]),
+	new Menu("bhp/edit", true,null, ["PeBhp Edit"]),
+	new Menu("bhp/delete", true,null, ["PeBhp Delete"]),
 
 	new Menu("current", true, null, ["PeSumur Read"]),
 	new Menu("current/list", true, null, ["PeSumur Read"]),

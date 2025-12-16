@@ -7,23 +7,23 @@ import { Observable, of } from 'rxjs';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 
 //import { Sensor }    from './sensor';
-import { PeSensor }    from './pe-sensor';
+import { PeBhp}    from './pe-bhp';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
 
 @Component({
-	selector: 'app-sensor-add',
-	templateUrl: './pe-sensor-add.component.html',
-	styleUrls: ['./pe-sensor.scss']
+	selector: 'app-bhp-add',
+	templateUrl: './pe-bhp-add.component.html',
+	styleUrls: ['./pe-bhp.scss']
 })
 
-export class PeSensorAddComponent {
+export class PeBhpAddComponent {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
-	sensorForm: FormGroup;
+	bhpForm: FormGroup;
 	
 	isUploading = false;
 	isLoading = false;
@@ -41,9 +41,9 @@ export class PeSensorAddComponent {
   	data_mode = "all";
   	resultsLength = 0;
 
-	data: PeSensor[] = [];
+	data: PeBhp[] = [];
 	data_error_count: number = 0;
-	displayedColumns: string[] = ["info", "date","well","freq","load","pi","ti","esp","capacity","Actions"];
+	displayedColumns: string[] = ["info", "date","well","compl_layer","layer_name","perfo_interval","meas_type","meas_depth","pmax","tmax", "noted","Actions"];
 
 	constructor(
 		private formBuilder: FormBuilder,
@@ -58,24 +58,24 @@ export class PeSensorAddComponent {
 		this.loading = true;
 		//this.snackBar.dismiss();
 		this.snackbarService.status.next(new SnackbarApi(false));
-		this.sensorForm.disable();
+		this.bhpForm.disable();
 	}
 
-	get f() { return this.sensorForm.controls; }
+	get f() { return this.bhpForm.controls; }
 
 	ngOnInit() { 
 
 		this.titleService.titleSource.next({
-          title: "Add Downhole Sensor",
+          title: "Add BHP",
           icon:"add",
 	      breadcrumbs: [
 	        {label: 'Petroleum Engineering', routerLink: ''}, 
-	        {label: 'Downhole Sensor', routerLink: 'pe/sensor'},
+	        {label: 'BHP', routerLink: 'pe/bhp'},
 	        {label: 'Add', routerLink: ''}, 
 	      ]}
 	    );
 
-		this.sensorForm = this.formBuilder.group({
+		this.bhpForm = this.formBuilder.group({
 			//sensor_id: ['', Validators.required],
 			location_id: [''],
 			is_anchor: [''],
@@ -85,12 +85,12 @@ export class PeSensorAddComponent {
 		//this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 	};
 
-	listSensor() {
-		this.router.navigate(['pe', 'sensor', 'list']);
+	listBhp() {
+		this.router.navigate(['pe', 'bhp', 'list']);
 	}
 
 	canDeactivate(): Observable<boolean> | boolean {
-		if (this.sensorForm.pristine) {
+		if (this.bhpForm.pristine) {
 			return true;
 		}
 		return this.dialogService.confirm('Discard changes?');
@@ -111,7 +111,7 @@ export class PeSensorAddComponent {
 		const fd = new FormData();
 		this.isUploading = true;
 		fd.append('files', this.fileInput.nativeElement.files[0]);
-		this.http.post('/api/pe/sensor/UploadFiles', fd, {
+		this.http.post('/api/pe/bhp/UploadFiles', fd, {
 			reportProgress: true,
 			observe: 'events'
 		})
@@ -142,7 +142,7 @@ export class PeSensorAddComponent {
 			}
 		}
 		
-		this.http.get<any>('/api/pe/sensor/Tmp', httpOption).subscribe(res => {
+		this.http.get<any>('/api/pe/bhp/Tmp', httpOption).subscribe(res => {
 			this.isLoading = false;
 			this.data = res['items'];
 			this.data_error_count = res['error_count'];
@@ -157,7 +157,7 @@ export class PeSensorAddComponent {
 
 	saveData() {
 		this.isSaving = true;
-		this.http.get<any>('/api/pe/sensor/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+		this.http.get<any>('/api/pe/bhp/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
 			this.isSaving = false;
 			this.modified_count = res["modified_count"];
 			this.created_count = res["created_count"];
@@ -193,7 +193,7 @@ export class PeSensorAddComponent {
 
 	@HostListener('window:beforeunload', ['$event'])
 	unloadNotification($event: any) {
-		return this.sensorForm.pristine;
+		return this.bhpForm.pristine;
 	}
 
 }

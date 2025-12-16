@@ -1,4 +1,4 @@
-export class PeSensor {
+export class PeBhp {
 	constructor(
 		public _id: string,
 		public machine_id: number,
@@ -9,8 +9,8 @@ export class PeSensor {
 	) {}
 }
 
-export class PeSensorError {
+export class PeBhpError {
 	constructor(
-		public pe_sensor_id: number = 0,
+		public pe_bhp_id: number = 0,
 	) {}
 }

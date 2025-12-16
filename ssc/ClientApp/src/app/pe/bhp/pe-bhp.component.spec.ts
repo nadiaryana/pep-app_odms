@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PeSensorComponent } from './pe-sensor.component';
+import { PeBhpComponent } from './pe-bhp.component';
 
-describe('PeSensorComponent', () => {
-  let component: PeSensorComponent;
-  let fixture: ComponentFixture<PeSensorComponent>;
+describe('PeBhpComponent', () => {
+  let component: PeBhpComponent;
+  let fixture: ComponentFixture<PeBhpComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PeSensorComponent ]
+      declarations: [ PeBhpComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PeSensorComponent);
+    fixture = TestBed.createComponent(PeBhpComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

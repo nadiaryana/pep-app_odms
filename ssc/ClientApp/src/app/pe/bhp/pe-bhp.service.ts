@@ -4,14 +4,14 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router, RouterStateSnapshot, ActivatedRoute } from '@angular/router';
 
-import { PeSensor } from './pe-sensor';
+import { PeBhp } from './pe-bhp';
 //import { Sensor } from './sensor';
 
 @Injectable({
   providedIn: 'root'
 })
 
-export class PeSensorService {
+export class PeBhpService {
   
   constructor(
 	private http: HttpClient,
@@ -19,31 +19,31 @@ export class PeSensorService {
 	
   }
 
-    add(_pe_sensor: PeSensor) {
-		return this.http.post<any>('Pe/Sensor/Add', _pe_sensor)
+    add(_pe_bhp: PeBhp) {
+		return this.http.post<any>('Pe/Bhp/Add', _pe_bhp)
 		.pipe(map(res => {
 			return res;
 		}));
     }
 	
-	deletePeSensor(_pe_sensor: PeSensor) {
-		return this.http.post<any>('Pe/Sensor/Delete', _pe_sensor)
+	deletePeBhp(_pe_bhp: PeBhp) {
+		return this.http.post<any>('Pe/Bhp/Delete', _pe_bhp)
 		.pipe(map(res => {
 			return res;
 		}));
 	}
 	
-	editPeSensor(_pe_sensor: PeSensor) {
-		return this.http.post<any>('Pe/Sensor/Edit', _pe_sensor)
+	editPeBhp(_pe_bhp: PeBhp) {
+		return this.http.post<any>('Pe/Bhp/Edit', _pe_bhp)
 		.pipe(map(res => {
 			return res;
 		}));
 	}
 	
-	getOne(_pe_sensor: PeSensor) : Observable<PeSensor> {
-		return this.http.post<any>('Pe/Sensor/Get', _pe_sensor)
+	getOne(_pe_bhp: PeBhp) : Observable<PeBhp> {
+		return this.http.post<any>('Pe/Bhp/Get', _pe_bhp)
 		.pipe(map(res => { 
-			return new PeSensor(res.PE_TICKET_ID, res.MACHINE_ID, res.PRESENCE_LOCATION_ID, res.DEVICE_ROLE);
+			return new PeBhp(res.PE_TICKET_ID, res.MACHINE_ID, res.PRESENCE_LOCATION_ID, res.DEVICE_ROLE);
 		})); 
 	}
 }
