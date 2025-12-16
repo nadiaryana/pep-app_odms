@@ -88,6 +88,14 @@ import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.
   PeSonologAddComponent,
   PeSonologDeleteDialogComponent,
 
+  PeDailyGasListComponent,
+  PeDailyGasDeleteDialogComponent,
+  PeDailyGasChartComponent,
+
+  PeDailyChanPlotChartComponent,
+  PeDailyChanPlotListComponent,
+  PeDailyChanPlotDeleteDialogComponent,
+  
   PeBhpComponent,
   PeBhpAddComponent,
   PeBhpListComponent,
