@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { MatSnackBar } from '@angular/material';
 
 @Component({
-  selector: 'app-pe-sensor',
-  templateUrl: './pe-sensor.component.html',
-  styleUrls: ['./pe-sensor.scss']
+  selector: 'app-pe-bhp',
+  templateUrl: './pe-bhp.component.html',
+  styleUrls: ['./pe-bhp.scss']
 })
-export class PeSensorComponent { 
+export class PeBhpComponent { 
   constructor (
 	public snackBar: MatSnackBar
   ) {}

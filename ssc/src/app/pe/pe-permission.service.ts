@@ -42,11 +42,11 @@ export class PePermissionService {
   new Menu("dynagraph", true, null, ["PeDynagraph Read"]),
   new Menu("dynagraph/add", true,null, ["PeDynagraph Add"]),
 
-	new Menu("sensor", true,null, ["PeSensor Read"]),
-	new Menu("sensor/list", true,null, ["PeSensor Read"]),
-	new Menu("sensor/add", true,null, ["PeSensor Add"]),
-	new Menu("sensor/edit", true,null, ["PeSensor Edit"]),
-	new Menu("sensor/delete", true,null, ["PeSensor Delete"]),
+	new Menu("bhp", true,null, ["PeBhp Read"]),
+	new Menu("bhp/list", true,null, ["PeBhp Read"]),
+	new Menu("bhp/add", true,null, ["PeBhp Add"]),
+	new Menu("bhp/edit", true,null, ["PeBhp Edit"]),
+	new Menu("bhp/delete", true,null, ["PeBhp Delete"]),
 
 	new Menu("wellperformance", true,null, ["PeWellPerformance Read"]),
   new Menu("ipr", true,null, ["PeIPR Read"]),

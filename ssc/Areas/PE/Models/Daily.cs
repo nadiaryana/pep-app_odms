@@ -198,16 +198,16 @@ namespace ssc.Areas.PE.Models
         public static IMongoDatabase database;
         public static readonly IMongoCollection<Daily> _daily;
         public static readonly IMongoCollection<Sonolog> _sonolog;
-        public static readonly IMongoCollection<Sensor> _sensor;
+        public static readonly IMongoCollection<Bhp> _bhp;
         public static readonly IMongoCollection<Production> _production;
         public static readonly IMongoCollection<ProductionTmp> _production_tmp;
         public static readonly IMongoCollection<Structure> _structure;
         public static readonly IMongoCollection<DailyTmp> _daily_tmp;
         public static readonly IMongoCollection<SonologTmp> _sonolog_tmp;
-        public static readonly IMongoCollection<SensorTmp> _sensor_tmp;
+        public static readonly IMongoCollection<BhpTmp> _bhp_tmp;
         public static ProjectionDefinition<Daily> _fields_daily;
         public static ProjectionDefinition<Sonolog> _fields_sonolog;
-        public static ProjectionDefinition<Sensor> _fields_sensor;
+        public static ProjectionDefinition<Bhp> _fields_bhp;
         public static ProjectionDefinition<Production> _fields_production;
         public static ProjectionDefinition<Structure> _fields_structure;
         public static string[] _logical;
@@ -219,12 +219,12 @@ namespace ssc.Areas.PE.Models
 
             _daily = database.GetCollection<Daily>("daily");
             _sonolog = database.GetCollection<Sonolog>("sonolog");
-            _sensor = database.GetCollection<Sensor>("sensor");
+            _bhp = database.GetCollection<Bhp>("bhp");
             _production = database.GetCollection<Production>("production");
 
             _daily_tmp = database.GetCollection<DailyTmp>("daily_tmp");
             _sonolog_tmp = database.GetCollection<SonologTmp>("sonolog_tmp");
-            _sensor_tmp = database.GetCollection<SensorTmp>("sensor_tmp");
+            _bhp_tmp = database.GetCollection<BhpTmp>("bhp_tmp");
 
             _fields_daily = Builders<Daily>.Projection
                 .Include(t => t.date)
@@ -282,13 +282,16 @@ namespace ssc.Areas.PE.Models
                 .Include(t => t.egfl)
                 .Include(t => t.al);
 
-            _fields_sensor = Builders<Sensor>.Projection
+            _fields_bhp = Builders<Bhp>.Projection
                .Include(t => t.date)
                .Include(t => t.well)
-               .Include(t => t.freq)
-               .Include(t => t.load)
-               .Include(t => t.pi)
-               .Include(t => t.ti);
+               .Include(t => t.layer_name)
+               .Include(t => t.perfo_interval)
+               .Include(t => t.meas_type)
+               .Include(t => t.meas_depth)
+               .Include(t => t.pmax)
+               .Include(t => t.tmax)
+               .Include(t => t.noted);
 
             _fields_production = Builders<Production>.Projection
                .Include(t => t.date)

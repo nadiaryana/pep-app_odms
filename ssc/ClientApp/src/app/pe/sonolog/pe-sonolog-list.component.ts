@@ -24,8 +24,8 @@ import { CommonService } from '../../common.service';
 })
 export class PeSonologListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "date","well","pump_intake","dfl","sfl","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time"];
-  headerColumns1: string[] = ["select", "date","well","pump_intake","fluid_level","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time"];
+  displayedColumns: string[] = ["select", "date","well","pump_intake","dfl","sfl","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time", "keterangan"];
+  headerColumns1: string[] = ["select", "date","well","pump_intake","fluid_level","tglc","egfl","al","thp","spm","cp","agf","pbhp","sbhp","time", "keterangan"];
   headerColumns2: string[] = ["dfl","sfl"];
   exampleDatabase: ExampleHttpDao | null;
   data: PeSonolog[] = [];
@@ -64,6 +64,7 @@ export class PeSonologListComponent implements OnInit {
   pbhpFilter = new FormControl('');
   sbhpFilter = new FormControl('');
   timeFilter = new FormControl('');
+  keteranganFilter = new FormControl('');
 
   date_xSelected = [];
   well_xSelected = [];
@@ -81,6 +82,7 @@ export class PeSonologListComponent implements OnInit {
   pbhp_xSelected = [];
   sbhp_xSelected = [];
   time_xSelected = [];
+  keterangan_xSelected = [];
 
   filterSubscription:Subscription;
   selectedSubscription:Subscription;
@@ -158,6 +160,7 @@ export class PeSonologListComponent implements OnInit {
       this.pbhpFilter.valueChanges.pipe(debounceTime(300)),
       this.sbhpFilter.valueChanges.pipe(debounceTime(300)),
       this.timeFilter.valueChanges.pipe(debounceTime(300)),
+      this.keteranganFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
@@ -302,6 +305,7 @@ export class PeSonologListComponent implements OnInit {
     if(this.pbhp_xSelected.length) columnfilter["pbhp"] = this.pbhp_xSelected;
     if(this.sbhp_xSelected.length) columnfilter["sbhp"] = this.sbhp_xSelected;
     if(this.time_xSelected.length) columnfilter["time"] = this.time_xSelected;
+    if(this.keterangan_xSelected.length) columnfilter["keterangan"] = this.keterangan_xSelected;
 
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     //if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();

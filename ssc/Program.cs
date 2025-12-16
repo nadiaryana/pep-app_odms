@@ -20,7 +20,7 @@ namespace ssc
             Thread.CurrentThread.CurrentUICulture = culture;
 
 
-      CreateWebHostBuilder(args).UseContentRoot(Directory.GetCurrentDirectory()).Build().Run();
+            CreateWebHostBuilder(args).UseContentRoot(Directory.GetCurrentDirectory()).Build().Run();
             /*var host = new WebHostBuilder()
             .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
@@ -35,6 +35,6 @@ namespace ssc
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>();
 
-      
+
     }
 }

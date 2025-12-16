@@ -48,7 +48,8 @@ namespace ssc.Areas.PE.Controllers
                 .Include(t => t.agf)
                 .Include(t => t.pbhp)
                 .Include(t => t.sbhp)
-                .Include(t => t.time);
+                .Include(t => t.time)
+                .Include(t => t.keterangan);
         }
 
         [Authorize("PeSonolog Read")]
@@ -79,7 +80,8 @@ namespace ssc.Areas.PE.Controllers
                     Builders<Sonolog>.Filter.Regex(t => t.agf, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.pbhp, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.sbhp, new BsonRegularExpression(filter, "i")) |
-                    Builders<Sonolog>.Filter.Regex(t => t.time, new BsonRegularExpression(filter, "i"));
+                    Builders<Sonolog>.Filter.Regex(t => t.time, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.keterangan, new BsonRegularExpression(filter, "i"));
             }
 
             if (!String.IsNullOrWhiteSpace(columnfilter))
@@ -97,7 +99,7 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.tglc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.tglc.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.tglc, Convert.ToDecimal(c))));
                 if (colfilter.egfl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.egfl.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.egfl, Convert.ToDecimal(c))));
                 if (colfilter.al?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.al.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.al, Convert.ToDecimal(c))));
-                if (colfilter.thp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.thp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.thp, Convert.ToDecimal(c))));
+                if (colfilter.thp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.thp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Regex(t => t.thp, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.spm?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.spm.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Regex(t => t.spm, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.cp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.cp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.cp, Convert.ToDecimal(c))));
                 if (colfilter.agf?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.agf.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.agf, Convert.ToDecimal(c))));
@@ -105,6 +107,7 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.sbhp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.sbhp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.sbhp, Convert.ToDecimal(c))));
                 // if (colfilter.time?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.time.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.spm, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.time?.ToList().Count(c => !(c is JObject)) > 0) { xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.time.ToList().Select(val => (val is DateTime dt) ? Builders<Sonolog>.Filter.Eq(t => t.time, new BsonDateTime(new DateTime(1970, 1, 1, dt.Hour, dt.Minute, dt.Second, DateTimeKind.Utc))) : Builders<Sonolog>.Filter.Eq(t => t.time, new BsonDateTime(DateTime.Parse(val.ToString()).ToUniversalTime())))); }
+                if (colfilter.keterangan?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.keterangan.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Regex(t => t.keterangan, new BsonRegularExpression((string)c, "i"))));
 
 
                 foreach (string log in DailyCommon._logical)
@@ -118,7 +121,8 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.tglc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.tglc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$tglc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.egfl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.egfl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$egfl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.al?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.al.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$al\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.thp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.thp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$thp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    // if (colfilter.thp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.thp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$thp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.thp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.thp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$thp\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.spm?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.spm.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$spm\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.cp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.cp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$cp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.agf?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.agf.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$agf\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
@@ -127,6 +131,8 @@ namespace ssc.Areas.PE.Controllers
                     // if (colfilter.time?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.time.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$time\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     // if (colfilter.time?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) { xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.time.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$time\",\"{1}\"]}}", ((JObject)c).GetValue("opr"), TimeSpan.Parse(((JObject)c).GetValue("val").ToString()).ToString(@"hh\:mm\:ss"))).ToArray()), log); }
                     if (colfilter.time?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) { xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.time.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$time\", ISODate(\"1970-01-01T{1}Z\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("HH:mm:ss"))).ToArray()), log); }
+                    if (colfilter.keterangan?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) { xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.keterangan.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$keterangan\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log); }
+
                 }
 
                 xfilter = xfilter & xcolfilter;
@@ -153,6 +159,7 @@ namespace ssc.Areas.PE.Controllers
                 case "pbhp": _items = (order == "asc") ? _items.SortBy(t => t.pbhp) : _items.SortByDescending(t => t.pbhp); break;
                 case "sbhp": _items = (order == "asc") ? _items.SortBy(t => t.sbhp) : _items.SortByDescending(t => t.sbhp); break;
                 case "time": _items = (order == "asc") ? _items.SortBy(t => t.time) : _items.SortByDescending(t => t.time); break;
+                case "keterangan": _items = (order == "asc") ? _items.SortBy(t => t.keterangan) : _items.SortByDescending(t => t.keterangan); break;
             }
 
             switch (mode)
@@ -279,11 +286,14 @@ namespace ssc.Areas.PE.Controllers
             ws.Cells[1, 15, 2, 15].Merge = true;
             ws.Cells[3, 15].Value = "meter";
 
-            ws.Cells[1, 1, 1, 15].Style.Font.Bold = true;
-            ws.Cells[1, 1, 3, 15].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            ws.Cells[1, 1, 3, 15].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 16].Value = "Keterangan";
+            ws.Cells[1, 16, 2, 16].Merge = true;
 
-            for (int c = 1; c <= 15; c++)
+            ws.Cells[1, 1, 1, 16].Style.Font.Bold = true;
+            ws.Cells[1, 1, 3, 16].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 3, 16].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+
+            for (int c = 1; c <= 16; c++)
             {
                 //ws.Column(c).AutoFit();
             }
@@ -308,6 +318,7 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[4 + i, 13].Value = t.pbhp;
                 ws.Cells[4 + i, 14].Value = t.sbhp;
                 ws.Cells[4 + i, 15].Value = t.time;
+                ws.Cells[4 + i, 16].Value = t.keterangan;
             }
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
@@ -456,14 +467,13 @@ namespace ssc.Areas.PE.Controllers
                         error_count++;
                     }
 
-                    try
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 9].Value?.ToString().Trim()))
                     {
-                        _row.thp = (!String.IsNullOrWhiteSpace(ws.Cells[r, 9].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 9].Value?.ToString().Trim()) : (decimal?)null;
+                        _row.thp = ws.Cells[r, 9].Value?.ToString().Trim();
                     }
-                    catch (Exception e)
+                    else
                     {
-                        _row_error.thp = new ErrorItem { value = ws.Cells[r, 9].Value?.ToString(), message = e.Message };
-                        error_count++;
+                        _row.thp = null;
                     }
 
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 10].Value?.ToString().Trim()))
@@ -553,7 +563,26 @@ namespace ssc.Areas.PE.Controllers
                         _row_error.time = null;
                     }
 
-
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 16].Value?.ToString()))
+                    {
+                        try
+                        {
+                            _row.keterangan = ws.Cells[r, 16].Value?.ToString().Trim();
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.keterangan = new ErrorItem
+                            {
+                                value = ws.Cells[r, 16].Value?.ToString(),
+                                message = e.Message
+                            };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row.keterangan = null;
+                    }
 
 
                     if (error_count > last_error_count)
@@ -662,6 +691,7 @@ namespace ssc.Areas.PE.Controllers
                         pbhp = item.pbhp,
                         sbhp = item.sbhp,
                         time = item.time,
+                        keterangan = item.keterangan,
                         updated_by = User.Identity.Name,
                         updated_date = DateTime.Now,
                         created_by = User.Identity.Name,

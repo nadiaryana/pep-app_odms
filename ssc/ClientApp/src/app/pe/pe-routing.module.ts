@@ -23,10 +23,10 @@ import { PeSonologDeleteDialogComponent } from './sonolog/pe-sonolog-list.compon
 import { PeSonologAddComponent } from './sonolog/pe-sonolog-add.component';
 import { PeSonologChartComponent } from './sonolog/pe-sonolog-chart.component';
 
-import { PeSensorComponent } from './sensor/pe-sensor.component';
-import { PeSensorListComponent } from './sensor/pe-sensor-list.component';
-import { PeSensorDeleteDialogComponent } from './sensor/pe-sensor-list.component';
-import { PeSensorAddComponent } from './sensor/pe-sensor-add.component';
+import { PeBhpComponent} from './bhp/pe-bhp.component';
+import { PeBhpListComponent} from './bhp/pe-bhp-list.component';
+import { PeBhpDeleteDialogComponent } from './bhp/pe-bhp-list.component';
+import { PeBhpAddComponent} from './bhp/pe-bhp-add.component';
 import { PeDailyManajemenComponent } from './daily/pe-daily-manajemen.component';
 
 // import { PeWellMonitoringComponent } from './well/pe-well-monitoring.component';
@@ -75,9 +75,9 @@ const peRoutes: Routes = [
 	  { path: 'sonolog-chart', component: PeSonologChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
-    { path: 'sensor', component: PeSensorComponent, children: [
-      { path: 'list', component: PeSensorListComponent, canActivate: [PePermissionGuard] },
-      { path: 'add', component: PeSensorAddComponent, canActivate: [PePermissionGuard] },
+    { path: 'bhp', component: PeBhpComponent, children: [
+      { path: 'list', component: PeBhpListComponent, canActivate: [PePermissionGuard] },
+      { path: 'add', component: PeBhpAddComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
     { path: 'ipr', component: IprComponent},

@@ -33,10 +33,10 @@ import { PeSonologListComponent } from './sonolog/pe-sonolog-list.component';
 import { PeSonologDeleteDialogComponent } from './sonolog/pe-sonolog-list.component';
 import { PeSonologAddComponent } from './sonolog/pe-sonolog-add.component';
 
-import { PeSensorComponent } from './sensor/pe-sensor.component';
-import { PeSensorListComponent } from './sensor/pe-sensor-list.component';
-import { PeSensorDeleteDialogComponent } from './sensor/pe-sensor-list.component';
-import { PeSensorAddComponent } from './sensor/pe-sensor-add.component';
+import { PeBhpComponent} from './bhp/pe-bhp.component';
+import { PeBhpListComponent} from './bhp/pe-bhp-list.component';
+import { PeBhpDeleteDialogComponent } from './bhp/pe-bhp-list.component';
+import { PeBhpAddComponent } from './bhp/pe-bhp-add.component';
 
 import { Panel, PanelSubItem } from '../navigation/panel/panel';
 import { PanelItem } from '../navigation/panel/panel';
@@ -88,17 +88,11 @@ import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.
   PeSonologAddComponent,
   PeSonologDeleteDialogComponent,
 
-  PeSensorComponent,
-  PeSensorListComponent,
-  PeSensorAddComponent,
-  PeSensorDeleteDialogComponent,
-  PeDailyGasListComponent,
-  PeDailyGasDeleteDialogComponent,
-  PeDailyGasChartComponent,
+  PeBhpComponent,
+  PeBhpAddComponent,
+  PeBhpListComponent,
+  PeBhpDeleteDialogComponent,
 
-  PeDailyChanPlotChartComponent,
-  PeDailyChanPlotListComponent,
-  PeDailyChanPlotDeleteDialogComponent,
   PeDailyZonechartComponent,
   PeDailyZonechartListComponent,
   PeDailyZoneChartDeleteDialogComponent,
@@ -144,7 +138,7 @@ import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.
   xFilterDialogTextComponent,
   PeDailyDeleteDialogComponent,
   PeSonologDeleteDialogComponent,
-  PeSensorDeleteDialogComponent,
+  PeBhpDeleteDialogComponent,
   ],
 })
 
@@ -165,9 +159,9 @@ export class PeModule {
             new PanelSubItem("Daily Production", "pe/daily", "list", this.pePermission.passPermission("pe/daily")),
             new PanelSubItem("Sonolog", "pe/sonolog", "graphic_eq", this.pePermission.passPermission("pe/sonolog")),
             //new PanelSubItem("Sonolog Add", "pe/sonolog/add", "playlist_add", this.pePermission.passPermission("pe/sonolog/add")),
-			      new PanelSubItem("BHP", "pe/sensor", "sensors", this.pePermission.passPermission("pe/sensor")),
+			      new PanelSubItem("BHP", "pe/bhp", "sensors", this.pePermission.passPermission("pe/bhp")),
             new PanelSubItem("IPR", "pe/ipr", "show_chart"),
-            //new PanelSubItem("Sensor Add", "pe/sensor/add", "playlist_add", this.pePermission.passPermission("pe/sensor/add")),
+            //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [
           new PanelSubItem("iSRP", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur")),

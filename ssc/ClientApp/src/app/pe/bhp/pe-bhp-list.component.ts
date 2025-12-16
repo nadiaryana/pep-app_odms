@@ -8,8 +8,8 @@ import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
 
-import { PeSensorService } from './pe-sensor.service';
-import { PeSensor }    from './pe-sensor';
+import { PeBhpService} from './pe-bhp.service';
+import { PeBhp}    from './pe-bhp';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
@@ -18,15 +18,15 @@ import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
 
 @Component({
-  selector: 'pe-sensor-list',
-  templateUrl: './pe-sensor-list.component.html',
-  styleUrls: ['./pe-sensor.scss']
+  selector: 'pe-bhp-list',
+  templateUrl: './pe-bhp-list.component.html',
+  styleUrls: ['./pe-bhp.scss']
 })
-export class PeSensorListComponent implements OnInit {
+export class PeBhpListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "date","well","freq","load","pi","ti","esp","capacity"];
+  displayedColumns: string[] = ["select", "date","well","compl_layer","layer_name","perfo_interval","meas_type","meas_depth","pmax","tmax", "noted"];
   exampleDatabase: ExampleHttpDao | null;
-  data: PeSensor[] = [];
+  data: PeBhp[] = [];
 
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
@@ -48,19 +48,25 @@ export class PeSensorListComponent implements OnInit {
 
   dateFilter = new FormControl('');
   wellFilter = new FormControl('');
-  freqFilter = new FormControl('');
-  loadFilter = new FormControl('');
-  piFilter = new FormControl('');
-  tiFilter = new FormControl('');
+  compl_layerFilter = new FormControl('');
+  layer_nameFilter = new FormControl('');
+  perfo_intervalFilter = new FormControl('');
+  meas_typeFilter = new FormControl('');
+  meas_depthFilter = new FormControl('');
+  pmaxFilter = new FormControl('');
+  tmaxFilter = new FormControl('');
+  notedFilter = new FormControl('');
 
   date_xSelected = [];
   well_xSelected = [];
-  freq_xSelected = [];
-  load_xSelected = [];
-  pi_xSelected = [];
-  ti_xSelected = [];
-  esp_xSelected = [];
-  capacity_xSelected = [];
+  compl_layer_xSelected = [];
+  layer_name_xSelected = [];
+  perfo_interval_xSelected = [];
+  meas_type_xSelected = [];
+  meas_depth_xSelected = [];
+  pmax_xSelected = [];
+  tmax_xSelected = [];
+  noted_xSelected = [];
 
   filterSubscription:Subscription;
   selectedSubscription:Subscription;
@@ -71,7 +77,7 @@ export class PeSensorListComponent implements OnInit {
     private router: Router,
     public dialog: MatDialog,
     //public snackBar: MatSnackBar,
-    private pe_sensorService: PeSensorService,
+    private pe_bhpService: PeBhpService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
     private titleService: TitleService,
@@ -87,7 +93,7 @@ export class PeSensorListComponent implements OnInit {
       icon: "sensors",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
-        {label: 'Downhole Sensor', routerLink: ''}
+        {label: 'BHP', routerLink: ''}
       ]}
     );
 
@@ -124,10 +130,14 @@ export class PeSensorListComponent implements OnInit {
       this.filterControl.valueChanges.pipe(debounceTime(300)),
       this.dateFilter.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.freqFilter.valueChanges.pipe(debounceTime(300)),
-      this.loadFilter.valueChanges.pipe(debounceTime(300)),
-      this.piFilter.valueChanges.pipe(debounceTime(300)),
-      this.tiFilter.valueChanges.pipe(debounceTime(300)),
+      this.compl_layerFilter.valueChanges.pipe(debounceTime(300)),
+      this.layer_nameFilter.valueChanges.pipe(debounceTime(300)),
+      this.perfo_intervalFilter.valueChanges.pipe(debounceTime(300)),
+      this.meas_typeFilter.valueChanges.pipe(debounceTime(300)),
+      this.meas_depthFilter.valueChanges.pipe(debounceTime(300)),
+      this.pmaxFilter.valueChanges.pipe(debounceTime(300)),
+      this.tmaxFilter.valueChanges.pipe(debounceTime(300)),
+      this.notedFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
@@ -199,7 +209,7 @@ export class PeSensorListComponent implements OnInit {
     ).pipe(map((res) => {
       this.isLoadingResults = false;
       return {
-        filename: 'Sensor.xlsx',
+        filename: 'BHP.xlsx',
         data: new Blob(
           [res['body']],
           { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
@@ -259,12 +269,14 @@ export class PeSensorListComponent implements OnInit {
     var columnfilter = {};
     if(this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
     if(this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if(this.freq_xSelected.length) columnfilter["freq"] = this.freq_xSelected;
-    if(this.load_xSelected.length) columnfilter["load"] = this.load_xSelected;
-    if(this.pi_xSelected.length) columnfilter["pi"] = this.pi_xSelected;
-    if(this.ti_xSelected.length) columnfilter["ti"] = this.ti_xSelected;
-    if(this.esp_xSelected.length) columnfilter["esp"] = this.esp_xSelected;
-    if(this.capacity_xSelected.length) columnfilter["capacity"] = this.capacity_xSelected;
+    if(this.compl_layer_xSelected.length) columnfilter["compl_layer"] = this.compl_layer_xSelected;
+    if(this.layer_name_xSelected.length) columnfilter["layer_name"] = this.layer_name_xSelected;
+    if(this.perfo_interval_xSelected.length) columnfilter["perfo_interval"] = this.perfo_interval_xSelected;
+    if(this.meas_type_xSelected.length) columnfilter["meas_type"] = this.meas_type_xSelected;
+    if(this.meas_depth_xSelected.length) columnfilter["meas_depth"] = this.meas_depth_xSelected;
+    if(this.pmax_xSelected.length) columnfilter["pmax"] = this.pmax_xSelected;
+    if(this.tmax_xSelected.length) columnfilter["tmax"] = this.tmax_xSelected;
+    if(this.noted_xSelected.length) columnfilter["noted"] = this.noted_xSelected;
 
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     //if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
@@ -302,7 +314,7 @@ export class PeSensorListComponent implements OnInit {
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-    const dialogRef = this.dialog.open(PeSensorDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeBhpDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
     });
@@ -311,7 +323,7 @@ export class PeSensorListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/sensor', {
+        this.http.delete<any>('/api/pe/bhp', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -333,8 +345,8 @@ export class PeSensorListComponent implements OnInit {
 
 }
 
-export interface PeSensorApi {
-  items: PeSensor[];
+export interface PeBhpApi {
+  items: PeBhp[];
   total_count: number;
 }
 
@@ -358,7 +370,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) {}
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeSensorApi> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeBhpApi> {
 
     var params = {};
     if(sort!=null) params["sort"] = sort;
@@ -371,19 +383,19 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<PeSensorApi>('/api/pe/sensor', httpOption);
+    return this.http.get<PeBhpApi>('/api/pe/bhp', httpOption);
   }
 }
 
 @Component({
-  selector: 'app-sensor-delete-dialog',
+  selector: 'app-bhp-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
-  styleUrls: ['./pe-sensor.scss']
+  styleUrls: ['./pe-bhp.scss']
 })
-export class PeSensorDeleteDialogComponent {
+export class PeBhpDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeSensorDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeBhpDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) {}
 
   onNoClick(): void {
