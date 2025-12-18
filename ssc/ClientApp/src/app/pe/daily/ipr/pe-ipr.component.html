@@ -420,7 +420,7 @@
               <mat-label>Liquid Rate</mat-label>
               <input
                 matInput
-                [formControl]="grossAvg"
+                [value]="dailyAverages?.length ? dailyAverages[0]?.grossAvg : ''"
                 placeholder="Liquid Rate"
                 readonly
               />
