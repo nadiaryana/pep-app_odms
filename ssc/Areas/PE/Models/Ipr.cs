@@ -25,6 +25,17 @@ namespace ssc.Areas.PE.Models
 
         // Computed reference depth (optional to store — kept for convenience)
         public double? PerforationDepthReference { get; set; }
+        public decimal? sm { get; set; }
+        public string ls_method { get; set; }
+        public decimal? ds_kd { get; set; }
+        public decimal? ds_sl { get; set; }
+        public decimal? ds_spm { get; set; }
+        public decimal? ds_size { get; set; }
+        public decimal? ds_pump_displace { get; set; }
+        public decimal? wc { get; set; }
+        public decimal? fig_curr_gross { get; set; }
+        public decimal? gas { get; set; }
+
 
 
         // Test metadata

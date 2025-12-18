@@ -399,6 +399,13 @@ namespace ssc.Areas.PE.Controllers
                         zone = s.zone,
                         interval = s.interval,
                         wc = s.wc,
+                        ls_method = s.ls_method,
+                        ds_kd = s.ds_kd,
+                        ds_sl = s.ds_sl,
+                        ds_spm = s.ds_spm,
+                        size = s.ds_size,
+                        lifting_capacity = s.ds_pump_displace,
+                        gas = s.gas,
                     });
 
                     return Ok(new { data = daily_area });
@@ -432,6 +439,7 @@ namespace ssc.Areas.PE.Controllers
                         thp = s.thp_potensi,
                         sm = s.sm,
                         whp = s.ds_whp,
+
                     });
 
                     return Ok(new { data = daily_chart });

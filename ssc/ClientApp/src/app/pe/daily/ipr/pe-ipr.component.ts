@@ -64,6 +64,22 @@ export class IprComponent implements OnInit {
   bottom_perforation_depth = new FormControl("");
   zone = new FormControl("");
   interval = new FormControl("");
+  sm = new FormControl("");
+  qmax = new FormControl("");
+  ls_method = new FormControl("");
+  ds_kd = new FormControl("");
+  ds_sl = new FormControl("");
+  ds_spm = new FormControl("");
+  size  = new FormControl("");
+  lifting_capacity = new FormControl("");  
+  prod_ratio = new FormControl("");  
+
+  grossAvg = new FormControl("");  
+  gross = new FormControl("");  
+  wc = new FormControl("");  
+  gas = new FormControl("");  
+  
+
   perforation_depth_reference = new FormControl("");
   static_fluid_level = new FormControl("");
   dynamic_fluid_level = new FormControl("");
@@ -191,6 +207,20 @@ export class IprComponent implements OnInit {
 
     });
 
+
+    this.start_dateControl.valueChanges.subscribe(() => {
+    if (this.end_dateControl.value && this.well_xSelected.length > 0) {
+      this.getDailyData();
+      }
+    });
+
+    this.end_dateControl.valueChanges.subscribe(() => {
+      if (this.start_dateControl.value && this.well_xSelected.length > 0) {
+        this.getDailyData();
+      }
+    });
+
+
     // this.well_dateControl.valueChanges.subscribe((r) => {
     //   this.refresh_IPR();
     // });
@@ -309,9 +339,11 @@ export class IprComponent implements OnInit {
     grossAvg: number;
     netAvg: number;
     wcAvg: number;
+    gasAvg: number;
   }[] = [];
 
   loadingGetDailyData: boolean = false;
+
   getDailyData() {
     if (!this.start_dateInput || !this.end_dateInput) {
       this.snackbarService.status.next(
@@ -326,9 +358,9 @@ export class IprComponent implements OnInit {
 
     let params = new HttpParams();
     // start date
-    let startDate = new Date(this.start_dateInput);
+    let startDate = new Date(this.start_dateControl.value);
     // end date +1 after start date
-    let endDate = new Date(this.end_dateInput); // clone
+    let endDate = new Date(this.end_dateControl.value); // clone
     // endDate.setDate(startDate.getDate());
 
     if (!this.well_xSelected || this.well_xSelected.length === 0) {
@@ -372,6 +404,23 @@ export class IprComponent implements OnInit {
             this.end_dateInput
           );
 
+          const grossAvg =
+          this.dailyAverages.length > 0
+            ? this.dailyAverages[0].grossAvg
+            : 0;
+
+          const wcAvg =
+          this.dailyAverages.length > 0
+            ? this.dailyAverages[0].wcAvg
+            : 0;
+
+          const gasAvg =
+            this.dailyAverages.length > 0
+              ? this.dailyAverages[0].gasAvg
+              : 0;
+
+
+
           // order data by date ascending
           const dataSortedDate = filteredData.sort((a, b) => {
             return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -383,6 +432,40 @@ export class IprComponent implements OnInit {
           const interval = latestData
             ? this.formatInterval(latestData.interval)
             : "";
+          
+          const smAvg = this.calculateAverageSM(filteredData);
+
+          //Method
+          const ls_method = latestData ? latestData.ls_method : "";
+          console.log("latestData full:", latestData);
+
+          //KD
+          const ds_kd = latestData ? latestData.ds_kd : "";
+
+          //SL dan SPM
+          const ds_sl = latestData ? latestData.ds_sl : "";
+          const ds_spm = latestData ? latestData.ds_spm : "";
+
+          //Siaze
+          const size = latestData ? latestData.size : "";
+          this.size.setValue(size);
+          
+          //Lifting Capacity
+          const lifting_capacity =
+            latestData && latestData.lifting_capacity != null
+              ? Number(latestData.lifting_capacity)
+              : 0;
+
+          this.lifting_capacity.setValue(
+            lifting_capacity > 0 ? lifting_capacity : "-"
+          );
+
+          //Production to lifting capacity ratio
+          let prod_ratio = "-";
+          if (lifting_capacity && lifting_capacity > 0) {
+            prod_ratio = ((grossAvg / lifting_capacity) * 100).toFixed(2);
+          }
+          this.prod_ratio.setValue(prod_ratio);
 
           //ambil zona dari data
           this.zone.setValue(zone);
@@ -393,6 +476,32 @@ export class IprComponent implements OnInit {
           this.interval.setValue(interval);
           // console.log("interval:", interval);
           // console.log("this.interval.value:", this.interval.value);
+
+          //SM
+          this.sm.setValue(smAvg.toFixed(2));
+
+          //Method
+          this.ls_method.setValue(ls_method);
+
+          //KD
+          this.ds_kd.setValue(ds_kd);
+
+          //SL dan SPM
+          this.ds_sl.setValue(ds_sl);
+          this.ds_spm.setValue(ds_spm);
+
+          //WC
+           this.wc.setValue(wcAvg.toFixed(2));
+
+          
+           //Gas
+           this.gas.setValue(gasAvg.toFixed(2));
+
+            //Gross
+           this.gross.setValue(grossAvg.toFixed(2));
+
+
+          
 
           this.loadingGetDailyData = false;
           // fallback: clear loading state and notify user if request takes too long
@@ -430,6 +539,21 @@ export class IprComponent implements OnInit {
     });
   }
 
+  calculateAverageSM(data: any[]): number {
+  const validSM = data
+    .map(d => Number(d.sm))
+    .filter(v => !isNaN(v));
+
+  if (validSM.length === 0) return 0;
+
+  const total = validSM.reduce((sum, val) => sum + val, 0);
+  return total / validSM.length;
+}
+
+
+
+
+
   // perforation depth change handler
   perforationChange() {
     // read raw values (string or number)
@@ -461,7 +585,16 @@ export class IprComponent implements OnInit {
   }
 
   testData() {
-    if (!this.start_dateInput || !this.end_dateInput) {
+    // if (!this.start_dateInput || !this.end_dateInput) {
+    //   this.snackbarService.status.next(
+    //     new SnackbarApi(true, "Please select a well date.", "dismiss", {
+    //       duration: 3000,
+    //     })
+    //   );
+    //   return;
+    // }
+
+    if (!this.start_dateControl.value || !this.end_dateControl.value) {
       this.snackbarService.status.next(
         new SnackbarApi(true, "Please select a well date.", "dismiss", {
           duration: 3000,
@@ -507,6 +640,9 @@ export class IprComponent implements OnInit {
     // hitung IPR
     const pi = grossAvg / (ps - pwf);
     const qmax = pi * ps;
+
+    //nilai qmax
+    this.qmax.setValue(qmax.toFixed(2));
 
     console.log(`pi = ${grossAvg} / ${ps} - ${pwf} = ${pi}`);
     console.log(`qmax = ${pi} * ${ps} = ${qmax}`);
@@ -685,6 +821,7 @@ export class IprComponent implements OnInit {
       grossAvg: number;
       netAvg: number;
       wcAvg: number;
+      gasAvg: number;
     }[] = [];
 
     Object.keys(grouped).forEach((well) => {
@@ -711,6 +848,10 @@ export class IprComponent implements OnInit {
           ? validWc.reduce((sum, v) => sum + v, 0) / validWc.length
           : 0;
 
+      const gasAvg =
+        items.reduce((sum, i) => sum + (parseFloat(i.gas) || 0), 0) /
+        items.length;
+
       // const wcAvg = items.reduce((sum, i) => {
       //   let wcVal = 0;
       //   if (i.wc !== undefined && i.wc !== null) {
@@ -727,6 +868,7 @@ export class IprComponent implements OnInit {
         grossAvg: parseFloat(grossAvg.toFixed(2)),
         netAvg: parseFloat(netAvg.toFixed(2)),
         wcAvg: parseFloat(wcAvg.toFixed(2)),
+        gasAvg: parseFloat(gasAvg.toFixed(2)),
       });
     });
 
