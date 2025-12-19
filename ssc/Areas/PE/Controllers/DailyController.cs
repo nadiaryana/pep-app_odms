@@ -406,6 +406,7 @@ namespace ssc.Areas.PE.Controllers
                         size = s.ds_size,
                         lifting_capacity = s.ds_pump_displace,
                         gas = s.gas,
+                        // qmax = s.qmax,
                     });
 
                     return Ok(new { data = daily_area });

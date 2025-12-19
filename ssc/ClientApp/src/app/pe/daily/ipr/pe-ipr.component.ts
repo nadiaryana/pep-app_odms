@@ -73,6 +73,9 @@ export class IprComponent implements OnInit {
   size  = new FormControl("");
   lifting_capacity = new FormControl("");  
   prod_ratio = new FormControl("");  
+  prod_reservoir = new FormControl(""); 
+  factor_corr = new FormControl(""); 
+    
 
   grossAvg = new FormControl("");  
   gross = new FormControl("");  
@@ -419,6 +422,8 @@ export class IprComponent implements OnInit {
               ? this.dailyAverages[0].gasAvg
               : 0;
 
+  
+
 
 
           // order data by date ascending
@@ -463,9 +468,17 @@ export class IprComponent implements OnInit {
           //Production to lifting capacity ratio
           let prod_ratio = "-";
           if (lifting_capacity && lifting_capacity > 0) {
-            prod_ratio = ((grossAvg / lifting_capacity) * 100).toFixed(2);
+            prod_ratio = Math.round((grossAvg / lifting_capacity) * 100).toString();
           }
           this.prod_ratio.setValue(prod_ratio);
+
+          
+
+          //Production to reservoir potential ratio
+          
+
+          
+          
 
           //ambil zona dari data
           this.zone.setValue(zone);
@@ -499,8 +512,6 @@ export class IprComponent implements OnInit {
 
             //Gross
            this.gross.setValue(grossAvg.toFixed(2));
-
-
           
 
           this.loadingGetDailyData = false;
@@ -624,6 +635,8 @@ export class IprComponent implements OnInit {
     const bottomRaw = this.bottom_perforation_depth.value;
     const static_fl = this.static_fluid_level.value;
     const dynamic_fl = this.dynamic_fluid_level.value;
+    const factor_corr = this.factor_corr.value;
+    
 
     const dailyAverages = this.dailyAverages;
 
@@ -638,13 +651,13 @@ export class IprComponent implements OnInit {
     this.flowing_bottomhole_pressure.setValue(pwf.toFixed(2));
 
     // hitung IPR
-    const pi = grossAvg / (ps - pwf);
+    const pi = (grossAvg / (ps - pwf)) * factor_corr; // *factor correction
     const qmax = pi * ps;
 
     //nilai qmax
     this.qmax.setValue(qmax.toFixed(2));
 
-    console.log(`pi = ${grossAvg} / ${ps} - ${pwf} = ${pi}`);
+    console.log(`pi = ${grossAvg} / ${ps} - ${pwf} * ${factor_corr}= ${pi}`);
     console.log(`qmax = ${pi} * ${ps} = ${qmax}`);
 
     // get pwf values
@@ -663,7 +676,15 @@ export class IprComponent implements OnInit {
     }else{
       // this.showChart = false;
     }
-  }
+
+    let prod_reservoir = "-";
+
+    if (qmax > 0 && grossAvg > 0) {
+      prod_reservoir = Math.round(grossAvg / qmax).toString();
+    }
+
+    this.prod_reservoir.setValue(prod_reservoir);
+      }
 
   getPwf(sbhp: any, iteration = 1) {
     const pwf_values = [];

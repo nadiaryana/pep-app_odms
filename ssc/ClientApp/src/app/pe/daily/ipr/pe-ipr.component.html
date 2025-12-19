@@ -213,6 +213,18 @@
           />
           <span matSuffix>psi</span>
         </mat-form-field>
+
+        <mat-form-field class="filter">
+          <mat-label>Factor Correction</mat-label>
+          <input
+            matInput
+            [formControl]="factor_corr"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Factor Correction"
+          />
+        </mat-form-field>
         
       </div>
     </mat-card-content>
@@ -314,6 +326,16 @@
             />
             <span matSuffix>bfpd</span>
           </mat-form-field>
+             <mat-form-field class="filter">
+              <mat-label>Production to reservoir potential ratio</mat-label>
+              <input
+                matInput
+                [formControl]="prod_reservoir"
+                placeholder="Production to reservoir potential ratio"
+                readonly
+              />
+              <span matSuffix>%</span>
+            </mat-form-field>
 
           </div>
         </mat-card-content>
@@ -441,9 +463,8 @@
               <mat-label>Oil Rate</mat-label>
               <input
                 matInput
-                [formControl]="wc"
-                placeholder="Water Cut"
-                readonly
+                [value]="dailyAverages?.length ? dailyAverages[0]?.netAvg : ''"
+                disabled
               />
               <span matSuffix>bopd</span>
             </mat-form-field>

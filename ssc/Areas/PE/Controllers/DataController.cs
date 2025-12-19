@@ -99,13 +99,37 @@ namespace ssc.Areas.PE.Controllers
                 count = s.Count()
             });
 
-            var weekly_well = _daily.Find(d => d.date <= date && d.date >= date.Value.AddDays(-6)
-               ).Project<Daily>(_fields_daily).ToList().Where(s => s.tes_prod_gross > 0 || s.gas > 0 || s.prod_hours > 0).GroupBy(r => r.date
-               ).OrderBy(d => d.Key).Select(s => new
-               {
-                   dates = TimeZoneInfo.ConvertTimeFromUtc(s.Key.Value, TimeZoneInfo.Local),
-                   count = s.Count()
-               });
+            // var weekly_well = _daily.Find(d => d.date <= date && d.date >= date.Value.AddDays(-6)
+            //    ).Project<Daily>(_fields_daily).ToList().Where(s => s.tes_prod_gross > 0 || s.gas > 0 || s.prod_hours > 0).GroupBy(r => r.date
+            //    ).OrderBy(d => d.Key).Select(s => new
+            //    {
+            //        dates = TimeZoneInfo.ConvertTimeFromUtc(s.Key.Value, TimeZoneInfo.Local),
+            //        count = s.Count()
+            //    });
+
+            var weekly_well = _daily.Find(d =>
+                    d.date >= date &&
+                    d.date <= end_date
+                )
+                .Project<Daily>(_fields_daily)
+                .ToList()
+                .Where(s =>
+                    s.tes_prod_gross > 0 ||
+                    s.gas > 0 ||
+                    s.prod_hours > 0
+                )
+                .GroupBy(r => r.date)
+                .OrderBy(g => g.Key)
+                .Select(s => new
+                {
+                    dates = TimeZoneInfo.ConvertTimeFromUtc(
+                                s.Key.Value,
+                                TimeZoneInfo.Local
+                            ),
+                    count = s.Count()
+                })
+                .ToList();
+
 
             // var weekly_well = _daily.Find(d => d.date <= end_date && d.date >= date && d.art_lift_type.Length > 0;
 
@@ -121,8 +145,31 @@ namespace ssc.Areas.PE.Controllers
                 //  count = s.Count()
                 //  });
 
-                int active_wells_count = res.Where(r => !String.IsNullOrEmpty(r.status)).Sum(s => s.count);
-                int inactive_wells_count = (int)_daily.Find(r => r.date == date).CountDocuments() - active_wells_count;
+                // int active_wells_count = res.Where(r => !String.IsNullOrEmpty(r.status)).Sum(s => s.count);
+                // int inactive_wells_count = (int)_daily.Find(r => r.date == date).CountDocuments() - active_wells_count;
+
+                DateTime? lastDate = weekly_well.LastOrDefault()?.dates.Date;
+
+                    int active_wells_count = 0;
+                    int inactive_wells_count = 0;
+
+                    if (lastDate.HasValue)
+                    {
+                        active_wells_count = (int)_daily.Find(d =>
+                                d.date == lastDate &&
+                                (
+                                    d.tes_prod_gross > 0 ||
+                                    d.gas > 0 ||
+                                    d.prod_hours > 0
+                                )
+                            ).CountDocuments();
+
+                        int total_wells = (int)_daily.Find(d =>
+                                d.date == lastDate
+                            ).CountDocuments();
+
+                        inactive_wells_count = total_wells - active_wells_count;
+                    }
 
                 return Ok(new
                 {

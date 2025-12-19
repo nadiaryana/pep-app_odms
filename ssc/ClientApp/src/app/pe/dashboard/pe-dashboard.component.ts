@@ -207,16 +207,17 @@ export class PeDashboardComponent   {
       timezoneOffset: -8 * 60 // untuk GMT+8 (menggeser waktu agar tidak muncul GMT)
     },
     xAxis: {
-      categories: [],
-      labels: {
-        formatter: function () {
-          return Highcharts.dateFormat('%e %b %Y', this.value); 
-        },
-        autoRotation: [-45],
-        style: {
-          fontSize: 10
-        }
-      }
+      type: 'datetime',
+      // categories: [],
+      // labels: {
+      //   formatter: function () {
+      //     return Highcharts.dateFormat('%e %b %Y', this.value); 
+      //   },
+      //   autoRotation: [-45],
+      //   style: {
+      //     fontSize: 10
+      //   }
+      // }
     },
     yAxis: {
      title: {
@@ -1137,11 +1138,17 @@ export class PeDashboardComponent   {
       var date_category = [];
       res["data_active_well"].map(function (daw) {
         console.log(new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate()));
-        var xdt = new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate() + 1);
+        // var xdt = new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate() + 1);
         //var dt = [xdt.getDate(), xdt.getMonth() + 1, xdt.getFullYear().toString().substr(-2)].join("/");
-        date_category.push(xdt);
-		//console.log("Ini apalagiii: "+date_category.push(xdt));
+        const xdt = new Date(daw.dates);
+        date_category.push(
+          formatDate(xdt, 'dd MMM yyyy', 'en-US')
+        );
         act_well_series_data.push(Math.round(daw.count));
+
+        // date_category.push(xdt);
+		//console.log("Ini apalagiii: "+date_category.push(xdt));
+        // act_well_series_data.push(Math.round(daw.count));
       });
 	  
 	  var length = act_well_series_data.length;
@@ -1150,7 +1157,7 @@ export class PeDashboardComponent   {
 	  
 	  for(var x = 0; x < length ; x++){
 		active_well = act_well_series_data[length-1];
-		active_well_date = date_category[length-2];
+		active_well_date = date_category[length-1];
 	  }
 	  
 	  // this.active_wells_count = res["active_wells_count"];
@@ -1198,21 +1205,34 @@ export class PeDashboardComponent   {
       var date_category = [];
       res["data_active_well"].map(function (daw) {
         console.log(new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate()));
-        var xdt = new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate() + 1);
-        //var dt = [xdt.getDate(), xdt.getMonth() + 1, xdt.getFullYear().toString().substr(-2)].join("/");
-        date_category.push(xdt);
+        // var xdt = new Date(new Date(daw.dates).getFullYear(), new Date(daw.dates).getMonth(), new Date(daw.dates).getDate() + 1);
+        // //var dt = [xdt.getDate(), xdt.getMonth() + 1, xdt.getFullYear().toString().substr(-2)].join("/");
+        // date_category.push(xdt);
 		//console.log("Ini apalagiii: "+date_category.push(xdt));
-        act_well_series_data.push(Math.round(daw.count));
+        const xdt = new Date(daw.dates);
+          date_category.push(
+            formatDate(xdt, 'dd MMM yyyy', 'en-US')
+          );
+          act_well_series_data.push(Math.round(daw.count));
+
+        // act_well_series_data.push(Math.round(daw.count));
       });
+      
+
 	  
-	  var length = act_well_series_data.length;
+	  // var length = act_well_series_data.length;
 	  var active_well = 0;
 	  var active_well_date = "";
 	  
-	  for(var x = 0; x < length ; x++){
-		active_well = act_well_series_data[length-1];
-		active_well_date = date_category[length-2];
-	  }
+	  // for(var x = 0; x < length ; x++){
+		// active_well = act_well_series_data[length-1];
+		// active_well_date = date_category[length-2];
+	  // }
+    const length = act_well_series_data.length;
+
+    this.active_wells_count = length ? act_well_series_data[length - 1] : 0;
+    this.dateActiveWell = length ? date_category[length - 1] : '-';
+
 	  
 	  // this.active_wells_count = res["active_wells_count"];
 	  this.active_wells_count = active_well;

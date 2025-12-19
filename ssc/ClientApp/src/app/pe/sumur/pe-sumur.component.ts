@@ -30,6 +30,8 @@ export class SumurComponent implements OnInit {
     { id: 2, name: "ST-092", status: "UNKNOWN", channelId: "2817838", apiKey: "Y6S3WJA4ZEIG67OA" },
     { id: 3, name: "ST-159", status: "UNKNOWN", channelId: "2826853", apiKey: "VGBBTAVANY97BLWQ" },
     { id: 4, name: "ST-161", status: "UNKNOWN", channelId: "2987295", apiKey: "TRI6GE6UIE89CFQ5" },
+    { id: 5, name: "ST-080", status: "UNKNOWN", channelId: "3204961", apiKey: "2AYZPIK6HI2MG8YJ" },
+    { id: 6, name: "ST-210", status: "UNKNOWN", channelId: "3204974", apiKey: "8RD7XSL5RYH316QZ" },
   ];
 
   selectedWell: Well | null = null;

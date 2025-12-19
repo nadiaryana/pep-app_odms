@@ -84,7 +84,19 @@ export class PeDailyPerAreaChartComponent {
     }
 	],
     tooltip: {
-      shared: true
+      shared: true,
+      formatter: function () {
+        let s = `<b>${this.x}</b><br/>`;
+        let total = 0;
+
+        this.points.forEach(p => {
+          s += `${p.series.name}: <b>${p.y.toFixed(2)}</b> bopd<br/>`;
+          total += p.y;
+        });
+
+        s += `<hr/><b>Total: ${total.toFixed(2)} bopd</b>`;
+        return s;
+      }
     },
     legend: {
       layout: 'horizontal',
@@ -96,6 +108,7 @@ export class PeDailyPerAreaChartComponent {
     },
 	plotOptions: {
         areaspline: {
+            stacking: 'normal',
             fillOpacity: 0.6
         }
     },
