@@ -58,6 +58,10 @@ export class PePermissionService {
 	new Menu("current/edit", true, null, ["PeSumur Edit"]),
 	new Menu("current/delete", true, null, ["PeSumur Delete"]),
 
+	new Menu("chan-plot", true, null, ["PeChanPlot Read"]),
+	new Menu("chan-plot/list", true, null, ["PeChanPlot Read"]),
+	new Menu("chan-plot/chart", true, null, ["PeChanPlot Read"]),
+
 	];
 	
 	

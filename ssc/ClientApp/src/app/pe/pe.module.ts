@@ -63,6 +63,7 @@ import { PeDailyGasDeleteDialogComponent, PeDailyGasListComponent } from './dail
 import { PeDailyChanPlotListComponent, PeDailyChanPlotDeleteDialogComponent } from './daily/pe-daily-chan-plot-list.component';
 import { PeDailyGasChartComponent } from './daily/pe-daily-gaschart.component';
 import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.component';
+import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -114,6 +115,7 @@ import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.
   PeSumurCurrentListComponent,
   PeSumurCurrentAddComponent,
   PeSumurDeleteDialogComponent,
+  PeDailyChanPlotComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -169,6 +171,7 @@ export class PeModule {
             //new PanelSubItem("Sonolog Add", "pe/sonolog/add", "playlist_add", this.pePermission.passPermission("pe/sonolog/add")),
 			      new PanelSubItem("BHP", "pe/bhp", "sensors", this.pePermission.passPermission("pe/bhp")),
             new PanelSubItem("IPR", "pe/ipr", "show_chart"),
+            new PanelSubItem("Chan Plot", "pe/chan-plot", "list"),
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [

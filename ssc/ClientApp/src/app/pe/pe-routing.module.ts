@@ -48,6 +48,9 @@ import { PeSumurCurrentListComponent } from './current/pe-sumur-current-list.com
 import { SumurComponent } from './sumur/pe-sumur.component';
 import { PeSumurCurrentAddComponent } from './current/pe-sumur-current-add.component';
 import { PeSumurCurrentComponent } from './current/pe-sumur-current.component';
+import { PeDailyChanPlotListComponent } from './daily/pe-daily-chan-plot-list.component';
+import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.component';
+import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -85,6 +88,11 @@ const peRoutes: Routes = [
     { path: 'current', component: PeSumurCurrentComponent, children: [
       { path: 'list', component: PeSumurCurrentListComponent, canActivate: [PePermissionGuard] },
       { path: 'add', component: PeSumurCurrentAddComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full" },
+    ]},
+    { path: 'chan-plot', component: PeDailyChanPlotComponent, children: [
+      { path: 'list', component: PeDailyChanPlotListComponent, canActivate: [PePermissionGuard] },
+      { path: 'chart', component: PeDailyChanPlotChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
 
