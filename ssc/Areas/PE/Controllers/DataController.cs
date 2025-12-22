@@ -78,6 +78,8 @@ namespace ssc.Areas.PE.Controllers
                 case "well_performance_monthly":
                     return Data_WelPerformance(type, date, end_date, well);
 
+                case "bhp":
+                    return Data_Bhp(type, date, end_date, well);
                 default:
                     return Ok(new { });
             }
@@ -338,7 +340,7 @@ namespace ssc.Areas.PE.Controllers
         {
             switch (type)
             {
-                case "well_performance_sonolog":
+                case "bhp":
 
                     var bhp = _bhp.Find(
                         r => well.Contains(r.well) &&
@@ -348,6 +350,7 @@ namespace ssc.Areas.PE.Controllers
                         date = TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, TimeZoneInfo.Local),
                         well = s.well,
                         pmax = s.pmax,
+                        tmax = s.tmax,
                         // pump_intake = s.pump_intake,
                         // dfl = s.dfl,
                         // cdfl = s.cdfl,

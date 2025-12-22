@@ -67,23 +67,25 @@ export class PeBhpChartComponent implements OnInit{
           color: '#999999'
         }
       }
-    },{ // Primary yAxis
-      title: {
-        text: 'Tmax (psi)',
-        style: {
-          color: '#000000'
-        }
-      },
-      reversed: false,
-      showFirstLabel: true,
-      showLastLabel: true,
-      labels: {
-        format: '{value}',
-        style: {
-          color: '#999999'
-        }
-      }
-    }],
+    },
+    // { // Primary yAxis
+    //   title: {
+    //     text: 'Tmax (psi)',
+    //     style: {
+    //       color: '#000000'
+    //     }
+    //   },
+    //   reversed: false,
+    //   showFirstLabel: true,
+    //   showLastLabel: true,
+    //   labels: {
+    //     format: '{value}',
+    //     style: {
+    //       color: '#999999'
+    //     }
+    //   }
+    // }
+  ],
     tooltip: {
       headerFormat: '<b>{series.name}</b><br />',
       pointFormat: '{point.y}',
@@ -94,51 +96,66 @@ export class PeBhpChartComponent implements OnInit{
       align: 'center',
       verticalAlign: 'top',
       backgroundColor:
-        Highcharts.defaultOptions.legend.backgroundColor || // theme
-        'rgba(255,255,255,0.25)'
-    },
-    series: [{
-      name: 'Pmax',
-      type: 'line',
-      yAxis: 0,
-      data: [],
-      color: '#008000',
-      zIndex: 3,
-      tooltip: {
-        valueSuffix: ' m',
-        valueDecimals: 2
-      },
-      marker: {
-        enabled: false
-      }
+         // theme
+          'rgba(255,255,255,0.25)'
+            },
+            series: [{
+              name: 'Pmax',
+              type: 'scatter',
+              yAxis: 0,
+              data: [],
+              color: '#008000',
+              zIndex: 3,
+              tooltip: {
+          valueSuffix: ' psi',
+          valueDecimals: 2
+              },
+              marker: {
+          enabled: true,
+          radius: 4,
+          symbol: 'circle',
+          lineWidth: 1,
+          lineColor: '#ffffff'
+              },
+              lineWidth: 0
+            },
+          //   {
+          //     name: 'Tmax',
+          //     type: 'scatter',
+          //     data: [],
+          //     yAxis: 1,
+          //     color: '#ff3300',
+          //     tooltip: {
+          // valueSuffix: ' psi',
+          // valueDecimals: 2
+          //     },
+          //     marker: {
+          // enabled: true,
+          // radius: 4,
+          // symbol: 'circle',
+          // lineWidth: 1,
+          // lineColor: '#ffffff'
+          //     },
+          //     lineWidth: 0
+          //   }
+          ],
 
-    },{
-    name: 'Tmax',
-    type: 'line',
-    data: [],
-    yAxis: 1,
-    color: '#ff3300',
-    tooltip: {
-      valueSuffix: ' psi',
-      valueDecimals: 2   },
-  }],
-
-    responsive: {
-      rules: [{
-        condition: {
-          maxWidth: 500
-        },
-        chartOptions: {
-          legend: {
-            floating: false,
-            layout: 'horizontal',
-            align: 'center',
-            verticalAlign: 'bottom',
-            x: 0,
-            y: 0
+            responsive: {
+              rules: [{
+          condition: {
+            maxWidth: 500
           },
-          yAxis: [
-            { // yAxis[0] → Pmax
+          chartOptions: {
+            legend: {
+              floating: false,
+              layout: 'horizontal',
+              align: 'center',
+              verticalAlign: 'bottom',
+              x: 0,
+              y: 0
+            },
+            yAxis: [
+              { // yAxis[0] → Pmax
               title: {
                 text: 'Pmax (psi)'
               },
@@ -149,18 +166,18 @@ export class PeBhpChartComponent implements OnInit{
               },
               showLastLabel: false
             },
-            { // yAxis[1] → Tmax
-              title: {
-                text: 'Tmax (°C)'
-              },
-              labels: {
-                align: 'left',
-                x: 0,
-                y: -6
-              },
-              opposite: true,
-              showLastLabel: false
-            }
+            // { // yAxis[1] → Tmax
+            //   title: {
+            //     text: 'Tmax (°C)'
+            //   },
+            //   labels: {
+            //     align: 'left',
+            //     x: 0,
+            //     y: -6
+            //   },
+            //   opposite: true,
+            //   showLastLabel: false
+            // }
           ]
         }
       }]
@@ -264,7 +281,7 @@ export class PeBhpChartComponent implements OnInit{
     // let end = new Date(this.end_dateControl.value);
     // end.setHours(23, 59, 59, 999);
     let params = new HttpParams();
-        params = params.append("type", "well_performance_sonolog")
+        params = params.append("type", "bhp")
           .append("date", this.start_dateControl.value.toISOString())
           .append("end_date", this.end_dateControl.value.toISOString());
         for (const w of this.well_xSelected) {
@@ -278,6 +295,7 @@ export class PeBhpChartComponent implements OnInit{
           this.bhp_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
           this.bhp_chart_options["xAxis"][0]["categories"] = res["data"].map(d => formatDate(d["date"], "dd-MMM-yy", "en-US"));
           this.bhp_chart_options["series"][0]["data"] = res["data"].map(d => d["pmax"]);
+          // this.bhp_chart_options["series"][1]["data"] = res["data"].map(d => d["tmax"]);
           // this.bhp_chart_options["series"][1]["data"] = res["data"].map(d => d["dfl"]);
           // this.sonolog_chart_options["series"][1]["data"] = res["data"].map(d => d["cdfl"]);
           // this.bhp_chart_options["series"][2]["data"] = res["data"].map(d => d["sfl"]);
