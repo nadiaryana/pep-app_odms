@@ -25,6 +25,7 @@ export class PePermissionService {
 	new Menu("daily/list", true, null, ["PeDaily Read"]),
 	new Menu("daily/zonechart-list", true, null, ["PeDaily Read"]),
 	new Menu("daily/manajemen", true, null, ["PeDaily Read"]),
+	new Menu("daily/manajemen-chart", true, null, ["PeDaily Read"]),
 	new Menu("daily/add", true, null, ["PeDaily Add"]),
 	new Menu("daily/add-osg", true, null, ["PeDaily Add"]),
 	new Menu("daily/edit-osg", true, null, ["PeDaily Add"]),

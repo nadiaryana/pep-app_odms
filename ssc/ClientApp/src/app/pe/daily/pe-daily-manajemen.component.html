@@ -4,9 +4,10 @@
   </mat-form-field-->
 
 
+  <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/manajemen-chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
 </div>
 
-<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" style="margin-top : 50px">
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
   <div class="table-action-header">
     <h3 class="table-title" style="flex-grow:2"><mat-icon>update</mat-icon> Operation, Sot, Oil dan Gas Productions</h3>
     <button mat-stroked-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/add-osg']" *ngIf="pePermissionService.passPermission('pe/daily/add')"><mat-icon>add</mat-icon> Update Operation, SOT & Gas </button>

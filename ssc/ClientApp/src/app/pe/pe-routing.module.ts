@@ -52,6 +52,7 @@ import { PeDailyChanPlotListComponent } from './daily/pe-daily-chan-plot-list.co
 import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.component';
 import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
 import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
+import { PeDailyManajemenChartComponent } from './daily/pe-daily-manajemen-chart.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -61,6 +62,7 @@ const peRoutes: Routes = [
       { path: 'list', component: PeDailyListComponent, canActivate: [PePermissionGuard] },
 	  { path: 'add', component: PeDailyAddComponent, canActivate: [PePermissionGuard] },
 	  { path: 'manajemen', component: PeDailyManajemenComponent, canActivate: [PePermissionGuard] },
+	  { path: 'manajemen-chart', component: PeDailyManajemenChartComponent, canActivate: [PePermissionGuard] },
 	  { path: 'add-osg', component: PeDailyAddOsgComponent, canActivate: [PePermissionGuard] },
       { path: 'edit-osg/:id', component: PeDailyEditOsgComponent, canActivate: [PePermissionGuard] },
 	  { path: 'zonechart-list', component: PeDailyZonechartListComponent, canActivate: [PePermissionGuard] },

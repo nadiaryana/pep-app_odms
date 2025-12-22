@@ -65,6 +65,7 @@ import { PeDailyGasChartComponent } from './daily/pe-daily-gaschart.component';
 import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.component';
 import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
 import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
+import { PeDailyManajemenChartComponent } from './daily/pe-daily-manajemen-chart.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -76,6 +77,7 @@ import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
 
   PeDailyComponent,
   PeDailyManajemenComponent,
+  PeDailyManajemenChartComponent,
   PeDailyListComponent,
   PeDailyAddComponent,
   PeDailyChartComponent,
