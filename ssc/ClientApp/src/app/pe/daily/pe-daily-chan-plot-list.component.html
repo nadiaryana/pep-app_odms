@@ -54,23 +54,23 @@
 		<!-- <ng-container matColumnDef="last_prod"> -->
 		  <!-- <th mat-header-cell *matHeaderCellDef colspan="3">Last Production</th> -->
 		<!-- </ng-container> -->
-		<ng-container matColumnDef="last_prod_gross">
+		<ng-container matColumnDef="fig_curr_gross">
 		  <th mat-header-cell *matHeaderCellDef>
 			<div fxLayout="row" fxLayoutAlign="start center">
 			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
-			  <app-xfilter title="Last Production Gross" column="last_prod_gross" format="number" [selected]="last_prod_gross_xSelected"></app-xfilter>
+			  <app-xfilter title="Fig Current Gross" column="fig_curr_gross" format="number" [selected]="fig_curr_gross_xSelected"></app-xfilter>
 			</div>
 		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.last_prod_gross | number : '1.0-0') || '-'}}</td>
+		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_gross | number : '1.0-0') || '-'}}</td>
 		</ng-container>
-		<ng-container matColumnDef="last_prod_net">
+		<ng-container matColumnDef="fig_curr_net">
 		  <th mat-header-cell *matHeaderCellDef>
 			<div fxLayout="row" fxLayoutAlign="start center">
 			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
-			  <app-xfilter title="Last Production Net" column="last_prod_net" format="number" [selected]="last_prod_net_xSelected"></app-xfilter>
+			  <app-xfilter title="Fig Current Net" column="fig_currnet" format="number" [selected]="fig_curr_net_xSelected"></app-xfilter>
 			</div>
 		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.last_prod_net | number : '1.0-0') || '-'}}</td>
+		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_net | number : '1.0-0') || '-'}}</td>
 		</ng-container>
 		<ng-container matColumnDef="gas">
 		  <th mat-header-cell *matHeaderCellDef>

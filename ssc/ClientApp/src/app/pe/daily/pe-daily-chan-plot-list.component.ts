@@ -25,8 +25,8 @@ import { CommonService } from '../../common.service';
 
 export class PeDailyChanPlotListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "date","well","last_prod_gross","last_prod_net","gas","wor"];
-  headerColumns1: string[] = ["select", "date","well","last_prod_gross","last_prod_net","gas","wor"];
+  displayedColumns: string[] = ["select", "date","well","fig_curr_gross","fig_curr_net","gas","wor"];
+  headerColumns1: string[] = ["select", "date","well","fig_curr_gross","fig_curr_net","gas","wor"];
   // headerColumns2: string[] = ["last_prod_gross","last_prod_net","last_prod_wc"]
   exampleDatabase: ExampleHttpDao | null;
   data: any[] = [];
@@ -56,8 +56,8 @@ export class PeDailyChanPlotListComponent implements OnInit {
   test_dateFilter = new FormControl('');
   test_durationFilter = new FormControl('');
   last_prod_hoursFilter = new FormControl('');
-  last_prod_grossFilter = new FormControl('');
-  last_prod_netFilter = new FormControl('');
+  fig_curr_grossFilter = new FormControl('');
+  fig_curr_netFilter = new FormControl('');
   last_prod_wcFilter = new FormControl('');
   art_lift_sizeFilter = new FormControl('');
   art_lift_typeFilter = new FormControl('');
@@ -83,8 +83,8 @@ export class PeDailyChanPlotListComponent implements OnInit {
   test_date_xSelected = [];
   test_duration_xSelected = [];
   last_prod_hours_xSelected = [];
-  last_prod_gross_xSelected = [];
-  last_prod_net_xSelected = [];
+  fig_curr_gross_xSelected = [];
+  fig_curr_net_xSelected = [];
   last_prod_wc_xSelected = [];
   gas_xSelected = [];
   art_lift_size_xSelected = [];
@@ -182,8 +182,8 @@ export class PeDailyChanPlotListComponent implements OnInit {
       this.test_dateFilter.valueChanges.pipe(debounceTime(300)),
       this.test_durationFilter.valueChanges.pipe(debounceTime(300)),
       this.last_prod_hoursFilter.valueChanges.pipe(debounceTime(300)),
-      this.last_prod_grossFilter.valueChanges.pipe(debounceTime(300)),
-      this.last_prod_netFilter.valueChanges.pipe(debounceTime(300)),
+      this.fig_curr_grossFilter.valueChanges.pipe(debounceTime(300)),
+      this.fig_curr_netFilter.valueChanges.pipe(debounceTime(300)),
       this.last_prod_wcFilter.valueChanges.pipe(debounceTime(300)),
       this.art_lift_sizeFilter.valueChanges.pipe(debounceTime(300)),
       this.art_lift_typeFilter.valueChanges.pipe(debounceTime(300)),
@@ -338,8 +338,8 @@ export class PeDailyChanPlotListComponent implements OnInit {
     if (this.test_date_xSelected.length) columnfilter["test_date"] = this.test_date_xSelected;
     if (this.test_duration_xSelected.length) columnfilter["test_duration"] = this.test_duration_xSelected;
     if (this.last_prod_hours_xSelected.length) columnfilter["last_prod_hours"] = this.last_prod_hours_xSelected;
-    if (this.last_prod_gross_xSelected.length) columnfilter["last_prod_gross"] = this.last_prod_gross_xSelected;
-    if (this.last_prod_net_xSelected.length) columnfilter["last_prod_net"] = this.last_prod_net_xSelected;
+    if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"] = this.fig_curr_gross_xSelected;
+    if (this.fig_curr_net_xSelected.length) columnfilter["fig_curr_net"] = this.fig_curr_net_xSelected;
     if (this.last_prod_wc_xSelected.length) columnfilter["last_prod_wc"] = this.last_prod_wc_xSelected;
     if (this.gas_xSelected.length) columnfilter["gas"] = this.gas_xSelected;
     if (this.art_lift_size_xSelected.length) columnfilter["art_lift_size"] = this.art_lift_size_xSelected;//.map(s => "^"+s+"$");

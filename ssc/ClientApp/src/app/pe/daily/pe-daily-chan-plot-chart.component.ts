@@ -317,18 +317,18 @@ export class PeDailyChanPlotChartComponent {
 	  console.log(res["data"])
       console.log(res["data"].length)
 	  
-	  let q = res["data"].map(d => d["wor"]);
+	  let worDaily = res["data"].map(d => d["wor"]);
 	  let worr = [];
-	  for (var r = 0; r < res["data"].length; r++){
-		if (r == 0){
-			worr[r] = 0
+	  for (let i = 0; i < worDaily.length; i++){
+		if (i == 0){
+			worr[i] = 0
 		}
 		else{
-			worr[r] = (q[r]-q[r-1])/1
+			worr[i] = (worDaily[i]-worDaily[i-1])/1
 		}
 		
 		console.log("data worr' dlm: "+worr)
-		// this.daily_chart_options["series"][1]["data"] = worr;
+		this.daily_chart_options["series"][1]["data"] = worr;
 		
 	  }
 	  
