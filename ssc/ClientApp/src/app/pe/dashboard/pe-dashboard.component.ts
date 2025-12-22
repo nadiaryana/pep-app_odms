@@ -1046,22 +1046,6 @@ export class PeDashboardComponent   {
 
         console.log(this.dateControl.value.toLocaleDateString("id-ID"));
         console.log(new Date(d.date).toLocaleDateString("id-ID"));
-
-        //Check data (Daily upload) on database
-        //if value is 0. Data not uploaded yet.
-        //if (this.dateControl.value.toLocaleDateString("id-ID") == new Date(d.date).toLocaleDateString("id-ID")) {
-        //  this.valueSOT = d.sot;
-        //  this.valueFigure = d.figure;
-        //  this.valueGas = d.gas / 1000;
-        //  this.valueGasSales = d.gas_sales / 1000;
-        //  this.valueOperation = d.operation;
-        //} else {
-        //  this.valueSOT = 0;
-        //  this.valueFigure = 0;
-        //  this.valueGas = 0;
-        //  this.valueGasSales = 0;
-        //  this.valueOperation = 0;
-        //}
       });
 
       this.oil_chart_options["subtitle"]["text"] = "( " + start_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" }) + " - " + end_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" }) + " )";

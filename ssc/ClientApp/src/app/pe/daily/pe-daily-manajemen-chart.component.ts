@@ -29,21 +29,29 @@ import { xFilterService } from '../../xfilter/xfilter.component';
 
 export class PeDailyManajemenChartComponent {
 
-  @ViewChild('daily_chart_el', {static:true}) public daily_chart_el: ElementRef;
-    daily_table_data = [];
-    daily_table_columns:string[] = ["status", "count"];
-	
-	
-    daily_chart_options:object = {
+  @ViewChild('manajemen_chart_el', {static:true}) public manajemen_chart_el: ElementRef;
+
+  areaControl = new FormControl('sgt'); // default
+  dateControl = new FormControl(new Date());
+  date_xSelected = [];
+
+  isLoadingResults: boolean = false;
+
+  valueOperation = 0;
+  valueSOT = 0;
+  valueFigure = 0;
+
+    manajemen_chart_options:any = {
 	
     chart: {
+        type: 'line',
         zoomType: 'x',
         style: {
           fontFamily: 'Roboto, Helvetica Neue, sans-serif'
         }
     },
     title: {
-        text: null,
+        text: 'Oil Production',
     },
 	
     caption: {
@@ -51,51 +59,40 @@ export class PeDailyManajemenChartComponent {
         align: 'center',
         verticalAlign: 'top'
     },
-    xAxis: [{
-		type: 'logarithmic',
-		minorTickInterval: 0.1,
-		categories: [],
-		// min: 1,
-		crosshair: true,
-        autoRotation : true,
-		labels: {
-		// format: '{value:%d-%b-%y}',
-         // step: 7
+    xAxis: {
+      categories: [],
+      crosshair: true,
+      labels: {
+        rotation: -45
+      }
+    },
+    yAxis: {
+      title: {
+        text: 'BOPD'
+      },
+      min: 0,
+      plotLines: [
+        {
+          value: 0,
+          color: '#000',
+          width: 0,
+          zIndex: 5
         }
-      }],
-    yAxis: { // Primary yAxis
-		type: 'logarithmic',
-		minorTickInterval: 0.1,
-		data: [],
-		min: 0.000001, // Minimum value for the y-axis (will be the lower bound)
-		// max: 300, // Maximum value for the y-axis (will be the upper bound)
-		// tickInterval: 1, // Interval for the y-axis labels
-        title: {
-            text: 'WOR, WOR`',
-            style: {
-                color: '#666666'
-            }
-        },
-        labels: {
-            format: '{value}',
-            style: {
-                color: '#999999'
-            }
-        }
+      ]
     },
 	
     tooltip: {
-		headerFormat: '<b>{series.name}</b><br />',
-		pointFormat: 'Days = {point.x}, {series.name} = {point.y}',
+		// headerFormat: '<b>{series.name}</b><br />',
+		// pointFormat: 'Days = {point.x}, {series.name} = {point.y}',
 		shared: true
     },
     legend: {
-        layout: 'horizontal',
+        // layout: 'horizontal',
         align: 'center',
-        verticalAlign: 'top',
-        backgroundColor:
-            Highcharts.defaultOptions.legend.backgroundColor || // theme
-            'rgba(255,255,255,0.25)'
+        verticalAlign: 'bottom',
+        // backgroundColor:
+        //     Highcharts.defaultOptions.legend.backgroundColor || // theme
+        //     'rgba(255,255,255,0.25)'
     },
 	plotOptions: {
         series: {
@@ -107,106 +104,41 @@ export class PeDailyManajemenChartComponent {
     },
     series: [
 	{
-		// Regression: true,
-        name: 'WOR',
-        type: 'scatter',
-        yAxis: 0,
+        name: 'Operation',
+        type: 'line',
         data: [],
-		// id: 'one',
-        color: '#0000cc',
-        tooltip: {
-            valueSuffix: ' ',
-            valueDecimals: 5
-        },
-		marker: {
-		  symbol: 'circle', // Set the default marker type for the series
-		  radius: 3 // Set the default marker radius
-		}
-
-    },
-	{
-        name: 'WOR`',
-        type: 'scatter',
-        yAxis: 0,
+        color: '#4dabf7'
+      },
+      {
+        name: 'SOT',
+        type: 'line',
         data: [],
-		id: "base_worr",
-        color: '#e60000',
-        tooltip: {
-            valueSuffix: ' ',
-            valueDecimals: 5
-        },
-		marker: {
-		  symbol: 'circle', // Set the default marker type for the series
-		  radius: 3 // Set the default marker radius
-		}
-
-    }, {
-            type: 'spline',
-			name: 'Trend Line',
-			dashStyle: 'shortdot',
-			data: [],
-			color: '#b3b3ff',
-			marker: {
-            enabled: false
-			},
-			states: {
-				hover: {
-					lineWidth: 0
-				}
-			},
-        }, {
-            type: 'spline',
-			name: 'Trend Line',
-			dashStyle: 'shortdot',
-			data: [],
-			color: '#ffb3b3',
-			marker: {
-            enabled: false
-			},
-			states: {
-				hover: {
-					lineWidth: 0
-				}
-			},
-        }
-	],
-
-    
-    responsive: {
-        rules: [{
-            condition: {
-                maxWidth: 500
-            },
-            chartOptions: {
-                legend: {
-                    floating: false,
-                    layout: 'horizontal',
-                    align: 'center',
-                    verticalAlign: 'bottom',
-                    x: 0,
-                    y: 0
-                },
-                yAxis: [{
-                    labels: {
-                        align: 'right',
-                        x: 0,
-                        y: -6
-                    },
-                    showLastLabel: false
-                }, {
-                    labels: {
-                        align: 'left',
-                        x: 0,
-                        y: -6
-                    },
-                    showLastLabel: false
-                }, {
-                    visible: false
-                }]
-            }
-        }]
-    }
-}
+        color: '#ff7f0e'
+      },
+      {
+        name: 'Figure',
+        type: 'line',
+        data: [],
+        color: '#8bc34a'
+      },
+      {
+        name: 'RKAP Oil',
+        type: 'line',
+        data: [],
+        dashStyle: 'ShortDash',
+        color: '#000000',
+        marker: { enabled: false }
+      },
+      {
+        name: 'WP&B Oil',
+        type: 'line',
+        data: [],
+        dashStyle: 'ShortDash',
+        color: '#ff0000',
+        marker: { enabled: false }
+      }
+    ],
+};
 
   @ViewChild('start_datePicker', {static: true}) start_datePicker: MatDatepicker<any>;
   start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate()-4)));
@@ -219,7 +151,7 @@ export class PeDailyManajemenChartComponent {
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
 
-  isLoadingResults:boolean = false;
+  // isLoadingResults:boolean = false;
   
   constructor(
 	private http: HttpClient,
@@ -231,59 +163,120 @@ export class PeDailyManajemenChartComponent {
 	this.exampleDatabase = new ExampleHttpDao(this.http);
 	
 	this.titleService.titleSource.next({
-      title: "Chan Plot",
-      icon: "scatter_plot",
+      title: "Chart",
+      icon: "show_chart",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
-        { label: 'Daily', routerLink: '' },
+        { label: 'Manajemen', routerLink: '' },
 		{ label: 'Chart', routerLink: '' }
       ]
     }
     );
+    this.areaControl.valueChanges.subscribe(() => this.refresh_Production());
+    this.dateControl.valueChanges.subscribe(() => this.refresh_Production());
+
+    this.refresh_Production();
 	
-	this.xfilterService.filter.subscribe(res => {
-      this.getColumnValues(res);
-    })
-    this.xfilterService.selected.subscribe(res => {
-      this[res["column"] + "_xSelected"] = res["selected"];
-      this.refresh_Daily();
-    })
-    
-    this.start_dateControl.valueChanges.subscribe(r => {
-      this.refresh_Daily();
-    })
-    this.end_dateControl.valueChanges.subscribe(r => {
-      this.refresh_Daily();
-    })
-	
+	  // /** filter tanggal */
+    // this.xfilterService.selected.subscribe(res => {
+    //   if (res.column === 'date') {
+    //     this.date_xSelected = res.selected;
+    //     this.refreshChart();
+    //   }
+    // });
+
+    // /** filter area */
+    // this.areaControl.valueChanges.subscribe(() => {
+    //   this.refreshChart();
+    // });
+
+    // this.refreshChart();
   }
   
-  getColumnValues(param: any) {
-    var column = param["column"];
-    var filter = param["filter"];
-    var selected = param["selected"]
-    var clear = param["clear"];
-    var columnfilter = { well: this.well_xSelected.map(s => "^"+s+"$")};
-    if(filter) columnfilter[column] = [filter];
-    if(selected && selected.length > 0) columnfilter[column] = selected.map(s => "^"+s+"$");
-    if(clear) delete columnfilter[column];
+  // getColumnValues(param: any) {
+  //   var column = param["column"];
+  //   var filter = param["filter"];
+  //   var selected = param["selected"]
+  //   var clear = param["clear"];
+  //   var columnfilter = { well: this.well_xSelected.map(s => "^"+s+"$")};
+  //   if(filter) columnfilter[column] = [filter];
+  //   if(selected && selected.length > 0) columnfilter[column] = selected.map(s => "^"+s+"$");
+  //   if(clear) delete columnfilter[column];
 
-    return this.exampleDatabase!.getRepoIssues(
-      "well", 
-      "asc", 
-      0, 
-      0, 
+  //   return this.exampleDatabase!.getRepoIssues(
+  //     "well", 
+  //     "asc", 
+  //     0, 
+  //     0, 
+  //     "",
+  //     columnfilter,
+  //     "well"
+  //   ).pipe(map((res) => {
+  //     return res;
+  //   })).subscribe(res => {
+  //     this.xfilterService.updateItems({column: "well", items: res.items});
+  //   }, () => {
+      
+  //   });
+  // }
+
+  getColumnValues(param: any) {
+
+  const column   = param.column;
+  const filter   = param.filter;
+  const selected = param.selected;
+  const clear    = param.clear;
+
+  /** =========================
+   *  BUILD COLUMN FILTER
+   *  ========================= */
+  let columnfilter: any = {};
+
+  /** filter well sebelumnya (cascade filter) */
+  if (this.well_xSelected && this.well_xSelected.length > 0) {
+    columnfilter["well"] = this.well_xSelected.map(w => "^" + w + "$");
+  }
+
+  /** filter by current column */
+  if (filter) {
+    columnfilter[column] = [filter];
+  }
+
+  if (selected && selected.length > 0) {
+    columnfilter[column] = selected.map(s => "^" + s + "$");
+  }
+
+  /** clear column filter */
+  if (clear) {
+    delete columnfilter[column];
+  }
+
+  /** =========================
+   *  API CALL
+   *  ========================= */
+  this.exampleDatabase!
+    .getRepoIssues(
+      column,        // distinct column
+      "asc",
+      0,
+      0,
       "",
       columnfilter,
-      "well"
-    ).pipe(map((res) => {
-      return res;
-    })).subscribe(res => {
-      this.xfilterService.updateItems({column: "well", items: res.items});
-    }, () => {
-      
+      column         // group by
+    )
+    .subscribe(res => {
+
+      /** update dropdown / filter list */
+      this.xfilterService.updateItems({
+        column: column,
+        items: res.items
+      });
+
+    }, err => {
+      console.error("getColumnValues error", err);
     });
-  }
+}
+
 
   start_dateChange(evt) {
     this.start_dateInput = evt.value.toLocaleDateString("en-US", { month:"short", year:"numeric", day:"numeric" });
@@ -293,121 +286,264 @@ export class PeDailyManajemenChartComponent {
     this.end_dateInput = evt.value.toLocaleDateString("en-US", { month:"short", year:"numeric", day:"numeric" });
   }
 
-  refresh_Daily() {
-    let params = new HttpParams();
-    params = params.append("type", "well_performance_daily")
-      .append("date", this.start_dateControl.value.toISOString())
-      .append("end_date", this.end_dateControl.value.toISOString());
-    for(const w of this.well_xSelected) {
-      params = params.append("well", w);
-      console.log(w);
-    }
-    
-    this.http.get('/api/pe/data', {params: params}).subscribe(res => {
-	  
-	  var g = res["data"].map(d => d["date"])
-	  // let WOR = res["data"].map(d => d["wor"]);
-	  
-	  
-      this.daily_chart_options["title"]["text"] = this.well_xSelected.join(",");
-      this.daily_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " +formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
-      this.daily_chart_options["series"][0]["data"] = res["data"].map(d => d["wor"]);
-      this.daily_chart_options["series"][2]["data"] = getTrendLine(res["data"].map(d => d["wor"]));
-	  
-	  console.log(res["data"])
-      console.log(res["data"].length)
-	  
-	  let worDaily = res["data"].map(d => d["wor"]);
-	  let worr = [];
-	  for (let i = 0; i < worDaily.length; i++){
-		if (i == 0){
-			worr[i] = 0
-		}
-		else{
-			worr[i] = (worDaily[i]-worDaily[i-1])/1
-		}
-		
-		console.log("data worr' dlm: "+worr)
-		this.daily_chart_options["series"][1]["data"] = worr;
-		
-	  }
-	  
-	  // console.log("Cek data: "+res["data"].map(d => d["wor"]))
-	  console.log("data worr' luar: "+worr.length)
-	  // console.log("data worr' luar dt: "+worr)
-	  this.daily_chart_options["series"][1]["data"] = worr;
-	  this.daily_chart_options["series"][3]["data"] = getTrendLine(worr);
-	  
-	  function getTrendLine(data) {
-		const n = data.length;
-		
-		console.log("Dlm trendline func data: "+data)
+//  refreshChart() {
 
-		let sumX = 0,
-			sumY = 0,
-			sumXY = 0,
-			sumX2 = 0;
+//     this.isLoadingResults = true;
 
-		// Calculate the sums needed for linear regression
-		for (let i = 0; i < n; i++) {			
-			sumX += i;
-			sumY += data[i];
-			sumXY += i * data[i];
-			sumX2 += i * i;
-			
-		}
-		
-		console.log("Dlm trendline func sumX: "+sumX)
-		console.log("Dlm trendline func sumY: "+sumY)
-		console.log("Dlm trendline func sumXY: "+sumXY)
-		console.log("Dlm trendline func sumX2: "+sumX2)
-		
-		// Calculate the slope of the trend line
-		const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
-		
-		// Calculate the intercept of the trend line
-		let intercept = ((sumY / n) - slope * (sumX / n));
-				
-		const trendline = []; // Array to store the trend line data points
-		
-		// Find the minimum and maximum x-values from the scatter plot data		
-				
-		console.log("Dlm trendline slope : "+slope)
-		console.log("Dlm trendline intercept : "+intercept)
-		
-				
-		// console.log("Dlm trendline func dt: "+minX, maxX)
-		// console.log("Dlm trendline func min: "+[minX, MIN])
-		// console.log("Dlm trendline func max: "+[maxX, MAX])
-		
-		// Calculate the corresponding y-values for the trend line using the slope
-		// and intercept
-					
-		for (let i = 0; i < n; i++) {
-			
-			if (intercept < 0.000001){
-				intercept = 0.00001;
-			}
-			else{
-				intercept = intercept;
-			}
-			
-			let linee = slope * i + intercept;
-						
-			
-			trendline.push(linee);
-			console.log("Dlm trendline : "+linee);
-		}
-		
-		return trendline;
-	}
-	 
-      Highcharts.chart(this.daily_chart_el.nativeElement, this.daily_chart_options);
+//     let params = new HttpParams()
+//       .append('sort', 'date')
+//       .append('order', 'asc')
+//       .append('page', '0')
+//       .append('pagesize', '200');
+
+//     if (this.date_xSelected.length) {
+//       params = params.append(
+//         'columnfilter',
+//         JSON.stringify({ date: this.date_xSelected })
+//       );
+//     }
+
+//     this.http.get<any>('/api/pe/production', { params })
+//       .subscribe(res => {
+
+//         const data = res.items || [];
+//         const area = this.areaControl.value;
+
+//         /** X AXIS */
+//         this.manajemen_chart_options.xAxis.categories =
+//           data.map(d => formatDate(d.date, 'dd MMM yy', 'en-US'));
+
+//         /** SERIES */
+//         this.manajemen_chart_options.series[0].data =
+//           data.map(d => Number(d[`${area}_opr`] || 0));
+
+//         this.manajemen_chart_options.series[1].data =
+//           data.map(d => Number(d[`${area}_sot`] || 0));
+
+//         this.manajemen_chart_optionss.series[2].data =
+//           data.map(d => Number(d[`${area}_fig`] || 0));
+
+//         /** RKAP & WP&B dibuat flat line */
+//         const rkap = data.map(d => Number(d.rkap_oil || 0));
+//         const wpnb = data.map(d => Number(d.wpnb_oil || 0));
+
+//         this.manajemen_chart_options.series[3].data = rkap;
+//         this.manajemen_chart_optionss.series[4].data = wpnb;
+
+//         /** TITLE & SUBTITLE */
+//         this.manajemen_chart_options.title.text =
+//           `Oil Production - ${area.toUpperCase()}`;
+
+//         if (data.length) {
+//           this.manajemen_chart_options.subtitle.text =
+//             `${formatDate(data[0].date,'dd MMM yyyy','en-US')} - ` +
+//             `${formatDate(data[data.length-1].date,'dd MMM yyyy','en-US')}`;
+//         }
+
+//         Highcharts.chart(
+//           this.area_chart_el.nativeElement,
+//           this.area_chart_options
+//         );
+
+//         this.isLoadingResults = false;
+
+//       }, err => {
+//         this.isLoadingResults = false;
+//         console.error(err);
+//       });
+//   }
+
+// refresh_Production_Area() {
+
+//   this.isLoadingProduction = true;
+
+//   const area = this.areaControl.value; // 'sgt' | 'sbr' | 'bd'
+
+//   const end_date = this.dateControl.value;
+//   const start_date = new Date(
+//     end_date.getFullYear(),
+//     end_date.getMonth() - 1,
+//     end_date.getDate()
+//   );
+
+//   this.http.get('/api/pe/production', {
+//     params: {
+//       sort: 'date',
+//       order: 'asc',
+//       pagesize: '10000',
+//       columnfilter:
+//         '{"date":[{"opr":"gte","val":"' + start_date.toISOString() +
+//         '","log":"and"},{"opr":"lte","val":"' + end_date.toISOString() +
+//         '","log":"and"}]}'
+//     }
+//   }).subscribe(res => {
+
+//     var categories = [];
+
+//     var series_operation = [];
+//     var series_sot = [];
+//     var series_figure = [];
+//     var series_rkap_oil = [];
+//     var series_wpnb_oil = [];
+
+//     res["items"].map(d => {
+
+//       var xdt = new Date(d.date);
+//       var dt = [
+//         xdt.getDate(),
+//         xdt.toLocaleString('en', { month: 'short' }),
+//         xdt.getFullYear().toString().substr(-2)
+//       ].join("-");
+
+//       categories.push(dt);
+
+//       /** 🔑 AREA BASED MAPPING */
+//       series_operation.push({ name: dt, y: d[`${area}_opr`] });
+//       series_sot.push({ name: dt, y: d[`${area}_sot`] });
+//       series_figure.push({ name: dt, y: d[`${area}_fig`] });
+
+//       /** target line */
+//       series_rkap_oil.push({ name: dt, y: d.rkap_oil });
+//       series_wpnb_oil.push({ name: dt, y: d.wpnb_oil });
+
+//       /** Daily value (optional, sama seperti code lama) */
+//       if (
+//         this.dateControl.value.toLocaleDateString("id-ID") ===
+//         new Date(d.date).toLocaleDateString("id-ID")
+//       ) {
+//         this.valueOperation = d[`${area}_opr`];
+//         this.valueSOT = d[`${area}_sot`];
+//         this.valueFigure = d[`${area}_fig`];
+//       }
+
+//     });
+
+//     /** =========================
+//      *  UPDATE CHART
+//      *  ========================= */
+//     this.oil_chart_options["title"]["text"] =
+//       "Oil Production - " + area.toUpperCase();
+
+//     this.oil_chart_options["subtitle"]["text"] =
+//       "( " +
+//       start_date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) +
+//       " - " +
+//       end_date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) +
+//       " )";
+
+//     this.oil_chart_options["xAxis"]["categories"] = categories;
+
+//     this.oil_chart_options["series"][0]["data"] = series_operation;
+//     this.oil_chart_options["series"][1]["data"] = series_sot;
+//     this.oil_chart_options["series"][2]["data"] = series_figure;
+//     this.oil_chart_options["series"][3]["data"] = series_rkap_oil;
+//     this.oil_chart_options["series"][4]["data"] = series_wpnb_oil;
+
+//     Highcharts.chart(
+//       this.oil_chart_el.nativeElement,
+//       this.oil_chart_options
+//     );
+
+//     this.isLoadingProduction = false;
+
+//   }, error => {
+//     this.isLoadingProduction = false;
+//   });
+// }
+
+refresh_Production() {
+
+    this.isLoadingResults = true;
+
+    const area = this.areaControl.value; // sgt | sbr | bd
+
+    const end_date = this.dateControl.value;
+    const start_date = new Date(
+      end_date.getFullYear(),
+      end_date.getMonth() - 1,
+      end_date.getDate()
+    );
+
+    this.http.get('/api/pe/production', {
+      params: {
+        sort: 'date',
+        order: 'asc',
+        pagesize: '10000',
+        columnfilter:
+          '{"date":[{"opr":"gte","val":"' + start_date.toISOString() +
+          '","log":"and"},{"opr":"lte","val":"' + end_date.toISOString() +
+          '","log":"and"}]}'
+      }
+    }).subscribe((res: any) => {
+
+      var categories = [];
+
+      var series_operation = [];
+      var series_sot = [];
+      var series_figure = [];
+      var series_rkap_oil = [];
+      var series_wpnb_oil = [];
+
+      res.items.map(d => {
+
+        var xdt = new Date(d.date);
+        var dt = [
+          xdt.getDate(),
+          xdt.toLocaleString('en', { month: 'short' }),
+          xdt.getFullYear().toString().substr(-2)
+        ].join('-');
+
+        categories.push(dt);
+
+        /** 🔑 AREA BASED */
+        series_operation.push({ name: dt, y: d[`${area}_opr`] });
+        series_sot.push({ name: dt, y: d[`${area}_sot`] });
+        series_figure.push({ name: dt, y: d[`${area}_fig`] });
+
+        /** TARGET LINE */
+        series_rkap_oil.push({ name: dt, y: d.rkap_oil });
+        series_wpnb_oil.push({ name: dt, y: d.wpnb_oil });
+
+        /** DAILY VALUE */
+        if (
+          this.dateControl.value.toLocaleDateString("id-ID") ===
+          new Date(d.date).toLocaleDateString("id-ID")
+        ) {
+          this.valueOperation = d[`${area}_opr`];
+          this.valueSOT = d[`${area}_sot`];
+          this.valueFigure = d[`${area}_fig`];
+        }
+      });
+
+      /** UPDATE CHART */
+      this.manajemen_chart_options.title.text =
+        'Oil Production - ' + area.toUpperCase();
+
+      this.manajemen_chart_options.subtitle.text =
+        '( ' +
+        start_date.toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) +
+        ' - ' +
+        end_date.toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) +
+        ' )';
+
+      this.manajemen_chart_options.xAxis.categories = categories;
+
+      this.manajemen_chart_options.series[0].data = series_operation;
+      this.manajemen_chart_options.series[1].data = series_sot;
+      this.manajemen_chart_options.series[2].data = series_figure;
+      this.manajemen_chart_options.series[3].data = series_rkap_oil;
+      this.manajemen_chart_options.series[4].data = series_wpnb_oil;
+
+      Highcharts.chart(
+        this.manajemen_chart_el.nativeElement,
+        this.manajemen_chart_options
+      );
+
+      this.isLoadingResults = false;
 
     }, error => {
-
-    }, () => {
-
+      this.isLoadingResults = false;
+      console.error(error);
     });
   }
 

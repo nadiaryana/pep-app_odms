@@ -1,4 +1,13 @@
 <div class="container-top-bar top-flow" fxLayoutGap="10px">
+  <!-- <mat-form-field class="field-area" floatLabel="never">
+    <input matInput [(ngModel)]="area_xSelected" disabled />
+    <app-xfilter
+      title="Area"
+      column="area"
+      [selected]="area_xSelected">
+    </app-xfilter>
+  </mat-form-field> -->
+
   <mat-form-field class="field-well" floatLabel="never">
     <!--mat-label class="select-well">Select Well</mat-label-->
     <input matInput [(ngModel)]="well_xSelected" disabled />
@@ -50,12 +59,12 @@
 <div fxLayout="row" fxLayout.lt-lg="column" fxLayoutWrap fxLayoutGap="10px" fxLayoutAlign="center">
   <div fxFlex="50%" fxLayout="column" fxLayoutGap="5px">
     <mat-card fxFlex="100%" class="dasboard_card">
-      <div #oil_chart_el class="oil_chart"></div>
+      <div #manajemen_chart_el class="manajemen_chart"></div>
     </mat-card>
   </div>
-  <div fxFlex="50%" fxLayout="column" fxLayoutGap="5px">
+  <!-- <div fxFlex="50%" fxLayout="column" fxLayoutGap="5px">
     <mat-card fxFlex="100%" class="dasboard_card">
       <div #gas_chart_el class="gas_chart"></div>
     </mat-card>
-  </div>
+  </div> -->
 </div>
