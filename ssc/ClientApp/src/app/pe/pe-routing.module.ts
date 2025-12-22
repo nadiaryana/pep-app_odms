@@ -51,6 +51,7 @@ import { PeSumurCurrentComponent } from './current/pe-sumur-current.component';
 import { PeDailyChanPlotListComponent } from './daily/pe-daily-chan-plot-list.component';
 import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.component';
 import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
+import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -81,6 +82,7 @@ const peRoutes: Routes = [
     { path: 'bhp', component: PeBhpComponent, children: [
       { path: 'list', component: PeBhpListComponent, canActivate: [PePermissionGuard] },
       { path: 'add', component: PeBhpAddComponent, canActivate: [PePermissionGuard] },
+      { path: 'bhp-chart', component: PeBhpChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
     { path: 'ipr', component: IprComponent},

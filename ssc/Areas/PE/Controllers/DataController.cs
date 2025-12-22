@@ -150,26 +150,26 @@ namespace ssc.Areas.PE.Controllers
 
                 DateTime? lastDate = weekly_well.LastOrDefault()?.dates.Date;
 
-                    int active_wells_count = 0;
-                    int inactive_wells_count = 0;
+                int active_wells_count = 0;
+                int inactive_wells_count = 0;
 
-                    if (lastDate.HasValue)
-                    {
-                        active_wells_count = (int)_daily.Find(d =>
-                                d.date == lastDate &&
-                                (
-                                    d.tes_prod_gross > 0 ||
-                                    d.gas > 0 ||
-                                    d.prod_hours > 0
-                                )
-                            ).CountDocuments();
+                if (lastDate.HasValue)
+                {
+                    active_wells_count = (int)_daily.Find(d =>
+                            d.date == lastDate &&
+                            (
+                                d.tes_prod_gross > 0 ||
+                                d.gas > 0 ||
+                                d.prod_hours > 0
+                            )
+                        ).CountDocuments();
 
-                        int total_wells = (int)_daily.Find(d =>
-                                d.date == lastDate
-                            ).CountDocuments();
+                    int total_wells = (int)_daily.Find(d =>
+                            d.date == lastDate
+                        ).CountDocuments();
 
-                        inactive_wells_count = total_wells - active_wells_count;
-                    }
+                    inactive_wells_count = total_wells - active_wells_count;
+                }
 
                 return Ok(new
                 {
@@ -257,20 +257,10 @@ namespace ssc.Areas.PE.Controllers
                         gross = s.fig_curr_gross,
                         net = s.fig_curr_net,
                         wc = s.wc,
-                        // thp = s.thp,
                         sm = s.sm,
-                        // dfl = s.sonolog_dfl,
-                        //cdfl = s.sono,
-                        // sfl = s.sonolog_sfl,
-                        // sgmix = s.sgmix,
-                        // ps = s.ps,
-                        // pwf = s.pwf,
-                        // qmax = s.qmax,
-                        // bean_size = s.art_lift_bean_size,
-                        // gas_rates = s.gas,
+
                         sl = s.ds_sl,
                         spm = s.ds_spm,
-                        // freq = s.art_lift_freq,
                         wor = s.wor,
                         noted = s.noted
 
@@ -339,6 +329,36 @@ namespace ssc.Areas.PE.Controllers
                     });
 
                     return Ok(new { data = sonolog });
+
+                default:
+                    return Ok(new { });
+            }
+        }
+        private ActionResult Data_Bhp(string type, DateTime? start, DateTime? end, string[] well)
+        {
+            switch (type)
+            {
+                case "well_performance_sonolog":
+
+                    var bhp = _bhp.Find(
+                        r => well.Contains(r.well) &&
+                        r.date >= start && r.date <= end
+                    ).Project<Bhp>(_fields_bhp).ToList().OrderBy(t => t.date).Select(s => new
+                    {
+                        date = TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, TimeZoneInfo.Local),
+                        well = s.well,
+                        pmax = s.pmax,
+                        // pump_intake = s.pump_intake,
+                        // dfl = s.dfl,
+                        // cdfl = s.cdfl,
+                        // sfl = s.sfl,
+                        // tglc = s.tglc,
+                        // egfl = s.egfl,
+                        // al = s.al
+
+                    });
+
+                    return Ok(new { data = bhp });
 
                 default:
                     return Ok(new { });

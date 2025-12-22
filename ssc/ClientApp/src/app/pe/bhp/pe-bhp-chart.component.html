@@ -1,10 +1,3 @@
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-  <!--mat-form-field>
-    <input matInput placeholder="Filter" [formControl]="filterControl">
-  </mat-form-field-->
-  <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/bhp/chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
-</div>
-
 <div class="container-top-bar top-flow" fxLayoutGap="10px">
 	
 	<mat-form-field class="field-well" floatLabel="never">
@@ -33,5 +26,5 @@
 	<div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
 		
 	</div>
-	<div #daily_chart_el class="daily_chart"></div>
+	<div #bhp_chart_el class="bhp_chart"></div>
 </div>

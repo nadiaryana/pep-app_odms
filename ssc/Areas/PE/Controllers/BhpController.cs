@@ -27,6 +27,7 @@ namespace ssc.Areas.PE.Controllers
         private readonly IMongoCollection<BhpTmp> _bhp_tmp;
         private ProjectionDefinition<Bhp> _fields;
 
+
         public BhpController(IPEDatabaseSettings settings)
         {
             var client = new MongoClient(settings.ConnectionString);
@@ -635,5 +636,36 @@ namespace ssc.Areas.PE.Controllers
                 return BadRequest();
             }
         }
+
+        [Authorize("PeBhp Read")]
+        [HttpGet]
+        private ActionResult Data_Bhp(string type, DateTime? start, DateTime? end, string[] well)
+        {
+            switch (type)
+            {
+                case "bhp_chart":
+
+                    // var startLocal = TimeZoneInfo.ConvertTimeFromUtc(start.Value, TimeZoneInfo.Local);
+                    // var endLocal = TimeZoneInfo.ConvertTimeFromUtc(end.Value, TimeZoneInfo.Local);
+
+                    var bhp = _bhp.Find(
+                        r => well.Contains(r.well) &&
+                        r.date >= start && r.date <= end
+                    ).Project<Bhp>(_fields).ToList().OrderBy(t => t.date).Select(s => new
+                    {
+                        date = System.TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, System.TimeZoneInfo.Local),
+                        well = s.well,
+                        pmax = s.pmax,
+                        tmax = s.tmax,
+
+                    });
+
+                    return Ok(new { items = bhp });
+
+                default:
+                    return Ok(new { });
+            }
+        }
+
     }
 }

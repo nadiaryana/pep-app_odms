@@ -51,6 +51,7 @@ export class PePermissionService {
 	new Menu("bhp/add", true,null, ["PeBhp Add"]),
 	new Menu("bhp/edit", true,null, ["PeBhp Edit"]),
 	new Menu("bhp/delete", true,null, ["PeBhp Delete"]),
+	new Menu("bhp/bhp-chart", true, null, ["PeBhp Read"]),
 
 	new Menu("current", true, null, ["PeSumur Read"]),
 	new Menu("current/list", true, null, ["PeSumur Read"]),

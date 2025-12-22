@@ -64,6 +64,7 @@ import { PeDailyChanPlotListComponent, PeDailyChanPlotDeleteDialogComponent } fr
 import { PeDailyGasChartComponent } from './daily/pe-daily-gaschart.component';
 import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.component';
 import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
+import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -101,6 +102,7 @@ import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
   PeBhpAddComponent,
   PeBhpListComponent,
   PeBhpDeleteDialogComponent,
+  PeBhpChartComponent,
 
   PeDailyZonechartComponent,
   PeDailyZonechartListComponent,
