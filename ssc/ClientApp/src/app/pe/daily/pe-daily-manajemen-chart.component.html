@@ -1,10 +1,10 @@
 <div class="container-top-bar top-flow" fxLayoutGap="10px">
 
-  <mat-form-field class="filter-field">
+	<mat-form-field class="field-well" floatLabel="never">
     <mat-label>Area</mat-label>
-    <input matInput [value]="area_xSelected?.join(', ')" readonly />
+    <!-- <input matInput [value]="area_xSelected?.join(', ')" readonly /> -->
+    <input matInput [(ngModel)]="area_xSelected" disabled>
     <app-xfilter
-      matSuffix
       title="Area"
       column="area"
       [selected]="area_xSelected">

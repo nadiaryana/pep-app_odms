@@ -17,6 +17,8 @@ import * as trendline from 'highcharts/indicators/trendline';
 // import * as Regression from 'highcharts-regression';
 
 import { MatSnackBar } from '@angular/material';
+import { SnackbarService } from '../../snackbar.service';
+import { SnackbarApi } from '../../snackbar.service';
 
 import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
@@ -164,6 +166,7 @@ export class PeDailyManajemenChartComponent {
 	private http: HttpClient,
     private titleService: TitleService,
     private xfilterService: xFilterService,
+    private snackbarService: SnackbarService,
   ) { }
 
   ngOnInit() {
@@ -188,6 +191,21 @@ export class PeDailyManajemenChartComponent {
         this.getColumnValues(res);
       })  
       
+    // on xFilter selection change
+    this.xfilterService.selected.subscribe((res) => {
+      if (res.column === 'area') {
+        // limit only 1 area selection
+        if (res.selected && res.selected.length > 1) {
+          this.area_xSelected = [];
+          // notif snackbar
+          this.snackbarService.status.next(new SnackbarApi(true, "Only one area can be selected at a time."));
+        } else { 
+          this.area_xSelected = res.selected || [];
+          console.log('AREA SELECTED:', this.area_xSelected);
+          this.refresh_Production();
+        }
+      }
+    });
     this.start_dateControl.valueChanges.subscribe(r => {
       this.refresh_Production();
     })
@@ -264,7 +282,7 @@ export class PeDailyManajemenChartComponent {
 
     // get data from backend for area filter
     this.http.get<any>('/api/pe/production/GetAreaList').subscribe(res => {
-      this.area_xSelected = res.items || [];
+      // this.area_xSelected = res.items || [];
       this.xfilterService.updateItems({
         column: 'area',
         items: res.items
@@ -281,183 +299,12 @@ export class PeDailyManajemenChartComponent {
     this.end_dateInput = evt.value.toLocaleDateString("en-US", { month:"short", year:"numeric", day:"numeric" });
   }
 
-//  refreshChart() {
-
-//     this.isLoadingResults = true;
-
-//     let params = new HttpParams()
-//       .append('sort', 'date')
-//       .append('order', 'asc')
-//       .append('page', '0')
-//       .append('pagesize', '200');
-
-//     if (this.date_xSelected.length) {
-//       params = params.append(
-//         'columnfilter',
-//         JSON.stringify({ date: this.date_xSelected })
-//       );
-//     }
-
-//     this.http.get<any>('/api/pe/production', { params })
-//       .subscribe(res => {
-
-//         const data = res.items || [];
-//         const area = this.areaControl.value;
-
-//         /** X AXIS */
-//         this.manajemen_chart_options.xAxis.categories =
-//           data.map(d => formatDate(d.date, 'dd MMM yy', 'en-US'));
-
-//         /** SERIES */
-//         this.manajemen_chart_options.series[0].data =
-//           data.map(d => Number(d[`${area}_opr`] || 0));
-
-//         this.manajemen_chart_options.series[1].data =
-//           data.map(d => Number(d[`${area}_sot`] || 0));
-
-//         this.manajemen_chart_optionss.series[2].data =
-//           data.map(d => Number(d[`${area}_fig`] || 0));
-
-//         /** RKAP & WP&B dibuat flat line */
-//         const rkap = data.map(d => Number(d.rkap_oil || 0));
-//         const wpnb = data.map(d => Number(d.wpnb_oil || 0));
-
-//         this.manajemen_chart_options.series[3].data = rkap;
-//         this.manajemen_chart_optionss.series[4].data = wpnb;
-
-//         /** TITLE & SUBTITLE */
-//         this.manajemen_chart_options.title.text =
-//           `Oil Production - ${area.toUpperCase()}`;
-
-//         if (data.length) {
-//           this.manajemen_chart_options.subtitle.text =
-//             `${formatDate(data[0].date,'dd MMM yyyy','en-US')} - ` +
-//             `${formatDate(data[data.length-1].date,'dd MMM yyyy','en-US')}`;
-//         }
-
-//         Highcharts.chart(
-//           this.area_chart_el.nativeElement,
-//           this.area_chart_options
-//         );
-
-//         this.isLoadingResults = false;
-
-//       }, err => {
-//         this.isLoadingResults = false;
-//         console.error(err);
-//       });
-//   }
-
-// refresh_Production_Area() {
-
-//   this.isLoadingProduction = true;
-
-//   const area = this.areaControl.value; // 'sgt' | 'sbr' | 'bd'
-
-//   const end_date = this.dateControl.value;
-//   const start_date = new Date(
-//     end_date.getFullYear(),
-//     end_date.getMonth() - 1,
-//     end_date.getDate()
-//   );
-
-//   this.http.get('/api/pe/production', {
-//     params: {
-//       sort: 'date',
-//       order: 'asc',
-//       pagesize: '10000',
-//       columnfilter:
-//         '{"date":[{"opr":"gte","val":"' + start_date.toISOString() +
-//         '","log":"and"},{"opr":"lte","val":"' + end_date.toISOString() +
-//         '","log":"and"}]}'
-//     }
-//   }).subscribe(res => {
-
-//     var categories = [];
-
-//     var series_operation = [];
-//     var series_sot = [];
-//     var series_figure = [];
-//     var series_rkap_oil = [];
-//     var series_wpnb_oil = [];
-
-//     res["items"].map(d => {
-
-//       var xdt = new Date(d.date);
-//       var dt = [
-//         xdt.getDate(),
-//         xdt.toLocaleString('en', { month: 'short' }),
-//         xdt.getFullYear().toString().substr(-2)
-//       ].join("-");
-
-//       categories.push(dt);
-
-//       /** 🔑 AREA BASED MAPPING */
-//       series_operation.push({ name: dt, y: d[`${area}_opr`] });
-//       series_sot.push({ name: dt, y: d[`${area}_sot`] });
-//       series_figure.push({ name: dt, y: d[`${area}_fig`] });
-
-//       /** target line */
-//       series_rkap_oil.push({ name: dt, y: d.rkap_oil });
-//       series_wpnb_oil.push({ name: dt, y: d.wpnb_oil });
-
-//       /** Daily value (optional, sama seperti code lama) */
-//       if (
-//         this.dateControl.value.toLocaleDateString("id-ID") ===
-//         new Date(d.date).toLocaleDateString("id-ID")
-//       ) {
-//         this.valueOperation = d[`${area}_opr`];
-//         this.valueSOT = d[`${area}_sot`];
-//         this.valueFigure = d[`${area}_fig`];
-//       }
-
-//     });
-
-//     /** =========================
-//      *  UPDATE CHART
-//      *  ========================= */
-//     this.oil_chart_options["title"]["text"] =
-//       "Oil Production - " + area.toUpperCase();
-
-//     this.oil_chart_options["subtitle"]["text"] =
-//       "( " +
-//       start_date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) +
-//       " - " +
-//       end_date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) +
-//       " )";
-
-//     this.oil_chart_options["xAxis"]["categories"] = categories;
-
-//     this.oil_chart_options["series"][0]["data"] = series_operation;
-//     this.oil_chart_options["series"][1]["data"] = series_sot;
-//     this.oil_chart_options["series"][2]["data"] = series_figure;
-//     this.oil_chart_options["series"][3]["data"] = series_rkap_oil;
-//     this.oil_chart_options["series"][4]["data"] = series_wpnb_oil;
-
-//     Highcharts.chart(
-//       this.oil_chart_el.nativeElement,
-//       this.oil_chart_options
-//     );
-
-//     this.isLoadingProduction = false;
-
-//   }, error => {
-//     this.isLoadingProduction = false;
-//   });
-// }
-
 refresh_Production() {
 
     this.isLoadingResults = false;
 
     // const area = this.areaControl.value.toLowerCase(); // sgt | sbr | bd
 
-    // const end_date = this.dateControl.value;
-    // const start_date = new Date(
-    //   end_date.getFullYear(),
-    //   end_date.getMonth() - 1,
-    //   end_date.getDate()
-    // );
     const start_date = this.start_dateControl.value;
     const end_date   = this.end_dateControl.value;
     const area =
@@ -469,18 +316,25 @@ refresh_Production() {
     console.log('areaControl:', this.areaControl.value);
     console.log('area_xSelected:', this.area_xSelected);
 
+    let columnfilter: any = {
+      date: [
+        { opr: 'gte', val: start_date.toISOString(), log: 'and' },
+        { opr: 'lte', val: end_date.toISOString(), log: 'and' }
+      ]
+    };
 
-
+    // if (area) {
+    //   columnfilter['area'] = [
+    //     { opr: 'eq', val: area }
+    //   ];
+    // }
 
     this.http.get('/api/pe/production', {
       params: {
         sort: 'date',
         order: 'asc',
         pagesize: '10000',
-        columnfilter:
-          '{"date":[{"opr":"gte","val":"' + start_date.toISOString() +
-          '","log":"and"},{"opr":"lte","val":"' + end_date.toISOString() +
-          '","log":"and"}]}'
+        columnfilter: JSON.stringify(columnfilter)
       }
     }).subscribe((res: any) => {
 
