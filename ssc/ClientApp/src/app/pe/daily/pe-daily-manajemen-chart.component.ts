@@ -150,6 +150,7 @@ export class PeDailyManajemenChartComponent {
 
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
+  area_xSelected = [];
 
   // isLoadingResults:boolean = false;
   
@@ -177,49 +178,11 @@ export class PeDailyManajemenChartComponent {
 
     this.refresh_Production();
 	
-	  // /** filter tanggal */
-    // this.xfilterService.selected.subscribe(res => {
-    //   if (res.column === 'date') {
-    //     this.date_xSelected = res.selected;
-    //     this.refreshChart();
-    //   }
-    // });
-
-    // /** filter area */
-    // this.areaControl.valueChanges.subscribe(() => {
-    //   this.refreshChart();
-    // });
-
-    // this.refreshChart();
+    this.xfilterService.filter.subscribe(res => {
+        this.getColumnValues(res);
+      })    
   }
   
-  // getColumnValues(param: any) {
-  //   var column = param["column"];
-  //   var filter = param["filter"];
-  //   var selected = param["selected"]
-  //   var clear = param["clear"];
-  //   var columnfilter = { well: this.well_xSelected.map(s => "^"+s+"$")};
-  //   if(filter) columnfilter[column] = [filter];
-  //   if(selected && selected.length > 0) columnfilter[column] = selected.map(s => "^"+s+"$");
-  //   if(clear) delete columnfilter[column];
-
-  //   return this.exampleDatabase!.getRepoIssues(
-  //     "well", 
-  //     "asc", 
-  //     0, 
-  //     0, 
-  //     "",
-  //     columnfilter,
-  //     "well"
-  //   ).pipe(map((res) => {
-  //     return res;
-  //   })).subscribe(res => {
-  //     this.xfilterService.updateItems({column: "well", items: res.items});
-  //   }, () => {
-      
-  //   });
-  // }
-
   getColumnValues(param: any) {
 
   const column   = param.column;
@@ -233,8 +196,11 @@ export class PeDailyManajemenChartComponent {
   let columnfilter: any = {};
 
   /** filter well sebelumnya (cascade filter) */
-  if (this.well_xSelected && this.well_xSelected.length > 0) {
-    columnfilter["well"] = this.well_xSelected.map(w => "^" + w + "$");
+  // if (this.well_xSelected && this.well_xSelected.length > 0) {
+  //   columnfilter["well"] = this.well_xSelected.map(w => "^" + w + "$");
+  // }
+  if (this.area_xSelected && this.area_xSelected.length > 0) {
+    columnfilter["area"] = this.area_xSelected.map(w => "^" + w + "$");
   }
 
   /** filter by current column */
@@ -254,26 +220,35 @@ export class PeDailyManajemenChartComponent {
   /** =========================
    *  API CALL
    *  ========================= */
-  this.exampleDatabase!
-    .getRepoIssues(
-      column,        // distinct column
-      "asc",
-      0,
-      0,
-      "",
-      columnfilter,
-      column         // group by
-    )
-    .subscribe(res => {
+  // this.exampleDatabase!
+  //   .getRepoIssues(
+  //     column,        // distinct column
+  //     "asc",
+  //     0,
+  //     0,
+  //     "",
+  //     columnfilter,
+  //     column         // group by
+  //   )
+  //   .subscribe(res => {
 
-      /** update dropdown / filter list */
+  //     /** update dropdown / filter list */
+  //     this.xfilterService.updateItems({
+  //       column: column,
+  //       items: res.items
+  //     });
+
+  //   }, err => {
+  //     console.error("getColumnValues error", err);
+  //   });
+
+    // get data from backend for area filter
+    this.http.get<any>('/api/pe/production/GetAreaList').subscribe(res => {
+      this.area_xSelected = res.items || [];
       this.xfilterService.updateItems({
-        column: column,
+        column: 'area',
         items: res.items
       });
-
-    }, err => {
-      console.error("getColumnValues error", err);
     });
 }
 

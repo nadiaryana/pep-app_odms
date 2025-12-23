@@ -346,7 +346,7 @@ namespace ssc.Areas.PE.Controllers
       };
     }
 
-    [HttpGet("{id}", Name = "GetProduction")]
+    [HttpGet("{id:length(24)}", Name = "GetProduction")]
     public ActionResult Get(string id)
     {
       var xfilter = Builders<Production>.Filter.Eq("_id", id);
@@ -676,6 +676,20 @@ namespace ssc.Areas.PE.Controllers
       });
     }
 
+    [HttpGet("GetAreaList")]
+    public ActionResult AreaList()
+    {
+      var areaList = new List<string>
+      {
+        "SGT",
+        "SBR",
+        "BD"
+      };
+
+      return new JsonResult(new{
+        items = areaList
+      });
+    }
     //   [HttpGet("SaveDataProduction")]
     //   public ActionResult SaveDataProduction([FromQuery] List<Production> items)
     //   {
