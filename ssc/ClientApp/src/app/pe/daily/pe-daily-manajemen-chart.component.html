@@ -1,12 +1,24 @@
 <div class="container-top-bar top-flow" fxLayoutGap="10px">
-  <mat-form-field class="field-area" floatLabel="never">
+
+  <mat-form-field class="filter-field">
+    <mat-label>Area</mat-label>
+    <input matInput [value]="area_xSelected?.join(', ')" readonly />
+    <app-xfilter
+      matSuffix
+      title="Area"
+      column="area"
+      [selected]="area_xSelected">
+    </app-xfilter>
+  </mat-form-field>
+
+  <!-- <mat-form-field class="field-area" floatLabel="never">
     <input matInput [(ngModel)]="area_xSelected" disabled />
     <app-xfilter
       title="Area"
       column="area"
       [selected]="area_xSelected">
     </app-xfilter>
-  </mat-form-field>
+  </mat-form-field> -->
 
   <!-- <mat-form-field class="field-well" floatLabel="never">
     <input matInput [(ngModel)]="well_xSelected" disabled />
@@ -25,7 +37,7 @@
       [matDatepicker]="start_datePicker"
       [formControl]="start_dateControl"
       (dateChange)="start_dateChange($event)"
-      disabled
+      readonly
     />
     <input matInput [(ngModel)]="start_dateInput" disabled />
     <mat-datepicker-toggle
@@ -43,7 +55,7 @@
       [matDatepicker]="end_datePicker"
       [formControl]="end_dateControl"
       (dateChange)="end_dateChange($event)"
-      disabled
+      readonly
     />
     <input matInput [(ngModel)]="end_dateInput" disabled />
     <mat-datepicker-toggle

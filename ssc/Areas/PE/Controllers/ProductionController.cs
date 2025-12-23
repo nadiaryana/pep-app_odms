@@ -686,7 +686,8 @@ namespace ssc.Areas.PE.Controllers
         "BD"
       };
 
-      return new JsonResult(new{
+      return new JsonResult(new
+      {
         items = areaList
       });
     }

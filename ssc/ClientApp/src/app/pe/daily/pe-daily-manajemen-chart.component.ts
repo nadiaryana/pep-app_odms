@@ -31,9 +31,11 @@ export class PeDailyManajemenChartComponent {
 
   @ViewChild('manajemen_chart_el', {static:true}) public manajemen_chart_el: ElementRef;
 
-  areaControl = new FormControl('sgt'); // default
+  areaControl = new FormControl(''); 
   dateControl = new FormControl(new Date());
   date_xSelected = [];
+  well_xSelected = [];
+  area_xSelected = [];
 
   isLoadingResults: boolean = false;
 
@@ -51,9 +53,11 @@ export class PeDailyManajemenChartComponent {
         }
     },
     title: {
-        text: 'Oil Production',
+       text: "Oil Production  : " + (this.area_xSelected.length > 0 ? this.area_xSelected[0] : ""),
     },
-	
+    subtitle: {         
+    text: ''
+  },
     caption: {
         text: null,
         align: 'center',
@@ -149,10 +153,12 @@ export class PeDailyManajemenChartComponent {
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month:"short", year:"numeric", day:"numeric" });
 
   exampleDatabase: ExampleHttpDao | null;
-  well_xSelected = [];
-  area_xSelected = [];
+ 
 
   // isLoadingResults:boolean = false;
+
+  chart: Highcharts.Chart;
+
   
   constructor(
 	private http: HttpClient,
@@ -180,7 +186,14 @@ export class PeDailyManajemenChartComponent {
 	
     this.xfilterService.filter.subscribe(res => {
         this.getColumnValues(res);
-      })    
+      })  
+      
+    this.start_dateControl.valueChanges.subscribe(r => {
+      this.refresh_Production();
+    })
+    this.end_dateControl.valueChanges.subscribe(r => {
+      this.refresh_Production();
+    })
   }
   
   getColumnValues(param: any) {
@@ -194,6 +207,10 @@ export class PeDailyManajemenChartComponent {
    *  BUILD COLUMN FILTER
    *  ========================= */
   let columnfilter: any = {};
+  if (column === 'area' && selected && selected.length > 0) { this.areaControl.setValue(selected[0].toLowerCase());
+    this.refresh_Production();
+  }
+
 
   /** filter well sebelumnya (cascade filter) */
   // if (this.well_xSelected && this.well_xSelected.length > 0) {
@@ -202,6 +219,9 @@ export class PeDailyManajemenChartComponent {
   if (this.area_xSelected && this.area_xSelected.length > 0) {
     columnfilter["area"] = this.area_xSelected.map(w => "^" + w + "$");
   }
+  console.log('areaControl:', this.areaControl.value);
+  console.log('area_xSelected:', this.area_xSelected);
+
 
   /** filter by current column */
   if (filter) {
@@ -428,16 +448,29 @@ export class PeDailyManajemenChartComponent {
 
 refresh_Production() {
 
-    this.isLoadingResults = true;
+    this.isLoadingResults = false;
 
-    const area = this.areaControl.value; // sgt | sbr | bd
+    // const area = this.areaControl.value.toLowerCase(); // sgt | sbr | bd
 
-    const end_date = this.dateControl.value;
-    const start_date = new Date(
-      end_date.getFullYear(),
-      end_date.getMonth() - 1,
-      end_date.getDate()
-    );
+    // const end_date = this.dateControl.value;
+    // const start_date = new Date(
+    //   end_date.getFullYear(),
+    //   end_date.getMonth() - 1,
+    //   end_date.getDate()
+    // );
+    const start_date = this.start_dateControl.value;
+    const end_date   = this.end_dateControl.value;
+    const area =
+    this.areaControl.value ||
+    (this.area_xSelected && this.area_xSelected.length > 0
+      ? this.area_xSelected[0].toLowerCase()
+      : 'sgt');
+
+    console.log('areaControl:', this.areaControl.value);
+    console.log('area_xSelected:', this.area_xSelected);
+
+
+
 
     this.http.get('/api/pe/production', {
       params: {
@@ -459,6 +492,8 @@ refresh_Production() {
       var series_rkap_oil = [];
       var series_wpnb_oil = [];
 
+      this.manajemen_chart_options.series.forEach(s => s.data = []);
+
       res.items.map(d => {
 
         var xdt = new Date(d.date);
@@ -471,9 +506,9 @@ refresh_Production() {
         categories.push(dt);
 
         /** 🔑 AREA BASED */
-        series_operation.push({ name: dt, y: d[`${area}_opr`] });
-        series_sot.push({ name: dt, y: d[`${area}_sot`] });
-        series_figure.push({ name: dt, y: d[`${area}_fig`] });
+        series_operation.push({ name: dt, y: d[`${area}_opr`] || 0});
+        series_sot.push({ name: dt, y: d[`${area}_sot`] || 0});
+        series_figure.push({ name: dt, y: d[`${area}_fig`] || 0});
 
         /** TARGET LINE */
         series_rkap_oil.push({ name: dt, y: d.rkap_oil });
@@ -490,16 +525,18 @@ refresh_Production() {
         }
       });
 
+      console.log('AREA:', area);
+      console.log('Sample row:', res.items[0]);
+
+
       /** UPDATE CHART */
       this.manajemen_chart_options.title.text =
-        'Oil Production - ' + area.toUpperCase();
+        'Oil Production - ' + area.toUpperCase(), 
 
       this.manajemen_chart_options.subtitle.text =
-        '( ' +
-        start_date.toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) +
-        ' - ' +
-        end_date.toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) +
-        ' )';
+      `( ${start_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}` +
+      ` - ${end_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })} )`;
+
 
       this.manajemen_chart_options.xAxis.categories = categories;
 
@@ -509,17 +546,19 @@ refresh_Production() {
       this.manajemen_chart_options.series[3].data = series_rkap_oil;
       this.manajemen_chart_options.series[4].data = series_wpnb_oil;
 
-      Highcharts.chart(
+      this.chart = Highcharts.chart(
         this.manajemen_chart_el.nativeElement,
         this.manajemen_chart_options
       );
 
       this.isLoadingResults = false;
 
+
     }, error => {
       this.isLoadingResults = false;
       console.error(error);
     });
+
   }
 
 }
@@ -548,42 +587,3 @@ export class ExampleHttpDao {
     return this.http.get<PeWellApi>('/api/pe/daily', httpOption);
   }
 }
-
-
-
-// const [x, y] = [i+1, data[i]];
-			
-// sumX += x;
-// sumY += y;
-// sumXY += x * y;
-// sumX2 += x ** 2;
-
-
-
-// const intercept = (( sumY / n ) - slope * ( sumX / n ));
-
-// const minX = 1;
-// const maxX = data.length;
-
-
-// var MIN = minX * slope + intercept;
-// var MAX = maxX * slope + intercept;
-
-
-// if (MIN < 0.0001){
-			// MIN = 0.0001;
-		// }
-		// else{
-			// MIN = MIN;
-		// }
-		
-		// if (MAX < 0.0001){
-			// MAX = 0.0001;
-		// }
-		// else{
-			// MAX = MAX;
-		// }
-
-
-// trendline.push([minX, MIN]);
-// trendline.push([maxX, MAX]);

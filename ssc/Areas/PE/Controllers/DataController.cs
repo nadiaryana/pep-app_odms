@@ -351,13 +351,6 @@ namespace ssc.Areas.PE.Controllers
                         well = s.well,
                         pmax = s.pmax,
                         tmax = s.tmax,
-                        // pump_intake = s.pump_intake,
-                        // dfl = s.dfl,
-                        // cdfl = s.cdfl,
-                        // sfl = s.sfl,
-                        // tglc = s.tglc,
-                        // egfl = s.egfl,
-                        // al = s.al
 
                     });
 
