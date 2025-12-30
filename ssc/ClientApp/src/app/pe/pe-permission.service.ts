@@ -64,6 +64,13 @@ export class PePermissionService {
 	new Menu("chan-plot/list", true, null, ["PeChanPlot Read"]),
 	new Menu("chan-plot/chart", true, null, ["PeChanPlot Read"]),
 
+	new Menu("aggregate", true, null, ["PeAggregate Read"]),
+	new Menu("aggregate/list", true, null, ["PeAggregate Read"]),
+
+	// new Menu("one-slide", true, null, ["PeOneSlide Read"]),
+
+
+
 	];
 	
 	

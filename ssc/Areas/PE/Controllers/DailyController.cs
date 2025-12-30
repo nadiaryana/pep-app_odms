@@ -1243,6 +1243,103 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
+        [ApiController]
+        [Route("api/pe/daily")]
+        public class PeDailyController : ControllerBase
+        {
+            private readonly IMongoCollection<Daily> _daily;
+
+            public PeDailyController(IMongoDatabase database)
+            {
+                _daily = database.GetCollection<Daily>("daily");
+            }
+
+            [HttpGet]
+            public IActionResult GetDaily(
+                string mode,
+                long? date,        // timestamp dari frontend (opsional)
+                int page = 0,
+                int pagesize = 50
+            )
+            {
+                if (mode == "delta")
+                    return GetDailyDelta(date, page, pagesize);
+
+                // MODE LAMA (kode existing kamu)
+                return Ok();
+            }
+
+            // ================== DELTA MODE ==================
+            private IActionResult GetDailyDelta(long? date, int page, int pagesize)
+            {
+                DateTime today = date != null
+                    ? DateTimeOffset.FromUnixTimeMilliseconds(date.Value).Date
+                    : DateTime.Today;
+
+                DateTime yesterday = today.AddDays(-1);
+
+                // DATA HARI INI
+                var todayData = _daily.Find(d =>
+                    d.date == today &&
+                    d.fig_curr_gross > 0
+                ).ToList();
+
+                // DATA HARI SEBELUMNYA
+                var prevData = _daily.Find(d =>
+                    d.date == yesterday &&
+                    d.fig_curr_gross > 0
+                ).ToList();
+
+                // JOIN BY WELL
+                var joined = todayData.Join(
+                    prevData,
+                    t => t.well,
+                    p => p.well,
+                    (t, p) => new DailyDelta
+                    {
+                        date = today,
+                        well = t.well,
+
+                        fig_curr_gross_today = t.fig_curr_gross,
+                        fig_curr_gross_prev = p.fig_curr_gross,
+                        delta_fig_curr_gross = t.fig_curr_gross - p.fig_curr_gross,
+
+                        fig_curr_net_today = t.fig_curr_net,
+                        fig_curr_net_prev = p.fig_curr_net,
+                        delta_fig_curr_net = t.fig_curr_net - p.fig_curr_net,
+
+                        wc_today = t.wc,
+                        wc_prev = p.wc,
+                        delta_wc = t.wc - p.wc,
+
+                        gas_today = t.gas,
+                        gas_prev = p.gas,
+                        delta_gas = t.gas - p.gas,
+
+                        ds_efficiency_today = t.ds_efficiency,
+                        ds_efficiency_prev = p.ds_efficiency,
+                        delta_ds_efficiency = t.ds_efficiency - p.ds_efficiency,
+
+                        sm_today = t.sm,
+                        sm_prev = p.sm,
+                        delta_sm = t.sm - p.sm
+                    }
+                ).OrderBy(r => r.well).ToList();
+
+                var paged = joined
+                    .Skip(page * pagesize)
+                    .Take(pagesize)
+                    .ToList();
+
+                return Ok(new
+                {
+                    items = paged,
+                    total_count = joined.Count
+                });
+            }
+        }
+
+
 
         [Authorize("PeDaily Read")]
         [HttpGet("buildfigure")]

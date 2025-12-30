@@ -1,5 +1,3 @@
-/* form */
-
 .container-top-bar {
   margin-right: 21.5%;
 }
@@ -12,9 +10,7 @@ mat-card {
 }
 
 .container-content {
-    
   width: 100%;
-  min-height: 600px
 }
 
 .chart-card {
@@ -22,11 +18,6 @@ mat-card {
   display: block;
 }
 
-.per_area_chart, .per_area_chart_off {
-  width: 100%;
-  height: 380px;
-  display: block;
-}
 mat-progress-bar {
   width: 332px;
 }
@@ -99,9 +90,30 @@ mat-card-actions {
   padding-right: 10px !important;
 }
 
+.mat-input-element {
+  color: #000 !important;        /* warna teks hitam */
+  font-size: 14px !important;
+}
+
+.mat-form-field-ripple {
+  background-color: #000 !important;
+}
+
+/* Label di atas input */
+.mat-form-field-label {
+  color: #000 !important;        /* agar tidak blur abu-abu */
+  font-weight: 500;
+}
+
+/* Placeholder */
+.mat-form-field-placeholder {
+  color: #000 !important;
+}
+
 
 ::ng-deep .mat-form-field-wrapper .mat-form-field-underline {
   bottom: 5px !important;
+  background-color: #000 !important;
 }
 
 ::ng-deep .mat-form-field-wrapper .mat-form-field-infix {
@@ -172,9 +184,4 @@ ng::host .mat-horizontal-stepper-content {
 .w_100 {
   resize: horizontal;
   min-width: 100px;
-}
-
-.manajemen_chart {
-  height: 550px;
-  // width: 100%;
 }

@@ -66,6 +66,9 @@ import { PeDailyChanPlotChartComponent } from './daily/pe-daily-chan-plot-chart.
 import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
 import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
 import { PeDailyManajemenChartComponent } from './daily/pe-daily-manajemen-chart.component';
+import { PeDailyAggregateComponent } from './daily/pe-daily-aggregate.component';
+import { PeDailyAggregateListComponent } from './daily/pe-daily-aggregate-list.component';
+import { OneSlideComponent } from './daily/oneslide/pe-one-slide.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -120,6 +123,9 @@ import { PeDailyManajemenChartComponent } from './daily/pe-daily-manajemen-chart
   PeSumurCurrentAddComponent,
   PeSumurDeleteDialogComponent,
   PeDailyChanPlotComponent,
+  PeDailyAggregateComponent,
+  PeDailyAggregateListComponent,
+  OneSlideComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -175,7 +181,9 @@ export class PeModule {
             //new PanelSubItem("Sonolog Add", "pe/sonolog/add", "playlist_add", this.pePermission.passPermission("pe/sonolog/add")),
 			      new PanelSubItem("BHP", "pe/bhp", "sensors", this.pePermission.passPermission("pe/bhp")),
             new PanelSubItem("IPR", "pe/ipr", "show_chart"),
+            new PanelSubItem("One Slide", "pe/one-slide", "camera"),
             new PanelSubItem("Chan Plot", "pe/chan-plot", "scatter_plot"),
+            new PanelSubItem("Aggregate", "pe/aggregate", "trending_up"),
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [

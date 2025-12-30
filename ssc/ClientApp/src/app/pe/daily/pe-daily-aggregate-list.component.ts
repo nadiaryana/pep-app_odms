@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams, HttpResponse, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
+import { Component, OnInit, ViewChild, Inject, OnDestroy } from '@angular/core';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatTableDataSource } from '@angular/material/table';
 import { merge, Observable, of as observableOf, Subscription } from 'rxjs';
@@ -7,32 +7,44 @@ import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operat
 import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
+
+// import { PeDailyService } from './pe-daily.service';
+// import { PeDaily } from './pe-daily';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
 import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
-import { User } from '../../user';
-import { AuthService } from '../../auth.service';
 
 @Component({
-  selector: 'pe-daily-manajemen',
-  templateUrl: './pe-daily-manajemen.component.html',
+  selector: 'pe-daily-aggregate-list',
+  templateUrl: './pe-daily-aggregate-list.component.html',
   styleUrls: ['./pe-daily.scss']
 })
-export class PeDailyManajemenComponent implements OnInit {
 
-  currentUser: User;
+export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
-  displayedColumns: string[] = ["settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
-  headerColumns1: string[] = ["settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
-  // displayedColumns: string[] = ["date","operation","figure", "sot", "gas", "gas_sales", "sgt_opr", "settings"];
-  // headerColumns1: string[] = ["date", "operation", "figure", "sot", "gas", "gas_sales", "sgt_opr", "settings"];
+  displayedColumns: string[] = ["select", "date","well",
+    "fig_curr_gross_today","fig_curr_gross_prev","delta_fig_curr_gross",
+    "fig_curr_net_today","fig_curr_net_prev","delta_fig_curr_net",
+    "wc_today","wc_prev","delta_wc",
+    "gas_today","gas_prev","delta_gas",
+    "ds_efficiency_today","ds_efficiency_prev","delta_ds_efficiency",
+    "sm_today","sm_prev","delta_sm"];
+
+  headerColumns1: string[] = [
+    "select", "date","well","fig_curr_gross_today","fig_curr_gross_prev","delta_fig_curr_gross",
+    "fig_curr_net_today","fig_curr_net_prev","delta_fig_curr_net",
+    "wc_today","wc_prev","delta_wc",
+    "gas_today","gas_prev","delta_gas",
+    "ds_efficiency_today","ds_efficiency_prev","delta_ds_efficiency",
+    "sm_today","sm_prev","delta_sm"];
+
   exampleDatabase: ExampleHttpDao | null;
-  data = [];
-  completedData = [];
-  // dataSource = new MatTableDataSource<any>(this.data);
+  data: any[] = [];
+
+  dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
   isEditing: boolean = false;
 
@@ -49,46 +61,72 @@ export class PeDailyManajemenComponent implements OnInit {
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
   filterControl = new FormControl('');
+
   dateFilter = new FormControl('');
- 
+  wellFilter = new FormControl('');
+  fig_curr_grossFilter = new FormControl('');
+  fig_curr_netFilter = new FormControl('');
+  // wor = new FormControl('');
+  wcFilter = new FormControl('');
+  gasFilter = new FormControl('');
+  ds_efficiencyFilter = new FormControl('');
+  
+
   date_xSelected = [];
+  well_xSelected = [];
+  fig_curr_gross_xSelected = [];
+  fig_curr_net_xSelected = [];
+  gas_xSelected = [];
+  sm_xSelected = [];
+  wor_xSelected = [];
+  wc_xSelected = [];
+  ds_efficiency_xSelected = [];
 
 
   filterSubscription: Subscription;
   selectedSubscription: Subscription;
   listSubscription: Subscription;
-
+  
   constructor(
     private http: HttpClient,
     private router: Router,
     public dialog: MatDialog,
-    //public snackBar: MatSnackBar,
+    public snackBar: MatSnackBar,
+    // private pe_dailyService: PeDailyService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
     private titleService: TitleService,
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
-    private authService: AuthService,
-  ) {
-    this.authService.currentUser.subscribe(res => {
-      this.currentUser = res;
-      console.log(this.currentUser);
-    });
-
-  }
+  ) { }
 
   ngOnInit() {
-
-    this.titleService.titleSource.next({
-      title: "Daily Manajemen",
-      icon: "list",
+    this.loadData();
+	this.titleService.titleSource.next({
+      title: "Aggregate",
+      icon: "trending_up",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
-        { label: 'Manajemen', routerLink: '' }
+        { label: 'Daily Aggregate', routerLink: '' }
       ]
     }
     );
+	
+	var p_start_submitDate = this.route.snapshot.paramMap.get('start_submitDate');
+    if (p_start_submitDate != null && p_start_submitDate.length > 0) {
+      //this.start_submitDate = isNaN(Number(p_start_submitDate)) ? new Date(Date.parse(p_start_submitDate)) : new Date(Number(p_start_submitDate));
+      this.start_submitDate = Number(p_start_submitDate);
+      console.log(this.start_submitDate);
+    }
+    var p_end_submitDate = this.route.snapshot.paramMap.get('end_submitDate');
+    if (p_end_submitDate != null && p_end_submitDate.length > 0) {
+      //this.end_submitDate = isNaN(Number(p_end_submitDate)) ? new Date(Date.parse(p_end_submitDate)) : new Date(Number(p_end_submitDate));
+      this.end_submitDate = Number(p_end_submitDate);
+      console.log(this.end_submitDate);
+    }
+    this.group = this.route.snapshot.paramMap.get('group');
+    this.status = this.route.snapshot.paramMap.get('status');
 
     this.exampleDatabase = new ExampleHttpDao(this.http);
 
@@ -107,6 +145,13 @@ export class PeDailyManajemenComponent implements OnInit {
       this.paginator.page,
       this.filterControl.valueChanges.pipe(debounceTime(300)),
       this.dateFilter.valueChanges.pipe(debounceTime(300)),
+      this.wellFilter.valueChanges.pipe(debounceTime(300)),
+      this.fig_curr_grossFilter.valueChanges.pipe(debounceTime(300)),
+      this.fig_curr_netFilter.valueChanges.pipe(debounceTime(300)),
+      this.ds_efficiencyFilter.valueChanges.pipe(debounceTime(300)),
+      this.wcFilter.valueChanges.pipe(debounceTime(300)),
+      this.gasFilter.valueChanges.pipe(debounceTime(300)),
+
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
@@ -127,7 +172,7 @@ export class PeDailyManajemenComponent implements OnInit {
         this.isLoadingResults = false;
         this.isRateLimitReached = false;
         this.resultsLength = data.total_count;
-        console.log(data.items)
+
         return data.items;
       }),
       catchError(() => {
@@ -138,13 +183,13 @@ export class PeDailyManajemenComponent implements OnInit {
       })
     ).subscribe(data => {
       this.data = data;
-      // this.dataSource = new MatTableDataSource<any>(this.data);
+      console.log("Isinya apa: "+this.data);
+      this.dataSource = new MatTableDataSource<any>(this.data);
       this.selection.clear();
     });
-
-
+	
   }
-
+  
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
     this.selectedSubscription.unsubscribe();
@@ -154,7 +199,7 @@ export class PeDailyManajemenComponent implements OnInit {
   passPermission(path: String) {
     return this.pePermissionService.passPermission(path);
   }
-  
+
   exportExcel() {
 
     const httpOption: Object = {
@@ -168,10 +213,10 @@ export class PeDailyManajemenComponent implements OnInit {
     var columnfilter = this.getColumnFilter();
 
     this.exampleDatabase!.getRepoIssues(
-      this.sort.active, 
-      this.sort.direction, 
-      this.paginator.pageIndex, 
-      this.paginator.pageSize, 
+      this.sort.active,
+      this.sort.direction,
+      this.paginator.pageIndex,
+      this.paginator.pageSize,
       this.filterControl.value,
       columnfilter,
       "excel",
@@ -179,10 +224,10 @@ export class PeDailyManajemenComponent implements OnInit {
     ).pipe(map((res) => {
       this.isLoadingResults = false;
       return {
-        filename: 'Production.xlsx',
+        filename: 'Daily.xlsx',
         data: new Blob(
           [res['body']],
-          { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
+          { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
         ),
       };
     })).subscribe(res => {
@@ -237,26 +282,63 @@ export class PeDailyManajemenComponent implements OnInit {
 
   getColumnFilter() {
     var columnfilter = {};
-
     if (this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
-
+    if (this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
+    if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"] = this.fig_curr_gross_xSelected;
+    if (this.fig_curr_net_xSelected.length) columnfilter["fig_curr_net"] = this.fig_curr_net_xSelected;
+    if (this.gas_xSelected.length) columnfilter["gas"] = this.gas_xSelected;
+    if (this.sm_xSelected.length) columnfilter["sm"] = this.sm_xSelected;
+    if (this.wor_xSelected.length) columnfilter["wor"] = this.wor_xSelected;
+    if (this.ds_efficiency_xSelected.length) columnfilter["ds_efficiency"] = this.ds_efficiency_xSelected;
+	
+    //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
+    //if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
+    //if(this.group) columnfilter['group'] = this.group;
+    //if(this.status) columnfilter['status'] = this.status;
     return columnfilter;
+	
+  }
+  
+
+  formatInterval(arr) {
+    return arr.map(a => a.join("-")).join(", ");
   }
 
+  /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+      this.selection.clear() :
+      this.dataSource.data.forEach(row => this.selection.select(row));
+  }
+
+  /** The label for the checkbox on the passed row */
+  checkboxLabel(row?: any): string {
+    if (!row) {
+      return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+    }
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
+  }
 
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-   /* const dialogRef = this.dialog.open(PeLabDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeDailyAggregateDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
-    }); 
+    });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.isLoadingResults = true;
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/labreport', {
+        this.http.delete<any>('/api/pe/daily', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -274,16 +356,30 @@ export class PeDailyManajemenComponent implements OnInit {
           })
       }
     });
-    */
   }
 
-  alert(x) {
-    window.alert(x);
+  loadData() {
+    this.http.get<any>('/api/pe/daily', {
+      params: {
+        mode: 'delta',
+        page: '0',
+        pagesize: '50'
+      }
+    }).subscribe(res => {
+      this.dataSource.data = res.items;
+      this.resultsLength = res.total_count;
+      this.isLoadingResults = false;
+    });
   }
-
 
 }
 
+
+
+export interface editR {
+  // items: PeDaily[];
+  total_count: number;
+}
 
 /*export interface PeDaily {
   PE_TICKET_ID: number;
@@ -305,34 +401,33 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) { }
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 10, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<any> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<any> {
+
     var params = {};
-    sort != null? params["sort"] = sort : params["sort"] = 'date';
+    if (sort != null) params["sort"] = sort;
     if (order != null) params["order"] = order;
     if (page != null) params["page"] = page.toString();
     if (pagesize != null) params["pagesize"] = pagesize.toString();
     if (filter != null) params["filter"] = filter;
-    if(Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
-	if(mode != null) params["mode"] = mode;
+    if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
+    if (mode != null) params["mode"] = mode;
 
     httpOption["params"] = params;
 
-    return this.http.get<any>('/api/pe/production', httpOption);
+    return this.http.get<any>('/api/pe/daily/delta', httpOption);
   }
-
-}
-
-/*
+} 
 
 @Component({
-  selector: 'app-lab-delete-dialog',
+  selector: 'app-daily-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
-  styleUrls: ['./pe-lab.scss']
+  // styleUrls: ['./pe-daily.scss']
 })
-export class PeLabDeleteDialogComponent {
+
+export class PeDailyAggregateDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeLabDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeDailyAggregateDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) { }
 
   onNoClick(): void {
@@ -343,4 +438,4 @@ export class PeLabDeleteDialogComponent {
     this.dialogRef.close();
   }
 
-}*/
+}

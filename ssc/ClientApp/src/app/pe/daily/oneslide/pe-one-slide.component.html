@@ -1,0 +1,499 @@
+<!-- <p>ipr works!</p> -->
+<div
+  fxLayout="row"
+  fxLayout.lt-lg="column"
+  fxLayoutGap="12px"
+  fxLayoutAlign="start stretch"
+>
+  <mat-card fxFlex="30" class="dasboard_card">
+    <mat-card-content>
+      <!-- Filter Form Section -->
+      <div
+        class="filter-form"
+        fxLayout="column"
+        fxLayoutGap="10px"
+        fxLayoutAlign="start start"
+        fxLayout.lt-md="column"
+      >
+        <h3>Perforation Depth</h3>
+
+        <mat-form-field class="field-well">
+          <mat-label>Well</mat-label>
+          <input matInput [(ngModel)]="well_xSelected" disabled />
+          <app-xfilter
+            title="Well"
+            column="well"
+            [selected]="well_xSelected"
+          ></app-xfilter>
+        </mat-form-field>
+
+        <mat-form-field class="filter">
+          <mat-label>Start Date</mat-label>
+          <input
+            matInput
+            class="input-hidden"
+            [matDatepicker]="start_datePicker"
+            [formControl]="start_dateControl"
+            (dateChange)="start_dateChange($event)"
+            disabled
+          />
+          <input matInput [(ngModel)]="start_dateInput" disabled />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="start_datePicker"
+            [disabled]="isLoadingResults"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field class="filter">
+          <mat-label>End Date</mat-label>
+          <input
+            matInput
+            class="input-hidden"
+            [matDatepicker]="end_datePicker"
+            [formControl]="end_dateControl"
+            (dateChange)="end_dateChange($event)"
+            disabled
+          />
+          <input matInput [(ngModel)]="end_dateInput" disabled />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="end_datePicker"
+            [disabled]="isLoadingResults"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field class="filter">
+          <mat-label>Zone</mat-label>
+          <input matInput [formControl]="zone" placeholder="Zone" readonly />
+        </mat-form-field>
+        <mat-form-field class="filter">
+          <mat-label>Interval</mat-label>
+          <input
+            matInput
+            [formControl]="interval"
+            placeholder="Interval"
+            readonly
+          />
+        </mat-form-field>
+
+        <!-- Top Perforation Depth -->
+        <mat-form-field class="filter">
+          <mat-label>Top Perforation Depth</mat-label>
+          <input
+            matInput
+            [formControl]="top_perforation_depth"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Top Perforation Depth"
+            (change)="perforationChange()"
+          />
+          <span matSuffix>m</span>
+        </mat-form-field>
+
+        <!-- Bottom Perforation Depth -->
+        <mat-form-field class="filter">
+          <mat-label>Bottom Perforation Depth</mat-label>
+          <input
+            matInput
+            [formControl]="bottom_perforation_depth"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Bottom Perforation Depth"
+            (change)="perforationChange()"
+          />
+          <span matSuffix>m</span>
+        </mat-form-field>
+
+        <!-- Perforation Depth Reference (disabled input; keep binding to its FormControl) -->
+        <mat-form-field class="filter">
+          <mat-label>Perforation Depth Reference</mat-label>
+          <input
+            matInput
+            [value]="perforation_depth_reference?.value"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Perforation Depth Reference"
+            disabled
+          />
+          <span matSuffix>m</span>
+        </mat-form-field>
+
+        <h3>Test Data</h3>
+
+        <!-- Gross Average -->
+        <mat-form-field class="filter">
+          <mat-label>Gross Average</mat-label>
+          <input
+            matInput
+            [value]="dailyAverages?.length ? dailyAverages[0]?.grossAvg : ''"
+            disabled
+          />
+          <span matSuffix>BFPD</span>
+        </mat-form-field>
+
+        <!-- Net Average -->
+        <mat-form-field class="filter">
+          <mat-label>Net Average</mat-label>
+          <input
+            matInput
+            [value]="dailyAverages?.length ? dailyAverages[0]?.netAvg : ''"
+            disabled
+          />
+          <span matSuffix>BOPD</span>
+        </mat-form-field>
+
+        <!-- WC Average -->
+        <mat-form-field class="filter">
+          <mat-label>WC Average</mat-label>
+          <input
+            matInput
+            [value]="dailyAverages?.length ? dailyAverages[0]?.wcAvg + '%' : ''"
+            disabled
+          />
+          <span matSuffix>%</span>
+        </mat-form-field>
+
+        <mat-form-field class="filter">
+          <mat-label>Static Fluid Level</mat-label>
+          <input
+            matInput
+            [formControl]="static_fluid_level"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Static Fluid Level"
+            (change)="testData()"
+          />
+          <span matSuffix>m</span>
+        </mat-form-field>
+
+        <!-- Bottom Perforation Depth -->
+        <mat-form-field class="filter">
+          <mat-label>Dynamic Fluid Level</mat-label>
+          <input
+            matInput
+            [formControl]="dynamic_fluid_level"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Dynamic Fluid Level"
+            (change)="testData()"
+          />
+          <span matSuffix>m</span>
+        </mat-form-field>
+        <mat-form-field class="filter">
+          <mat-label>Static Bottomhole Pressure</mat-label>
+          <input
+            matInput
+            [value]="static_botthomhole_pressure?.value"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Static Bottomhole Pressure"
+            disabled
+          />
+          <span matSuffix>psi</span>
+        </mat-form-field>
+        <mat-form-field class="filter">
+          <mat-label>Flowing Bottomhole Pressure</mat-label>
+          <input
+            matInput
+            [value]="flowing_bottomhole_pressure?.value"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Flowing Bottomhole Pressure"
+            disabled
+          />
+          <span matSuffix>psi</span>
+        </mat-form-field>
+
+        <mat-form-field class="filter">
+          <mat-label>Factor Correction</mat-label>
+          <input
+            matInput
+            [formControl]="factor_corr"
+            type="number"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Factor Correction"
+          />
+        </mat-form-field>
+        
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div fxFlex="70" fxLayout="column" fxLayoutGap="12px" style="width: 100%">
+    <!-- right: IPR chart -->
+    <mat-card class="dasboard_card">
+      <mat-card-content
+        style="
+          min-height: 500px;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+        "
+      >
+        <h3>IPR Chart</h3>
+        <!-- chart container grows to fill card content -->
+        <div style="flex: 1; min-height: 500px">
+          <div #ipr_chart_el style="width: 100%; height: 100%"></div>
+        </div>
+      </mat-card-content>
+      <mat-card-content
+        style="
+          min-height: 500px;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+        "
+      >
+        <h3>Production Chart</h3>
+        <!-- chart container grows to fill card content -->
+        <div style="flex: 1; min-height: 500px">
+          <div #daily_chart_el class="daily_chart"></div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- other data -->
+    <div
+      fxLayout="row"
+      fxLayout.lt-lg="column"
+      fxLayoutGap="12px"
+      fxLayoutAlign="start stretch"
+    >
+      <!-- Subsurface Data -->
+      <mat-card class="dasboard_card" fxFlex="33%">
+        <mat-card-content>
+          <div
+            class="filter-form"
+            fxLayout="column"
+            fxLayoutGap="10px"
+            fxLayoutAlign="start start"
+            fxLayout.lt-md="column"
+          >
+            <h3>Subsurface Data</h3>
+
+            <mat-form-field class="filter">
+              <mat-label>Zone</mat-label>
+              <input
+                matInput
+                [formControl]="zone"
+                placeholder="Zone"
+                readonly
+              />
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Interval</mat-label>
+              <input
+                matInput
+                [formControl]="interval"
+                placeholder="Interval"
+                readonly
+              />
+              <span matSuffix>m</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Static Bottomhole Pressure</mat-label>
+              <input
+                matInput
+                [formControl]="static_botthomhole_pressure"
+                placeholder="Static Bottomhole Pressure"
+                readonly
+              />
+              <span matSuffix>psi</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Flowing Bottomhole Pressure</mat-label>
+              <input
+                matInput
+                [formControl]="flowing_bottomhole_pressure"
+                placeholder="Flowing Bottomhole Pressure"
+                readonly
+              />
+              <span matSuffix>psi</span>
+            </mat-form-field>
+             <mat-form-field class="filter">
+            <mat-label>SM</mat-label>
+            <input 
+                  matInput 
+                  [formControl]="sm" 
+                  placeholder="SM" 
+                  readonly />
+                  <span matSuffix>m</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+            <mat-label>Qmax</mat-label>
+            <input
+              matInput
+              [formControl]="qmax"
+              placeholder="Qmax"
+              readonly
+            />
+            <span matSuffix>bfpd</span>
+          </mat-form-field>
+             <mat-form-field class="filter">
+              <mat-label>Production to reservoir potential ratio</mat-label>
+              <input
+                matInput
+                [formControl]="prod_reservoir"
+                placeholder="Production to reservoir potential ratio"
+                readonly
+              />
+              <span matSuffix>%</span>
+            </mat-form-field>
+
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Lifting Parameter  -->
+      <mat-card class="dasboard_card" fxFlex="33%">
+        <mat-card-content>
+          <div
+            class="filter-form"
+            fxLayout="column"
+            fxLayoutGap="10px"
+            fxLayoutAlign="start start"
+            fxLayout.lt-md="column"
+          >
+            <h3>Lifting Parameter</h3>
+
+            <mat-form-field class="filter">
+              <mat-label>Lifting Type</mat-label>
+              <input
+                matInput
+                [formControl]="ls_method"
+                placeholder="Lifting Type"
+                readonly
+              />
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Pump Setting Depth</mat-label>
+              <input
+                matInput
+                [formControl]="ds_kd"
+                placeholder="Pump Setting Depth"
+                readonly
+              />
+              <span matSuffix>m</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Stroke length</mat-label>
+              <input
+                matInput
+                [formControl]="ds_sl"
+                placeholder="Stroke Length"
+                readonly
+              />
+              <span matSuffix>in</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>SPM</mat-label>
+              <input
+                matInput
+                [formControl]="ds_spm"
+                placeholder="SPM"
+                readonly
+              />
+              <span matSuffix>SPM / Hz</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Pump diameter</mat-label>
+              <input
+                matInput
+                [formControl]="size"
+                placeholder="Pump diameter"
+                readonly
+              />
+              <span matSuffix>in</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Lifting Capacity</mat-label>
+              <input
+                matInput
+                [formControl]="lifting_capacity"
+                placeholder="Lifting capacity"
+                readonly
+              />
+              <span matSuffix>bfpd</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Production to lifting capacity ratio</mat-label>
+              <input
+                matInput
+                [formControl]="prod_ratio"
+                placeholder="Production to lifting capacity ratio"
+                readonly
+              />
+              <span matSuffix>%</span>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Production Data -->
+      <mat-card class="dasboard_card" fxFlex="33%">
+        <mat-card-content>
+          <div
+            class="filter-form"
+            fxLayout="column"
+            fxLayoutGap="10px"
+            fxLayoutAlign="start start"
+            fxLayout.lt-md="column"
+          >
+            <h3>Subsurface Data</h3>
+
+            <mat-form-field class="filter">
+              <mat-label>Liquid Rate</mat-label>
+              <input
+                matInput
+                [value]="dailyAverages?.length ? dailyAverages[0]?.grossAvg : ''"
+                placeholder="Liquid Rate"
+                readonly
+              />
+              <span matSuffix>bfpd</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Water Cut</mat-label>
+              <input
+                matInput
+                [formControl]="wc"
+                placeholder="Water Cut"
+                readonly
+              />
+              <span matSuffix>%</span>
+            </mat-form-field>
+
+            <mat-form-field class="filter">
+              <mat-label>Oil Rate</mat-label>
+              <input
+                matInput
+                [value]="dailyAverages?.length ? dailyAverages[0]?.netAvg : ''"
+                disabled
+              />
+              <span matSuffix>bopd</span>
+            </mat-form-field>
+            <mat-form-field class="filter">
+              <mat-label>Gas Rate</mat-label>
+              <input
+                matInput
+                [value]="dailyAverages?.length ? dailyAverages[0]?.gasAvg : ''"
+                disabled
+              />
+              <span matSuffix>Mmscfd</span>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

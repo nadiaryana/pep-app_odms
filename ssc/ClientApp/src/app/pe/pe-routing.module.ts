@@ -54,6 +54,10 @@ import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
 import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
 import { PeDailyManajemenChartComponent } from './daily/pe-daily-manajemen-chart.component';
 
+import { PeDailyAggregateComponent } from './daily/pe-daily-aggregate.component';
+import { PeDailyAggregateListComponent } from './daily/pe-daily-aggregate-list.component';
+import { OneSlideComponent } from './daily/oneslide/pe-one-slide.component';
+
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
     { path: 'dashboard', component: PeDashboardComponent, canActivate: [PePermissionGuard] },
@@ -99,6 +103,11 @@ const peRoutes: Routes = [
       { path: 'chart', component: PeDailyChanPlotChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
+    { path: 'aggregate', component: PeDailyAggregateComponent, children:[
+      { path: 'list', component: PeDailyAggregateListComponent, canActivate: [PePermissionGuard]},
+      { path: '', redirectTo: 'list', pathMatch:"full"},
+    ]},
+    { path: 'one-slide', component: OneSlideComponent},
 
   ]},
 ]; 
