@@ -900,13 +900,13 @@ export class OneSlideComponent implements OnInit {
           type: 'line',
           yAxis: 1,
           data: [],
-          color: '#7030A0',
+          color: '#5b9bd5',
           zIndex: 6,
           tooltip: {
             valueSuffix: ' psi',
             valueDecimals: 2
           },
-        visible: false
+        // visible: false
     
         },{
           name: 'KD',
@@ -922,20 +922,20 @@ export class OneSlideComponent implements OnInit {
             valueSuffix: ' Hz',
             valueDecimals: 2
           },
-        visible: false
+        // visible: false
         
         },{
           name: 'SM',
-          type: 'area',
+          type: 'line',
           yAxis: 1,
           data: [],
-          color: '#5b9bd5',
+          color: '#acc52b',
           zIndex: 4,
           tooltip: {
             valueSuffix: ' m',
             valueDecimals: 2
           },
-        visible: false
+        // visible: false
         
         },{
           name: 'SL',
@@ -951,7 +951,7 @@ export class OneSlideComponent implements OnInit {
             valueSuffix: ' inch',
             valueDecimals: 2
           },
-        visible: false
+        // visible: false
     
         }, {
           name: 'SPM',
@@ -967,7 +967,7 @@ export class OneSlideComponent implements OnInit {
             valueSuffix: ' SPM',
             valueDecimals: 2
           },
-        visible: false
+        // visible: false
         
         }, {
           name: 'Gross',
@@ -980,6 +980,20 @@ export class OneSlideComponent implements OnInit {
             enabled: false
           },tooltip: {
             valueSuffix: ' bfpd',
+            valueDecimals: 2
+          }
+    
+        }, {
+          name: 'Pump Size',
+          type: 'line',
+          yAxis: 0,
+          data: [],
+          color: '#800080',
+          zIndex: 1,
+          marker: {
+            enabled: false
+          },tooltip: {
+            valueSuffix: ' inch',
             valueDecimals: 2
           }
     
@@ -1029,12 +1043,13 @@ export class OneSlideComponent implements OnInit {
 
     this.daily_chart_options_daily.xAxis[0].categories = categories;
 
-    this.daily_chart_options_daily.series[0].data = data.map(d => d.thp);
-    this.daily_chart_options_daily.series[1].data = data.map(d => d.ds_kd);
+    this.daily_chart_options_daily.series[0].data = data.map(d => d.gross);
+    this.daily_chart_options_daily.series[1].data = data.map(d => d.kd);
     this.daily_chart_options_daily.series[2].data = smFixed
-    this.daily_chart_options_daily.series[3].data = data.map(d => d.ds_sl);
-    this.daily_chart_options_daily.series[4].data = data.map(d => d.ds_spm);
-    this.daily_chart_options_daily.series[5].data = data.map(d => d.size);
+    this.daily_chart_options_daily.series[3].data = data.map(d => d.sl);
+    this.daily_chart_options_daily.series[4].data = data.map(d => d.spm);
+    this.daily_chart_options_daily.series[5].data = data.map(d => d.gross);
+    this.daily_chart_options_daily.series[6].data = data.map(d => d.size);
 
     Highcharts.chart(
       this.daily_chart_daily_el.nativeElement,
