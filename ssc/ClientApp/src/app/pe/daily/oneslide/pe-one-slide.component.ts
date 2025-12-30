@@ -12,6 +12,8 @@ import {catchError,map,startWith,switchMap,debounceTime,take,mergeAll,timeout,} 
 // import { ExampleHttpDao } from '../pe-daily-list.component';
 import { xFilterService } from "src/app/xfilter/xfilter.component";
 import * as Highcharts from 'highcharts';
+import { formatDate } from '@angular/common';
+
 
 // import { PeSonolog }    from './pe-sonolog';
 // import { SnackbarService } from './../snackbar.service';
@@ -63,6 +65,10 @@ export class OneSlideComponent implements OnInit {
   @ViewChild('daily_chart_el', { static: false })
   public daily_chart_el!: ElementRef;
 
+  @ViewChild('daily_chart_daily_el', { static: false })
+  public daily_chart_daily_el!: ElementRef;
+
+
 
   top_perforation_depth = new FormControl("");
   bottom_perforation_depth = new FormControl("");
@@ -98,6 +104,7 @@ export class OneSlideComponent implements OnInit {
   daily_table_columns: string[] = ["status", "count"];
 
   ipr_chart_options: any;
+  
 
   daily_chart_options: object = {
     chart: {
@@ -150,6 +157,8 @@ export class OneSlideComponent implements OnInit {
       text: null,
     },
   };
+
+  daily_chart_options_daily: any = JSON.parse(JSON.stringify(this.daily_chart_options));
 
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
@@ -520,6 +529,8 @@ export class OneSlideComponent implements OnInit {
           // setelah daily_data diisi
           this.daily_data = filteredData;
 
+          this.loadDailyChartLikeDailyPage();
+
           // render chart
           setTimeout(() => {
             this.renderDailyChart(this.daily_data);
@@ -741,8 +752,9 @@ export class OneSlideComponent implements OnInit {
   if (!this.daily_chart_el) return;
 
   const categories = data.map(d =>
-    this.formatDate(d.date, 'dd-MMM-yy', 'en-US')
-  );
+  formatDate(d.date, 'dd-MMM-yy', 'en-US')
+);
+
 
   const gross = data.map(d => d.gross || 0);
   const water = data.map(d => (d.gross - d.net) || 0);
@@ -752,7 +764,7 @@ export class OneSlideComponent implements OnInit {
 
   this.daily_chart_options = {
     chart: {
-      type: 'area',
+      // type: 'area',
       zoomType: 'x',
     },
     title: {
@@ -784,24 +796,270 @@ export class OneSlideComponent implements OnInit {
       }
     },
     series: [
-      { name: 'Liquid Rate', data: gross },
-      { name: 'Water', data: water },
-      { name: 'Oil Rate', data: net },
+      { name: 'Liquid Rate', data: gross, type: 'line', color: '#000000' },
+      { name: 'Water Cut', data: water, type: 'line', color: '#0070C0'},
+      { name: 'Oil Rate', data: net, type: 'area', color: '#acc52b'},
       {
-        name: 'Gas',
+        name: 'Gas Rate',
         type: 'line',
         yAxis: 1,
         dashStyle: 'ShortDot',
+        color: '#af6a33',
         data: gas
       }
     ]
   };
 
-  Highcharts.chart(
-    this.daily_chart_el.nativeElement,
-    this.daily_chart_options
-  );
+    Highcharts.chart(
+      this.daily_chart_el.nativeElement,
+      this.daily_chart_options
+    );
+  }
+
+  renderDailyChartFromDailyPage(res: any) {
+    if (!this.daily_chart_daily_el) return;
+
+    const data = res.data || [];
+
+   const categories = data.map(d =>
+  formatDate(d.date, 'dd-MMM-yy', 'en-US')
+);
+
+
+    const smFixed = data.map(d => d.sm < 0 ? 0 : d.sm);
+
+    this.daily_chart_options_daily = {
+        chart: {
+          zoomType: 'x',
+          style: {
+            fontFamily: 'Roboto, Helvetica Neue, sans-serif'
+          }
+        },
+      exporting: {
+            fallbackToExportServer: false
+        },
+        title: {
+          text: null,
+        },
+        caption: {
+          text: null,
+          align: 'center',
+          verticalAlign: 'bottom'
+        },
+        xAxis: [{
+          categories: [],
+          crosshair: true,
+          autoRotation: true,
+          labels: {
+            // step: 7
+          }//,
+        }],
+        yAxis: [{ // Primary yAxis
+          title: {
+            text: 'Gross (bfpd), Net (bopd), Qgas (bfpd), SL (inch)',
+            style: {
+              color: '#666666'
+            }
+          },
+          labels: {
+            format: '{value}',
+            style: {
+              color: '#999999'
+            }
+          }
+        }, { // Secondary yAxis
+          gridLineWidth: 0,
+          title: {
+            text: 'WC (%), THP (psi), SM (m), SPM (SPM)',
+            style: {
+              color: '#666666'
+            }
+          },
+          labels: {
+            format: '{value}',
+            style: {
+              color: '#999999'
+            }
+          },
+          opposite: true
+        }
+      ],
+        tooltip: {
+          shared: true
+        },
+        legend: {
+          layout: 'horizontal',
+          align: 'center',
+          verticalAlign: 'top',
+          backgroundColor:
+            Highcharts.defaultOptions.legend.backgroundColor || // theme
+            'rgba(255,255,255,0.25)'
+        },	
+        series: [{
+          name: 'WHP',
+          type: 'line',
+          yAxis: 1,
+          data: [],
+          color: '#7030A0',
+          zIndex: 6,
+          tooltip: {
+            valueSuffix: ' psi',
+            valueDecimals: 2
+          },
+        visible: false
+    
+        },{
+          name: 'KD',
+          type: 'line',
+          yAxis: 0,
+          data: [],
+          color: '#17d1b2',
+          zIndex: 5,
+          marker: {
+            enabled: false
+          },
+          tooltip: {
+            valueSuffix: ' Hz',
+            valueDecimals: 2
+          },
+        visible: false
+        
+        },{
+          name: 'SM',
+          type: 'area',
+          yAxis: 1,
+          data: [],
+          color: '#5b9bd5',
+          zIndex: 4,
+          tooltip: {
+            valueSuffix: ' m',
+            valueDecimals: 2
+          },
+        visible: false
+        
+        },{
+          name: 'SL',
+          type: 'line',
+          yAxis: 0,
+          data: [],
+          color: '#91e30e',
+          zIndex: 3,
+          marker: {
+            enabled: false
+          },
+          tooltip: {
+            valueSuffix: ' inch',
+            valueDecimals: 2
+          },
+        visible: false
+    
+        }, {
+          name: 'SPM',
+          type: 'line',
+          yAxis: 1,
+          data: [],
+          color: '#d41179',
+          zIndex: 2,
+          marker: {
+            enabled: false
+          },
+          tooltip: {
+            valueSuffix: ' SPM',
+            valueDecimals: 2
+          },
+        visible: false
+        
+        }, {
+          name: 'Gross',
+          type: 'line',
+          yAxis: 0,
+          data: [],
+          color: '#000000',
+          zIndex: 1,
+          marker: {
+            enabled: false
+          },tooltip: {
+            valueSuffix: ' bfpd',
+            valueDecimals: 2
+          }
+    
+        }, 
+      ],
+        responsive: {
+          rules: [{
+            condition: {
+              maxWidth: 500
+            },
+            chartOptions: {
+              legend: {
+                floating: false,
+                layout: 'horizontal',
+                align: 'center',
+                verticalAlign: 'bottom',
+                x: 0,
+                y: 0
+              },
+              yAxis: [{
+                labels: {
+                  align: 'right',
+                  x: 0,
+                  y: -6
+                },
+                showLastLabel: false
+              }, {
+                labels: {
+                  align: 'left',
+                  x: 0,
+                  y: -6
+                },
+                showLastLabel: false
+              }, {
+                visible: false
+              }]
+            }
+          }]
+        }
+      }
+
+    this.daily_chart_options_daily.title.text =
+      this.well_xSelected.join(',');
+
+    this.daily_chart_options_daily.caption.text =
+      `${this.start_dateInput} - ${this.end_dateInput}`;
+
+    this.daily_chart_options_daily.xAxis[0].categories = categories;
+
+    this.daily_chart_options_daily.series[0].data = data.map(d => d.thp);
+    this.daily_chart_options_daily.series[1].data = data.map(d => d.ds_kd);
+    this.daily_chart_options_daily.series[2].data = smFixed
+    this.daily_chart_options_daily.series[3].data = data.map(d => d.ds_sl);
+    this.daily_chart_options_daily.series[4].data = data.map(d => d.ds_spm);
+    this.daily_chart_options_daily.series[5].data = data.map(d => d.size);
+
+    Highcharts.chart(
+      this.daily_chart_daily_el.nativeElement,
+      this.daily_chart_options_daily
+    );
+  }
+
+  loadDailyChartLikeDailyPage() {
+  let params = new HttpParams()
+    .append("type", "well_performance")
+    .append("date", this.start_dateControl.value.toISOString())
+    .append("end_date", this.end_dateControl.value.toISOString());
+
+  for (const w of this.well_xSelected) {
+    params = params.append("well", w);
+  }
+
+  this.http
+    .get<any>('/api/pe/daily/GetChart', { params })
+    .subscribe(res => {
+      this.renderDailyChartFromDailyPage(res);
+    });
 }
+
+
 
   generateChart() {
   this.ipr_chart_options = {

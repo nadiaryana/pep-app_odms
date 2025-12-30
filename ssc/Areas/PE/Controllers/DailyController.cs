@@ -440,6 +440,7 @@ namespace ssc.Areas.PE.Controllers
                         thp = s.thp_potensi,
                         sm = s.sm,
                         whp = s.ds_whp,
+                        size = s.ds_size,
 
                     });
 
