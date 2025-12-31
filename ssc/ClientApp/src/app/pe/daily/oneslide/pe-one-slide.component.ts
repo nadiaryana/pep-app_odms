@@ -531,15 +531,11 @@ export class OneSlideComponent implements OnInit {
 
           this.loadDailyChartLikeDailyPage();
 
-          // render chart
-          setTimeout(() => {
-            this.renderDailyChart(this.daily_data);
-          });
-
 
           this.loadingGetDailyData = false;
           // fallback: clear loading state and notify user if request takes too long
           setTimeout(() => {
+            this.renderDailyChart(this.daily_data);
             this.loadingGetDailyData = false;
           }, 2000);
         },
@@ -774,7 +770,8 @@ export class OneSlideComponent implements OnInit {
       text:
         this.start_dateInput +
         ' - ' +
-        this.end_dateInput
+        this.end_dateInput,
+      align: 'center',
     },
     xAxis: {
       categories: categories,
@@ -856,7 +853,7 @@ export class OneSlideComponent implements OnInit {
         }],
         yAxis: [{ // Primary yAxis
           title: {
-            text: 'Gross (bfpd), Net (bopd), Qgas (bfpd), SL (inch)',
+            text: 'WHP (m), EOT/PSD (m), SM (m), SL (in)',
             style: {
               color: '#666666'
             }
@@ -870,7 +867,7 @@ export class OneSlideComponent implements OnInit {
         }, { // Secondary yAxis
           gridLineWidth: 0,
           title: {
-            text: 'WC (%), THP (psi), SM (m), SPM (SPM)',
+            text: 'SPM/Freq, OD Pump (in)',
             style: {
               color: '#666666'
             }
@@ -890,7 +887,7 @@ export class OneSlideComponent implements OnInit {
         legend: {
           layout: 'horizontal',
           align: 'center',
-          verticalAlign: 'top',
+          verticalAlign: 'bottom',
           backgroundColor:
             Highcharts.defaultOptions.legend.backgroundColor || // theme
             'rgba(255,255,255,0.25)'
@@ -898,7 +895,7 @@ export class OneSlideComponent implements OnInit {
         series: [{
           name: 'WHP',
           type: 'line',
-          yAxis: 1,
+          yAxis: 0,
           data: [],
           color: '#5b9bd5',
           zIndex: 6,
@@ -913,7 +910,7 @@ export class OneSlideComponent implements OnInit {
           type: 'line',
           yAxis: 0,
           data: [],
-          color: '#17d1b2',
+          color: '#000000',
           zIndex: 5,
           marker: {
             enabled: false
@@ -927,7 +924,7 @@ export class OneSlideComponent implements OnInit {
         },{
           name: 'SM',
           type: 'line',
-          yAxis: 1,
+          yAxis: 0,
           data: [],
           color: '#acc52b',
           zIndex: 4,
@@ -942,7 +939,7 @@ export class OneSlideComponent implements OnInit {
           type: 'line',
           yAxis: 0,
           data: [],
-          color: '#91e30e',
+          color: '#FEB05D',
           zIndex: 3,
           marker: {
             enabled: false
@@ -958,7 +955,7 @@ export class OneSlideComponent implements OnInit {
           type: 'line',
           yAxis: 1,
           data: [],
-          color: '#d41179',
+          color: '#D34E4E',
           zIndex: 2,
           marker: {
             enabled: false
@@ -970,23 +967,9 @@ export class OneSlideComponent implements OnInit {
         // visible: false
         
         }, {
-          name: 'Gross',
+          name: 'Pump Diameter',
           type: 'line',
-          yAxis: 0,
-          data: [],
-          color: '#000000',
-          zIndex: 1,
-          marker: {
-            enabled: false
-          },tooltip: {
-            valueSuffix: ' bfpd',
-            valueDecimals: 2
-          }
-    
-        }, {
-          name: 'Pump Size',
-          type: 'line',
-          yAxis: 0,
+          yAxis: 1,
           data: [],
           color: '#800080',
           zIndex: 1,
@@ -1043,13 +1026,12 @@ export class OneSlideComponent implements OnInit {
 
     this.daily_chart_options_daily.xAxis[0].categories = categories;
 
-    this.daily_chart_options_daily.series[0].data = data.map(d => d.gross);
+    this.daily_chart_options_daily.series[0].data = data.map(d => d.whp);
     this.daily_chart_options_daily.series[1].data = data.map(d => d.kd);
     this.daily_chart_options_daily.series[2].data = smFixed
     this.daily_chart_options_daily.series[3].data = data.map(d => d.sl);
     this.daily_chart_options_daily.series[4].data = data.map(d => d.spm);
-    this.daily_chart_options_daily.series[5].data = data.map(d => d.gross);
-    this.daily_chart_options_daily.series[6].data = data.map(d => d.size);
+    this.daily_chart_options_daily.series[5].data = data.map(d => d.size);
 
     Highcharts.chart(
       this.daily_chart_daily_el.nativeElement,
