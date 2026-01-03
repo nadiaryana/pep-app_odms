@@ -58,6 +58,11 @@ import { PeDailyAggregateComponent } from './daily/pe-daily-aggregate.component'
 import { PeDailyAggregateListComponent } from './daily/pe-daily-aggregate-list.component';
 import { OneSlideComponent } from './daily/oneslide/pe-one-slide.component';
 
+import { BarchartComponent } from './barchart/barchart.component';
+import { BarchartListComponent } from './barchart/barchart-list.component';
+import { BarchartAddComponent } from './barchart/barchart-add.component';
+import { BarchartChartComponent } from './barchart/barchart-chart.component';
+
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
     { path: 'dashboard', component: PeDashboardComponent, canActivate: [PePermissionGuard] },
@@ -108,6 +113,12 @@ const peRoutes: Routes = [
       { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
     { path: 'one-slide', component: OneSlideComponent},
+    { path: 'barchart', component: BarchartComponent, children: [
+      { path: 'list', component: BarchartListComponent, canActivate: [PePermissionGuard] },
+      { path: 'add', component: BarchartAddComponent, canActivate: [PePermissionGuard] },
+      { path: 'chart', component: BarchartChartComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full" },
+    ]},
 
   ]},
 ]; 

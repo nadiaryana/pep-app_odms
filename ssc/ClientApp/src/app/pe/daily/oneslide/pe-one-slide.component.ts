@@ -173,6 +173,7 @@ export class OneSlideComponent implements OnInit {
   well_xSelected = [];
 
   isLoadingResults: boolean = false;
+  isCapturingScreenshot: boolean = false;
 
   daily_data: any[] = [];
   data_pwf: any[] = [];
@@ -1146,12 +1147,76 @@ export class OneSlideComponent implements OnInit {
 
   
 
+  private loadingOverlay: HTMLElement = null;
+
+  private showLoadingOverlay() {
+    // Create overlay element and append to body
+    this.loadingOverlay = document.createElement('div');
+    this.loadingOverlay.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999999;
+      ">
+        <div style="
+          background-color: white;
+          padding: 30px 50px;
+          border-radius: 8px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        ">
+          <div style="
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3f51b5;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+          "></div>
+          <p style="margin-top: 20px; font-size: 16px; color: #333; font-weight: 500;">
+            Preparing screenshot, please wait...
+          </p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+    document.body.appendChild(this.loadingOverlay);
+  }
+
+  private hideLoadingOverlay() {
+    if (this.loadingOverlay && this.loadingOverlay.parentNode) {
+      this.loadingOverlay.parentNode.removeChild(this.loadingOverlay);
+      this.loadingOverlay = null;
+    }
+  }
+
   captureScreenshot() {
     
     if (!this.screenshotArea) {
       console.error('Capture area not found');
       return;
     }
+    
+    // Show loading indicator
+    this.isCapturingScreenshot = true;
+    this.showLoadingOverlay();
+    
     const el = this.screenshotArea.nativeElement;
 
     html2canvas(el, {
@@ -1164,6 +1229,14 @@ export class OneSlideComponent implements OnInit {
       link.href = image;
       link.download = 'production_ipr_operation.png';
       link.click();
+      
+      // Hide loading indicator
+      this.isCapturingScreenshot = false;
+      this.hideLoadingOverlay();
+    }).catch((error: any) => {
+      console.error('Screenshot capture failed:', error);
+      this.isCapturingScreenshot = false;
+      this.hideLoadingOverlay();
     });
   }
 

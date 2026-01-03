@@ -70,6 +70,11 @@ import { PeDailyAggregateComponent } from './daily/pe-daily-aggregate.component'
 import { PeDailyAggregateListComponent } from './daily/pe-daily-aggregate-list.component';
 import { OneSlideComponent } from './daily/oneslide/pe-one-slide.component';
 import { RouterModule } from '@angular/router';
+
+import { BarchartComponent } from './barchart/barchart.component';
+import { BarchartListComponent, BarchartDeleteDialogComponent } from './barchart/barchart-list.component';
+import { BarchartAddComponent } from './barchart/barchart-add.component';
+import { BarchartChartComponent } from './barchart/barchart-chart.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -127,6 +132,11 @@ import { RouterModule } from '@angular/router';
   PeDailyAggregateComponent,
   PeDailyAggregateListComponent,
   OneSlideComponent,
+  BarchartComponent,
+  BarchartListComponent,
+  BarchartDeleteDialogComponent,
+  BarchartAddComponent,
+  BarchartChartComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -162,6 +172,7 @@ import { RouterModule } from '@angular/router';
   PeDailyDeleteDialogComponent,
   PeSonologDeleteDialogComponent,
   PeBhpDeleteDialogComponent,
+  BarchartDeleteDialogComponent,
   ],
 })
 
@@ -187,6 +198,7 @@ export class PeModule {
             new PanelSubItem("One Slide", "pe/one-slide", "camera"),
             new PanelSubItem("Chan Plot", "pe/chan-plot", "scatter_plot"),
             new PanelSubItem("Aggregate", "pe/aggregate", "trending_up"),
+            new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [

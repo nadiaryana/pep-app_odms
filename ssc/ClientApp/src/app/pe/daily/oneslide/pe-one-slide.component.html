@@ -4,9 +4,11 @@
     mat-raised-button
     color="primary"
     (click)="captureScreenshot()"
+    [disabled]="isCapturingScreenshot"
   >
-    <mat-icon>photo_camera</mat-icon>
-    Screenshot
+    <mat-icon *ngIf="!isCapturingScreenshot">photo_camera</mat-icon>
+    <mat-spinner *ngIf="isCapturingScreenshot" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+    {{ isCapturingScreenshot ? 'Capturing...' : 'Screenshot' }}
   </button>
 </div>
 
