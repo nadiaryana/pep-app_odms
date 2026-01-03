@@ -1255,10 +1255,10 @@ namespace ssc.Areas.PE.Controllers
                 _daily = database.GetCollection<Daily>("daily");
             }
 
-            [HttpGet]
+            [HttpGet("delta")]
             public IActionResult GetDaily(
-                string mode,
-                long? date,        // timestamp dari frontend (opsional)
+                string mode = null,
+                long? date = null,      // timestamp dari frontend (opsional)
                 int page = 0,
                 int pagesize = 50
             )

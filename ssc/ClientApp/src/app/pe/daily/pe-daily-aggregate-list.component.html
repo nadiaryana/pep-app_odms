@@ -12,7 +12,7 @@
   </div>
 
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
-    <table mat-table [dataSource]="data" class="pe-table"
+    <table mat-table [dataSource]="dataSource" class="pe-table"
            matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
       <ng-container matColumnDef="select" >
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -101,12 +101,124 @@
           {{ row.delta_fig_curr_net | number:'1.0-0' }}
         </td>
       </ng-container>
+
+	  <ng-container matColumnDef="wc_today">
+        <th mat-header-cell *matHeaderCellDef>WC Today</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.wc_today | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="wc_prev">
+        <th mat-header-cell *matHeaderCellDef>WC Prev</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.wc_prev | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="delta_wc">
+        <th mat-header-cell *matHeaderCellDef>Δ WC</th>
+        <td mat-cell *matCellDef="let row"
+            class="cell-right"
+            [ngClass]="{
+              'delta-up': row.delta_wc > 0,
+              'delta-down': row.delta_wc < 0,
+              'delta-stable': row.delta_wc === 0
+            }">
+          {{ row.delta_wc | number:'1.0-0' }}
+        </td>
+      </ng-container>
+      
+	  <ng-container matColumnDef="gas_today">
+        <th mat-header-cell *matHeaderCellDef>Gas Today</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.gas_today | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="gas_prev">
+        <th mat-header-cell *matHeaderCellDef>Gas Prev</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.gas_prev | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="delta_gas">
+        <th mat-header-cell *matHeaderCellDef>Δ Gas</th>
+        <td mat-cell *matCellDef="let row"
+            class="cell-right"
+            [ngClass]="{
+              'delta-up': row.delta_gast > 0,
+              'delta-down': row.delta_gas < 0,
+              'delta-stable': row.delta_gas === 0
+            }">
+          {{ row.delta_gas | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+	  <ng-container matColumnDef="ds_efficiency_today">
+        <th mat-header-cell *matHeaderCellDef>Efficiency Today</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.ds_efficiency_today | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="ds_efficiency_prev">
+        <th mat-header-cell *matHeaderCellDef>Efficiency Prev</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.ds_efficiency_prev | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="delta_ds_efficiency">
+        <th mat-header-cell *matHeaderCellDef>Δ Efficiency</th>
+        <td mat-cell *matCellDef="let row"
+            class="cell-right"
+            [ngClass]="{
+              'delta-up': row.delta_ds_efficiency > 0,
+              'delta-down': row.delta_ds_efficiency < 0,
+              'delta-stable': row.delta_ds_efficiency === 0
+            }">
+          {{ row.delta_ds_efficiency | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+	  <ng-container matColumnDef="sm_today">
+        <th mat-header-cell *matHeaderCellDef>SM Today</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.sm_today | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="sm_prev">
+        <th mat-header-cell *matHeaderCellDef>SM Prev</th>
+        <td mat-cell *matCellDef="let row" class="cell-right">
+          {{ row.sm_prev | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="delta_sm">
+        <th mat-header-cell *matHeaderCellDef>Δ SM</th>
+        <td mat-cell *matCellDef="let row"
+            class="cell-right"
+            [ngClass]="{
+              'delta-up': row.delta_sm > 0,
+              'delta-down': row.delta_sm < 0,
+              'delta-stable': row.delta_sm === 0
+            }">
+          {{ row.delta_sm | number:'1.0-0' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 	</table>
 	</div>
 
   <mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+
+
   
   <router-outlet></router-outlet>
   <router-outlet name="overlay2"></router-outlet> 
 </div> 
-<p>pe-aggregate works!</p>

@@ -69,6 +69,7 @@ import { PeDailyManajemenChartComponent } from './daily/pe-daily-manajemen-chart
 import { PeDailyAggregateComponent } from './daily/pe-daily-aggregate.component';
 import { PeDailyAggregateListComponent } from './daily/pe-daily-aggregate-list.component';
 import { OneSlideComponent } from './daily/oneslide/pe-one-slide.component';
+import { RouterModule } from '@angular/router';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -143,6 +144,8 @@ import { OneSlideComponent } from './daily/oneslide/pe-one-slide.component';
     MatSlideToggleModule,
     MatSortModule,
     MatChipsModule,
+  
+    RouterModule,
   // NgChartsModule,
 
   ],

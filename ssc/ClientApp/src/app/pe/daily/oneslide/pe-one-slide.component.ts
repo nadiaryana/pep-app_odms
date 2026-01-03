@@ -1,3 +1,5 @@
+declare var require: any;
+
 import { Component, Input, HostListener, ViewChild, OnInit,ElementRef,} from "@angular/core";
 import {FormBuilder,FormGroup,FormControl,Validators,} from "@angular/forms";
 import {MatPaginator,MatSort,MatDialog,MatSnackBar,MatDialogRef,MAT_DIALOG_DATA,MatDatepicker,} from "@angular/material";
@@ -13,6 +15,9 @@ import {catchError,map,startWith,switchMap,debounceTime,take,mergeAll,timeout,} 
 import { xFilterService } from "src/app/xfilter/xfilter.component";
 import * as Highcharts from 'highcharts';
 import { formatDate } from '@angular/common';
+// import * as html2canvas from 'html2canvas';
+
+const html2canvas = require('html2canvas');
 
 
 // import { PeSonolog }    from './pe-sonolog';
@@ -67,6 +72,10 @@ export class OneSlideComponent implements OnInit {
 
   @ViewChild('daily_chart_daily_el', { static: false })
   public daily_chart_daily_el!: ElementRef;
+
+  @ViewChild('screenshotArea', { static: false })
+  screenshotArea!: ElementRef;
+
 
 
 
@@ -237,19 +246,6 @@ export class OneSlideComponent implements OnInit {
     });
 
 
-    // this.well_dateControl.valueChanges.subscribe((r) => {
-    //   this.refresh_IPR();
-    // });
-
-    // this.start_dateControl.valueChanges.subscribe((r) => {
-    //   this.refresh_IPR();
-    // });
-    // this.end_dateControl.valueChanges.subscribe((r) => {
-    //   this.refresh_IPR();
-    // });
-    // this.well_dateControl.valueChanges.subscribe(() => this.getDailyData());
-    // this.start_dateControl.valueChanges.subscribe(() => this.refresh_IPR());
-    // this.end_dateControl.valueChanges.subscribe(() => this.refresh_IPR());
   }
 
   getColumnValues(param: any) {
@@ -342,14 +338,10 @@ export class OneSlideComponent implements OnInit {
       .get<any>("/api/pe/daily/ipr", { params: params })
       .subscribe((res: any) => {
         this.isLoadingResults = false;
-        // handle response here, e.g. update chart data
-        // }, (err: any) => {
-        //   this.isLoadingResults = false;
-        //   console.error(err);
       });
   }
 
-  // dailyAverages: { date: string, grossAvg: number, netAvg: number, wcAvg: string }[] = [];
+
   dailyAverages: {
     well: string;
     grossAvg: number;
@@ -435,9 +427,6 @@ export class OneSlideComponent implements OnInit {
               ? this.dailyAverages[0].gasAvg
               : 0;
 
-  
-
-
 
           // order data by date ascending
           const dataSortedDate = filteredData.sort((a, b) => {
@@ -485,13 +474,6 @@ export class OneSlideComponent implements OnInit {
           }
           this.prod_ratio.setValue(prod_ratio);
 
-          
-
-          //Production to reservoir potential ratio
-          
-
-          
-          
 
           //ambil zona dari data
           this.zone.setValue(zone);
@@ -620,14 +602,6 @@ export class OneSlideComponent implements OnInit {
   }
 
   testData() {
-    // if (!this.start_dateInput || !this.end_dateInput) {
-    //   this.snackbarService.status.next(
-    //     new SnackbarApi(true, "Please select a well date.", "dismiss", {
-    //       duration: 3000,
-    //     })
-    //   );
-    //   return;
-    // }
 
     if (!this.start_dateControl.value || !this.end_dateControl.value) {
       this.snackbarService.status.next(
@@ -1158,17 +1132,6 @@ export class OneSlideComponent implements OnInit {
         items.reduce((sum, i) => sum + (parseFloat(i.gas) || 0), 0) /
         items.length;
 
-      // const wcAvg = items.reduce((sum, i) => {
-      //   let wcVal = 0;
-      //   if (i.wc !== undefined && i.wc !== null) {
-      //     if (typeof i.wc === 'string') wcVal = parseFloat(i.wc.replace('%',''));
-      //     else wcVal = i.wc;
-      //   } else if (i.gross && i.net) {
-      //     wcVal = (1 - (i.net / i.gross)) * 100; // auto hitung kalau belum ada
-      //   }
-      //   return sum + wcVal;
-      // }, 0) / items.length;
-
       averages.push({
         well,
         grossAvg: parseFloat(grossAvg.toFixed(2)),
@@ -1180,6 +1143,30 @@ export class OneSlideComponent implements OnInit {
 
     return averages;
   }
+
+  
+
+  captureScreenshot() {
+    
+    if (!this.screenshotArea) {
+      console.error('Capture area not found');
+      return;
+    }
+    const el = this.screenshotArea.nativeElement;
+
+    html2canvas(el, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true
+    }).then((canvas: HTMLCanvasElement) => {
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = 'production_ipr_operation.png';
+      link.click();
+    });
+  }
+
 }
 
 export interface PeWellApi {
