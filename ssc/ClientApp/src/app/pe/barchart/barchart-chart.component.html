@@ -1,11 +1,40 @@
-<div class="container-content">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>Barchart Chart</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <p>Chart akan ditampilkan di sini.</p>
-      <p>Halaman ini sedang dalam pengembangan.</p>
-    </mat-card-content>
-  </mat-card>
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <button mat-button color="primary" (click)="refreshChart()" [disabled]="isLoading">
+    <mat-icon>refresh</mat-icon> Refresh
+  </button>
+  <button mat-button [routerLink]="['/pe/barchart/list']">
+    <mat-icon>list</mat-icon> Back to List
+  </button>
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  
+  <!-- Loading Indicator -->
+  <div class="loading-shade" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Rig Legend -->
+  <div class="rig-legend" *ngIf="rigLegend.length > 0">
+    <span class="legend-title">Rig: </span>
+    <span *ngFor="let rig of rigLegend" class="legend-item">
+      <span class="legend-color" [style.background-color]="rig.color"></span>
+      {{ rig.name }}
+    </span>
+  </div>
+
+  <!-- Gantt Chart Container -->
+  <div class="gantt-chart-container">
+    <div #ganttChart class="gantt-chart"></div>
+  </div>
+
+  <!-- No Data Message -->
+  <div *ngIf="!isLoading && chartData.length === 0" class="no-data">
+    <mat-icon>info</mat-icon>
+    <p>No data available. Please add barchart data first.</p>
+    <button mat-raised-button color="primary" [routerLink]="['/pe/barchart/add']">
+      <mat-icon>add</mat-icon> Add Data
+    </button>
+  </div>
+
 </div>
