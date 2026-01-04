@@ -41,7 +41,7 @@ export class BarchartAddComponent {
   data: BarchartTmp[] = [];
   data_error_count: number = 0;
 
-  displayedColumns: string[] = ["info", "well", "job", "rig", "plan_start", "plan_end"];
+  displayedColumns: string[] = ["info", "well", "job", "rig", "plan_start", "plan_end", "remarks"];
 
   constructor(
     private formBuilder: FormBuilder,

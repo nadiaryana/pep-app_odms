@@ -25,7 +25,7 @@ import { CommonService } from '../../common.service';
 })
 export class BarchartListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "well", "job", "rig", "plan_start", "plan_end"];
+  displayedColumns: string[] = ["select", "well", "job", "rig", "plan_start", "plan_end", "remarks"];
   
   exampleDatabase: ExampleHttpDao | null;
   data: Barchart[] = [];
@@ -48,12 +48,14 @@ export class BarchartListComponent implements OnInit {
   rigFilter = new FormControl('');
   plan_startFilter = new FormControl('');
   plan_endFilter = new FormControl('');
+  remarksFilter = new FormControl('');
 
   well_xSelected = [];
   job_xSelected = [];
   rig_xSelected = [];
   plan_start_xSelected = [];
   plan_end_xSelected = [];
+  remarks_xSelected = [];
 
   filterSubscription: Subscription;
   selectedSubscription: Subscription;
@@ -106,6 +108,7 @@ export class BarchartListComponent implements OnInit {
       this.rigFilter.valueChanges.pipe(debounceTime(300)),
       this.plan_startFilter.valueChanges.pipe(debounceTime(300)),
       this.plan_endFilter.valueChanges.pipe(debounceTime(300)),
+      this.remarksFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
@@ -235,6 +238,7 @@ export class BarchartListComponent implements OnInit {
     if (this.rig_xSelected.length) columnfilter["rig"] = this.rig_xSelected;
     if (this.plan_start_xSelected.length) columnfilter["plan_start"] = this.plan_start_xSelected;
     if (this.plan_end_xSelected.length) columnfilter["plan_end"] = this.plan_end_xSelected;
+    if (this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
     return columnfilter;
   }
 

@@ -37,18 +37,18 @@
     </span>
   </div>
 
-  <!-- Gantt Chart Container -->
-  <div class="gantt-chart-container">
+  <!-- Gantt Chart Container with horizontal scroll -->
+  <div class="gantt-chart-wrapper" [hidden]="isLoading || chartData.length === 0">
     <div #ganttChart class="gantt-chart"></div>
   </div>
 
   <!-- No Data Message -->
   <div *ngIf="!isLoading && chartData.length === 0" class="no-data">
     <mat-icon>info</mat-icon>
-    <p>No data available. Please add barchart data first.</p>
-    <button mat-raised-button color="primary" [routerLink]="['/pe/barchart/add']">
+    <p>No data available for this date.</p>
+    <!-- <button mat-raised-button color="primary" [routerLink]="['/pe/barchart/add']">
       <mat-icon>add</mat-icon> Add Data
-    </button>
+    </button> -->
   </div>
 
 </div>

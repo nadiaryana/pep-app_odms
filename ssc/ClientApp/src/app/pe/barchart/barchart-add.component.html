@@ -46,7 +46,7 @@
         <mat-spinner></mat-spinner>
       </div>
       <div class="container-table">
-        <table mat-table [dataSource]="data" class="barchart-table" matSort matSortActive="plan_start" matSortDisableClear
+        <table mat-table [dataSource]="data" class="pe-table" matSort matSortActive="plan_start" matSortDisableClear
           matSortDirection="desc">
           
           <ng-container matColumnDef="info">
@@ -100,6 +100,15 @@
               [ngClass]="{'cell-error':row._error?.plan_end?.value}" [matTooltip]="row._error?.plan_end?.message"
               matTooltipPosition="after">
               {{(row.plan_end | date: 'dd MMM y') || row._error?.plan_end?.value || '-'}}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="remarks">
+            <th mat-header-cell *matHeaderCellDef>Remarks</th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-error':row._error?.remarks?.value}" [matTooltip]="row._error?.remarks?.message"
+              matTooltipPosition="after">
+              {{row.remarks || row._error?.remarks?.value || '-'}}
             </td>
           </ng-container>
 

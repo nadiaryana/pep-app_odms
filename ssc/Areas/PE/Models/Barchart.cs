@@ -25,6 +25,7 @@ namespace ssc.Areas.PE.Models
         public string updated_by { get; set; }
         public DateTime? updated_date { get; set; }
         public BarchartError _error { get; set; }
+        public string remarks { get; set; }
     }
 
     public class BarchartTmp
@@ -35,6 +36,7 @@ namespace ssc.Areas.PE.Models
         public int error_count { get; set; }
         public DateTime upload_date { get; set; }
         public Barchart[] items { get; set; }
+        public string remarks { get; set; }
     }
 
     public class BarchartError
@@ -45,6 +47,7 @@ namespace ssc.Areas.PE.Models
         public ErrorItem rig { get; set; }
         public ErrorItem plan_start { get; set; }
         public ErrorItem plan_end { get; set; }
+        public ErrorItem remarks { get; set; }
     }
 
     public class BarchartList
@@ -54,5 +57,6 @@ namespace ssc.Areas.PE.Models
         public dynamic[] rig { get; set; }
         public dynamic[] plan_start { get; set; }
         public dynamic[] plan_end { get; set; }
+        public dynamic[] remarks { get; set; }
     }
 }

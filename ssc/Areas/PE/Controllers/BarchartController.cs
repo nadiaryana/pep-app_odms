@@ -34,39 +34,44 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeBarchart Read")]
         [HttpGet]
-        public ActionResult Get(String sort = "plan_start", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
+        public ActionResult Get(String sort = "plan_start", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "", DateTime? start_date = null, DateTime? end_date = null)
         {
             FilterDefinition<Barchart> xfilter = Builders<Barchart>.Filter.Ne("a", "b");
             FilterDefinition<Barchart> xcolfilter;
-
             if (!String.IsNullOrWhiteSpace(filter))
             {
                 filter = filter.ToLower();
                 xfilter =
                     Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression(filter, "i")) |
                     Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression(filter, "i")) |
-                    Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression(filter, "i"));
+                    Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression(filter, "i")) |
+                    Builders<Barchart>.Filter.Regex(t => t.remarks, new BsonRegularExpression(filter, "i")) |
+                    Builders<Barchart>.Filter.Regex(t => t.plan_start, new BsonRegularExpression(filter, "i")) |
+                    Builders<Barchart>.Filter.Regex(t => t.plan_end, new BsonRegularExpression(filter, "i"));
             }
 
             if (!String.IsNullOrWhiteSpace(columnfilter))
             {
                 xcolfilter = Builders<Barchart>.Filter.Ne("a", "b");
                 BarchartList colfilter = JsonConvert.DeserializeObject<BarchartList>(columnfilter);
-
-                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0)
+                
+                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) 
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
-
-                if (colfilter.job?.ToList().Count(c => !(c is JObject)) > 0)
+                
+                if (colfilter.job?.ToList().Count(c => !(c is JObject)) > 0) 
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.job.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression((string)c, "i"))));
-
-                if (colfilter.rig?.ToList().Count(c => !(c is JObject)) > 0)
+                
+                if (colfilter.rig?.ToList().Count(c => !(c is JObject)) > 0) 
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.rig.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression((string)c, "i"))));
-
-                if (colfilter.plan_start?.ToList().Count(c => !(c is JObject)) > 0)
+                
+                if (colfilter.plan_start?.ToList().Count(c => !(c is JObject)) > 0) 
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.plan_start.ToList().Select(c => (c is DateTime) ? Builders<Barchart>.Filter.Eq(t => t.plan_start, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$plan_start\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + (string)c + "/i}}}"));
-
-                if (colfilter.plan_end?.ToList().Count(c => !(c is JObject)) > 0)
+                
+                if (colfilter.plan_end?.ToList().Count(c => !(c is JObject)) > 0) 
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.plan_end.ToList().Select(c => (c is DateTime) ? Builders<Barchart>.Filter.Eq(t => t.plan_end, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$plan_end\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + (string)c + "/i}}}"));
+                    
+                if (colfilter.remarks?.ToList().Count(c => !(c is JObject)) > 0) 
+                    xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.remarks.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.remarks, new BsonRegularExpression((string)c, "i"))));
 
                 xfilter = xfilter & xcolfilter;
             }
@@ -82,6 +87,7 @@ namespace ssc.Areas.PE.Controllers
                 case "rig": _items = (order == "asc") ? _items.SortBy(t => t.rig) : _items.SortByDescending(t => t.rig); break;
                 case "plan_start": _items = (order == "asc") ? _items.SortBy(t => t.plan_start) : _items.SortByDescending(t => t.plan_start); break;
                 case "plan_end": _items = (order == "asc") ? _items.SortBy(t => t.plan_end) : _items.SortByDescending(t => t.plan_end); break;
+                case "remarks": _items = (order == "asc") ? _items.SortBy(t => t.remarks) : _items.SortByDescending(t => t.remarks); break;
             }
 
             switch (mode)
@@ -103,6 +109,22 @@ namespace ssc.Areas.PE.Controllers
                         StatusCode = StatusCodes.Status200OK
                     };
 
+                // Mode chart: untuk Gantt Chart dengan filter date range
+                // Mengikuti pattern DataController (well_performance_sonolog)
+                case "chart":
+                    var chartData = _barchart.Find(
+                        r => r.plan_start >= start_date && r.plan_end <= end_date
+                    ).ToList().OrderBy(t => t.plan_start).Select(s => new
+                    {
+                        well = s.well,
+                        job = s.job,
+                        rig = s.rig,
+                        remarks = s.remarks,
+                        plan_start = s.plan_start,
+                        plan_end = s.plan_end
+                    });
+                    return Ok(new { data = chartData });
+
                 case "excel":
                     return GetExcel(_items.ToList());
 
@@ -113,6 +135,7 @@ namespace ssc.Areas.PE.Controllers
                         case "well":
                         case "job":
                         case "rig":
+                        case "remarks":
                             res = _barchart.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
                             break;
                         case "plan_start":
@@ -248,6 +271,12 @@ namespace ssc.Areas.PE.Controllers
                         }
                     }
 
+                    // Remarks (Column F)
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 7].Value?.ToString()))
+                    {
+                        _row.remarks = ws.Cells[r, 7].Value?.ToString().Trim();
+                    }
+
                     // Check for existing data
                     if (_row_error.well == null && _row.plan_start != null)
                     {
@@ -311,6 +340,7 @@ namespace ssc.Areas.PE.Controllers
                 case "rig": _tmpitems = (order == "asc") ? _tmpitems.OrderBy(t => t.rig).ToList() : _tmpitems.OrderByDescending(t => t.rig).ToList(); break;
                 case "plan_start": _tmpitems = (order == "asc") ? _tmpitems.OrderBy(t => t.plan_start).ToList() : _tmpitems.OrderByDescending(t => t.plan_start).ToList(); break;
                 case "plan_end": _tmpitems = (order == "asc") ? _tmpitems.OrderBy(t => t.plan_end).ToList() : _tmpitems.OrderByDescending(t => t.plan_end).ToList(); break;
+                case "remarks": _tmpitems = (order == "asc") ? _tmpitems.OrderBy(t => t.remarks).ToList() : _tmpitems.OrderByDescending(t => t.remarks).ToList(); break;
             }
 
             List<Barchart> items = _tmpitems
@@ -358,6 +388,7 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.job, item.job)
                         .Set(t => t.rig, item.rig)
                         .Set(t => t.plan_end, item.plan_end)
+                        .Set(t => t.remarks, item.remarks)
                         .Set(t => t.updated_date, DateTime.Now);
 
                     _barchart.UpdateOne(filter, update);
@@ -372,6 +403,7 @@ namespace ssc.Areas.PE.Controllers
                         rig = item.rig,
                         plan_start = item.plan_start,
                         plan_end = item.plan_end,
+                        remarks = item.remarks,
                         created_date = DateTime.Now
                     };
                     _barchart.InsertOne(newItem);
@@ -400,11 +432,12 @@ namespace ssc.Areas.PE.Controllers
                 var worksheet = package.Workbook.Worksheets.Add("Barchart");
 
                 // Header
-                worksheet.Cells[1, 1].Value = "Well";
-                worksheet.Cells[1, 2].Value = "Job";
-                worksheet.Cells[1, 3].Value = "Rig";
-                worksheet.Cells[1, 4].Value = "Plan Start";
-                worksheet.Cells[1, 5].Value = "Plan End";
+                worksheet.Cells[1, 2].Value = "Well";
+                worksheet.Cells[1, 3].Value = "Job";
+                worksheet.Cells[1, 4].Value = "Rig";
+                worksheet.Cells[1, 5].Value = "Plan Start";
+                worksheet.Cells[1, 6].Value = "Plan End";
+                worksheet.Cells[1, 7].Value = "Remarks";
 
                 // Style header
                 using (var range = worksheet.Cells[1, 1, 1, 5])
@@ -418,14 +451,16 @@ namespace ssc.Areas.PE.Controllers
                 int row = 2;
                 foreach (var item in items)
                 {
-                    worksheet.Cells[row, 1].Value = item.well;
-                    worksheet.Cells[row, 2].Value = item.job;
-                    worksheet.Cells[row, 3].Value = item.rig;
-                    worksheet.Cells[row, 4].Value = item.plan_start;
-                    worksheet.Cells[row, 5].Value = item.plan_end;
+                    worksheet.Cells[row, 2].Value = item.well;
+                    worksheet.Cells[row, 3].Value = item.job;
+                    worksheet.Cells[row, 4].Value = item.rig;
+                    worksheet.Cells[row, 5].Value = item.plan_start;
+                    worksheet.Cells[row, 6].Value = item.plan_end;
 
-                    worksheet.Cells[row, 4].Style.Numberformat.Format = "dd-MMM-yyyy";
                     worksheet.Cells[row, 5].Style.Numberformat.Format = "dd-MMM-yyyy";
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = "dd-MMM-yyyy";
+
+                    worksheet.Cells[row, 7].Value = item.remarks;
 
                     row++;
                 }

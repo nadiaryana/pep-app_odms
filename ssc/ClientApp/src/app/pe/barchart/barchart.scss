@@ -1,7 +1,7 @@
 /* form */
 
 .container-top-bar {
-  margin-right: 21.5%;
+  margin-right: 0;
 }
 
 mat-card { 
@@ -12,9 +12,8 @@ mat-card {
 }
 
 .container-content {
-    
   width: 100%;
-  min-height: 600px
+  min-height: 600px;
 }
 
 .chart-card {
@@ -180,10 +179,20 @@ ng::host .mat-horizontal-stepper-content {
 }
 
 /* Gantt Chart Styles */
+.gantt-chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 16px 0;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .gantt-chart-container {
   width: 100%;
   min-height: 500px;
-  padding: 16px;
+  padding: 16px 0;
   background: #ffffff;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
