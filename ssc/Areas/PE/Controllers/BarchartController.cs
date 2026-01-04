@@ -52,20 +52,20 @@ namespace ssc.Areas.PE.Controllers
             {
                 xcolfilter = Builders<Barchart>.Filter.Ne("a", "b");
                 BarchartList colfilter = JsonConvert.DeserializeObject<BarchartList>(columnfilter);
-                
-                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
-                
-                if (colfilter.job?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.job?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.job.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression((string)c, "i"))));
-                
-                if (colfilter.rig?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.rig?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.rig.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression((string)c, "i"))));
-                
-                if (colfilter.plan_start?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.plan_start?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.plan_start.ToList().Select(c => (c is DateTime) ? Builders<Barchart>.Filter.Eq(t => t.plan_start, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$plan_start\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + (string)c + "/i}}}"));
-                
-                if (colfilter.plan_end?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.plan_end?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.plan_end.ToList().Select(c => (c is DateTime) ? Builders<Barchart>.Filter.Eq(t => t.plan_end, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$plan_end\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + (string)c + "/i}}}"));
 
                 xfilter = xfilter & xcolfilter;
