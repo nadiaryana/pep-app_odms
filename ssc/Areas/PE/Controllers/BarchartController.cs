@@ -54,23 +54,23 @@ namespace ssc.Areas.PE.Controllers
             {
                 xcolfilter = Builders<Barchart>.Filter.Ne("a", "b");
                 BarchartList colfilter = JsonConvert.DeserializeObject<BarchartList>(columnfilter);
-                
-                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
-                
-                if (colfilter.job?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.job?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.job.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression((string)c, "i"))));
-                
-                if (colfilter.rig?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.rig?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.rig.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression((string)c, "i"))));
-                
-                if (colfilter.plan_start?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.plan_start?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.plan_start.ToList().Select(c => (c is DateTime) ? Builders<Barchart>.Filter.Eq(t => t.plan_start, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$plan_start\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + (string)c + "/i}}}"));
-                
-                if (colfilter.plan_end?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.plan_end?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.plan_end.ToList().Select(c => (c is DateTime) ? Builders<Barchart>.Filter.Eq(t => t.plan_end, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$plan_end\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + (string)c + "/i}}}"));
-                    
-                if (colfilter.remarks?.ToList().Count(c => !(c is JObject)) > 0) 
+
+                if (colfilter.remarks?.ToList().Count(c => !(c is JObject)) > 0)
                     xcolfilter = xcolfilter & Builders<Barchart>.Filter.Or(colfilter.remarks.ToList().Where(c => !(c is JObject)).Select(c => Builders<Barchart>.Filter.Regex(t => t.remarks, new BsonRegularExpression((string)c, "i"))));
 
                 xfilter = xfilter & xcolfilter;
@@ -220,13 +220,13 @@ namespace ssc.Areas.PE.Controllers
                     // Job (Column B)
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                     {
-                        _row.job = ws.Cells[r, 2].Value?.ToString().Trim();
+                        _row.job = ws.Cells[r, 3].Value?.ToString().Trim();
                     }
 
                     // Rig (Column C)
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString()))
                     {
-                        _row.rig = ws.Cells[r, 3].Value?.ToString().Trim();
+                        _row.rig = ws.Cells[r, 4].Value?.ToString().Trim();
                     }
 
                     // Plan Start (Column D)
@@ -255,7 +255,7 @@ namespace ssc.Areas.PE.Controllers
                     {
                         try
                         {
-                            if (ws.Cells[r, 5].Value.GetType() == DateTime.Now.GetType())
+                            if (ws.Cells[r, 6].Value.GetType() == DateTime.Now.GetType())
                             {
                                 _row.plan_end = (DateTime?)ws.Cells[r, 6].Value;
                             }

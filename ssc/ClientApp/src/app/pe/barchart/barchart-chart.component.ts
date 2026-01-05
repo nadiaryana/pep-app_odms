@@ -327,7 +327,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               text: 'RIG'  // Header kolom
             },
             categories: categories
-          }]
+          }],
+          cellHeight: 80  
         }
       },
       
@@ -389,16 +390,16 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               borderRadius: 3,
 
               dataLabels: {
-            enabled: true,
-            align: 'center',
-            verticalAlign: 'middle',
-            format: '{point.name}',
-            style: {
-              fontSize: '10px',
-              fontWeight: 'bold',
-              textOutline: 'none',
-              color: '#000000'
-            }
+                enabled: true,
+                align: 'center',
+                verticalAlign: 'middle',
+                format: '{point.name}',
+                style: {
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  textOutline: 'none',
+                  color: '#000000'
+                }
               },
 
               data: wellSeries
@@ -409,42 +410,67 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Remarks',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 24,             // Ukuran bar remarks lebih besar
+              pointWidth: 46,             // Ukuran bar remarks lebih besar
               pointPlacement: 0.18,       // Posisi bar di bawah
               borderRadius: 0,
 
+              // dataLabels: {
+              //   enabled: true,
+              //   align: 'center',
+              //   verticalAlign: 'middle',
+              //   formatter: function() {
+              //     const point: any = this.point;
+              //     const text = point.name || '';
+                  
+              //     // Calculate bar width in pixels based on date range
+              //     const msPerDay = 24 * 3600 * 1000;
+              //     const daysDiff = (point.end - point.start) / msPerDay;
+                  
+              //     // Approximate character width (adjust based on font size 9px)
+              //     const charWidth = 5;
+              //     const barWidth = daysDiff * 20; // Approximate pixels per day
+              //     const maxChars = Math.floor(barWidth / charWidth) - 2; // Leave some padding
+                  
+              //     if (maxChars <= 0) {
+              //     return '';
+              //     }
+                  
+              //     if (text.length > maxChars) {
+              //     return text.substring(0, maxChars - 1) + '…';
+              //     }
+                  
+              //     return text;
+              //   },
+              //   style: {
+              //     fontSize: '9px',
+              //     textOutline: 'none',
+              //     color: '#333333'
+              //   }
+              // },
               dataLabels: {
-            enabled: true,
-            align: 'center',
-            verticalAlign: 'middle',
-            formatter: function() {
-              const point: any = this.point;
-              const text = point.name || '';
-              
-              // Calculate bar width in pixels based on date range
-              const msPerDay = 24 * 3600 * 1000;
-              const daysDiff = (point.end - point.start) / msPerDay;
-              
-              // Approximate character width (adjust based on font size 9px)
-              const charWidth = 5;
-              const barWidth = daysDiff * 20; // Approximate pixels per day
-              const maxChars = Math.floor(barWidth / charWidth) - 2; // Leave some padding
-              
-              if (maxChars <= 0) {
-              return '';
-              }
-              
-              if (text.length > maxChars) {
-              return text.substring(0, maxChars - 1) + '…';
-              }
-              
-              return text;
-            },
-            style: {
-              fontSize: '9px',
-              textOutline: 'none',
-              color: '#333333'
-            }
+                enabled: true,
+                useHTML: true,
+                inside: true,
+                allowOverlap: true,
+
+                formatter: function () {
+                  const point: any = this.point;
+                  const text = point.name || '';
+
+                  return `
+                    <div style="
+                      width: 160px;
+                      white-space: normal;
+                      word-wrap: break-word;
+                      text-align: center;
+                      line-height: 14px;
+                      font-size: 10px;
+                      color: #333;
+                    ">
+                      ${text}
+                    </div>
+                  `;
+                }
               },
 
               data: remarkSeries
@@ -523,6 +549,22 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     this.createRigLegend(rigColors);
   }
 
+  private utcToLocalMidnight(dateStr: string): number {
+  const d = new Date(dateStr);
+
+  // shift ke WIB
+  const local = new Date(d.getTime() + (7 * 60 * 60 * 1000));
+
+  // set ke local midnight
+  return new Date(
+    local.getFullYear(),
+    local.getMonth(),
+    local.getDate(),
+    0, 0, 0, 0
+  ).getTime();
+}
+
+
   // fungsi membuat custom legend rig
   createRigLegend(rigColors: any) {
     // Konversi object ke array untuk di-loop di template
@@ -538,57 +580,133 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   }
 
   // fungsi reformat data dari API ke series Highcharts
-  private reformatDataGantt() {
-    const wellSeries: any[] = [];
-    const remarkSeries: any[] = [];
-    const categories: string[] = [];
+  // private reformatDataGantt() {
+  //   const wellSeries: any[] = [];
+  //   const remarkSeries: any[] = [];
+  //   const categories: string[] = [];
 
-    this.chartData.forEach((d, index) => {
+  //   this.chartData.forEach((d, index) => {
 
-      // label kiri (rig)
-      categories.push(d.rig);
+  //     // label kiri (rig)
+  //     categories.push(d.rig);
 
-      // Parse tanggal dan set ke awal hari (00:00:00) agar bar mulai tepat di tanggal
-      const startDate = new Date(d.plan_start);
-      const start = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+  //     // Parse tanggal dan set ke awal hari (00:00:00) agar bar mulai tepat di tanggal
+  //     const startDate = new Date(d.plan_start);
+  //     const start = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
       
-      const endDate = new Date(d.plan_end);
-      // Tambah 1 hari ke end agar bar mencakup sampai akhir tanggal tersebut
-      // Karena Highcharts Gantt menggunakan exclusive end (bar berhenti sebelum end date)
-      let end = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()) + (24 * 60 * 60 * 1000);
+  //     const endDate = new Date(d.plan_end);
+  //     // Tambah 1 hari ke end agar bar mencakup sampai akhir tanggal tersebut
+  //     // Karena Highcharts Gantt menggunakan exclusive end (bar berhenti sebelum end date)
+  //     let end = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()) + (24 * 60 * 60 * 1000);
 
-      /* === BARIS ATAS (WELL NAME) === */
-      wellSeries.push({
-        name: d.well,
-        start,
-        end,
-        y: index,
-        color: '#B4A7D6',
-        custom: {
-          label: d.well,
-          rig: d.rig,
-          job: d.job,
-          remarks: d.remarks
-        }
-      });
+  //     /* === BARIS ATAS (WELL NAME) === */
+  //     wellSeries.push({
+  //       name: d.well,
+  //       start,
+  //       end,
+  //       y: index,
+  //       color: '#B4A7D6',
+  //       custom: {
+  //         label: d.well,
+  //         rig: d.rig,
+  //         job: d.job,
+  //         remarks: d.remarks
+  //       }
+  //     });
 
-      /* === BARIS BAWAH (REMARKS) === */
-      remarkSeries.push({
-        name: d.remarks,
-        start,
-        end,
-        y: index, // PENTING: y sama → visually connected
-        color: '#FFD966',
-        custom: {
-          label: d.remarks,
-          well: d.well,
-          rig: d.rig,
-          job: d.job
-        }
-      });
+  //     /* === BARIS BAWAH (REMARKS) === */
+  //     remarkSeries.push({
+  //       name: d.remarks,
+  //       start,
+  //       end,
+  //       y: index, // PENTING: y sama → visually connected
+  //       color: '#FFD966',
+  //       custom: {
+  //         label: d.remarks,
+  //         well: d.well,
+  //         rig: d.rig,
+  //         job: d.job
+  //       }
+  //     });
+  //   });
+
+  //   return { wellSeries, remarkSeries, categories };
+  // }
+
+  private reformatDataGantt() {
+
+  const wellSeries: any[] = [];
+  const remarkSeries: any[] = [];
+  const categories: string[] = [];
+
+  const rigMap = new Map<string, number>();
+  let rigIndex = 0;
+
+  this.chartData.forEach((d) => {
+
+    if (!d.rig) return;
+
+    // === GROUP BY RIG ===
+    if (!rigMap.has(d.rig)) {
+      rigMap.set(d.rig, rigIndex);
+      categories[rigIndex] = d.rig;
+      rigIndex++;
+    }
+
+    const y = rigMap.get(d.rig);
+
+    // === TANGGAL FIX SNAP KE KOLOM ===
+    const rawStart = new Date(d.plan_start);
+    const rawEnd   = new Date(d.plan_end);
+
+    const localStart = new Date(rawStart.getTime() - rawStart.getTimezoneOffset() * 60000);
+    const localEnd   = new Date(rawEnd.getTime()   - rawEnd.getTimezoneOffset() * 60000);
+
+    const start = new Date(
+      localStart.getFullYear(),
+      localStart.getMonth(),
+      localStart.getDate(), 0,0,0,0
+    ).getTime();
+
+    const end = new Date(
+      localEnd.getFullYear(),
+      localEnd.getMonth(),
+      localEnd.getDate() + 1, 0,0,0,0
+    ).getTime();
+
+    // === WELL BAR ===
+    wellSeries.push({
+      name: d.well,
+      start,
+      end,
+      y,
+      color: '#B4A7D6',
+      custom: {
+        label: d.well,
+        rig: d.rig,
+        job: d.job,
+        remarks: d.remarks
+      }
     });
 
-    return { wellSeries, remarkSeries, categories };
-  }
+    // === REMARK BAR ===
+    remarkSeries.push({
+      name: d.remarks,
+      start,
+      end,
+      y,
+      color: '#FFFFFF',
+      custom: {
+        label: d.remarks,
+        well: d.well,
+        rig: d.rig,
+        job: d.job
+      }
+    });
+  });
+
+  return { wellSeries, remarkSeries, categories };
+}
+
 
 }
