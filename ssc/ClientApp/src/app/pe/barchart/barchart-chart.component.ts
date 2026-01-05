@@ -457,8 +457,14 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                   const point: any = this.point;
                   const text = point.name || '';
 
-                  return `
+                    // Limit to 3 lines, show ellipsis if overflow
+                    return `
                     <div style="
+                      display: -webkit-box;
+                      -webkit-line-clamp: 3;
+                      -webkit-box-orient: vertical;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
                       width: 160px;
                       white-space: normal;
                       word-wrap: break-word;
@@ -469,7 +475,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                     ">
                       ${text}
                     </div>
-                  `;
+                    `;
                 }
               },
 
@@ -671,7 +677,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     const end = new Date(
       localEnd.getFullYear(),
       localEnd.getMonth(),
-      localEnd.getDate() + 1, 0,0,0,0
+      localEnd.getDate(), 0,0,0,0
     ).getTime();
 
     // === WELL BAR ===

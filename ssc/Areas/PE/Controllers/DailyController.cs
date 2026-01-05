@@ -1244,102 +1244,148 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-        [ApiController]
-        [Route("api/pe/daily")]
-        public class PeDailyController : ControllerBase
+        // ================== DELTA ENDPOINT ==================
+        [Authorize("PeDaily Read")]
+        [HttpGet("delta")]
+        public IActionResult GetDailyDelta(
+            long? date = null,      // timestamp dari frontend (opsional, untuk filter tanggal tertentu)
+            int page = 0,
+            int pagesize = 50,
+            string mode = "",
+            string columnfilter = ""
+        )
         {
-            private readonly IMongoCollection<Daily> _daily;
-
-            public PeDailyController(IMongoDatabase database)
+            // Parse columnfilter jika ada
+            dynamic colfilter = null;
+            FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
+            
+            if (!string.IsNullOrWhiteSpace(columnfilter))
             {
-                _daily = database.GetCollection<Daily>("daily");
-            }
-
-            [HttpGet("delta")]
-            public IActionResult GetDaily(
-                string mode = null,
-                long? date = null,      // timestamp dari frontend (opsional)
-                int page = 0,
-                int pagesize = 50
-            )
-            {
-                if (mode == "delta")
-                    return GetDailyDelta(date, page, pagesize);
-
-                // MODE LAMA (kode existing kamu)
-                return Ok();
-            }
-
-            // ================== DELTA MODE ==================
-            private IActionResult GetDailyDelta(long? date, int page, int pagesize)
-            {
-                DateTime today = date != null
-                    ? DateTimeOffset.FromUnixTimeMilliseconds(date.Value).Date
-                    : DateTime.Today;
-
-                DateTime yesterday = today.AddDays(-1);
-
-                // DATA HARI INI
-                var todayData = _daily.Find(d =>
-                    d.date == today &&
-                    d.fig_curr_gross > 0
-                ).ToList();
-
-                // DATA HARI SEBELUMNYA
-                var prevData = _daily.Find(d =>
-                    d.date == yesterday &&
-                    d.fig_curr_gross > 0
-                ).ToList();
-
-                // JOIN BY WELL
-                var joined = todayData.Join(
-                    prevData,
-                    t => t.well,
-                    p => p.well,
-                    (t, p) => new DailyDelta
-                    {
-                        date = today,
-                        well = t.well,
-
-                        fig_curr_gross_today = t.fig_curr_gross,
-                        fig_curr_gross_prev = p.fig_curr_gross,
-                        delta_fig_curr_gross = t.fig_curr_gross - p.fig_curr_gross,
-
-                        fig_curr_net_today = t.fig_curr_net,
-                        fig_curr_net_prev = p.fig_curr_net,
-                        delta_fig_curr_net = t.fig_curr_net - p.fig_curr_net,
-
-                        wc_today = t.wc,
-                        wc_prev = p.wc,
-                        delta_wc = t.wc - p.wc,
-
-                        gas_today = t.gas,
-                        gas_prev = p.gas,
-                        delta_gas = t.gas - p.gas,
-
-                        ds_efficiency_today = t.ds_efficiency,
-                        ds_efficiency_prev = p.ds_efficiency,
-                        delta_ds_efficiency = t.ds_efficiency - p.ds_efficiency,
-
-                        sm_today = t.sm,
-                        sm_prev = p.sm,
-                        delta_sm = t.sm - p.sm
-                    }
-                ).OrderBy(r => r.well).ToList();
-
-                var paged = joined
-                    .Skip(page * pagesize)
-                    .Take(pagesize)
-                    .ToList();
-
-                return Ok(new
+                colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
+                
+                // Filter well jika ada di columnfilter
+                if (colfilter.well != null)
                 {
-                    items = paged,
-                    total_count = joined.Count
-                });
+                    var wellFilters = ((Newtonsoft.Json.Linq.JArray)colfilter.well).ToObject<string[]>();
+                    if (wellFilters.Length > 0)
+                    {
+                        var wellRegexFilters = wellFilters.Select(w => 
+                            Builders<Daily>.Filter.Regex("well", new MongoDB.Bson.BsonRegularExpression(w, "i"))
+                        ).ToList();
+                        xfilter = xfilter & Builders<Daily>.Filter.Or(wellRegexFilters);
+                    }
+                }
             }
-        }
 
+            // Jika mode adalah untuk mengambil distinct values (untuk filter dropdown)
+            if (!string.IsNullOrEmpty(mode) && mode != "excel")
+            {
+                switch (mode)
+                {
+                    case "well":
+                        var wells = _daily.Distinct<string>("well", xfilter)
+                            .ToEnumerable().OrderBy(t => t).ToList();
+                        return Ok(new { items = wells });
+                    case "date":
+                        var dates = _daily.Distinct<DateTime?>("date", xfilter)
+                            .ToEnumerable().OrderByDescending(t => t).ToList();
+                        return Ok(new { items = dates });
+                    case "location":
+                        var locations = _daily.Distinct<string>("location", xfilter)
+                            .ToEnumerable().OrderBy(t => t).ToList();
+                        return Ok(new { items = locations });
+                    default:
+                        return Ok(new { items = new List<string>() });
+                }
+            }
+
+            // Ambil semua data dari database (dengan filter jika ada)
+            var allData = _daily.Find(xfilter)
+                .SortByDescending(d => d.date)
+                .ThenBy(d => d.well)
+                .ToList();
+
+            // Buat lookup dictionary untuk mencari data hari sebelumnya per well
+            var dataByWellAndDate = allData
+                .Where(d => d.date.HasValue)
+                .GroupBy(d => d.well)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(d => d.date).ToList()
+                );
+
+            // Proses setiap record dan cari data hari sebelumnya
+            var result = allData
+                .Where(d => d.date.HasValue && d.fig_curr_gross > 0)
+                .Select(current =>
+                {
+                    // Cari data hari sebelumnya untuk well yang sama
+                    Daily prev = null;
+                    if (dataByWellAndDate.ContainsKey(current.well))
+                    {
+                        var wellHistory = dataByWellAndDate[current.well];
+                        var currentIndex = wellHistory.FindIndex(d => d.date == current.date);
+                        if (currentIndex > 0)
+                        {
+                            prev = wellHistory[currentIndex - 1];
+                        }
+                    }
+
+                    return new
+                    {
+                        date = current.date,
+                        well = current.well,
+                        location = current.location,
+
+                        fig_curr_gross_today = current.fig_curr_gross,
+                        fig_curr_gross_prev = prev?.fig_curr_gross,
+                        delta_fig_curr_gross = current.fig_curr_gross - (prev?.fig_curr_gross ?? 0),
+
+                        fig_curr_net_today = current.fig_curr_net,
+                        fig_curr_net_prev = prev?.fig_curr_net,
+                        delta_fig_curr_net = current.fig_curr_net - (prev?.fig_curr_net ?? 0),
+
+                        wc_today = current.wc,
+                        wc_prev = prev?.wc,
+                        delta_wc = current.wc - (prev?.wc ?? 0),
+
+                        gas_today = current.gas,
+                        gas_prev = prev?.gas,
+                        delta_gas = current.gas - (prev?.gas ?? 0),
+
+                        ds_efficiency_today = current.ds_efficiency,
+                        ds_efficiency_prev = prev?.ds_efficiency,
+                        delta_ds_efficiency = current.ds_efficiency - (prev?.ds_efficiency ?? 0),
+
+                        sm_today = current.sm,
+                        sm_prev = prev?.sm,
+                        delta_sm = current.sm - (prev?.sm ?? 0),
+
+                        prev_date = prev?.date
+                    };
+                })
+                .ToList();
+
+            // Filter by date jika parameter diberikan
+            if (date != null)
+            {
+                var filterDate = DateTimeOffset.FromUnixTimeMilliseconds(date.Value).Date;
+                result = result.Where(r => r.date.HasValue && r.date.Value.Date == filterDate).ToList();
+            }
+
+            var total_count = result.Count;
+
+            var paged = result
+                .Skip(page * pagesize)
+                .Take(pagesize)
+                .ToList();
+
+            return Ok(new
+            {
+                items = paged,
+                total_count = total_count
+            });
+        }
 
 
         [Authorize("PeDaily Read")]

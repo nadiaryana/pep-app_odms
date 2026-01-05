@@ -359,11 +359,12 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   }
 
   loadData() {
-    this.http.get<any>('/api/pe/daily', {
+    this.http.get<any>('/api/pe/daily/delta', {
       params: {
         mode: 'delta',
         page: '0',
-        pagesize: '50'
+        pagesize: '50',
+        date: null,
       }
     }).subscribe(res => {
       this.dataSource.data = res.items;
