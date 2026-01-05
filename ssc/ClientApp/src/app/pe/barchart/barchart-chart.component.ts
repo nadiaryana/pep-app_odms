@@ -345,6 +345,9 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           const remarks = custom.remarks ? custom.remarks.replace(/\n/g, '<br>') : '';
           const label = custom.label ? custom.label.replace(/\n/g, '<br>') : '';
           
+          // End date untuk display (kurangi 1 hari karena kita tambahkan 1 hari untuk bar)
+          const displayEnd = p.end - (24 * 60 * 60 * 1000);
+          
           // Jika ini bar Well
           if (this.series.name === 'Well') {
             return `
@@ -354,7 +357,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                   <tr><td style="color: #666; padding-right: 8px;">Rig:</td><td><b>${custom.rig || '-'}</b></td></tr>
                   <tr><td style="color: #666; padding-right: 8px;">Job:</td><td>${custom.job || '-'}</td></tr>
                   <tr><td style="color: #666; padding-right: 8px;">Start:</td><td>${Highcharts.dateFormat('%e %b %Y', p.start)}</td></tr>
-                  <tr><td style="color: #666; padding-right: 8px;">End:</td><td>${Highcharts.dateFormat('%e %b %Y', p.end)}</td></tr>
+                  <tr><td style="color: #666; padding-right: 8px;">End:</td><td>${Highcharts.dateFormat('%e %b %Y', displayEnd)}</td></tr>
                 </table>
                 ${remarks ? `<hr style="margin: 8px 0; border: none; border-top: 1px solid #ddd;">
                 <div style="color: #555;"><b>Remarks:</b><br><span style="white-space: pre-wrap;">${remarks}</span></div>` : ''}
@@ -368,7 +371,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               <b style="font-size: 13px; color: #333;">${custom.well || 'Remarks'}</b><br>
               <div style="margin-top: 6px; font-size: 12px; color: #555; white-space: pre-wrap;">${label || '-'}</div>
               <div style="margin-top: 6px; font-size: 11px; color: #888;">
-                ${Highcharts.dateFormat('%e %b %Y', p.start)} - ${Highcharts.dateFormat('%e %b %Y', p.end)}
+                ${Highcharts.dateFormat('%e %b %Y', p.start)} - ${Highcharts.dateFormat('%e %b %Y', displayEnd)}
               </div>
             </div>
           `;
@@ -547,15 +550,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
       // Parse tanggal dan set ke awal hari (00:00:00) agar bar mulai tepat di tanggal
       const startDate = new Date(d.plan_start);
-      const start = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const start = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
       
       const endDate = new Date(d.plan_end);
-      let end = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-
-      // Jika start dan end sama, tambahkan 1 hari agar bar terlihat
-      if (start === end) {
-        end = end + (24 * 60 * 60 * 1000); // Tambah 1 hari (dalam milliseconds)
-      }
+      // Tambah 1 hari ke end agar bar mencakup sampai akhir tanggal tersebut
+      // Karena Highcharts Gantt menggunakan exclusive end (bar berhenti sebelum end date)
+      let end = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()) + (24 * 60 * 60 * 1000);
 
       /* === BARIS ATAS (WELL NAME) === */
       wellSeries.push({
