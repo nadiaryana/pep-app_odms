@@ -99,10 +99,12 @@ mat-card-actions {
 }
 
 /* Label di atas input */
-.mat-form-field-label {
+.mat-form-field-label mat-label {
   color: #000 !important;        /* agar tidak blur abu-abu */
   font-weight: 500;
+  font-size: 50px !important;
 }
+
 
 /* Placeholder */
 .mat-form-field-placeholder {

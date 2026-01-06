@@ -65,9 +65,12 @@ export class IprComponent implements OnInit {
   zone = new FormControl("");
   interval = new FormControl("");
   sm = new FormControl("");
+  sm2 = new FormControl("");
   qmax = new FormControl("");
+  q_design = new FormControl("");
   ls_method = new FormControl("");
   ds_kd = new FormControl("");
+  ds_kd2 = new FormControl("");
   ds_sl = new FormControl("");
   ds_spm = new FormControl("");
   size  = new FormControl("");
@@ -88,6 +91,7 @@ export class IprComponent implements OnInit {
   dynamic_fluid_level = new FormControl("");
   static_botthomhole_pressure = new FormControl("");
   flowing_bottomhole_pressure = new FormControl("");
+  flowing_bottomhole_pressure2 = new FormControl("");
 
   @ViewChild("ipr_chart_el", { static: true }) public ipr_chart_el: ElementRef;
   daily_table_data = [];
@@ -154,7 +158,9 @@ export class IprComponent implements OnInit {
 
   daily_data: any[] = [];
   data_pwf: any[] = [];
+  data_pwf2: any[] = [];
   data_liquid_rate: any[] = [];
+  data_liquid_rate2: any[] = [];
 
   showChart: boolean = false;
 
@@ -446,6 +452,7 @@ export class IprComponent implements OnInit {
 
           //KD
           const ds_kd = latestData ? latestData.ds_kd : "";
+          
 
           //SL dan SPM
           const ds_sl = latestData ? latestData.ds_sl : "";
@@ -634,6 +641,8 @@ export class IprComponent implements OnInit {
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
     const static_fl = this.static_fluid_level.value;
+    const sm2 = this.sm2.value;
+    const ds_kd2 = this.ds_kd2.value;
     const dynamic_fl = this.dynamic_fluid_level.value;
     const factor_corr = this.factor_corr.value;
     
@@ -650,6 +659,7 @@ export class IprComponent implements OnInit {
     const pwf = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - dynamic_fl) * 3.281;
     this.flowing_bottomhole_pressure.setValue(pwf.toFixed(2));
 
+
     // hitung IPR
     const pi = (grossAvg / (ps - pwf)) * factor_corr; // *factor correction
     const qmax = pi * ps;
@@ -661,7 +671,7 @@ export class IprComponent implements OnInit {
     console.log(`qmax = ${pi} * ${ps} = ${qmax}`);
 
     // get pwf values
-    const pwf_values = this.getPwf(this.static_botthomhole_pressure.value);
+    const pwf_values = this.getPwf(this.flowing_bottomhole_pressure.value);
     console.log("pwf_values:", pwf_values);
     this.data_pwf = pwf_values;
 
@@ -669,6 +679,32 @@ export class IprComponent implements OnInit {
     const liquid_rate_values = this.getLiquidRate(this.static_botthomhole_pressure.value, qmax );
     this.data_liquid_rate = liquid_rate_values;
     console.log("liquid_rate_values:", liquid_rate_values);
+
+
+    //hitung operating design
+    const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+    this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
+    const q_design = pi  * (ps - pwf2);
+    this.q_design.setValue(q_design.toFixed(2));
+
+    //get pwf2 values
+    const pwf_values2 = this.getPwf(this.flowing_bottomhole_pressure2.value);
+    console.log("pwf2:", pwf_values2);
+    this.data_pwf2= pwf_values2;
+
+    //get liquid rate 2 values (q2)
+    console.log(`Operating Design:
+      Pwf_design = ${pwf2}
+      q_design   = ${q_design}`);
+    
+    this.data_pwf2 = this.getPwf(ps);
+
+    this.data_liquid_rate2 = this.data_pwf2.map(pwfVal => {
+      const q = pi * (ps - pwfVal);
+      return q > 0 ? q : 0;
+    });
+
+
 
     if(this.data_pwf.length > 0 && this.data_liquid_rate.length > 0){
       this.generateChart();
@@ -797,6 +833,39 @@ export class IprComponent implements OnInit {
           radius: 3,
         },
         zIndex: 2,
+      },
+      {
+        name: "IPR Design",
+        type: "line",
+        data: this.data_liquid_rate2.map((q: number, i: number) => {
+          return { x: q, y: this.data_pwf2[i] };
+        }),
+        dashStyle: "Dash",
+        color: "#FB8C00",
+        marker: {
+          enabled: false,
+        },
+        zIndex: 1,
+      },
+
+      // =====================
+      // OPERATING POINT
+      // =====================
+      {
+        name: "Operating Point",
+        type: "scatter",
+        data: [
+          {
+            x: Number(this.q_design.value),
+            y: Number(this.flowing_bottomhole_pressure2.value),
+          },
+        ],
+        color: "#E53935",
+        marker: {
+          radius: 6,
+          symbol: "circle",
+        },
+        zIndex: 5,
       },
     ],
     xAxis: {

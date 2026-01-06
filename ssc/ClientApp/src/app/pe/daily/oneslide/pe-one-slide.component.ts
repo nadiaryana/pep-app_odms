@@ -119,6 +119,18 @@ export class OneSlideComponent implements OnInit {
     chart: {
       type: "IPR",
       zoomType: "x",
+      // plotOptions: {
+      //   line: {
+      //     marker: {
+      //       enabled: false
+      //     }
+      //   },
+      //   area: {
+      //     marker: {
+      //       enabled: false
+      //     }
+      //   }
+      // },
       style: {
         fontFamily: "Roboto, Helvetica Neue, sans-serif",
       },
@@ -720,72 +732,90 @@ export class OneSlideComponent implements OnInit {
   }
 
   renderDailyChart(data: any[]) {
-  if (!this.daily_chart_el) return;
+      if (!this.daily_chart_el) return;
 
-  const categories = data.map(d =>
-  formatDate(d.date, 'dd-MMM-yy', 'en-US')
-);
-
-
-  const gross = data.map(d => d.gross || 0);
-  const water = data.map(d => (d.gross - d.net) || 0);
-  const net = data.map(d => d.net || 0);
-  const gas = data.map(d => d.gas || 0);
-  // const sm = data.map(d => d.sm < 0 ? 0 : d.sm);
-
-  this.daily_chart_options = {
-    chart: {
-      // type: 'area',
-      zoomType: 'x',
-    },
-    title: {
-      text: this.well_xSelected.join(', ')
-    },
-    caption: {
-      text:
-        this.start_dateInput +
-        ' - ' +
-        this.end_dateInput,
-      align: 'center',
-    },
-    xAxis: {
-      categories: categories,
-      crosshair: true
-    },
-    yAxis: [{
-      title: { text: 'Liquid (bfpd), Oil (bopd)' }
-    }, {
-      title: { text: 'WC (fraction), Gas (MMscfd)' },
-      opposite: true
-    }],
-    tooltip: {
-      shared: true
-    },
-    plotOptions: {
-      area: {
-        lineWidth: 0,
-        marker: { enabled: false }
-      }
-    },
-    series: [
-      { name: 'Liquid Rate', data: gross, type: 'line', color: '#000000' },
-      { name: 'Water Cut', data: water, type: 'line', color: '#0070C0'},
-      { name: 'Oil Rate', data: net, type: 'area', color: '#acc52b'},
-      {
-        name: 'Gas Rate',
-        type: 'line',
-        yAxis: 1,
-        dashStyle: 'ShortDot',
-        color: '#af6a33',
-        data: gas
-      }
-    ]
-  };
-
-    Highcharts.chart(
-      this.daily_chart_el.nativeElement,
-      this.daily_chart_options
+      const categories = data.map(d =>
+      formatDate(d.date, 'dd-MMM-yy', 'en-US')
     );
+
+
+      const gross = data.map(d => d.gross || 0);
+      const water = data.map(d => (d.gross - d.net) || 0);
+      const net = data.map(d => d.net || 0);
+      const gas = data.map(d => d.gas || 0);
+      // const sm = data.map(d => d.sm < 0 ? 0 : d.sm);
+
+      this.daily_chart_options = {
+        chart: {
+          // type: 'area',
+          zoomType: 'x',
+        },
+        title: {
+          text: 'Well Production Performance of ' + this.well_xSelected.join(', '),
+          style: {
+            fontSize: '23px',
+            // fontWeight: '600'
+          }
+        },
+        caption: {
+          text:
+            this.start_dateInput +
+            ' - ' +
+            this.end_dateInput,
+          align: 'center',
+        },
+        xAxis: {
+          categories: categories,
+          crosshair: true
+        },
+        yAxis: [{
+          title: { text: 'Liquid (bfpd), Oil (bopd)' }
+        }, {
+          title: { text: 'WC (fraction), Gas (MMscfd)' },
+          opposite: true
+        }],
+        tooltip: {
+          shared: true
+        },
+        plotOptions: {
+          area: {
+            lineWidth: 0,
+            marker: { enabled: false }
+          }
+        },
+        series: [
+          { name: 'Liquid Rate', data: gross, type: 'line', color: '#000000', 
+            marker: {
+                enabled: false
+              }, },
+          { name: 'Water Cut', data: water, type: 'line', color: '#0070C0', 
+            marker: {
+                enabled: false
+              },
+          },
+          { name: 'Oil Rate', data: net, type: 'area', color: '#acc52b', 
+            marker: {
+                enabled: false
+              },
+          },
+          {
+            name: 'Gas Rate',
+            type: 'line',
+            yAxis: 1,
+            dashStyle: 'ShortDot',
+            color: '#af6a33',
+            data: gas,
+            marker: {
+                enabled: false
+              },
+          }
+        ]
+      };
+
+        Highcharts.chart(
+          this.daily_chart_el.nativeElement,
+          this.daily_chart_options
+        );
   }
 
   renderDailyChartFromDailyPage(res: any) {
@@ -811,7 +841,11 @@ export class OneSlideComponent implements OnInit {
             fallbackToExportServer: false
         },
         title: {
-          text: null,
+          text: 'Well Operation Parameter of ' + this.well_xSelected.join(', '),
+          style: {
+            fontSize: '23px',
+            // fontWeight: '600'
+          }
         },
         caption: {
           text: null,
@@ -874,6 +908,9 @@ export class OneSlideComponent implements OnInit {
           data: [],
           color: '#5b9bd5',
           zIndex: 6,
+          marker: {
+            enabled: false
+          },
           tooltip: {
             valueSuffix: ' psi',
             valueDecimals: 2
@@ -903,6 +940,9 @@ export class OneSlideComponent implements OnInit {
           data: [],
           color: '#acc52b',
           zIndex: 4,
+          marker: {
+            enabled: false
+          },
           tooltip: {
             valueSuffix: ' m',
             valueDecimals: 2
@@ -993,9 +1033,6 @@ export class OneSlideComponent implements OnInit {
         }
       }
 
-    this.daily_chart_options_daily.title.text =
-      this.well_xSelected.join(',');
-
     this.daily_chart_options_daily.caption.text =
       `${this.start_dateInput} - ${this.end_dateInput}`;
 
@@ -1043,17 +1080,21 @@ export class OneSlideComponent implements OnInit {
       },
     },
     title: {
-      text: "Inflow Performance Relationship  : " + (this.well_xSelected.length > 0 ? this.well_xSelected[0] : ""),
+      text: "Inflow Performance Relationship of " + (this.well_xSelected.length > 0 ? this.well_xSelected[0] : ""),
+      style: {
+            fontSize: '23px',
+            // fontWeight: '500'
+          }
     },
     series: [
       {
-        name: "IPR Curve",
+        name: "IPR (Vogel Equation)",
         data: this.data_liquid_rate.map((q: number, i: number) => {
           return { x: q, y: this.data_pwf[i] };
         }),
         color: "#1E88E5",
         marker: {
-          enabled: true,
+          enabled: false,
           radius: 3,
         },
         zIndex: 2,
