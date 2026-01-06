@@ -234,14 +234,17 @@ namespace ssc.Areas.PE.Controllers
                     {
                         try
                         {
+                            DateTime parsedDate;
                             if (ws.Cells[r, 5].Value.GetType() == DateTime.Now.GetType())
                             {
-                                _row.plan_start = (DateTime?)ws.Cells[r, 5].Value;
+                                parsedDate = (DateTime)ws.Cells[r, 5].Value;
                             }
                             else
                             {
-                                _row.plan_start = DateTime.FromOADate(double.Parse(ws.Cells[r, 5].Value?.ToString().Trim()));
+                                parsedDate = DateTime.FromOADate(double.Parse(ws.Cells[r, 5].Value?.ToString().Trim()));
                             }
+                            // Set jam ke 12:00 UTC agar tidak bergeser hari saat timezone conversion
+                            _row.plan_start = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, 12, 0, 0, DateTimeKind.Utc);
                         }
                         catch (Exception e)
                         {
@@ -255,14 +258,17 @@ namespace ssc.Areas.PE.Controllers
                     {
                         try
                         {
+                            DateTime parsedDate;
                             if (ws.Cells[r, 6].Value.GetType() == DateTime.Now.GetType())
                             {
-                                _row.plan_end = (DateTime?)ws.Cells[r, 6].Value;
+                                parsedDate = (DateTime)ws.Cells[r, 6].Value;
                             }
                             else
                             {
-                                _row.plan_end = DateTime.FromOADate(double.Parse(ws.Cells[r, 6].Value?.ToString().Trim()));
+                                parsedDate = DateTime.FromOADate(double.Parse(ws.Cells[r, 6].Value?.ToString().Trim()));
                             }
+                            // Set jam ke 12:00 UTC agar tidak bergeser hari saat timezone conversion
+                            _row.plan_end = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, 12, 0, 0, DateTimeKind.Utc);
                         }
                         catch (Exception e)
                         {

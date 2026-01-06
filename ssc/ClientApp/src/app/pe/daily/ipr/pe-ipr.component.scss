@@ -31,10 +31,6 @@ mat-form-field {
   margin-right: 0 !important;
 }
 
-mat-card-content {
-  
-}
-
 mat-card-actions {
   margin-left: 0;
   margin-right: 0;
@@ -92,22 +88,41 @@ mat-card-actions {
 
 .mat-input-element {
   color: #000 !important;        /* warna teks hitam */
-  font-size: 14px !important;
+  font-size: 15px !important;    /* Diperbesar dari 14px */
 }
 
 .mat-form-field-ripple {
   background-color: #000 !important;
 }
 
-/* Label di atas input */
+/* Label di atas input - Normal state */
 .mat-form-field-label {
   color: #000 !important;        /* agar tidak blur abu-abu */
   font-weight: 500;
+  font-size: 16px !important;    /* Label normal */
+}
+
+/* Label saat floating (naik ke atas) - dengan jarak lebih */
+::ng-deep .mat-form-field-can-float.mat-form-field-should-float .mat-form-field-label,
+::ng-deep .mat-form-field-can-float .mat-form-field-autofill-control:-webkit-autofill + .mat-form-field-label-wrapper .mat-form-field-label {
+  transform: translateY(-1.5em) scale(0.85) !important; /* translateY lebih besar untuk jarak, scale 0.85 */
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+/* Menambah jarak antara label dan input */
+::ng-deep .mat-form-field-infix {
+  padding-top: 8px !important; /* Tambah padding atas untuk jarak */
 }
 
 /* Placeholder */
 .mat-form-field-placeholder {
   color: #000 !important;
+  font-size: 15px !important;
+}
+
+::ng-deep .mat-form-field{
+  line-height: 1.5 !important; /* Menambah line-height untuk jarak */
 }
 
 

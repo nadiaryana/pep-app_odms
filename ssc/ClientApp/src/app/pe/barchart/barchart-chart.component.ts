@@ -342,12 +342,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           const p: any = this.point;
           const custom = p.custom || {};
           
-          // Convert newline (\n) ke <br> untuk HTML
+          // Convert newline ( n) ke <br> untuk HTML
           const remarks = custom.remarks ? custom.remarks.replace(/\n/g, '<br>') : '';
           const label = custom.label ? custom.label.replace(/\n/g, '<br>') : '';
           
-          // End date untuk display (kurangi 1 hari karena kita tambahkan 1 hari untuk bar)
-          const displayEnd = p.end - (24 * 60 * 60 * 1000);
+          // End date untuk display (gunakan actualEnd yang disimpan)
+          const displayEnd = custom.actualEnd || (p.end - (24 * 60 * 60 * 1000));
           
           // Jika ini bar Well
           if (this.series.name === 'Well') {
@@ -457,11 +457,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                   const point: any = this.point;
                   const text = point.name || '';
 
-                    // Limit to 3 lines, show ellipsis if overflow
+                    // Limit to 2 lines, show ellipsis if overflow
                     return `
                     <div style="
                       display: -webkit-box;
-                      -webkit-line-clamp: 3;
+                      -webkit-line-clamp: 2;
                       -webkit-box-orient: vertical;
                       overflow: hidden;
                       text-overflow: ellipsis;
@@ -661,37 +661,42 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
     const y = rigMap.get(d.rig);
 
-    // === TANGGAL FIX SNAP KE KOLOM ===
+    // === TANGGAL FIX - Ambil tanggal lokal dari UTC ===
     const rawStart = new Date(d.plan_start);
     const rawEnd   = new Date(d.plan_end);
 
-    const localStart = new Date(rawStart.getTime() - rawStart.getTimezoneOffset() * 60000);
-    const localEnd   = new Date(rawEnd.getTime()   - rawEnd.getTimezoneOffset() * 60000);
+    // Ambil tanggal tanpa timezone offset
+    const start = Date.UTC(
+      rawStart.getUTCFullYear(),
+      rawStart.getUTCMonth(),
+      rawStart.getUTCDate(),
+      0, 0, 0, 0
+    );
 
-    const start = new Date(
-      localStart.getFullYear(),
-      localStart.getMonth(),
-      localStart.getDate(), 0,0,0,0
-    ).getTime();
+    // End date: tanggal sebenarnya (untuk display di tooltip)
+    const endActual = Date.UTC(
+      rawEnd.getUTCFullYear(),
+      rawEnd.getUTCMonth(),
+      rawEnd.getUTCDate(),
+      0, 0, 0, 0
+    );
 
-    const end = new Date(
-      localEnd.getFullYear(),
-      localEnd.getMonth(),
-      localEnd.getDate(), 0,0,0,0
-    ).getTime();
+    // End date untuk bar: tambah 1 hari agar bar mencakup sampai akhir end date
+    const endForBar = endActual + (24 * 60 * 60 * 1000);
 
     // === WELL BAR ===
     wellSeries.push({
       name: d.well,
       start,
-      end,
+      end: endForBar,  // Bar sampai akhir end date
       y,
       color: '#B4A7D6',
       custom: {
         label: d.well,
         rig: d.rig,
         job: d.job,
-        remarks: d.remarks
+        remarks: d.remarks,
+        actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
       }
     });
 
@@ -699,14 +704,15 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     remarkSeries.push({
       name: d.remarks,
       start,
-      end,
+      end: endForBar,  // Bar sampai akhir end date
       y,
       color: '#FFFFFF',
       custom: {
         label: d.remarks,
         well: d.well,
         rig: d.rig,
-        job: d.job
+        job: d.job,
+        actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
       }
     });
   });
