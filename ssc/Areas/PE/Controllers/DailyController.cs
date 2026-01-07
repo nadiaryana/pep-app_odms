@@ -1248,7 +1248,7 @@ namespace ssc.Areas.PE.Controllers
         [Authorize("PeDaily Read")]
         [HttpGet("delta")]
         public IActionResult GetDailyDelta(
-            // long? date = null,      // timestamp dari frontend (opsional, untuk filter tanggal tertentu)
+            DateTime? date,      // timestamp dari frontend (opsional, untuk filter tanggal tertentu)
             int page = 0,
             int pagesize = 50,
             string mode = "",
@@ -1263,22 +1263,25 @@ namespace ssc.Areas.PE.Controllers
             {
                 colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
 
-                // Filter well jika ada di columnfilter
+                // Filter well jika ada di columnfilter (mirror behaviour from Get)
                 if (colfilter.well != null)
                 {
-                    var wellFilters = ((Newtonsoft.Json.Linq.JArray)colfilter.well).ToObject<string[]>();
-                    if (wellFilters.Length > 0)
+                    try
                     {
-                        var wellRegexFilters = wellFilters.Select(w =>
-                            Builders<Daily>.Filter.Regex("well", new MongoDB.Bson.BsonRegularExpression(w, "i"))
-                        ).ToList();
-                        xfilter = xfilter & Builders<Daily>.Filter.Or(wellRegexFilters);
+                        var jarr = colfilter.well as Newtonsoft.Json.Linq.JArray;
+                        if (jarr != null && jarr.ToList().Count(c => !(c is Newtonsoft.Json.Linq.JObject)) > 0)
+                        {
+                            var patterns = jarr.Where(c => !(c is Newtonsoft.Json.Linq.JObject)).Select(c => c.ToString()).ToList();
+                            var regexFilters = patterns.Select(p => Builders<Daily>.Filter.Regex(t => t.well, new BsonRegularExpression(p, "i"))).ToList();
+                            if (regexFilters.Any()) xfilter = xfilter & Builders<Daily>.Filter.Or(regexFilters);
+                        }
                     }
+                    catch { }
                 }
             }
 
             // Jika mode adalah untuk mengambil distinct values (untuk filter dropdown)
-            if (!string.IsNullOrEmpty(mode) && mode != "excel")
+            if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "delta")
             {
                 switch (mode)
                 {
@@ -1299,26 +1302,69 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
-            var allowedWells = new List<string>
+            // var allowedWells = new List<string>
+            // {
+            //     "KRM-01","KRM-02","SBR-05","SBR-06","SBR-07","SBR-08","SBR-12","SBR-15","SBR-16","SBR-17","SBR-18","SBR-19",
+            //     "SBR-20","SBR-22","SBR-23","SBR-24","SBR-25","SBR-26","SBR-27","SBR-28","SBR-29","SBR-30","SBR-31","SBR-32",
+            //     "SBR-33","SBR-34","SBR-35","SBR-36","SBR-37B","SBR-38B","SBR-39B","SBR-40","SBR-41","SBR-42B","SBR-43B","SBR-44B",
+            //     "SBT-01","SBT-02","SBT-02A","SBT-06","SD-001","SD-002","SLR-001","ST-002","ST-003","ST-004","ST-005","ST-006","ST-008",
+            //     "ST-010","ST-016","ST-017","ST-021","ST-023","ST-026","ST-027","ST-038","ST-039","ST-040","ST-042","ST-043","ST-045",
+            //     "ST-047","ST-048","ST-050","ST-051","ST-053","ST-054","ST-058","ST-059","ST-061","ST-064","ST-068","ST-069","ST-080","ST-081",
+            //     "ST-082","ST-084","ST-088","ST-092","ST-099","ST-100","ST-103","ST-106","ST-108","ST-109","ST-112","ST-113","ST-116","ST-117",
+            //     "ST-118","ST-122","ST-124","ST-125","ST-126","ST-127","ST-129","ST-132","ST-134","ST-136","ST-138","ST-141","ST-144","ST-147",
+            //     "ST-148","ST-149","ST-150","ST-152","ST-153","ST-154","ST-155","ST-156","ST-157","ST-158","ST-159","ST-160","ST-161","ST-162",
+            //     "ST-163","ST-164","ST-168","ST-169","ST-170","ST-171","ST-173","ST-174","ST-176","ST-179","ST-181","ST-182","ST-183","ST-184",
+            //     "ST-185","ST-187","ST-188","ST-189","ST-190","ST-191","ST-192","ST-193","ST-194","ST-195","ST-196","ST-197","ST-198","ST-199",
+            //     "ST-200","ST-201","ST-202","ST-203","ST-204","ST-205","ST-206","ST-207","ST-208","ST-209","ST-210","ST-211","ST-212","ST-213",
+            //     "ST-214","ST-215","ST-216","ST-217","ST-218","ST-219","ST-220","ST-221","ST-222",
+            //     "TPH-01","UKM-01","UKM-03","UKM-04"
+            // };
+
+            // xfilter = xfilter & Builders<Daily>.Filter.In(d => d.well, allowedWells);
+
+
+            // If no date selected, return empty as requested
+            if (!date.HasValue)
+                return Ok(new
+                {
+                    items = new List<object>(),
+                    total_count = 0
+                });
+            // Determine selected date: prefer query param `date`, otherwise try `columnfilter.date`
+            DateTime? selectedDate = date;
+            if (!selectedDate.HasValue && colfilter != null)
             {
-                "KRM-01","KRM-02","SBR-05","SBR-06","SBR-07","SBR-08","SBR-12","SBR-15","SBR-16","SBR-17","SBR-18","SBR-19",
-                "SBR-20","SBR-22","SBR-23","SBR-24","SBR-25","SBR-26","SBR-27","SBR-28","SBR-29","SBR-30","SBR-31","SBR-32",
-                "SBR-33","SBR-34","SBR-35","SBR-36","SBR-37B","SBR-38B","SBR-39B","SBR-40","SBR-41","SBR-42B","SBR-43B","SBR-44B",
-                "SBT-01","SBT-02","SBT-02A","SBT-06","SD-001","SD-002","SLR-001","ST-002","ST-003","ST-004","ST-005","ST-006","ST-008",
-                "ST-010","ST-016","ST-017","ST-021","ST-023","ST-026","ST-027","ST-038","ST-039","ST-040","ST-042","ST-043","ST-045",
-                "ST-047","ST-048","ST-050","ST-051","ST-053","ST-054","ST-058","ST-059","ST-061","ST-064","ST-068","ST-069","ST-080","ST-081",
-                "ST-082","ST-084","ST-088","ST-092","ST-099","ST-100","ST-103","ST-106","ST-108","ST-109","ST-112","ST-113","ST-116","ST-117",
-                "ST-118","ST-122","ST-124","ST-125","ST-126","ST-127","ST-129","ST-132","ST-134","ST-136","ST-138","ST-141","ST-144","ST-147",
-                "ST-148","ST-149","ST-150","ST-152","ST-153","ST-154","ST-155","ST-156","ST-157","ST-158","ST-159","ST-160","ST-161","ST-162",
-                "ST-163","ST-164","ST-168","ST-169","ST-170","ST-171","ST-173","ST-174","ST-176","ST-179","ST-181","ST-182","ST-183","ST-184",
-                "ST-185","ST-187","ST-188","ST-189","ST-190","ST-191","ST-192","ST-193","ST-194","ST-195","ST-196","ST-197","ST-198","ST-199",
-                "ST-200","ST-201","ST-202","ST-203","ST-204","ST-205","ST-206","ST-207","ST-208","ST-209","ST-210","ST-211","ST-212","ST-213",
-                "ST-214","ST-215","ST-216","ST-217","ST-218","ST-219","ST-220","ST-221","ST-222",
-                "TPH-01","UKM-01","UKM-03","UKM-04"
-            };
+                try
+                {
+                    var jarr = colfilter.date as Newtonsoft.Json.Linq.JArray;
+                    if (jarr != null && jarr.Count > 0)
+                    {
+                        var first = jarr[0];
+                        if (first.Type == Newtonsoft.Json.Linq.JTokenType.Integer || first.Type == Newtonsoft.Json.Linq.JTokenType.Float)
+                        {
+                            // assume unix ms
+                            var ms = (long)first;
+                            selectedDate = DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime;
+                        }
+                        else
+                        {
+                            DateTime dt;
+                            if (DateTime.TryParse(first.ToString(), out dt)) selectedDate = dt;
+                        }
+                    }
+                }
+                catch { }
+            }
 
-            xfilter = xfilter & Builders<Daily>.Filter.In(d => d.well, allowedWells);
-
+            // If no date selected, return empty as requested
+            if (!selectedDate.HasValue)
+            {
+                return Ok(new
+                {
+                    items = new List<object>(),
+                    total_count = 0
+                });
+            }
 
             // Ambil semua data dari database (dengan filter jika ada)
             var allData = _daily.Find(xfilter)
@@ -1326,7 +1372,7 @@ namespace ssc.Areas.PE.Controllers
                 .ThenBy(d => d.well)
                 .ToList();
 
-            // Buat lookup dictionary untuk mencari data hari sebelumnya per well
+            // Buat lookup dictionary untuk mencari data hari sebelumnya per well (ordered ascending)
             var dataByWellAndDate = allData
                 .Where(d => d.date.HasValue)
                 .GroupBy(d => d.well)
@@ -1335,27 +1381,35 @@ namespace ssc.Areas.PE.Controllers
                     g => g.OrderBy(d => d.date).ToList()
                 );
 
-            // Proses setiap record dan cari data hari sebelumnya
-            var result = allData
-                .Where(d => d.date.HasValue)
+            // Normalize target date to UTC date-only for robust comparison
+            var targetDateUtc = selectedDate.Value.ToUniversalTime().Date;
+
+            // Filter only records that belong to the selected date (date-only match)
+            var dayData = allData
+                .Where(d => d.date.HasValue && d.date.Value.ToUniversalTime().Date == targetDateUtc)
+                .ToList();
+
+            // For each well in the selected day, find the latest record for that day and the previous record (any earlier date)
+            var result = dayData
                 .GroupBy(d => d.well)
                 .Select(g =>
                 {
-                    // Urutkan per well berdasarkan tanggal
-                    var ordered = g.OrderByDescending(d => d.date).ToList();
-
-                    var today = ordered.FirstOrDefault();
-                    var yesterday = ordered.Skip(1).FirstOrDefault();
-
+                    var today = g.OrderByDescending(d => d.date).FirstOrDefault();
                     if (today == null) return null;
+
+                    Daily yesterday = null;
+                    if (dataByWellAndDate.ContainsKey(today.well))
+                    {
+                            yesterday = dataByWellAndDate[today.well]
+                                .Where(d => d.date.HasValue && d.date.Value < selectedDate.Value)
+                            .OrderByDescending(d => d.date)
+                            .FirstOrDefault();
+                    }
 
                     return new
                     {
                         well = today.well,
                         location = today.location,
-
-                        // today_date = today.date,
-                        // yesterday_date = yesterday?.date,
 
                         fig_curr_gross_today = today.fig_curr_gross,
                         fig_curr_gross_prev = yesterday?.fig_curr_gross,
@@ -1395,7 +1449,7 @@ namespace ssc.Areas.PE.Controllers
             return Ok(new
             {
                 items = paged,
-                total_count = total_count
+                total_count = total_count,
             });
         }
 

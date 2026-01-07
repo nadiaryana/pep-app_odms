@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild, Inject, OnDestroy } from '@angular/core';
-import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA, MatDatepicker } from '@angular/material';
 import { MatTableDataSource } from '@angular/material/table';
 import { merge, Observable, of as observableOf, Subscription } from 'rxjs';
 import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operators';
@@ -62,6 +62,16 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     'fig_curr_gross_prev','fig_curr_net_prev','wc_prev','gas_prev','ds_efficiency_prev', 'sm_prev',
     "fig_curr_gross_today","fig_curr_net_today","wc_today","gas_today","ds_efficiency_today","sm_today",
     "delta_fig_curr_net","delta_fig_curr_gross","delta_wc","delta_gas","delta_ds_efficiency","delta_sm"];
+
+  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
+  start_dateControl = new FormControl(new Date());
+  start_dateInput = this.start_dateControl.value
+    ? this.start_dateControl.value.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+        day: "numeric",
+      })
+    : "";  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
 
   exampleDatabase: ExampleHttpDao | null;
   data: any[] = [];
@@ -211,6 +221,12 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
 	
   }
+
+  start_dateChange(evt) {
+    this.start_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+    this.loadData();
+  }
+
   
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
@@ -393,7 +409,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         mode: 'delta',
         page: '0',
         pagesize: '50',
-        date: null,
+        date: this.start_dateControl.value.toISOString(),
       }
     }).subscribe(res => {
       this.dataSource.data = res.items;
@@ -441,6 +457,8 @@ export class ExampleHttpDao {
     if (filter != null) params["filter"] = filter;
     if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
     if (mode != null) params["mode"] = mode;
+
+    params["date"] =  new Date().toISOString(); 
 
     httpOption["params"] = params;
 
