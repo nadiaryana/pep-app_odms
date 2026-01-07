@@ -25,21 +25,43 @@ import { CommonService } from '../../common.service';
 
 export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
-  displayedColumns: string[] = ["select", "date","well",
-    "fig_curr_gross_today","fig_curr_gross_prev","delta_fig_curr_gross",
-    "fig_curr_net_today","fig_curr_net_prev","delta_fig_curr_net",
-    "wc_today","wc_prev","delta_wc",
-    "gas_today","gas_prev","delta_gas",
-    "ds_efficiency_today","ds_efficiency_prev","delta_ds_efficiency",
-    "sm_today","sm_prev","delta_sm"];
+  displayedColumns: string[] = [
+    'select','well',
+
+    // YESTERDAY
+    'fig_curr_gross_prev',
+    'fig_curr_net_prev',
+    'wc_prev',
+    'gas_prev',
+    'ds_efficiency_prev',
+    'sm_prev',
+
+    // TODAY
+    'fig_curr_gross_today',
+    'fig_curr_net_today',
+    'wc_today',
+    'gas_today',
+    'ds_efficiency_today',
+    'sm_today',
+
+    // DELTA
+    'delta_fig_curr_gross',
+    'delta_fig_curr_net',
+    'delta_wc',
+    'delta_gas',
+    'delta_ds_efficiency',
+    'delta_sm'
+  ];
+
 
   headerColumns1: string[] = [
-    "select", "date","well","fig_curr_gross_today","fig_curr_gross_prev","delta_fig_curr_gross",
-    "fig_curr_net_today","fig_curr_net_prev","delta_fig_curr_net",
-    "wc_today","wc_prev","delta_wc",
-    "gas_today","gas_prev","delta_gas",
-    "ds_efficiency_today","ds_efficiency_prev","delta_ds_efficiency",
-    "sm_today","sm_prev","delta_sm"];
+    "select","well",
+    'yesterday',"today","delta"];
+
+  headerColumns2: string[] = [
+    'fig_curr_gross_prev','fig_curr_net_prev','wc_prev','gas_prev','ds_efficiency_prev', 'sm_prev',
+    "fig_curr_gross_today","fig_curr_net_today","wc_today","gas_today","ds_efficiency_today","sm_today",
+    "delta_fig_curr_net","delta_fig_curr_gross","delta_wc","delta_gas","delta_ds_efficiency","delta_sm"];
 
   exampleDatabase: ExampleHttpDao | null;
   data: any[] = [];
@@ -298,6 +320,13 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     return columnfilter;
 	
   }
+
+  getDeltaClass(value: number): string {
+  if (value > 0) return 'delta-up';
+  if (value < 0) return 'delta-down';
+  return 'delta-flat';
+}
+
   
 
   formatInterval(arr) {

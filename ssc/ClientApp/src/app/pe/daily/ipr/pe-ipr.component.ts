@@ -26,6 +26,8 @@ import * as Highcharts from 'highcharts';
 export class IprComponent implements OnInit {
   wellList: string[] = [];
   selectedWell: string = "";
+  iprChart: Highcharts.Chart | null = null;
+
 
   @ViewChild("well_datePicker", { static: true })
   well_datePicker: MatDatepicker<any>;
@@ -226,6 +228,18 @@ export class IprComponent implements OnInit {
     this.end_dateControl.valueChanges.subscribe(() => {
       if (this.start_dateControl.value && this.well_xSelected.length > 0) {
         this.getDailyData();
+      }
+    });
+
+    this.sm2.valueChanges.subscribe(() => {
+      if (this.showChart) {
+        this.testData();
+      }
+    });
+
+    this.ds_kd2.valueChanges.subscribe(() => {
+      if (this.showChart) {
+        this.testData();
       }
     });
 
@@ -671,7 +685,7 @@ export class IprComponent implements OnInit {
     console.log(`qmax = ${pi} * ${ps} = ${qmax}`);
 
     // get pwf values
-    const pwf_values = this.getPwf(this.flowing_bottomhole_pressure.value);
+    const pwf_values = this.getPwf(this.static_botthomhole_pressure.value);
     console.log("pwf_values:", pwf_values);
     this.data_pwf = pwf_values;
 
@@ -680,30 +694,21 @@ export class IprComponent implements OnInit {
     this.data_liquid_rate = liquid_rate_values;
     console.log("liquid_rate_values:", liquid_rate_values);
 
+    
+    const FL_design = dynamic_fl + sm2 + ds_kd2;
+
 
     //hitung operating design
-    const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+    const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - FL_design) * 3.281;
     this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
     const q_design = pi  * (ps - pwf2);
     this.q_design.setValue(q_design.toFixed(2));
 
-    //get pwf2 values
-    const pwf_values2 = this.getPwf(this.flowing_bottomhole_pressure2.value);
-    console.log("pwf2:", pwf_values2);
-    this.data_pwf2= pwf_values2;
 
     //get liquid rate 2 values (q2)
     console.log(`Operating Design:
       Pwf_design = ${pwf2}
       q_design   = ${q_design}`);
-    
-    this.data_pwf2 = this.getPwf(ps);
-
-    this.data_liquid_rate2 = this.data_pwf2.map(pwfVal => {
-      const q = pi * (ps - pwfVal);
-      return q > 0 ? q : 0;
-    });
-
 
 
     if(this.data_pwf.length > 0 && this.data_liquid_rate.length > 0){
@@ -756,60 +761,13 @@ export class IprComponent implements OnInit {
     return liquid_rates;
   }
 
-  // generateChart() {
-  //   this.ipr_chart_options = {
-  //     chart: {
-  //       type: "line",
-  //       zoomType: "x",
-  //       style: {
-  //         fontFamily: "Roboto, Helvetica Neue, sans-serif",
-  //       },
-  //     },
-  //     title: {
-  //       text: null,
-  //     },
-  //     series: [
-  //       {
-  //         name: "Pwf",
-  //         data: this.data_pwf.map((y: any, index: number) => {
-  //           return { x: index * 0.1, y: y };
-  //         }),
-  //         color: "#1E88E5",
-  //         zIndex: 2,
-  //       },
-  //       {
-  //         name: "Liquid Rate",
-  //         data: this.data_liquid_rate.map((q: any, index: number) => {
-  //           return { x: index * 0.1, y: q };
-  //         }),
-  //         color: "#43A047",
-  //         zIndex: 1,
-  //         type: "line",
-  //         marker: { enabled: true, radius: 3 },
-  //       },
-  //     ],
-  //     xAxis: {
-  //       title: { text: "Value" },
-  //     },
-  //     tooltip: {
-  //       shared: true,
-  //       crosshairs: true,
-  //       valueDecimals: 2,
-  //     },
-  //     yAxis: {
-  //       title: { text: "Fraction (relative Pwf)" },
-  //       labels: {
-  //         formatter: function () {
-  //           return this.value.toFixed(1);
-  //         },
-  //       },
-  //     },
-  //   };
-
-  //   Highcharts.chart(this.ipr_chart_el.nativeElement, this.ipr_chart_options);
-  // }
 
   generateChart() {
+    if (this.iprChart) {
+    this.iprChart.destroy();  
+    this.iprChart = null;
+  }
+
   this.ipr_chart_options = {
     chart: {
       type: "line",
@@ -834,23 +792,7 @@ export class IprComponent implements OnInit {
         },
         zIndex: 2,
       },
-      {
-        name: "IPR Design",
-        type: "line",
-        data: this.data_liquid_rate2.map((q: number, i: number) => {
-          return { x: q, y: this.data_pwf2[i] };
-        }),
-        dashStyle: "Dash",
-        color: "#FB8C00",
-        marker: {
-          enabled: false,
-        },
-        zIndex: 1,
-      },
-
-      // =====================
       // OPERATING POINT
-      // =====================
       {
         name: "Operating Point",
         type: "scatter",
@@ -866,6 +808,32 @@ export class IprComponent implements OnInit {
           symbol: "circle",
         },
         zIndex: 5,
+      },
+      {
+        name: "Q_design",
+        type: "line",
+        data: [
+          { x: Number(this.q_design.value), y: 0 },
+          { x: Number(this.q_design.value), y: Number(this.static_botthomhole_pressure.value) },
+        ],
+        dashStyle: "Dash",
+        color: "#E53935",
+        marker: { enabled: false },
+        enableMouseTracking: false,
+        zIndex: 1,
+      },
+      {
+        name: "Pwf_design",
+        type: "line",
+        data: [
+          { x: 0, y: Number(this.flowing_bottomhole_pressure2.value) },
+          { x: Number(this.qmax.value), y: Number(this.flowing_bottomhole_pressure2.value) },
+        ],
+        dashStyle: "Dash",
+        color: "#E53935",
+        marker: { enabled: false },
+        enableMouseTracking: false,
+        zIndex: 1,
       },
     ],
     xAxis: {

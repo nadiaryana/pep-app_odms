@@ -1248,7 +1248,7 @@ namespace ssc.Areas.PE.Controllers
         [Authorize("PeDaily Read")]
         [HttpGet("delta")]
         public IActionResult GetDailyDelta(
-            long? date = null,      // timestamp dari frontend (opsional, untuk filter tanggal tertentu)
+            // long? date = null,      // timestamp dari frontend (opsional, untuk filter tanggal tertentu)
             int page = 0,
             int pagesize = 50,
             string mode = "",
@@ -1258,18 +1258,18 @@ namespace ssc.Areas.PE.Controllers
             // Parse columnfilter jika ada
             dynamic colfilter = null;
             FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
-            
+
             if (!string.IsNullOrWhiteSpace(columnfilter))
             {
                 colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
-                
+
                 // Filter well jika ada di columnfilter
                 if (colfilter.well != null)
                 {
                     var wellFilters = ((Newtonsoft.Json.Linq.JArray)colfilter.well).ToObject<string[]>();
                     if (wellFilters.Length > 0)
                     {
-                        var wellRegexFilters = wellFilters.Select(w => 
+                        var wellRegexFilters = wellFilters.Select(w =>
                             Builders<Daily>.Filter.Regex("well", new MongoDB.Bson.BsonRegularExpression(w, "i"))
                         ).ToList();
                         xfilter = xfilter & Builders<Daily>.Filter.Or(wellRegexFilters);
@@ -1299,6 +1299,27 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
+            var allowedWells = new List<string>
+            {
+                "KRM-01","KRM-02","SBR-05","SBR-06","SBR-07","SBR-08","SBR-12","SBR-15","SBR-16","SBR-17","SBR-18","SBR-19",
+                "SBR-20","SBR-22","SBR-23","SBR-24","SBR-25","SBR-26","SBR-27","SBR-28","SBR-29","SBR-30","SBR-31","SBR-32",
+                "SBR-33","SBR-34","SBR-35","SBR-36","SBR-37B","SBR-38B","SBR-39B","SBR-40","SBR-41","SBR-42B","SBR-43B","SBR-44B",
+                "SBT-01","SBT-02","SBT-02A","SBT-06","SD-001","SD-002","SLR-001","ST-002","ST-003","ST-004","ST-005","ST-006","ST-008",
+                "ST-010","ST-016","ST-017","ST-021","ST-023","ST-026","ST-027","ST-038","ST-039","ST-040","ST-042","ST-043","ST-045",
+                "ST-047","ST-048","ST-050","ST-051","ST-053","ST-054","ST-058","ST-059","ST-061","ST-064","ST-068","ST-069","ST-080","ST-081",
+                "ST-082","ST-084","ST-088","ST-092","ST-099","ST-100","ST-103","ST-106","ST-108","ST-109","ST-112","ST-113","ST-116","ST-117",
+                "ST-118","ST-122","ST-124","ST-125","ST-126","ST-127","ST-129","ST-132","ST-134","ST-136","ST-138","ST-141","ST-144","ST-147",
+                "ST-148","ST-149","ST-150","ST-152","ST-153","ST-154","ST-155","ST-156","ST-157","ST-158","ST-159","ST-160","ST-161","ST-162",
+                "ST-163","ST-164","ST-168","ST-169","ST-170","ST-171","ST-173","ST-174","ST-176","ST-179","ST-181","ST-182","ST-183","ST-184",
+                "ST-185","ST-187","ST-188","ST-189","ST-190","ST-191","ST-192","ST-193","ST-194","ST-195","ST-196","ST-197","ST-198","ST-199",
+                "ST-200","ST-201","ST-202","ST-203","ST-204","ST-205","ST-206","ST-207","ST-208","ST-209","ST-210","ST-211","ST-212","ST-213",
+                "ST-214","ST-215","ST-216","ST-217","ST-218","ST-219","ST-220","ST-221","ST-222",
+                "TPH-01","UKM-01","UKM-03","UKM-04"
+            };
+
+            xfilter = xfilter & Builders<Daily>.Filter.In(d => d.well, allowedWells);
+
+
             // Ambil semua data dari database (dengan filter jika ada)
             var allData = _daily.Find(xfilter)
                 .SortByDescending(d => d.date)
@@ -1316,62 +1337,53 @@ namespace ssc.Areas.PE.Controllers
 
             // Proses setiap record dan cari data hari sebelumnya
             var result = allData
-                .Where(d => d.date.HasValue && d.fig_curr_gross > 0)
-                .Select(current =>
+                .Where(d => d.date.HasValue)
+                .GroupBy(d => d.well)
+                .Select(g =>
                 {
-                    // Cari data hari sebelumnya untuk well yang sama
-                    Daily prev = null;
-                    if (dataByWellAndDate.ContainsKey(current.well))
-                    {
-                        var wellHistory = dataByWellAndDate[current.well];
-                        var currentIndex = wellHistory.FindIndex(d => d.date == current.date);
-                        if (currentIndex > 0)
-                        {
-                            prev = wellHistory[currentIndex - 1];
-                        }
-                    }
+                    // Urutkan per well berdasarkan tanggal
+                    var ordered = g.OrderByDescending(d => d.date).ToList();
+
+                    var today = ordered.FirstOrDefault();
+                    var yesterday = ordered.Skip(1).FirstOrDefault();
+
+                    if (today == null) return null;
 
                     return new
                     {
-                        date = current.date,
-                        well = current.well,
-                        location = current.location,
+                        well = today.well,
+                        location = today.location,
 
-                        fig_curr_gross_today = current.fig_curr_gross,
-                        fig_curr_gross_prev = prev?.fig_curr_gross,
-                        delta_fig_curr_gross = current.fig_curr_gross - (prev?.fig_curr_gross ?? 0),
+                        // today_date = today.date,
+                        // yesterday_date = yesterday?.date,
 
-                        fig_curr_net_today = current.fig_curr_net,
-                        fig_curr_net_prev = prev?.fig_curr_net,
-                        delta_fig_curr_net = current.fig_curr_net - (prev?.fig_curr_net ?? 0),
+                        fig_curr_gross_today = today.fig_curr_gross,
+                        fig_curr_gross_prev = yesterday?.fig_curr_gross,
+                        delta_fig_curr_gross = today.fig_curr_gross - (yesterday?.fig_curr_gross ?? 0),
 
-                        wc_today = current.wc,
-                        wc_prev = prev?.wc,
-                        delta_wc = current.wc - (prev?.wc ?? 0),
+                        fig_curr_net_today = today.fig_curr_net,
+                        fig_curr_net_prev = yesterday?.fig_curr_net,
+                        delta_fig_curr_net = today.fig_curr_net - (yesterday?.fig_curr_net ?? 0),
 
-                        gas_today = current.gas,
-                        gas_prev = prev?.gas,
-                        delta_gas = current.gas - (prev?.gas ?? 0),
+                        wc_today = today.wc,
+                        wc_prev = yesterday?.wc,
+                        delta_wc = today.wc - (yesterday?.wc ?? 0),
 
-                        ds_efficiency_today = current.ds_efficiency,
-                        ds_efficiency_prev = prev?.ds_efficiency,
-                        delta_ds_efficiency = current.ds_efficiency - (prev?.ds_efficiency ?? 0),
+                        gas_today = today.gas,
+                        gas_prev = yesterday?.gas,
+                        delta_gas = today.gas - (yesterday?.gas ?? 0),
 
-                        sm_today = current.sm,
-                        sm_prev = prev?.sm,
-                        delta_sm = current.sm - (prev?.sm ?? 0),
+                        sm_today = today.sm,
+                        sm_prev = yesterday?.sm,
+                        delta_sm = today.sm - (yesterday?.sm ?? 0),
 
-                        prev_date = prev?.date
+                        ds_efficiency_today = today.ds_efficiency,
+                        ds_efficiency_prev = yesterday?.ds_efficiency,
+                        delta_ds_efficiency = today.ds_efficiency - (yesterday?.ds_efficiency ?? 0)
                     };
                 })
+                .Where(x => x != null)
                 .ToList();
-
-            // Filter by date jika parameter diberikan
-            if (date != null)
-            {
-                var filterDate = DateTimeOffset.FromUnixTimeMilliseconds(date.Value).Date;
-                result = result.Where(r => r.date.HasValue && r.date.Value.Date == filterDate).ToList();
-            }
 
             var total_count = result.Count;
 

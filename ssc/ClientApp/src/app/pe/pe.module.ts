@@ -67,7 +67,7 @@ import { PeDailyChanPlotComponent } from './daily/pe-daily-chan-plot.component';
 import { PeBhpChartComponent } from './bhp/pe-bhp-chart.component';
 import { PeDailyManajemenChartComponent } from './daily/pe-daily-manajemen-chart.component';
 import { PeDailyAggregateComponent } from './daily/pe-daily-aggregate.component';
-import { PeDailyAggregateListComponent } from './daily/pe-daily-aggregate-list.component';
+import { PeDailyAggregateDeleteDialogComponent, PeDailyAggregateListComponent } from './daily/pe-daily-aggregate-list.component';
 import { OneSlideComponent } from './daily/oneslide/pe-one-slide.component';
 import { RouterModule } from '@angular/router';
 
@@ -131,6 +131,7 @@ import { BarchartChartComponent } from './barchart/barchart-chart.component';
   PeDailyChanPlotComponent,
   PeDailyAggregateComponent,
   PeDailyAggregateListComponent,
+  PeDailyAggregateDeleteDialogComponent,
   OneSlideComponent,
   BarchartComponent,
   BarchartListComponent,
