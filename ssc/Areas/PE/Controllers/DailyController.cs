@@ -1338,7 +1338,7 @@ namespace ssc.Areas.PE.Controllers
             var todayDate = date.Value.ToUniversalTime().Date;
             var yesterdayDate = todayDate.AddDays(-1);
 
-            #region AMBIL DATA TODAY & YESTERDAY SAJA
+            // ambil data today dan yesterday
             var neededFilter = Builders<Daily>.Filter.And(
                 xfilter,
                 Builders<Daily>.Filter.Gte(d => d.date, yesterdayDate),
@@ -1348,7 +1348,6 @@ namespace ssc.Areas.PE.Controllers
             var rawData = _daily.Find(neededFilter)
                 .SortByDescending(d => d.date)
                 .ToList();
-            #endregion
 
 
             // // Determine selected date: prefer query param `date`, otherwise try `columnfilter.date`

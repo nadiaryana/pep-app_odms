@@ -4,6 +4,7 @@ import { TitleService } from '../../navigation/title/title.service';
 import * as Highcharts from 'highcharts';
 import { FormControl } from '@angular/forms';
 import { MatDatepicker } from '@angular/material';
+import { style } from '@angular/animations';
 
 // ============================================
 // Import Highcharts Gantt module
@@ -395,7 +396,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                 verticalAlign: 'middle',
                 format: '{point.name}',
                 style: {
-                  fontSize: '10px',
+                  fontSize: '14px',
                   fontWeight: 'bold',
                   textOutline: 'none',
                   color: '#000000'
@@ -413,40 +414,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               pointWidth: 46,             // Ukuran bar remarks lebih besar
               pointPlacement: 0.18,       // Posisi bar di bawah
               borderRadius: 0,
-
-              // dataLabels: {
-              //   enabled: true,
-              //   align: 'center',
-              //   verticalAlign: 'middle',
-              //   formatter: function() {
-              //     const point: any = this.point;
-              //     const text = point.name || '';
-                  
-              //     // Calculate bar width in pixels based on date range
-              //     const msPerDay = 24 * 3600 * 1000;
-              //     const daysDiff = (point.end - point.start) / msPerDay;
-                  
-              //     // Approximate character width (adjust based on font size 9px)
-              //     const charWidth = 5;
-              //     const barWidth = daysDiff * 20; // Approximate pixels per day
-              //     const maxChars = Math.floor(barWidth / charWidth) - 2; // Leave some padding
-                  
-              //     if (maxChars <= 0) {
-              //     return '';
-              //     }
-                  
-              //     if (text.length > maxChars) {
-              //     return text.substring(0, maxChars - 1) + '…';
-              //     }
-                  
-              //     return text;
-              //   },
-              //   style: {
-              //     fontSize: '9px',
-              //     textOutline: 'none',
-              //     color: '#333333'
-              //   }
-              // },
               dataLabels: {
                 enabled: true,
                 useHTML: true,
@@ -460,17 +427,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                     // Limit to 2 lines, show ellipsis if overflow
                     return `
                     <div style="
-                      display: -webkit-box;
-                      -webkit-line-clamp: 2;
-                      -webkit-box-orient: vertical;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
                       width: 160px;
                       white-space: normal;
                       word-wrap: break-word;
                       text-align: center;
-                      line-height: 14px;
-                      font-size: 10px;
+                      line-height: 16px;
+                      font-size: 12px;
                       color: #333;
                     ">
                       ${text}

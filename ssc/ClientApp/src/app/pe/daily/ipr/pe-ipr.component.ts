@@ -697,9 +697,8 @@ export class IprComponent implements OnInit {
     
     const FL_design = dynamic_fl + sm2 + ds_kd2;
 
-
     //hitung operating design
-    const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - FL_design) * 3.281;
+    const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
     this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
     const q_design = pi  * (ps - pwf2);
     this.q_design.setValue(q_design.toFixed(2));

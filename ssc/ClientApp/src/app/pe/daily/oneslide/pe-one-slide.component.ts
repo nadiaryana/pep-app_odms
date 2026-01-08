@@ -177,6 +177,10 @@ export class OneSlideComponent implements OnInit {
     title: {
       text: null,
     },
+    // Sembunyikan credit Highcharts
+    credits: {
+      enabled: false
+    },
   };
 
   daily_chart_options_daily: any = JSON.parse(JSON.stringify(this.daily_chart_options));
@@ -809,13 +813,19 @@ export class OneSlideComponent implements OnInit {
                 enabled: false
               },
           }
-        ]
+        ],
+        // Sembunyikan credit Highcharts
+      credits: {
+        enabled: false
+      },
       };
+      
 
         Highcharts.chart(
           this.daily_chart_el.nativeElement,
           this.daily_chart_options
         );
+
   }
 
   renderDailyChartFromDailyPage(res: any) {
@@ -997,6 +1007,10 @@ export class OneSlideComponent implements OnInit {
     
         }, 
       ],
+      // Sembunyikan credit Highcharts
+      credits: {
+        enabled: false
+      },
         responsive: {
           rules: [{
             condition: {
@@ -1109,6 +1123,10 @@ export class OneSlideComponent implements OnInit {
     tooltip: {
       headerFormat: "",
       pointFormat: "Q: {point.x:.2f} <br>Pwf: {point.y:.2f}",
+    },
+    // Sembunyikan credit Highcharts
+    credits: {
+      enabled: false
     },
   };
 
