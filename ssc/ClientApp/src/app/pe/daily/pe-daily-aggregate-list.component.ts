@@ -203,6 +203,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
           this.paginator.pageSize,
           this.filterControl.value,
           columnfilter,
+          "delta",
+          {},
+          this.end_dateInput
         );
       }),
       map(data => {
@@ -269,7 +272,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.filterControl.value,
       columnfilter,
       "excel",
-      httpOption
+      httpOption,
+      this.end_dateInput
     ).pipe(map((res) => {
       this.isLoadingResults = false;
       return {
@@ -319,7 +323,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.paginator.pageSize,
       this.filterControl.value,
       columnfilter,
-      column
+      column,
+      {},
+      this.end_dateInput
     ).pipe(map((res) => {
       return res;
     })).subscribe(res => {
@@ -422,7 +428,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         mode: 'delta',
         page: '0',
         pagesize: '50',
-        date: this.end_dateControl.value.toISOString(),
+        date: new Date(this.end_dateInput).toISOString(),
+        columnfilter: JSON.stringify(this.getColumnFilter())
       }
     }).subscribe(res => {
       res.items.forEach(x => {
@@ -468,7 +475,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) { }
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<any> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}, dateFilter: string): Observable<any> {
 
     var params = {};
     if (sort != null) params["sort"] = sort;
@@ -479,7 +486,7 @@ export class ExampleHttpDao {
     if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
     if (mode != null) params["mode"] = mode;
 
-    params["date"] =  new Date().toISOString(); 
+    params["date"] =  new Date(dateFilter).toISOString();
 
     httpOption["params"] = params;
 

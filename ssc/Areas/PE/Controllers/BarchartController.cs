@@ -113,7 +113,16 @@ namespace ssc.Areas.PE.Controllers
                 // Mengikuti pattern DataController (well_performance_sonolog)
                 case "chart":
                     var chartData = _barchart.Find(
-                        r => r.plan_start >= start_date && r.plan_end <= end_date
+                        r => 
+                            // jika masih dialam range
+                            (r.plan_start >= start_date && 
+                            r.plan_end <= end_date) ||
+                            // atau jika plan_start lebih kecil dari start_date dan plan_end lebih besar dari start_date
+                            (r.plan_start <= start_date &&
+                            r.plan_end >= start_date) ||
+                            // atau jika plan_end lebih besar dari end_date dan plan_start lebih kecil dari end_date
+                            (r.plan_end >= end_date &&
+                            r.plan_start <= end_date)
                     ).ToList().OrderBy(t => t.plan_start).Select(s => new
                     {
                         well = s.well,

@@ -5,6 +5,7 @@ import * as Highcharts from 'highcharts';
 import { FormControl } from '@angular/forms';
 import { MatDatepicker } from '@angular/material';
 import { style } from '@angular/animations';
+import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
 
 // ============================================
 // Import Highcharts Gantt module
@@ -76,6 +77,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
+    private snackbarService: SnackbarService,
   ) { }
   
   // run pertama kali
@@ -93,6 +95,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     // refresh chart saat tanggal diubah
     this.start_dateControl.valueChanges.subscribe(value => {
       if (value) {
+        // prevent end_date < start_date
+        if (this.end_dateControl.value && this.end_dateControl.value < value) {
+          this.end_dateControl.setValue(value);
+          this.snackbarService.status.next(new SnackbarApi(true, 'End Date cannot be earlier than Start Date', "dismiss", { duration: 3000 }),);
+        }
+
         this.start_dateInput = value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
         this.refreshChart();
       }
@@ -100,6 +108,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
     this.end_dateControl.valueChanges.subscribe(value => {
       if (value) {
+        // prevent end_date < start_date
+        if (this.start_dateControl.value && this.start_dateControl.value > value) {
+          this.start_dateControl.setValue(value);
+          this.snackbarService.status.next(new SnackbarApi(true, 'Start Date cannot be longer than End Date', "dismiss", { duration: 3000 }),);
+        }
         this.end_dateInput = value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
         this.refreshChart();
       }
@@ -329,7 +342,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             },
             categories: categories
           }],
-          cellHeight: 80  
+          cellHeight: 100  
         }
       },
       
@@ -386,9 +399,9 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Well',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 14,             // Ukuran bar well (lebih kecil)
-              pointPlacement: -0.20,      // Posisi bar di atas
-              borderRadius: 3,
+              pointWidth: 28,             // Ukuran bar well (lebih kecil)
+              pointPlacement: -0.22,      // Posisi bar di atas
+              borderRadius: 4,
 
               dataLabels: {
                 enabled: true,
@@ -411,8 +424,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Remarks',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 46,             // Ukuran bar remarks lebih besar
-              pointPlacement: 0.18,       // Posisi bar di bawah
+              pointWidth: 40,             // Ukuran bar remarks lebih besar
+              pointPlacement: 0.22,       // Posisi bar di bawah
               borderRadius: 0,
               dataLabels: {
                 enabled: true,
@@ -421,22 +434,74 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                 allowOverlap: true,
 
                 formatter: function () {
-                  const point: any = this.point;
-                  const text = point.name || '';
-
                     // Limit to 2 lines, show ellipsis if overflow
+                    const point: any = this.point;
+                    const text = point.name || '';
+
+                    // sanitize text for title attribute
+                    const safe = String(text)
+                      .replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;');
+
+                    // try to get rendered bar width; fallback to estimate (days * 30px)
+                    const dayMs = 24 * 3600 * 1000;
+                    const estimatedDayPx = 30;
+                    const widthPx =
+                      point.shapeArgs && point.shapeArgs.width
+                      ? point.shapeArgs.width
+                      : (point.end && point.start ? Math.max(0, (point.end - point.start) / dayMs * estimatedDayPx) : 0);
+
+                    // If bar is extremely narrow, hide label to avoid overlap
+                    if (widthPx < 40) {
+                      return '';
+                    }
+
+                    // For small bars show single-line truncated text with tooltip
+                    // If bar is extremely narrow, hide label to avoid overlap
+                    if (widthPx < 40) {
+                      return '';
+                    }
+
+                    // For narrow bars show single-line truncated text with tooltip
+                    if (widthPx < 100) {
+                      const short = text.length > 30 ? text.substr(0, 30) + '…' : text;
+                      return `
+                        <div title="${safe}"
+                             style="
+                               width: ${Math.max(30, Math.floor(widthPx))}px;
+                               white-space: nowrap;
+                               overflow: hidden;
+                               text-overflow: ellipsis;
+                               font-size: 12px;
+                               color: #333;
+                               text-align: center;
+                             ">
+                          ${short}
+                        </div>
+                      `;
+                    }
+
+                    // For wider bars allow up to 4 lines with ellipsis
+                    const maxLines = 6;
                     return `
-                    <div style="
-                      width: 160px;
-                      white-space: normal;
-                      word-wrap: break-word;
-                      text-align: center;
-                      line-height: 16px;
-                      font-size: 12px;
-                      color: #333;
-                    ">
-                      ${text}
-                    </div>
+                      <div title="${safe}"
+                      style="
+                        width: ${Math.max(80, Math.floor(widthPx))}px;
+                        font-size: 12px;
+                        line-height: 14px;
+                        color: #333;
+                        text-align: center;
+                        display: -webkit-box;
+                        -webkit-line-clamp: ${maxLines};
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: normal;
+                      ">
+                      ${safe}
+                      </div>
                     `;
                 }
               },

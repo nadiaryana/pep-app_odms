@@ -1248,40 +1248,75 @@ namespace ssc.Areas.PE.Controllers
         [Authorize("PeDaily Read")]
         [HttpGet("delta")]
         public IActionResult GetDailyDelta(
-            DateTime? date,      // timestamp dari frontend (opsional, untuk filter tanggal tertentu)
-            int page = 0,
-            int pagesize = 50,
-            string sort = "date",
-            string order = "desc",
+            DateTime? date,          // tanggal acuan (hari ini)
+            int page = 0,            // page index (0-based)
+            int pagesize = 50,       // jumlah data per page
+            string sort = "well",    // kolom sorting
+            string order = "asc",    // asc / desc
             string mode = "",
             string columnfilter = ""
         )
         {
-            // Parse columnfilter jika ada
-            dynamic colfilter = null;
+            // ================== 1. VALIDASI DATE ==================
+            // Jika date tidak dipilih, kembalikan data kosong
+            if (!date.HasValue)
+            {
+                return Ok(new
+                {
+                    items = new List<object>(),
+                    total_count = 0,
+                    message = "No date selected"
+                });
+            }
+
+            // Normalisasi tanggal ke UTC (hanya ambil DATE)
+            var todayDate = date.Value.ToUniversalTime().Date;
+            var yesterdayDate = todayDate.AddDays(-1);
+
+            // ================== 2. BUILD FILTER DASAR ==================
+            // xfilter = filter tambahan dari columnfilter (well, dll)
             FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
 
             if (!string.IsNullOrWhiteSpace(columnfilter))
             {
-                colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
-
-                // Filter well jika ada di columnfilter (mirror behaviour from Get)
-                if (colfilter.well != null)
+                try
                 {
-                    try
+                    dynamic colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
+
+                    // Filter WELL jika ada
+                    if (colfilter?.well != null)
                     {
                         var jarr = colfilter.well as Newtonsoft.Json.Linq.JArray;
-                        if (jarr != null && jarr.ToList().Count(c => !(c is Newtonsoft.Json.Linq.JObject)) > 0)
+                        if (jarr != null && jarr.Count > 0)
                         {
-                            var patterns = jarr.Where(c => !(c is Newtonsoft.Json.Linq.JObject)).Select(c => c.ToString()).ToList();
-                            var regexFilters = patterns.Select(p => Builders<Daily>.Filter.Regex(t => t.well, new BsonRegularExpression(p, "i"))).ToList();
-                            if (regexFilters.Any()) xfilter = xfilter & Builders<Daily>.Filter.Or(regexFilters);
+                            // Ambil list string well
+                            var wells = jarr
+                                .Where(x => !(x is Newtonsoft.Json.Linq.JObject))
+                                .Select(x => x.ToString())
+                                .ToList();
+
+                            if (wells.Any())
+                            {
+                                // Gunakan Regex OR (mirror behaviour lama)
+                                var regexFilters = wells
+                                    .Select(w =>
+                                        Builders<Daily>.Filter.Regex(
+                                            d => d.well,
+                                            new MongoDB.Bson.BsonRegularExpression(w, "i")
+                                        )
+                                    )
+                                    .ToList();
+
+                                xfilter = Builders<Daily>.Filter.Or(regexFilters);
+                            }
                         }
                     }
-                    catch { }
+                }
+                catch
+                {
+                    // sengaja dikosongkan supaya filter rusak tidak mematikan endpoint
                 }
             }
-
             // Jika mode adalah untuk mengambil distinct values (untuk filter dropdown)
             if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "delta")
             {
@@ -1321,124 +1356,64 @@ namespace ssc.Areas.PE.Controllers
                 "ST-214","ST-215","ST-216","ST-217","ST-218","ST-219","ST-220","ST-221","ST-222",
                 "TPH-01","UKM-01","UKM-03","UKM-04"
             };
-
             xfilter = xfilter & Builders<Daily>.Filter.In(d => d.well, allowedWells);
-
-
-            // If no date selected, return empty as requested
-            if (!date.HasValue)
-            {
-                return Ok(new
-                {
-                    items = new List<object>(),
-                    total_count = 0
-                });
-            }
-
-            var todayDate = date.Value.ToUniversalTime().Date;
-            var yesterdayDate = todayDate.AddDays(-1);
-
-            // ambil data today dan yesterday
-            var neededFilter = Builders<Daily>.Filter.And(
+            // ================== 3. FILTER MONGO DIPERKETAT ==================
+            // Ambil hanya data:
+            // - kemarin + hari ini
+            // - sesuai filter well (jika ada)
+            var mongoFilter = Builders<Daily>.Filter.And(
                 xfilter,
                 Builders<Daily>.Filter.Gte(d => d.date, yesterdayDate),
                 Builders<Daily>.Filter.Lt(d => d.date, todayDate.AddDays(1))
             );
 
-            var rawData = _daily.Find(neededFilter)
+            // ================== 4. AMBIL DATA DARI MONGO (TERBATAS) ==================
+            // IMPORTANT:
+            // - Project hanya field yang dipakai
+            // - Sort by date DESC (supaya data terbaru di atas)
+            var rawData = _daily
+                .Find(mongoFilter)
                 .SortByDescending(d => d.date)
+                .Project(d => new
+                {
+                    d.well,
+                    d.location,
+                    d.date,
+
+                    d.fig_curr_gross,
+                    d.fig_curr_net,
+                    d.wc,
+                    d.gas,
+                    d.sm,
+                    d.ds_efficiency
+                })
                 .ToList();
 
-
-            // // Determine selected date: prefer query param `date`, otherwise try `columnfilter.date`
-            // DateTime? selectedDate = date;
-            // if (!selectedDate.HasValue && colfilter != null)
-            // {
-            //     try
-            //     {
-            //         var jarr = colfilter.date as Newtonsoft.Json.Linq.JArray;
-            //         if (jarr != null && jarr.Count > 0)
-            //         {
-            //             var first = jarr[0];
-            //             if (first.Type == Newtonsoft.Json.Linq.JTokenType.Integer || first.Type == Newtonsoft.Json.Linq.JTokenType.Float)
-            //             {
-            //                 // assume unix ms
-            //                 var ms = (long)first;
-            //                 selectedDate = DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime;
-            //             }
-            //             else
-            //             {
-            //                 DateTime dt;
-            //                 if (DateTime.TryParse(first.ToString(), out dt)) selectedDate = dt;
-            //             }
-            //         }
-            //     }
-            //     catch { }
-            // }
-
-            // // If no date selected, return empty as requested
-            // if (!selectedDate.HasValue)
-            // {
-            //     return Ok(new
-            //     {
-            //         items = new List<object>(),
-            //         total_count = 0
-            //     });
-            // }
-
-            // // Ambil semua data dari database (dengan filter jika ada)
-            // var allData = _daily.Find(xfilter)
-            //     .SortByDescending(d => d.date)
-            //     .ThenBy(d => d.well)
-            //     .ToList();
-
-            // // Buat lookup dictionary untuk mencari data hari sebelumnya per well (ordered ascending)
-            // var dataByWellAndDate = allData
-            //     .Where(d => d.date.HasValue)
-            //     .GroupBy(d => d.well)
-            //     .ToDictionary(
-            //         g => g.Key,
-            //         g => g.OrderBy(d => d.date).ToList()
-            //     );
-
-            // // Normalize target date to UTC date-only for robust comparison
-            // var targetDateUtc = selectedDate.Value.ToUniversalTime().Date;
-
-            // // Filter only records that belong to the selected date (date-only match)
-            // var dayData = allData
-            //     .Where(d => d.date.HasValue && d.date.Value.ToUniversalTime().Date == targetDateUtc)
-            //     .ToList();
-
-            // For each well in the selected day, find the latest record for that day and the previous record (any earlier date)
-            var result = allowedWells
-                .Select(well =>
+            // ================== 5. GROUP PER WELL (AMBIL MAX 2 RECORD) ==================
+            // Tujuan:
+            // - 1 record hari ini
+            // - 1 record sebelumnya (kemarin / terakhir)
+            var result = rawData
+                .Where(x => x.date.HasValue)
+                .GroupBy(x => x.well)
+                .Select(g =>
                 {
-                    var wellData = rawData
-                    .Where(x => x.well == well && x.date.HasValue)
-                    .OrderByDescending(x => x.date)
-                    .ToList();
-
-                    var today = wellData
-                        .FirstOrDefault(x => x.date.Value.ToUniversalTime().Date == todayDate);
-
-                    var yesterday = wellData
-                        .Where(x => x.date.Value.ToUniversalTime().Date < todayDate)
+                    // Urutkan per well berdasarkan tanggal DESC
+                    var ordered = g
                         .OrderByDescending(x => x.date)
-                        .FirstOrDefault();
+                        .Take(2) // 🔥 maksimal 2 record per well
+                        .ToList();
 
+                    var today = ordered
+                        .FirstOrDefault(x => x.date.Value.Date == todayDate);
+
+                    var yesterday = ordered
+                        .FirstOrDefault(x => x.date.Value.Date < todayDate);
+
+                    // Jika tidak ada data hari ini → skip well ini
                     if (today == null) return null;
 
-                    // Daily yesterday = null;
-                    // if (dataByWellAndDate.ContainsKey(today.well))
-                    // {
-                    //     var selectedDateOnly = selectedDate.Value.Date;
-
-                    //     yesterday = dataByWellAndDate[today.well]
-                    //         .Where(d => d.date.HasValue && d.date.Value < selectedDateOnly)
-                    //     .OrderByDescending(d => d.date)
-                    //     .FirstOrDefault();
-                    // }
-
+                    // Hitung delta
                     return new
                     {
                         well = today.well,
@@ -1446,11 +1421,13 @@ namespace ssc.Areas.PE.Controllers
 
                         fig_curr_gross_today = today.fig_curr_gross,
                         fig_curr_gross_prev = yesterday?.fig_curr_gross,
-                        delta_fig_curr_gross = today.fig_curr_gross - (yesterday?.fig_curr_gross ?? 0),
+                        delta_fig_curr_gross =
+                            today.fig_curr_gross - (yesterday?.fig_curr_gross ?? 0),
 
                         fig_curr_net_today = today.fig_curr_net,
                         fig_curr_net_prev = yesterday?.fig_curr_net,
-                        delta_fig_curr_net = today.fig_curr_net - (yesterday?.fig_curr_net ?? 0),
+                        delta_fig_curr_net =
+                            today.fig_curr_net - (yesterday?.fig_curr_net ?? 0),
 
                         wc_today = today.wc,
                         wc_prev = yesterday?.wc,
@@ -1466,23 +1443,136 @@ namespace ssc.Areas.PE.Controllers
 
                         ds_efficiency_today = today.ds_efficiency,
                         ds_efficiency_prev = yesterday?.ds_efficiency,
-                        delta_ds_efficiency = today.ds_efficiency - (yesterday?.ds_efficiency ?? 0)
+                        delta_ds_efficiency =
+                            today.ds_efficiency - (yesterday?.ds_efficiency ?? 0)
                     };
                 })
                 .Where(x => x != null)
                 .ToList();
 
-            var total_count = result.Count;
+            // ================== 6. SORTING (DATA SUDAH KECIL) ==================
+            switch (sort?.ToLower())
+            {
+                case "well":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.well).ToList()
+                        : result.OrderBy(x => x.well).ToList();
+                    break;
+                // prev fields
+                case "fig_curr_gross_prev":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.fig_curr_gross_prev).ToList()
+                        : result.OrderBy(x => x.fig_curr_gross_prev).ToList();
+                    break;
+                
+                case "fig_curr_net_prev":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.fig_curr_net_prev).ToList()
+                        : result.OrderBy(x => x.fig_curr_net_prev).ToList();
+                    break;
+                case "wc_prev":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.wc_prev).ToList()
+                        : result.OrderBy(x => x.wc_prev).ToList();
+                    break;
+                case "gas_prev":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.gas_prev).ToList()
+                        : result.OrderBy(x => x.gas_prev).ToList();
+                    break;
+                case "sm_prev":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.sm_prev).ToList()
+                        : result.OrderBy(x => x.sm_prev).ToList();
+                    break;
+                case "ds_efficiency_prev":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.ds_efficiency_prev).ToList()
+                        : result.OrderBy(x => x.ds_efficiency_prev).ToList();
+                    break;
+
+                // today fields
+                case "fig_curr_gross_today":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.fig_curr_gross_today).ToList()
+                        : result.OrderBy(x => x.fig_curr_gross_today).ToList();
+                    break;
+                case "fig_curr_net_today":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.fig_curr_net_today).ToList()
+                        : result.OrderBy(x => x.fig_curr_net_today).ToList();
+                    break;
+                case "wc_today":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.wc_today).ToList()
+                        : result.OrderBy(x => x.wc_today).ToList();
+                    break;
+                case "gas_today":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.gas_today).ToList()
+                        : result.OrderBy(x => x.gas_today).ToList();
+                    break;
+                case "sm_today":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.sm_today).ToList()
+                        : result.OrderBy(x => x.sm_today).ToList();
+                    break;
+                case "ds_efficiency_today":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.ds_efficiency_today).ToList()
+                        : result.OrderBy(x => x.ds_efficiency_today).ToList();
+                    break;
+
+                // delta fields
+                case "delta_fig_curr_gross":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.delta_fig_curr_gross).ToList()
+                        : result.OrderBy(x => x.delta_fig_curr_gross).ToList();
+                    break;
+                case "delta_fig_curr_net":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.delta_fig_curr_net).ToList()
+                        : result.OrderBy(x => x.delta_fig_curr_net).ToList();
+                    break;
+                case "delta_wc":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.delta_wc).ToList()
+                        : result.OrderBy(x => x.delta_wc).ToList();
+                    break;
+                case "delta_gas":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.delta_gas).ToList()
+                        : result.OrderBy(x => x.delta_gas).ToList();
+                    break;
+                case "delta_sm":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.delta_sm).ToList()
+                        : result.OrderBy(x => x.delta_sm).ToList();
+                    break;
+                case "delta_ds_efficiency":
+                    result = order == "desc"
+                        ? result.OrderByDescending(x => x.delta_ds_efficiency).ToList()
+                        : result.OrderBy(x => x.delta_ds_efficiency).ToList();
+                    break;
+                // default: sort by well
+                default:
+                    break;
+            }
+
+            // ================== 7. PAGINATION (AMAN, DATA KECIL) ==================
+            var totalCount = result.Count;
 
             var paged = result
                 .Skip(page * pagesize)
                 .Take(pagesize)
                 .ToList();
 
+            // ================== 8. RESPONSE ==================
             return Ok(new
             {
                 items = paged,
-                total_count = total_count,
+                total_count = totalCount,
+                message = "Success"
             });
         }
 
