@@ -178,3 +178,18 @@ ng::host .mat-horizontal-stepper-content {
   height: 550px;
   // width: 100%;
 }
+
+.delta-up {
+  color: #2e7d32;   // hijau
+  font-weight: 600;
+}
+
+.delta-down {
+  color: #c62828;   // merah
+  font-weight: 600;
+}
+
+.delta-same {
+  color: #f9a825;   // kuning
+  font-weight: 600;
+}

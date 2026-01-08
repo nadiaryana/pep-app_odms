@@ -5,11 +5,11 @@
   <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/delta']"><mat-icon>trending_up</mat-icon>Delta Chart</button> -->
    
 	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>Start Date</mat-label>
-		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
-		<input matInput [(ngModel)]="start_dateInput" disabled>
-		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+		<mat-label>End Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" disabled>
+		<input matInput [(ngModel)]="end_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
 	</mat-form-field>
 </div>
 
@@ -181,56 +181,80 @@
       <ng-container matColumnDef="delta_fig_curr_gross">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Δ Gross</span>
+              <span mat-sort-header="delta_fig_curr_gross" arrowPosition="before" class="mat-sort-header">Δ Gross</span>
               <app-xfilter title="Delta Gross" column="delta_fig_curr_gross" format="number" [selected]="fig_curr_gross_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row) ">{{(row.delta_fig_curr_gross | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right"
+              [class.delta-up]="row.delta_fig_curr_gross > 0"
+              [class.delta-down]="row.delta_fig_curr_gross < 0"
+              [class.delta-same]="row.delta_fig_curr_gross === 0" 
+              [class.clicked_row]="selection.isSelected(row) ">{{(row.delta_fig_curr_gross | number : '1.0-0') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_fig_curr_net">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Δ Net</span>
+              <span mat-sort-header="delta_fig_curr_net" arrowPosition="before" class="mat-sort-header">Δ Net</span>
               <app-xfilter title="Delta Net" column="delta_fig_curr_gross" format="number" [selected]="fig_curr_net_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.delta_fig_curr_net | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" 
+              [class.delta-up]="row.delta_fig_curr_gross > 0"
+              [class.delta-down]="row.delta_fig_curr_gross < 0"
+              [class.delta-same]="row.delta_fig_curr_gross === 0"  
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_fig_curr_net | number : '1.0-0') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_wc">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Δ WC</span>
+              <span mat-sort-header="delta_wc" arrowPosition="before" class="mat-sort-header">Δ WC</span>
               <app-xfilter title="Delta WC" column="delta_wc" format="number" [selected]="wc_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.delta_wc | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" 
+          [class.delta-up]="row.delta_fig_curr_gross > 0"
+              [class.delta-down]="row.delta_fig_curr_gross < 0"
+              [class.delta-same]="row.delta_fig_curr_gross === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_wc | number : '1.0-0') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_gas">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Δ Gas</span>
+              <span mat-sort-header="delta_gas" arrowPosition="before" class="mat-sort-header">Δ Gas</span>
               <app-xfilter title="Delta Gas" column="delta_gas" format="number" [selected]="gas_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.delta_gas | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" 
+              [class.delta-up]="row.delta_fig_curr_gross > 0"
+              [class.delta-down]="row.delta_fig_curr_gross < 0"
+              [class.delta-same]="row.delta_fig_curr_gross === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_gas | number : '1.0-0') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_ds_efficiency">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Δ Efficiency</span>
+              <span mat-sort-header="delta_ds_efficiency" arrowPosition="before" class="mat-sort-header">Δ Efficiency</span>
               <app-xfilter title="Delta Efficiency" column="delta_gas" format="number" [selected]="ds_efficiency_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.delta_ds_efficiency | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" 
+              [class.delta-up]="row.delta_fig_curr_gross > 0"
+              [class.delta-down]="row.delta_fig_curr_gross < 0"
+              [class.delta-same]="row.delta_fig_curr_gross === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_ds_efficiency | number : '1.0-0') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_sm">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Δ SM</span>
+              <span mat-sort-header="delta_sm" arrowPosition="before" class="mat-sort-header">Δ SM</span>
               <app-xfilter title="Delta SM" column="delta_gas" format="number" [selected]="sm_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.delta_sm | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" 
+              [class.delta-up]="row.delta_fig_curr_gross > 0"
+              [class.delta-down]="row.delta_fig_curr_gross < 0"
+              [class.delta-same]="row.delta_fig_curr_gross === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_sm | number : '1.0-0') || '-'}}</td>
         </ng-container>
 
       <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>

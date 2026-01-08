@@ -20,7 +20,7 @@ import { CommonService } from '../../common.service';
 @Component({
   selector: 'pe-daily-aggregate-list',
   templateUrl: './pe-daily-aggregate-list.component.html',
-  styleUrls: ['./pe-daily.scss']
+  styleUrls: ['./pe-daily.scss'],
 })
 
 export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
@@ -61,7 +61,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   headerColumns2: string[] = [
     'fig_curr_gross_prev','fig_curr_net_prev','wc_prev','gas_prev','ds_efficiency_prev', 'sm_prev',
     "fig_curr_gross_today","fig_curr_net_today","wc_today","gas_today","ds_efficiency_today","sm_today",
-    "delta_fig_curr_net","delta_fig_curr_gross","delta_wc","delta_gas","delta_ds_efficiency","delta_sm"];
+    "delta_fig_curr_gross","delta_fig_curr_net","delta_wc","delta_gas","delta_ds_efficiency","delta_sm"];
 
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
   start_dateControl = new FormControl(new Date());
@@ -71,7 +71,11 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         year: "numeric",
         day: "numeric",
       })
-    : "";  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
+    : "";  
+  
+  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
+  end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
   exampleDatabase: ExampleHttpDao | null;
   data: any[] = [];
@@ -79,6 +83,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
   isEditing: boolean = false;
+
+  
 
   resultsLength = 0;
   isLoadingResults = true;
@@ -227,6 +233,11 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.loadData();
   }
 
+  end_dateChange(evt) {
+    this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+    this.loadData();
+  }
+
   
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
@@ -330,7 +341,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     if (this.ds_efficiency_xSelected.length) columnfilter["ds_efficiency"] = this.ds_efficiency_xSelected;
 	
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
-    //if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
+    if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     //if(this.group) columnfilter['group'] = this.group;
     //if(this.status) columnfilter['status'] = this.status;
     return columnfilter;
@@ -348,6 +359,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   formatInterval(arr) {
     return arr.map(a => a.join("-")).join(", ");
   }
+
+  
 
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
@@ -409,9 +422,17 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         mode: 'delta',
         page: '0',
         pagesize: '50',
-        date: this.start_dateControl.value.toISOString(),
+        date: this.end_dateControl.value.toISOString(),
       }
     }).subscribe(res => {
+      res.items.forEach(x => {
+        console.log(
+          x.well,
+          'TODAY:', x.fig_curr_gross_today,
+          'YESTERDAY:', x.fig_curr_gross_prev
+        );
+      });
+
       this.dataSource.data = res.items;
       this.resultsLength = res.total_count;
       this.isLoadingResults = false;
