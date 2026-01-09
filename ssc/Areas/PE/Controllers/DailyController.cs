@@ -1244,20 +1244,18 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-        // ================== DELTA ENDPOINT ==================
         [Authorize("PeDaily Read")]
         [HttpGet("delta")]
         public IActionResult GetDailyDelta(
-            DateTime? date,          // tanggal acuan (hari ini)
-            int page = 0,            // page index (0-based)
-            int pagesize = 50,       // jumlah data per page
-            string sort = "well",    // kolom sorting
-            string order = "asc",    // asc / desc
+            DateTime? date,
+            int page = 0,
+            int pagesize = 50,
+            string sort = "well",
+            string order = "asc",
             string mode = "",
             string columnfilter = ""
         )
         {
-            // ================== 1. VALIDASI DATE ==================
             // Jika date tidak dipilih, kembalikan data kosong
             if (!date.HasValue)
             {
@@ -1269,11 +1267,9 @@ namespace ssc.Areas.PE.Controllers
                 });
             }
 
-            // Normalisasi tanggal ke UTC (hanya ambil DATE)
             var todayDate = date.Value.ToUniversalTime().Date;
             var yesterdayDate = todayDate.AddDays(-1);
 
-            // ================== 2. BUILD FILTER DASAR ==================
             // xfilter = filter tambahan dari columnfilter (well, dll)
             FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
 
@@ -1314,10 +1310,8 @@ namespace ssc.Areas.PE.Controllers
                 }
                 catch
                 {
-                    // sengaja dikosongkan supaya filter rusak tidak mematikan endpoint
                 }
             }
-            // Jika mode adalah untuk mengambil distinct values (untuk filter dropdown)
             if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "delta")
             {
                 switch (mode)
@@ -1357,20 +1351,13 @@ namespace ssc.Areas.PE.Controllers
                 "TPH-01","UKM-01","UKM-03","UKM-04"
             };
             xfilter = xfilter & Builders<Daily>.Filter.In(d => d.well, allowedWells);
-            // ================== 3. FILTER MONGO DIPERKETAT ==================
-            // Ambil hanya data:
-            // - kemarin + hari ini
-            // - sesuai filter well (jika ada)
+
             var mongoFilter = Builders<Daily>.Filter.And(
                 xfilter,
                 Builders<Daily>.Filter.Gte(d => d.date, yesterdayDate),
                 Builders<Daily>.Filter.Lt(d => d.date, todayDate.AddDays(1))
             );
 
-            // ================== 4. AMBIL DATA DARI MONGO (TERBATAS) ==================
-            // IMPORTANT:
-            // - Project hanya field yang dipakai
-            // - Sort by date DESC (supaya data terbaru di atas)
             var rawData = _daily
                 .Find(mongoFilter)
                 .SortByDescending(d => d.date)
@@ -1389,10 +1376,6 @@ namespace ssc.Areas.PE.Controllers
                 })
                 .ToList();
 
-            // ================== 5. GROUP PER WELL (AMBIL MAX 2 RECORD) ==================
-            // Tujuan:
-            // - 1 record hari ini
-            // - 1 record sebelumnya (kemarin / terakhir)
             var result = rawData
                 .Where(x => x.date.HasValue)
                 .GroupBy(x => x.well)
@@ -1401,7 +1384,7 @@ namespace ssc.Areas.PE.Controllers
                     // Urutkan per well berdasarkan tanggal DESC
                     var ordered = g
                         .OrderByDescending(x => x.date)
-                        .Take(2) // 🔥 maksimal 2 record per well
+                        .Take(2)
                         .ToList();
 
                     var today = ordered
@@ -1410,7 +1393,6 @@ namespace ssc.Areas.PE.Controllers
                     var yesterday = ordered
                         .FirstOrDefault(x => x.date.Value.Date < todayDate);
 
-                    // Jika tidak ada data hari ini → skip well ini
                     if (today == null) return null;
 
                     // Hitung delta
@@ -1450,7 +1432,7 @@ namespace ssc.Areas.PE.Controllers
                 .Where(x => x != null)
                 .ToList();
 
-            // ================== 6. SORTING (DATA SUDAH KECIL) ==================
+            // sorting
             switch (sort?.ToLower())
             {
                 case "well":
@@ -1464,7 +1446,7 @@ namespace ssc.Areas.PE.Controllers
                         ? result.OrderByDescending(x => x.fig_curr_gross_prev).ToList()
                         : result.OrderBy(x => x.fig_curr_gross_prev).ToList();
                     break;
-                
+
                 case "fig_curr_net_prev":
                     result = order == "desc"
                         ? result.OrderByDescending(x => x.fig_curr_net_prev).ToList()
@@ -1559,7 +1541,6 @@ namespace ssc.Areas.PE.Controllers
                     break;
             }
 
-            // ================== 7. PAGINATION (AMAN, DATA KECIL) ==================
             var totalCount = result.Count;
 
             var paged = result
@@ -1567,7 +1548,6 @@ namespace ssc.Areas.PE.Controllers
                 .Take(pagesize)
                 .ToList();
 
-            // ================== 8. RESPONSE ==================
             return Ok(new
             {
                 items = paged,
