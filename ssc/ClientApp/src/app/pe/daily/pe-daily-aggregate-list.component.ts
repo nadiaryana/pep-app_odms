@@ -432,14 +432,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         columnfilter: JSON.stringify(this.getColumnFilter())
       }
     }).subscribe(res => {
-      res.items.forEach(x => {
-        console.log(
-          x.well,
-          'TODAY:', x.fig_curr_gross_today,
-          'YESTERDAY:', x.fig_curr_gross_prev
-        );
-      });
-
       this.dataSource.data = res.items;
       this.resultsLength = res.total_count;
       this.isLoadingResults = false;
