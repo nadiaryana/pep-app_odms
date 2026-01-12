@@ -74,7 +74,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     : "";  
   
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
-  end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  // end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  end_dateControl = new FormControl(new Date());
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
   exampleDatabase: ExampleHttpDao | null;
@@ -100,7 +101,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
   filterControl = new FormControl('');
 
-  dateFilter = new FormControl('');
+  // dateFilter = new FormControl('');
+  start_dateFilter = new FormControl('');
+  end_dateFilter = new FormControl('');
   wellFilter = new FormControl('');
   fig_curr_grossFilter = new FormControl('');
   fig_curr_netFilter = new FormControl('');
@@ -140,7 +143,10 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.loadData();
+    this.start_dateControl.valueChanges.subscribe(() => this.loadData());
+    this.end_dateControl.valueChanges.subscribe(() => this.loadData());
+
+    // this.loadData();
 	this.titleService.titleSource.next({
       title: "Aggregate",
       icon: "trending_up",
@@ -182,7 +188,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.sort.sortChange,
       this.paginator.page,
       this.filterControl.valueChanges.pipe(debounceTime(300)),
-      this.dateFilter.valueChanges.pipe(debounceTime(300)),
+      // this.dateFilter.valueChanges.pipe(debounceTime(300)),
+      this.start_dateControl.valueChanges.pipe(debounceTime(300)),
+      this.end_dateControl.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_grossFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_netFilter.valueChanges.pipe(debounceTime(300)),
@@ -193,19 +201,29 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
+      
       switchMap(() => {
+        if (!this.start_dateControl.value || !this.end_dateControl.value) {
+          return observableOf({
+            items: [],
+            total_count: 0
+          });
+        }
+
         this.isLoadingResults = true;
-        var columnfilter = this.getColumnFilter();
+        // var columnfilter = this.getColumnFilter();
         return this.exampleDatabase!.getRepoIssues(
           this.sort.active,
           this.sort.direction,
           this.paginator.pageIndex,
           this.paginator.pageSize,
           this.filterControl.value,
-          columnfilter,
+          this.getColumnFilter(),
           "delta",
           {},
-          this.end_dateInput
+          // this.end_dateInput
+          this.start_dateControl.value,
+          this.end_dateControl.value
         );
       }),
       map(data => {
@@ -231,15 +249,42 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 	
   }
 
-  start_dateChange(evt) {
-    this.start_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  // start_dateChange(evt) {
+  //   this.start_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  //   this.loadData();
+  // }
+
+  formatDate(date: Date): string {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      year: 'numeric',
+      day: 'numeric'
+    });
+  }
+
+  start_dateChange(event: any) {
+  if (!event.value) return;
+
+  this.start_dateControl.setValue(event.value);
+  this.start_dateInput = this.formatDate(event.value);
+
+  this.loadData();
+  }
+
+  end_dateChange(event: any) {
+    if (!event.value) return;
+
+    this.end_dateControl.setValue(event.value);
+    this.end_dateInput = this.formatDate(event.value);
+
     this.loadData();
   }
 
-  end_dateChange(evt) {
-    this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
-    this.loadData();
-  }
+  // end_dateChange(evt) {
+  //   this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  //   this.loadData();
+  // }
 
   
   ngOnDestroy() {
@@ -273,7 +318,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       columnfilter,
       "excel",
       httpOption,
-      this.end_dateInput
+      // this.end_dateInput
+      this.start_dateControl.value,
+      this.end_dateControl.value
     ).pipe(map((res) => {
       this.isLoadingResults = false;
       return {
@@ -325,7 +372,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       columnfilter,
       column,
       {},
-      this.end_dateInput
+      // this.end_dateInput
+      this.start_dateControl.value,
+      this.end_dateControl.value
     ).pipe(map((res) => {
       return res;
     })).subscribe(res => {
@@ -422,19 +471,68 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadData() {
+  // loadData() {
+  //   if (!this.start_dateControl.value || !this.end_dateControl.value) {
+  //   return;
+  //   }
+  //   this.isLoadingResults = true;
+
+  //   this.http.get<any>('/api/pe/daily/delta', {
+  //     params: {
+  //       mode: 'delta',
+  //       page: '0',
+  //       pagesize: '50',
+  //       // date: new Date(this.end_dateInput).toISOString(),
+  //       startDate: this.start_dateControl.value.toISOString(),
+  //       endDate: this.end_dateControl.value.toISOString(),
+  //       columnfilter: JSON.stringify(this.getColumnFilter())
+  //     }
+  //   }).subscribe(res => {
+  //     this.dataSource.data = res.items;
+  //     this.resultsLength = res.total_count;
+  //     this.isLoadingResults = false;
+  //   });
+  // }
+
+  loadData(): void {
+    const start = this.start_dateControl.value;
+    const end = this.end_dateControl.value;
+
+    if (!start || !end) {
+      console.warn('Start / End date belum lengkap');
+      return;
+    }
+
+    // NORMALISASI JAM → cocok dengan Mongo + ToUniversalTime()
+    const startDate = new Date(start);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(end);
+    endDate.setHours(0, 0, 0, 0);
+
+    console.log('LOAD DATA:', startDate, endDate);
+
+    this.isLoadingResults = true;
+
     this.http.get<any>('/api/pe/daily/delta', {
       params: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
         mode: 'delta',
         page: '0',
         pagesize: '50',
-        date: new Date(this.end_dateInput).toISOString(),
-        columnfilter: JSON.stringify(this.getColumnFilter())
+        sort: 'well',
+        order: 'asc'
       }
-    }).subscribe(res => {
-      this.dataSource.data = res.items;
-      this.resultsLength = res.total_count;
-      this.isLoadingResults = false;
+    }).subscribe({
+      next: res => {
+        this.dataSource.data = res.items || [];
+        this.isLoadingResults = false;
+      },
+      error: err => {
+        console.error('API ERROR:', err);
+        this.isLoadingResults = false;
+      }
     });
   }
 
@@ -467,7 +565,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) { }
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}, dateFilter: string): Observable<any> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}, startDate: Date, endDate: Date): Observable<any> {
 
     var params = {};
     if (sort != null) params["sort"] = sort;
@@ -478,7 +576,9 @@ export class ExampleHttpDao {
     if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
     if (mode != null) params["mode"] = mode;
 
-    params["date"] =  new Date(dateFilter).toISOString();
+    // params["date"] =  new Date(dateFilter).toISOString();
+    params["startDate"] =  startDate.toISOString();
+    params["endDate"] =  endDate.toISOString();
 
     httpOption["params"] = params;
 

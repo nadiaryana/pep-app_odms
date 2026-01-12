@@ -1247,7 +1247,9 @@ namespace ssc.Areas.PE.Controllers
         [Authorize("PeDaily Read")]
         [HttpGet("delta")]
         public IActionResult GetDailyDelta(
-            DateTime? date,
+            // DateTime? date,
+            DateTime? startDate,
+            DateTime? endDate,
             int page = 0,
             int pagesize = 50,
             string sort = "well",
@@ -1257,7 +1259,7 @@ namespace ssc.Areas.PE.Controllers
         )
         {
             // Jika date tidak dipilih, kembalikan data kosong
-            if (!date.HasValue)
+            if (!startDate.HasValue || !endDate.HasValue)
             {
                 return Ok(new
                 {
@@ -1267,8 +1269,12 @@ namespace ssc.Areas.PE.Controllers
                 });
             }
 
-            var todayDate = date.Value.ToUniversalTime().Date;
-            var yesterdayDate = todayDate.AddDays(-1);
+            // var todayDate = date.Value.ToUniversalTime().Date;
+            // var yesterdayDate = todayDate.AddDays(-1);
+
+            var todayDate = endDate.Value.ToUniversalTime().Date;
+            var yesterdayDate = startDate.Value.ToUniversalTime().Date;
+
 
             // xfilter = filter tambahan dari columnfilter (well, dll)
             FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
@@ -1384,14 +1390,17 @@ namespace ssc.Areas.PE.Controllers
                     // Urutkan per well berdasarkan tanggal DESC
                     var ordered = g
                         .OrderByDescending(x => x.date)
-                        .Take(2)
+                        // .Take(2)
                         .ToList();
 
                     var today = ordered
                         .FirstOrDefault(x => x.date.Value.Date == todayDate);
 
+                    // var yesterday = ordered
+                    //     .FirstOrDefault(x => x.date.Value.Date < todayDate);
+
                     var yesterday = ordered
-                        .FirstOrDefault(x => x.date.Value.Date < todayDate);
+                        .FirstOrDefault(x => x.date.Value.Date == yesterdayDate);
 
                     if (today == null) return null;
 
