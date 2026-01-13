@@ -54,7 +54,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 		// Set background untuk halaman login
 		const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;
 		if (sidenavContent) {
-			sidenavContent.style.background = 'url("assets/image/pertamina.png") no-repeat';
+			sidenavContent.style.background = 'url("assets/image/logo.png") no-repeat';
 			sidenavContent.style.backgroundPositionX = 'right';
 			sidenavContent.style.backgroundPositionY = 'top';
 		}
