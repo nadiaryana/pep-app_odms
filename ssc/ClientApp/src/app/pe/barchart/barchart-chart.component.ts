@@ -74,6 +74,25 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     '#91e8e1'  // Cyan
   ];
 
+  jobColors: { [key: string]: string } = {
+    'workover': '#00b050',
+    'reparasi': '#ffff00',
+    'well services': '#00b0f0',
+    'fracturing': '#00b0f0',
+    'stimulasi': '#00b0f0',
+    'reaktivasi': '#ffc000',
+
+    'eor': '#92d050',
+    'optimasi': '#00b050',
+    'injeksi': '#0070c0',
+
+    'hoist repair': '#ff0000',
+    'hoist idle': '#b4a7d6',
+    'hoist mobilization': '#b4a7d6'
+  };
+
+
+
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
@@ -83,12 +102,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   // run pertama kali
   ngOnInit() {
     this.titleService.titleSource.next({
-      title: "Gantt Chart - Well Planning",
+      title: "Barchart",
       icon: "bar_chart",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
         { label: 'Barchart', routerLink: 'pe/barchart' },
-        { label: 'Gantt Chart', routerLink: '' }
+        { label: 'BarChart', routerLink: '' }
       ]
     });
 
@@ -271,16 +290,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       
       // Judul chart
       title: {
-        text: 'Well Planning Gantt Chart',
+        text: 'BARCHART RIG SANGATTA FIELD',
         style: {
           fontSize: '18px',
           fontWeight: 'bold'
         }
-      },
-      
-      // Sub judul
-      subtitle: {
-        text: 'Plan Start to Plan End by Well'
       },
       
       // Konfigurasi sumbu X (timeline horizontal)
@@ -304,11 +318,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             cellHeight: 30
           },
 
-          currentDateIndicator: {
-            enabled: true,
-            color: 'red',
-            width: 2
-          }
+          // currentDateIndicator: {
+          //   enabled: true,
+          //   color: 'red',
+          //   width: 2
+          // }
         },
         { // label format bulan & tahun
           type: 'datetime',
@@ -318,10 +332,10 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           labels: {
             style: {
               fontSize: '13px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
             },
             formatter: function () {
-              return Highcharts.dateFormat('%B %Y', this.value as number);
+              return Highcharts.dateFormat('%B %Y', this.value as number).toUpperCase();
             }
           },
 
@@ -409,11 +423,26 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                 verticalAlign: 'middle',
                 format: '{point.name}',
                 style: {
-                  fontSize: '14px',
+                  fontSize: '16px',
                   fontWeight: 'bold',
                   textOutline: 'none',
-                  color: '#000000'
-                }
+                },
+                formatter: function () {
+                  const p: any = this.point;
+                  return `
+                    <span style="
+                      color: #000;
+                      font-weight: bold;
+                      background:${p.color};
+                      padding:4px 8px;
+                      border-radius:4px;
+                      display:inline-block;
+                    ">
+                      ${p.name}
+                    </span>
+                  `;
+                },
+                useHTML: true
               },
 
               data: wellSeries
@@ -424,10 +453,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Remarks',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 40,             // Ukuran bar remarks lebih besar
-              pointPlacement: 0.22,       // Posisi bar di bawah
+              pointWidth: 25,             // Ukuran bar remarks lebih besar
+              pointPlacement: 0.18,       // Posisi bar di bawah
               borderRadius: 0,
               dataLabels: {
+                verticalAlign: 'top',
+                y: -15,
                 enabled: true,
                 useHTML: true,
                 inside: true,
@@ -474,7 +505,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                                white-space: nowrap;
                                overflow: hidden;
                                text-overflow: ellipsis;
-                               font-size: 12px;
+                               font-size: 14px;
                                color: #333;
                                text-align: center;
                              ">
@@ -489,7 +520,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       <div title="${safe}"
                       style="
                         width: ${Math.max(80, Math.floor(widthPx))}px;
-                        font-size: 12px;
+                        font-size: 14px;
                         line-height: 14px;
                         color: #333;
                         text-align: center;
@@ -612,6 +643,15 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     this.loadData();
   }
 
+  getJobColor(job: string): string {
+    if (!job) return '#bfbfbf';
+
+    const key = job.trim().toLowerCase();
+    return this.jobColors[key] || '#bfbfbf';
+  }
+
+
+
   // fungsi reformat data dari API ke series Highcharts
   // private reformatDataGantt() {
   //   const wellSeries: any[] = [];
@@ -710,6 +750,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
     // End date untuk bar: tambah 1 hari agar bar mencakup sampai akhir end date
     const endForBar = endActual + (24 * 60 * 60 * 1000);
+    const jobColor = this.getJobColor(d.job);
 
     // === WELL BAR ===
     wellSeries.push({
@@ -717,7 +758,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       start,
       end: endForBar,  // Bar sampai akhir end date
       y,
-      color: '#B4A7D6',
+      color: jobColor,
       custom: {
         label: d.well,
         rig: d.rig,

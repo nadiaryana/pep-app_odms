@@ -1313,6 +1313,9 @@ namespace ssc.Areas.PE.Controllers
                             }
                         }
                     }
+                    //filter gas
+
+
                 }
                 catch
                 {
@@ -1334,6 +1337,9 @@ namespace ssc.Areas.PE.Controllers
                         var locations = _daily.Distinct<string>("location", xfilter)
                             .ToEnumerable().OrderBy(t => t).ToList();
                         return Ok(new { items = locations });
+                    case "gas":
+                        var gas = _daily.Distinct<decimal?>("gas", xfilter).ToEnumerable().Select(t => t * 1000).OrderBy(t => t).ToList();
+                        return Ok(new { items = gas });
                     default:
                         return Ok(new { items = new List<string>() });
                 }
@@ -1367,19 +1373,6 @@ namespace ssc.Areas.PE.Controllers
             var rawData = _daily
                 .Find(mongoFilter)
                 .SortByDescending(d => d.date)
-                .Project(d => new
-                {
-                    d.well,
-                    d.location,
-                    d.date,
-
-                    d.fig_curr_gross,
-                    d.fig_curr_net,
-                    d.wc,
-                    d.gas,
-                    d.sm,
-                    d.ds_efficiency
-                })
                 .ToList();
 
             var result = rawData

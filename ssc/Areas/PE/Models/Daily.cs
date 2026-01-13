@@ -36,6 +36,9 @@ namespace ssc.Areas.PE.Models
         public decimal? wc { get; set; }
         public decimal? prod_hours { get; set; }
         public decimal? wor { get; set; }
+
+        [BsonElement("gas")]
+        [BsonRepresentation(BsonType.String)]
         public decimal? gas { get; set; }
         public decimal? gor { get; set; }
         public decimal? glr { get; set; }
