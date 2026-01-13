@@ -58,7 +58,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   chart: any;
 
   // Array untuk menyimpan data legend rig
-  rigLegend: any[] = [];
+  jobLegend: any[] = [];
 
   // Setiap rig akan mendapat warna berbeda=
   colors = [
@@ -75,20 +75,21 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   ];
 
   jobColors: { [key: string]: string } = {
-    'workover': '#00b050',
-    'reparasi': '#ffff00',
-    'well services': '#00b0f0',
+    'workover': '#00B050',
+    'reparasi': '#76933C',
+    'well services': '#ffff00',
     'fracturing': '#00b0f0',
-    'stimulasi': '#00b0f0',
-    'reaktivasi': '#ffc000',
+    'stimulasi': '#FFFFFF',
+    'reaktivasi': '#0070C0',
 
-    'eor': '#92d050',
-    'optimasi': '#00b050',
-    'injeksi': '#0070c0',
+    'eor': '#C4BD97',
+    'optimasi': '#92D050',
+    'injeksi': '#366092',
 
-    'hoist repair': '#ff0000',
-    'hoist idle': '#b4a7d6',
-    'hoist mobilization': '#b4a7d6'
+    'hoist repair': '#FF0000',
+    'hoist idle': '#B1A0C7',
+    'hoist mobilization': '#E4DFEC',
+    'komplesi lanjutan': '#C0504D',
   };
 
 
@@ -213,20 +214,13 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
     // Jika tidak ada data, clear legend dan return
     if (!this.chartData || this.chartData.length === 0) {
-      this.rigLegend = [];
+      this.jobLegend = [];
       return;
     }
     const { wellSeries, remarkSeries, categories } = this.reformatDataGantt();
 
-    // 1. mapping warna untuk setiap Rig
-    const rigColors = {};
-    // Ambil daftar rig unik dari data
-    const uniqueRigs = [...new Set(this.chartData.map(item => item.rig || 'Unknown'))];
-    // Assign warna untuk setiap rig
-    uniqueRigs.forEach((rig, index) => {
-      // Gunakan modulo agar warna berulang jika rig > jumlah warna
-      rigColors[rig as string] = this.colors[index % this.colors.length];
-    });
+    // 1. mapping warna untuk setiap Job sudah ada di jobColors property
+    // Tidak perlu mapping ulang karena sudah didefinisikan di class property
 
     // 2. Persiapkan data series untuk chart
     const seriesData = this.chartData.map((item, index) => {
@@ -240,7 +234,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         start: startDate,                    // Tanggal mulai (timestamp)
         end: endDate,                        // Tanggal selesai (timestamp)
         y: index,                            // Posisi vertikal (baris ke-n)
-        color: rigColors[item.rig || 'Unknown'], // Warna berdasarkan rig
+        color: this.getJobColor(item.job), // Warna berdasarkan job
         
         // Data custom untuk ditampilkan di tooltip
         custom: {
@@ -515,7 +509,13 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                     }
 
                     // For wider bars allow up to 4 lines with ellipsis
-                    const maxLines = 6;
+                    const maxLines = 10;
+                    const remarks = safe.replace(/\n/g, '<br>');
+                    // if text length is more than 200 chars text allign left
+                    let textAlign = 'center';
+                    if (text.length > 200) {
+                      textAlign = 'left';
+                    }
                     return `
                       <div title="${safe}"
                       style="
@@ -523,7 +523,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                         font-size: 14px;
                         line-height: 14px;
                         color: #333;
-                        text-align: center;
+                        text-align: ${textAlign};
                         display: -webkit-box;
                         -webkit-line-clamp: ${maxLines};
                         -webkit-box-orient: vertical;
@@ -531,7 +531,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                         text-overflow: ellipsis;
                         white-space: normal;
                       ">
-                      ${safe}
+                      ${remarks}
                       </div>
                     `;
                 }
@@ -609,8 +609,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       }
     });
 
-    // 7. Buat custom legend untuk rig
-    this.createRigLegend(rigColors);
+    // 7. Buat custom legend untuk job
+    this.createJobLegend();
   }
 
   private utcToLocalMidnight(dateStr: string): number {
@@ -629,12 +629,14 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 }
 
 
-  // fungsi membuat custom legend rig
-  createRigLegend(rigColors: any) {
+  // fungsi membuat custom legend job
+  createJobLegend() {
     // Konversi object ke array untuk di-loop di template
-    this.rigLegend = Object.keys(rigColors).map(rig => ({
-      name: rig,
-      color: rigColors[rig]
+    // Build legend based on jobs (not rigs) and use jobColors to set colors per job
+    const jobs = Array.from(new Set(this.chartData.map(item => (item.job || 'Unknown').toString().trim().toLowerCase())));
+    this.jobLegend = jobs.map(jobKey => ({
+      name: jobKey,
+      color: this.getJobColor(jobKey)
     }));
   }
 

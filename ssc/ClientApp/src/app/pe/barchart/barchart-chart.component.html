@@ -29,11 +29,11 @@
   </div>
 
   <!-- Rig Legend -->
-  <div class="rig-legend" *ngIf="rigLegend.length > 0">
-    <span class="legend-title">Rig: </span>
-    <span *ngFor="let rig of rigLegend" class="legend-item">
-      <span class="legend-color" [style.background-color]="rig.color"></span>
-      {{ rig.name }}
+  <div class="rig-legend" *ngIf="jobLegend.length > 0">
+    <span class="legend-title">Job: </span>
+    <span *ngFor="let job of jobLegend" class="legend-item">
+      <span class="legend-color" [style.background-color]="job.color"></span>
+      {{ job.name }}
     </span>
   </div>
 

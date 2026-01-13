@@ -69,7 +69,7 @@
 		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
 		</ng-container> 
     <ng-container matColumnDef="yesterday">
-          <th mat-header-cell *matHeaderCellDef colspan="6">Yesterday</th>
+          <th mat-header-cell *matHeaderCellDef colspan="6">{{ start_dateInput ? (start_dateInput | date:'d MMMM y') : "Yesterday" }}</th>
     </ng-container>
     <ng-container matColumnDef="fig_curr_gross_prev">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -77,7 +77,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross Prev</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_gross_prev | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_gross_prev | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="fig_curr_net_prev">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -85,7 +85,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net Prev</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_net_prev | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_net_prev | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="wc_prev">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -93,7 +93,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC Prev</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_prev | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_prev | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="gas_prev">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -101,7 +101,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas Prev</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.gas_prev | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.gas_prev | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="ds_efficiency_prev">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -109,7 +109,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency Prev</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ds_efficiency_prev | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ds_efficiency_prev | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="sm_prev">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -117,11 +117,11 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM Prev</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm_prev | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm_prev | number : '1.2-2') || '-'}}</td>
     </ng-container>
 
     <ng-container matColumnDef="today">
-        <th mat-header-cell *matHeaderCellDef colspan="6">Today</th>
+        <th mat-header-cell *matHeaderCellDef colspan="6">{{ end_dateInput ? (end_dateInput | date:'d MMMM y') : 'Today' }}</th>
     </ng-container>
     <ng-container matColumnDef="fig_curr_gross_today">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -129,7 +129,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_gross_today | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_gross_today | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="fig_curr_net_today">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -137,7 +137,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_net_today | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_net_today | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="wc_today">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -145,7 +145,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_today | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_today | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="gas_today">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -153,7 +153,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{ gas_today | number:'1.2-2':'id-ID' }}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{ row.gas_today | number:'1.2-2':'id-ID' }}</td>
     </ng-container>
     <ng-container matColumnDef="ds_efficiency_today">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -161,7 +161,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ds_efficiency_today | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ds_efficiency_today | number : '1.2-2') || '-'}}</td>
     </ng-container>
     <ng-container matColumnDef="sm_today">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -169,7 +169,7 @@
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm_today | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm_today | number : '1.2-2') || '-'}}</td>
     </ng-container>
 
       <ng-container matColumnDef="delta">
@@ -185,7 +185,7 @@
               [class.delta-up]="row.delta_fig_curr_gross > 0"
               [class.delta-down]="row.delta_fig_curr_gross < 0"
               [class.delta-same]="row.delta_fig_curr_gross === 0" 
-              [class.clicked_row]="selection.isSelected(row) ">{{(row.delta_fig_curr_gross | number : '1.0-0') || '-'}}</td>
+              [class.clicked_row]="selection.isSelected(row) ">{{(row.delta_fig_curr_gross | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_fig_curr_net">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -194,10 +194,10 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_fig_curr_gross > 0"
-              [class.delta-down]="row.delta_fig_curr_gross < 0"
-              [class.delta-same]="row.delta_fig_curr_gross === 0"  
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_fig_curr_net | number : '1.0-0') || '-'}}</td>
+              [class.delta-up]="row.delta_fig_curr_net> 0"
+              [class.delta-down]="row.delta_fig_curr_net< 0"
+              [class.delta-same]="row.delta_fig_curr_net=== 0"  
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_fig_curr_net | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_wc">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -206,10 +206,10 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-          [class.delta-up]="row.delta_fig_curr_gross > 0"
-              [class.delta-down]="row.delta_fig_curr_gross < 0"
-              [class.delta-same]="row.delta_fig_curr_gross === 0" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_wc | number : '1.0-0') || '-'}}</td>
+          [class.delta-up]="row.delta_wc > 0"
+              [class.delta-down]="row.delta_wc < 0"
+              [class.delta-same]="row.delta_wc === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_wc | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_gas">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -218,10 +218,10 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_fig_curr_gross > 0"
-              [class.delta-down]="row.delta_fig_curr_gross < 0"
-              [class.delta-same]="row.delta_fig_curr_gross === 0" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_gas | number : '1.0-0') || '-'}}</td>
+              [class.delta-up]="row.delta_gas > 0"
+              [class.delta-down]="row.delta_gas < 0"
+              [class.delta-same]="row.delta_gas === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_gas | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_ds_efficiency">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -230,10 +230,10 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_fig_curr_gross > 0"
-              [class.delta-down]="row.delta_fig_curr_gross < 0"
-              [class.delta-same]="row.delta_fig_curr_gross === 0" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_ds_efficiency | number : '1.0-0') || '-'}}</td>
+              [class.delta-up]="row.delta_ds_efficiency > 0"
+              [class.delta-down]="row.delta_ds_efficiency < 0"
+              [class.delta-same]="row.delta_ds_efficiency === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_ds_efficiency | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_sm">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -242,10 +242,10 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_fig_curr_gross > 0"
-              [class.delta-down]="row.delta_fig_curr_gross < 0"
-              [class.delta-same]="row.delta_fig_curr_gross === 0" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_sm | number : '1.0-0') || '-'}}</td>
+              [class.delta-up]="row.delta_sm > 0"
+              [class.delta-down]="row.delta_sm < 0"
+              [class.delta-same]="row.delta_sm === 0" 
+              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_sm | number : '1.2-2') || '-'}}</td>
         </ng-container>
 
       <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>

@@ -112,6 +112,8 @@ namespace ssc.Areas.PE.Controllers
                 // Mode chart: untuk Gantt Chart dengan filter date range
                 // Mengikuti pattern DataController (well_performance_sonolog)
                 case "chart":
+                    // list template rig untuk pengurutan
+                    var templateOrderRig = new List<string> { "H-25", "L-350", "MH-262", "Rigless" };
                     var chartData = _barchart.Find(
                         r => 
                             // jika masih dialam range
@@ -131,6 +133,12 @@ namespace ssc.Areas.PE.Controllers
                         remarks = s.remarks,
                         plan_start = s.plan_start,
                         plan_end = s.plan_end
+                    });
+                    // Urutkan berdasarkan template rig
+                    chartData = chartData.OrderBy(d =>
+                    {
+                        int index = templateOrderRig.IndexOf(d.rig);
+                        return index >= 0 ? index : int.MaxValue;
                     });
                     return Ok(new { data = chartData });
 

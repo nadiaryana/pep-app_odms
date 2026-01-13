@@ -143,8 +143,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.start_dateControl.valueChanges.subscribe(() => this.loadData());
-    this.end_dateControl.valueChanges.subscribe(() => this.loadData());
+    // this.start_dateControl.valueChanges.subscribe(() => this.loadData());
+    // this.end_dateControl.valueChanges.subscribe(() => this.loadData());
 
     // this.loadData();
 	this.titleService.titleSource.next({
@@ -278,7 +278,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.end_dateControl.setValue(event.value);
     this.end_dateInput = this.formatDate(event.value);
 
-    this.loadData();
+    // this.loadData();
   }
 
   // end_dateChange(evt) {
