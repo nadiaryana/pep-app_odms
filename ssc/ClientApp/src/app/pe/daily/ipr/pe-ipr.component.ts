@@ -259,51 +259,6 @@ export class IprComponent implements OnInit {
     // this.end_dateControl.valueChanges.subscribe(() => this.refresh_IPR());
   }
 
-  // Helper to compute operating design values (pwf2 and q_design)
-  private computeOperatingDesign(bottomRaw: any, dynamic_fl_raw: any, wcAvg: any, pi: number, ps: number) {
-    const sm2_raw = this.sm2.value;
-    const kd2_raw = this.ds_kd2.value;
-
-    // Guard: require sm2 and kd2 filled
-    if (sm2_raw === null || sm2_raw === "" || kd2_raw === null || kd2_raw === "") {
-      console.log("Operating Design belum diinput → dilewati");
-      return;
-    }
-
-    const sm2 = Number(sm2_raw);
-    const ds_kd2 = Number(kd2_raw);
-
-    if (isNaN(sm2) || isNaN(ds_kd2)) {
-      console.warn("Operating Design input tidak valid");
-      return;
-    }
-
-    const dynamic_fl = Number(dynamic_fl_raw);
-    const bottom = Number(bottomRaw);
-    const wcFraction = isFinite(Number(wcAvg)) ? Number(wcAvg) / 100 : 0;
-
-    // FL_design uses dynamic fluid level plus margins
-    const FL_design = dynamic_fl + sm2 + ds_kd2;
-
-    if (!isFinite(bottom) || !isFinite(FL_design) || bottom <= FL_design) {
-      console.warn('Operating Design menghasilkan kondisi tidak valid: bottom <= FL_design');
-      this.flowing_bottomhole_pressure2.setValue('0');
-      this.q_design.setValue('0');
-      return;
-    }
-
-    const blendedGradientPsiPerFt = 0.433 * wcFraction + 0.346 * (1 - wcFraction);
-    const pwf2 = blendedGradientPsiPerFt * (bottom - FL_design) * 3.281;
-    const pwf2_safe = isFinite(pwf2) ? pwf2 : 0;
-
-    this.flowing_bottomhole_pressure2.setValue(pwf2_safe.toFixed(2));
-
-    const q_design = isFinite(pi) && isFinite(ps) ? pi * (ps - pwf2_safe) : 0;
-    this.q_design.setValue(isFinite(q_design) ? q_design.toFixed(2) : '0');
-
-    console.log(`Operating Design:\n  FL_design=${FL_design}\n  Pwf_design=${pwf2_safe}\n  q_design=${q_design}`);
-  }
-
   getColumnValues(param: any) {
     var column = param["column"];
     var filter = param["filter"];
@@ -538,6 +493,13 @@ export class IprComponent implements OnInit {
           }
           this.prod_ratio.setValue(prod_ratio);
 
+          
+
+          //Production to reservoir potential ratio
+          
+
+          
+          
 
           //ambil zona dari data
           this.zone.setValue(zone);
@@ -693,8 +655,8 @@ export class IprComponent implements OnInit {
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
     const static_fl = this.static_fluid_level.value;
-    // const sm2 = Number(this.sm2.value);
-    // const ds_kd2 = Number(this.ds_kd2.value);
+    const sm2 = this.sm2.value;
+    const ds_kd2 = this.ds_kd2.value;
     const dynamic_fl = this.dynamic_fluid_level.value;
     const factor_corr = this.factor_corr.value;
     
@@ -733,24 +695,19 @@ export class IprComponent implements OnInit {
     console.log("liquid_rate_values:", liquid_rate_values);
 
     
-    // const FL_design = dynamic_fl + sm2 + ds_kd2;
+    const FL_design = dynamic_fl + sm2 + ds_kd2;
 
     //hitung operating design
-    // if (isNaN(sm2) || isNaN(ds_kd2)) {
-    //   console.warn("sm2 atau ds_kd2 bukan angka valid");
-    // return;
-    // }
-    // const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
-    // this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
-    // const q_design = pi  * (ps - pwf2);
-    // this.q_design.setValue(q_design.toFixed(2));
+    const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+    this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
+    const q_design = pi  * (ps - pwf2);
+    this.q_design.setValue(q_design.toFixed(2));
 
 
-    // //get liquid rate 2 values (q2)
-    // console.log(`Operating Design:
-    //   Pwf_design = ${pwf2}
-    //   q_design   = ${q_design}`);
-      
+    //get liquid rate 2 values (q2)
+    console.log(`Operating Design:
+      Pwf_design = ${pwf2}
+      q_design   = ${q_design}`);
 
 
     if(this.data_pwf.length > 0 && this.data_liquid_rate.length > 0){
@@ -767,12 +724,7 @@ export class IprComponent implements OnInit {
     }
 
     this.prod_reservoir.setValue(prod_reservoir);
-
-
-    // Consolidate operating design calculation into a helper for consistency
-    this.computeOperatingDesign(bottomRaw, dynamic_fl, wcAvg, pi, ps);
-
-  }
+      }
 
   getPwf(sbhp: any, iteration = 1) {
     const pwf_values = [];
