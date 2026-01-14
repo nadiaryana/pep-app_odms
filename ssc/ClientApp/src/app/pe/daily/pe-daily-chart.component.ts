@@ -80,7 +80,7 @@ export class PeDailyChartComponent {
     }],
     yAxis: [{ // Primary yAxis
       title: {
-        text: 'Gross (bfpd), Net (bopd), Qgas (bfpd), SL (inch)',
+        text: 'Gross (bfpd), Net (bopd), Qgas (MMscfd), SL (inch)',
         style: {
           color: '#666666'
         }
@@ -128,7 +128,8 @@ export class PeDailyChartComponent {
       zIndex: 9,
       marker: {
         enabled: false
-      },tooltip: {
+      },
+      tooltip: {
         valueSuffix: ' bfpd',
         valueDecimals: 2
       }
@@ -156,7 +157,7 @@ export class PeDailyChartComponent {
       color: '#C00000',
       zIndex: 7,
       tooltip: {
-        valueSuffix: ' bfpd',
+        valueSuffix: ' MMscfd',
         valueDecimals: 2
       },
 	  visible: false

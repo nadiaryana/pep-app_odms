@@ -60,7 +60,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   // Array untuk menyimpan data legend rig
   jobLegend: any[] = [];
 
-  // Setiap rig akan mendapat warna berbeda=
+
   colors = [
     '#7cb5ec', // Biru muda
     '#434348', // Abu-abu gelap
@@ -79,8 +79,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     'reparasi': '#76933C',
     'well services': '#ffff00',
     'fracturing': '#00b0f0',
-    'stimulasi': '#FFFFFF',
-    'reaktivasi': '#0070C0',
+    'stimulasi': '#1C4D8D',
+    'reaktivasi': '#f7a35c',
 
     'eor': '#C4BD97',
     'optimasi': '#92D050',

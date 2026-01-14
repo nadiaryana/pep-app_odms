@@ -493,13 +493,6 @@ export class IprComponent implements OnInit {
           }
           this.prod_ratio.setValue(prod_ratio);
 
-          
-
-          //Production to reservoir potential ratio
-          
-
-          
-          
 
           //ambil zona dari data
           this.zone.setValue(zone);
@@ -655,8 +648,8 @@ export class IprComponent implements OnInit {
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
     const static_fl = this.static_fluid_level.value;
-    const sm2 = this.sm2.value;
-    const ds_kd2 = this.ds_kd2.value;
+    // const sm2 = Number(this.sm2.value);
+    // const ds_kd2 = Number(this.ds_kd2.value);
     const dynamic_fl = this.dynamic_fluid_level.value;
     const factor_corr = this.factor_corr.value;
     
@@ -695,19 +688,24 @@ export class IprComponent implements OnInit {
     console.log("liquid_rate_values:", liquid_rate_values);
 
     
-    const FL_design = dynamic_fl + sm2 + ds_kd2;
+    // const FL_design = dynamic_fl + sm2 + ds_kd2;
 
     //hitung operating design
-    const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
-    this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
-    const q_design = pi  * (ps - pwf2);
-    this.q_design.setValue(q_design.toFixed(2));
+    // if (isNaN(sm2) || isNaN(ds_kd2)) {
+    //   console.warn("sm2 atau ds_kd2 bukan angka valid");
+    // return;
+    // }
+    // const pwf2 = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+    // this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
+    // const q_design = pi  * (ps - pwf2);
+    // this.q_design.setValue(q_design.toFixed(2));
 
 
-    //get liquid rate 2 values (q2)
-    console.log(`Operating Design:
-      Pwf_design = ${pwf2}
-      q_design   = ${q_design}`);
+    // //get liquid rate 2 values (q2)
+    // console.log(`Operating Design:
+    //   Pwf_design = ${pwf2}
+    //   q_design   = ${q_design}`);
+      
 
 
     if(this.data_pwf.length > 0 && this.data_liquid_rate.length > 0){
@@ -724,7 +722,50 @@ export class IprComponent implements OnInit {
     }
 
     this.prod_reservoir.setValue(prod_reservoir);
-      }
+
+
+    // ===============================
+    // OPERATING DESIGN (GUARD)
+    // ===============================
+    const sm2_raw = this.sm2.value;
+    const kd2_raw = this.ds_kd2.value;
+
+    // 🔒 STOP jika belum diisi
+    if (
+      sm2_raw === null || sm2_raw === "" ||
+      kd2_raw === null || kd2_raw === ""
+    ) {
+      console.log("Operating Design belum diinput → dilewati");
+      return;
+    }
+
+    const sm2 = Number(sm2_raw);
+    const ds_kd2 = Number(kd2_raw);
+
+    // safety check
+    if (isNaN(sm2) || isNaN(ds_kd2)) {
+      console.warn("Operating Design input tidak valid");
+      return;
+    }
+
+    // ===============================
+    // HITUNG OPERATING DESIGN
+    // ===============================
+    const pwf2 =
+      (0.433 * wcAvg / 100 + 0.346 * (1 - wcAvg / 100)) *
+      (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+
+    this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
+
+    const q_design = pi * (ps - pwf2);
+    this.q_design.setValue(q_design.toFixed(2));
+
+    console.log(`Operating Design:
+      Pwf_design = ${pwf2}
+      q_design   = ${q_design}`);
+
+    
+  }
 
   getPwf(sbhp: any, iteration = 1) {
     const pwf_values = [];

@@ -182,9 +182,6 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right"
-              [class.delta-up]="row.delta_fig_curr_gross > 0"
-              [class.delta-down]="row.delta_fig_curr_gross < 0"
-              [class.delta-same]="row.delta_fig_curr_gross === 0" 
               [class.clicked_row]="selection.isSelected(row) ">{{(row.delta_fig_curr_gross | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_fig_curr_net">
@@ -206,9 +203,6 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-          [class.delta-up]="row.delta_wc > 0"
-              [class.delta-down]="row.delta_wc < 0"
-              [class.delta-same]="row.delta_wc === 0" 
               [class.clicked_row]="selection.isSelected(row)">{{(row.delta_wc | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_gas">
@@ -218,9 +212,6 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_gas > 0"
-              [class.delta-down]="row.delta_gas < 0"
-              [class.delta-same]="row.delta_gas === 0" 
               [class.clicked_row]="selection.isSelected(row)">{{(row.delta_gas | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_ds_efficiency">
@@ -230,9 +221,6 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_ds_efficiency > 0"
-              [class.delta-down]="row.delta_ds_efficiency < 0"
-              [class.delta-same]="row.delta_ds_efficiency === 0" 
               [class.clicked_row]="selection.isSelected(row)">{{(row.delta_ds_efficiency | number : '1.2-2') || '-'}}</td>
         </ng-container>
       <ng-container matColumnDef="delta_sm">
@@ -242,9 +230,6 @@
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_sm > 0"
-              [class.delta-down]="row.delta_sm < 0"
-              [class.delta-same]="row.delta_sm === 0" 
               [class.clicked_row]="selection.isSelected(row)">{{(row.delta_sm | number : '1.2-2') || '-'}}</td>
         </ng-container>
 
