@@ -279,7 +279,9 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         },
         style: {
           fontFamily: 'Roboto, "Helvetica Neue", sans-serif'
-        }
+        },
+        spacingTop: 0,
+        // marginTop: 90
       },
       
       // Judul chart
@@ -295,10 +297,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       xAxis: [
         { // tanggal perhari
           type: 'datetime',
+          top: 150,
 
           tickInterval: 24 * 3600 * 1000, // 1 hari = 1 kolom
 
           labels: {
+            y: -2,
             style: {
               fontSize: '11px'
             },
@@ -321,6 +325,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         { // label format bulan & tahun
           type: 'datetime',
           linkedTo: 0,
+          top: 145,
 
           tickInterval: 30 * 24 * 3600 * 1000, // kira-kira per bulan
           labels: {
@@ -341,6 +346,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       
       // Konfigurasi sumbu Y (kategori well)
       yAxis: {
+        top: 70,
         type: 'category',
         categories: categories,
         grid: {
@@ -350,7 +356,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             },
             categories: categories
           }],
-          cellHeight: 100  
+          cellHeight: 90  
         }
       },
       
@@ -408,7 +414,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               pointPadding: 0,
               groupPadding: 0,
               pointWidth: 28,             // Ukuran bar well (lebih kecil)
-              pointPlacement: -0.22,      // Posisi bar di atas
+              pointPlacement: -0.15,      // Posisi bar di atas
               borderRadius: 4,
 
               dataLabels: {
@@ -566,9 +572,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         enabled: true
       },
 
-      // Range selector (optional - bisa pilih range cepat)
+      // Range selector 
       rangeSelector: {
         enabled: true,
+        floating: true,
+        
+        verticalAlign: 'top',
         selected: 0,
         buttons: [{
           type: 'month',
