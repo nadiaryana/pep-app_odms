@@ -77,7 +77,13 @@ export class PePermissionService {
 
 	// new Menu("one-slide", true, null, ["PeOneSlide Read"]),
 
-
+	new Menu("lab", true,null, ["PeLab Read"]),
+	new Menu("lab/list", true,null, ["PeLab Read"]),
+	new Menu("lab/reports", true,null, ["PeLab Read"]),
+	new Menu("lab/add", true,null, ["PeLab Add"]),
+	new Menu("lab/edit", true, /[a-z]/i, ["PeLab Edit"]),
+	new Menu("lab/delete", true,null, ["PeLab Delete"]),
+	new Menu("lab/chart", true,null, ["PeLab Read"]),
 
 	];
 	
