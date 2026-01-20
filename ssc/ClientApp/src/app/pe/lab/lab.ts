@@ -1,4 +1,4 @@
-export class Bhp {
+export class Lab {
 	constructor(
 		public id: string,
 		public type: string,

@@ -14,6 +14,7 @@ import { PeDashboardComponent } from './pe/dashboard/pe-dashboard.component';
 import { HighchartsChartModule } from 'highcharts-angular';
 import { SumurComponent } from './pe/sumur/pe-sumur.component';
 import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
+import { PeLabComponent } from './pe/lab/pe-lab.component';
 // import { PeSumurCurrentComponent } from './pe/current/pe-sumur-current.component';
 
 const appRoutes: Routes = [
@@ -29,6 +30,7 @@ const appRoutes: Routes = [
 { path: '', redirectTo: 'pe/dashboard', pathMatch: 'full' },
 { path: 'pe/sumur', component: SumurComponent },
 { path: 'pe/grafik', component: PeGrafikComponent },
+
 // { path: 'pe/grafik', component: PeSumurCurrentComponent },
 
 

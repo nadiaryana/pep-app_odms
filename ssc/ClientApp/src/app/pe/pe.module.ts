@@ -75,6 +75,10 @@ import { BarchartComponent } from './barchart/barchart.component';
 import { BarchartListComponent, BarchartDeleteDialogComponent } from './barchart/barchart-list.component';
 import { BarchartAddComponent } from './barchart/barchart-add.component';
 import { BarchartChartComponent } from './barchart/barchart-chart.component';
+import { PeLabAddComponent } from './lab/pe-lab-add.component';
+import { PeLabDeleteDialogComponent, PeLabListComponent } from './lab/pe-lab-list.component';
+import { PeLabChartComponent } from './lab/pe-lab-chart.component';
+import { PeLabComponent } from './lab/pe-lab.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -138,6 +142,12 @@ import { BarchartChartComponent } from './barchart/barchart-chart.component';
   BarchartDeleteDialogComponent,
   BarchartAddComponent,
   BarchartChartComponent,
+
+  PeLabComponent,
+  PeLabAddComponent,
+  PeLabListComponent,
+  PeLabDeleteDialogComponent,
+  PeLabChartComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -195,10 +205,10 @@ export class PeModule {
             new PanelSubItem("Sonolog", "pe/sonolog", "graphic_eq", this.pePermission.passPermission("pe/sonolog")),
             //new PanelSubItem("Sonolog Add", "pe/sonolog/add", "playlist_add", this.pePermission.passPermission("pe/sonolog/add")),
 			      new PanelSubItem("BHP", "pe/bhp", "sensors", this.pePermission.passPermission("pe/bhp")),
-            new PanelSubItem("IPR", "pe/ipr", "show_chart"),
+            new PanelSubItem("IPR", "pe/ipr", "data_thresholding"),
             new PanelSubItem("One Slide", "pe/one-slide", "camera"),
             new PanelSubItem("Chan Plot", "pe/chan-plot", "scatter_plot"),
-            new PanelSubItem("Aggregate", "pe/aggregate", "trending_up"),
+            new PanelSubItem("Aggregate", "pe/aggregate", "change_history"),
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
@@ -207,7 +217,13 @@ export class PeModule {
           new PanelSubItem("Daily Current", "pe/current", "table_chart"),
         ]),
         new PanelItem("Diagnostic Chart", "pe/grafik", "assessment", this.pePermission.passPermission("pe/grafik")),
-        
+        new PanelItem("Laboratorium", "", "science", this.pePermission.passPermission("pe/dasboard"), true, [
+            // new PanelSubItem("Analysis", "pe/lab", "analytics", this.pePermission.passPermission("pe/lab")),
+            new PanelSubItem("Report", "pe/lab", "summarize", this.pePermission.passPermission("pe/lab")),
+            // new PanelSubItem("Measurement Result", "pe/lab", "data_exploration", this.pePermission.passPermission("pe/lab")),
+            // new PanelSubItem("Performance & Inventory", "pe/lab", "trending_up", this.pePermission.passPermission("pe/lab")),
+
+          ]),
       
         ]));
     });

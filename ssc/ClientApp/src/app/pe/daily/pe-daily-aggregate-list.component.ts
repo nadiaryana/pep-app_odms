@@ -149,7 +149,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     // this.loadData();
 	this.titleService.titleSource.next({
       title: "Aggregate",
-      icon: "trending_up",
+      icon: "change_history",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
         { label: 'Daily Aggregate', routerLink: '' }

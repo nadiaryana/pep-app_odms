@@ -180,7 +180,7 @@ export class IprComponent implements OnInit {
 
     this.titleService.titleSource.next({
       title: "IPR",
-      icon: "show_chart",
+      icon: "data_thresholding",
       breadcrumbs: [
         { label: "Petroleum Engineering", routerLink: "" },
         { label: "IPR", routerLink: "pe/ipr" },

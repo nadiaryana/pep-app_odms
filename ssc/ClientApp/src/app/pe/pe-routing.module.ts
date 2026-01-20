@@ -63,6 +63,11 @@ import { BarchartListComponent } from './barchart/barchart-list.component';
 import { BarchartAddComponent } from './barchart/barchart-add.component';
 import { BarchartChartComponent } from './barchart/barchart-chart.component';
 
+import { PeLabComponent } from './lab/pe-lab.component';
+import { PeLabListComponent } from './lab/pe-lab-list.component';
+import { PeLabAddComponent } from './lab/pe-lab-add.component';
+import { PeLabChartComponent } from './lab/pe-lab-chart.component';
+
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
     { path: 'dashboard', component: PeDashboardComponent, canActivate: [PePermissionGuard] },
@@ -119,6 +124,14 @@ const peRoutes: Routes = [
       { path: 'chart', component: BarchartChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
+    { path: 'lab', component: PeLabComponent, children: [
+      { path: 'list', component: PeLabListComponent, canActivate: [PePermissionGuard] },
+      { path: 'reports', component: PeLabComponent},
+      { path: 'add', component: PeLabAddComponent, canActivate: [PePermissionGuard] },
+      { path: 'chart', component: PeLabChartComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full" },
+    ]},
+
 
   ]},
 ]; 
