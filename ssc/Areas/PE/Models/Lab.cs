@@ -10,18 +10,20 @@ namespace ssc.Areas.PE.Models
     public class Lab
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public string _id { get; set; }
-        public DateTime? date { get; set; }
-        public string well { get; set; }
-        public string compl_layer { get; set; }
-        public string[] layer_name { get; set; }
-        public decimal[][] perfo_interval { get; set; }
-        public string meas_type { get; set; }
-        public string meas_depth { get; set; }
-        public decimal? pmax { get; set; }
-        public decimal? tmax { get; set; }
-        public string noted { get; set; }
+        public decimal? nomor { get; set; }
+        public string nama_alat { get; set; }
+        public string spesifikasi { get; set; }
+        public string satuan { get; set; }
+        public string kegunaan { get; set; }
+        public decimal? baru { get; set; }
+        public decimal? lama { get; set; }
+        public decimal? rusak { get; set; }
+        public decimal? stok_awal { get; set; }
+        public decimal? barang_masuk { get; set; }
+        public decimal? barang_keluar { get; set; }
+        public decimal? stok_akhir { get; set; }
+        public string keterangan { get; set; }
         public string created_by { get; set; }
         public DateTime? created_date { get; set; }
         public string updated_by { get; set; }
@@ -32,33 +34,39 @@ namespace ssc.Areas.PE.Models
     public class LabError
     {
         public ErrorItem _row { get; set; }
-        public ErrorItem date { get; set; }
-        public ErrorItem well { get; set; }
-        public ErrorItem compl_layer { get; set; }
-        public ErrorItem layer_name { get; set; }
-        public ErrorItem perfo_interval { get; set; }
-        public ErrorItem meas_type { get; set; }
-        public ErrorItem meas_depth { get; set; }
-        public ErrorItem pmax { get; set; }
-        public ErrorItem tmax { get; set; }
-        public ErrorItem noted { get; set; }
+        public ErrorItem _id { get; set; }
+        public ErrorItem nomor { get; set; }
+        public ErrorItem nama_alat { get; set; }
+        public ErrorItem spesifikasi { get; set; }
+        public ErrorItem satuan { get; set; }
+        public ErrorItem kegunaan { get; set; }
+        public ErrorItem baru { get; set; }
+        public ErrorItem lama { get; set; }
+        public ErrorItem rusak { get; set; }
+        public ErrorItem stok_awal { get; set; }
+        public ErrorItem barang_masuk { get; set; }
+        public ErrorItem barang_keluar { get; set; }
+        public ErrorItem stok_akhir { get; set; }
+        public ErrorItem keterangan { get; set; }
     }
 
     public class LabList
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
+
         public Object[] _id { get; set; }
-        public Object[] date { get; set; }
-        public Object[] well { get; set; }
-        public Object[] compl_layer { get; set; }
-        public Object[] layer_name { get; set; }
-        public Object[] perfo_interval { get; set; }
-        public Object[] meas_type { get; set; }
-        public Object[] meas_depth { get; set; }
-        public Object[] pmax { get; set; }
-        public Object[] tmax { get; set; }
-        public Object[] noted { get; set; }
+        public Object[] nomor { get; set; }
+        public Object[] nama_alat { get; set; }
+        public Object[] spesifikasi { get; set; }
+        public Object[] satuan { get; set; }
+        public Object[] kegunaan { get; set; }
+        public Object[] baru { get; set; }
+        public Object[] lama { get; set; }
+        public Object[] rusak { get; set; }
+        public Object[] stok_awal { get; set; }
+        public Object[] barang_masuk { get; set; }
+        public Object[] barang_keluar { get; set; }
+        public Object[] stok_akhir { get; set; }
+        public Object[] keterangan { get; set; }
     }
 
     public class LabTmp

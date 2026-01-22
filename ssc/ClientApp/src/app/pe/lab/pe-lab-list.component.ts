@@ -50,20 +50,22 @@ export class PeLabListComponent implements OnInit {
   idFilter = new FormControl('');
   nama_alatFilter = new FormControl('');
   spesifikasiFilter = new FormControl('');
+  satuanFilter = new FormControl('');
   kegunaanFilter = new FormControl('');
   baruFilter = new FormControl('');
   lamaFilter = new FormControl('');
   rusakFilter = new FormControl('');
   stok_awalFilter = new FormControl('');
-  stok_akhirFilter = new FormControl('');
   barang_masukFilter = new FormControl('');
   barang_keluarFilter = new FormControl('');
+  stok_akhirFilter = new FormControl('');
   keteranganFilter = new FormControl('');
 
   nomor_xSelected = [];
   id_xSelected = [];
   nama_alat_xSelected = [];
   spesifikasi_xSelected = [];
+  satuan_xSelected = [];
   kegunaan_xSelected = [];
   baru_xSelected = [];
   lama_xSelected = [];
@@ -95,11 +97,11 @@ export class PeLabListComponent implements OnInit {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Lab",
-      icon: "sensors",
+      title: "Laboratorium Asset",
+      icon: "summarize",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
-        {label: 'BHP', routerLink: ''}
+        {label: 'Lab', routerLink: ''}
       ]}
     );
 
@@ -137,8 +139,9 @@ export class PeLabListComponent implements OnInit {
       this.nomorFilter.valueChanges.pipe(debounceTime(300)),
       this.idFilter.valueChanges.pipe(debounceTime(300)),
       this.nama_alatFilter.valueChanges.pipe(debounceTime(300)),
-      this.kegunaanFilter.valueChanges.pipe(debounceTime(300)),
       this.spesifikasiFilter.valueChanges.pipe(debounceTime(300)),
+      this.satuanFilter.valueChanges.pipe(debounceTime(300)),
+      this.kegunaanFilter.valueChanges.pipe(debounceTime(300)),
       this.baruFilter.valueChanges.pipe(debounceTime(300)),
       this.lamaFilter.valueChanges.pipe(debounceTime(300)),
       this.rusakFilter.valueChanges.pipe(debounceTime(300)),
@@ -280,6 +283,7 @@ export class PeLabListComponent implements OnInit {
     if(this.id_xSelected.length) columnfilter["id"] = this.id_xSelected;//.map(s => "^"+s+"$");
     if(this.nama_alat_xSelected.length) columnfilter["nama_alat"] = this.nama_alat_xSelected;
     if(this.spesifikasi_xSelected.length) columnfilter["spesifikasi"] = this.spesifikasi_xSelected;
+    if(this.satuan_xSelected.length) columnfilter["satuan"] = this.satuan_xSelected;
     if(this.kegunaan_xSelected.length) columnfilter["kegunaan"] = this.kegunaan_xSelected;
     if(this.baru_xSelected.length) columnfilter["baru"] = this.baru_xSelected;
     if(this.lama_xSelected.length) columnfilter["lama"] = this.lama_xSelected;

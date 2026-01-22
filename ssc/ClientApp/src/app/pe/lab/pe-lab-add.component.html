@@ -49,53 +49,66 @@
 				      <th mat-header-cell *matHeaderCellDef></th>
 				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-warning':row._error._row?.value=='warning','cell-error':row._error._row?.value=='error'}" [matTooltip]="row._error._row?.message" matTooltipPosition="after"><mat-icon>{{row._error._row?.value}}</mat-icon></td>
 				    </ng-container>
-				    
-				    <ng-container matColumnDef="date">
-				      <th mat-header-cell *matHeaderCellDef>Date</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date?.value}" [matTooltip]="row._error.date?.message" matTooltipPosition="after">{{(row.date | date: 'dd MMM y') || row._error.date?.value || '-'}}</td>
+
+					<ng-container matColumnDef="nomor">
+						<th mat-header-cell *matHeaderCellDef>No</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.nomor?.value}" [matTooltip]="row._error.nomor?.message" matTooltipPosition="after">{{(row.nomor | number) || row._error.nomor?.value || '-'}}</td>
+					</ng-container>
+
+				    <ng-container matColumnDef="id">
+				      <th mat-header-cell *matHeaderCellDef>ID</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.id?.value}" [matTooltip]="row._error.id?.message" matTooltipPosition="after">{{row.id || row._error.id?.value || '-'}}</td>
 				    </ng-container>
 
-				    <ng-container matColumnDef="well">
-				      <th mat-header-cell *matHeaderCellDef>Well</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.well?.value}" [matTooltip]="row._error.well?.message" matTooltipPosition="after">{{row.well || row._error.well?.value || '-'}}</td>
+				    <ng-container matColumnDef="nama_alat">
+				      <th mat-header-cell *matHeaderCellDef>Nama Alat</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.nama_alat?.value}" [matTooltip]="row._error.nama_alat?.message" matTooltipPosition="after">{{row.nama_alat || row._error.nama_alat?.value || '-'}}</td>
 				    </ng-container>
 
-					<ng-container matColumnDef="compl_layer">
-						<th mat-header-cell *matHeaderCellDef>Compl Layer</th>
-						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.compl_layer?.value}" [matTooltip]="row._error.compl_layer?.message" matTooltipPosition="after">{{row.compl_layer || row._error.compl_layer?.value || '-'}}</td>
+					<ng-container matColumnDef="spesifikasi">
+						<th mat-header-cell *matHeaderCellDef>Spesifikasi</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.spesifikasi?.value}" [matTooltip]="row._error.spesifikasi?.message" matTooltipPosition="after">{{row.spesifikasi || row._error.spesifikasi?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="satuan">
+						<th mat-header-cell *matHeaderCellDef>Satuan</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.satuan?.value}" [matTooltip]="row._error.satuan?.message" matTooltipPosition="after">{{row.satuan || row._error.satuan?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="kegunaan">
+						<th mat-header-cell *matHeaderCellDef>Kegunaan</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.kegunaan?.value}" [matTooltip]="row._error.kegunaan?.message" matTooltipPosition="after">{{row.kegunaan || row._error.kegunaan?.value || '-'}}</td>
 					</ng-container>
 
-					<ng-container matColumnDef="layer_name">
-						<th mat-header-cell *matHeaderCellDef>Layer Name</th>
-						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.layer_name?.value}" [matTooltip]="row._error.layer_name?.message" matTooltipPosition="after">
-						{{row.layer_name? row.layer_name.join(", ") : (row._error.zone?.value || '-')}}
-						</td>
+					<ng-container matColumnDef="baru">
+						<th mat-header-cell *matHeaderCellDef>Baru</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.baru?.value}" [matTooltip]="row._error.baru?.message" matTooltipPosition="after">{{(row.baru | number) || row._error.baru?.value || '-'}}</td>
 					</ng-container>
-					<ng-container matColumnDef="perfo_interval">
-						<th mat-header-cell *matHeaderCellDef>Perforation Interval</th>
-						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.perfo_interval?.value}" [matTooltip]="row._error.perfo_interval?.message" matTooltipPosition="after">{{row.perfo_interval? formatInterval(row.perfo_interval) : (row._error.perfo_interval?.value || '-')}}</td>
+					<ng-container matColumnDef="lama">
+						<th mat-header-cell *matHeaderCellDef>Lama</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.lama?.value}" [matTooltip]="row._error.lama?.message" matTooltipPosition="after">{{(row.lama | number) || row._error.lama?.value || '-'}}</td>
 					</ng-container>
-
-					<ng-container matColumnDef="meas_type">
-						<th mat-header-cell *matHeaderCellDef>Meas Type</th>
-						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.meas_type?.value}" [matTooltip]="row._error.meas_type?.message" matTooltipPosition="after">{{row.meas_type || row._error.meas_type?.value || '-'}}</td>
+					<ng-container matColumnDef="rusak">
+						<th mat-header-cell *matHeaderCellDef>Rusak</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.rusak?.value}" [matTooltip]="row._error.rusak?.message" matTooltipPosition="after">{{(row.rusak | number) || row._error.rusak?.value || '-'}}</td>
 					</ng-container>
-
-					<ng-container matColumnDef="meas_depth">
-						<th mat-header-cell *matHeaderCellDef>Meas Depth</th>
-						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.meas_depth?.value}" [matTooltip]="row._error.meas_depth?.message" matTooltipPosition="after">{{row.meas_depth  || row._error.meas_depth?.value || '-'}}</td>
+					<ng-container matColumnDef="stok_awal">
+						<th mat-header-cell *matHeaderCellDef>Stok Awal</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.stok_awal?.value}" [matTooltip]="row._error.stok_awal?.message" matTooltipPosition="after">{{(row.stok_awal | number) || row._error.stok_awal?.value || '-'}}</td>
 					</ng-container>
-					<ng-container matColumnDef="pmax">
-						<th mat-header-cell *matHeaderCellDef>Pmax</th>
-						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.pmax?.value}" [matTooltip]="row._error.pmax?.message" matTooltipPosition="after">{{(row.pmax | number) || row._error.pmax?.value || '-'}}</td>
+					<ng-container matColumnDef="barang_masuk">
+						<th mat-header-cell *matHeaderCellDef>Barang Masuk</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.barang_masuk?.value}" [matTooltip]="row._error.barang_masuk?.message" matTooltipPosition="after">{{(row.barang_masuk | number) || row._error.barang_masuk?.value || '-'}}</td>
 					</ng-container>
-					<ng-container matColumnDef="tmax">
-						<th mat-header-cell *matHeaderCellDef>Tmax</th>
-						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.tmax?.value}" [matTooltip]="row._error.tmax?.message" matTooltipPosition="after">{{(row.tmax | number) || row._error.tmax?.value || '-'}}</td>
+					<ng-container matColumnDef="barang_keluar">
+						<th mat-header-cell *matHeaderCellDef>Barang Keluar</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.barang_keluar?.value}" [matTooltip]="row._error.barang_keluar?.message" matTooltipPosition="after">{{(row.barang_keluar | number) || row._error.barang_keluar?.value || '-'}}</td>
 					</ng-container>
-					<ng-container matColumnDef="noted">
-						<th mat-header-cell *matHeaderCellDef rowspan="3">Remarks</th>
-						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.noted?.value}" [matTooltip]="row._error.noted?.message" matTooltipPosition="after">{{row.noted || row._error.noted?.value || '-'}}</td>
+					<ng-container matColumnDef="stok_akhir">
+						<th mat-header-cell *matHeaderCellDef>Stok Akhir</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.stok_akhir?.value}" [matTooltip]="row._error.stok_akhir?.message" matTooltipPosition="after">{{(row.stok_akhir | number) || row._error.stok_akhir?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="keterangan">
+						<th mat-header-cell *matHeaderCellDef rowspan="3">Keterangan</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.keterangan?.value}" [matTooltip]="row._error.keterangan?.message" matTooltipPosition="after">{{row.keterangan || row._error.keterangan?.value || '-'}}</td>
 					</ng-container>
 
 				    <ng-container matColumnDef="Actions">

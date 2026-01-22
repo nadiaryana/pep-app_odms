@@ -36,21 +36,25 @@ namespace ssc.Areas.PE.Controllers
             _lab = database.GetCollection<Lab>("lab");
             _lab_tmp = database.GetCollection<LabTmp>("lab_tmp");
             _fields = Builders<Lab>.Projection
-                .Include(t => t.date)
-                .Include(t => t.well)
-                .Include(t => t.compl_layer)
-                .Include(t => t.layer_name)
-                .Include(t => t.perfo_interval)
-                .Include(t => t.meas_type)
-                .Include(t => t.meas_depth)
-                .Include(t => t.pmax)
-                .Include(t => t.tmax)
-                .Include(t => t.noted);
+                .Include(t => t.nomor)
+                .Include(t => t._id)
+                .Include(t => t.nama_alat)
+                .Include(t => t.spesifikasi)
+                .Include(t => t.satuan)
+                .Include(t => t.kegunaan)
+                .Include(t => t.baru)
+                .Include(t => t.lama)
+                .Include(t => t.rusak)
+                .Include(t => t.stok_awal)
+                .Include(t => t.barang_masuk)
+                .Include(t => t.barang_keluar)
+                .Include(t => t.stok_akhir)
+                .Include(t => t.keterangan);
         }
 
         [Authorize("PeLab Read")]
         [HttpGet]
-        public ActionResult Get(String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
+        public ActionResult Get(String sort = "nomor", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
         {
 
             //var _items = _tickets.Find(t => true);
@@ -61,16 +65,20 @@ namespace ssc.Areas.PE.Controllers
             {
                 filter = filter.ToLower();
                 xfilter =
-                    Builders<Lab>.Filter.Regex(t => t.date, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.well, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.compl_layer, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.layer_name, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.perfo_interval, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.meas_type, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.meas_depth, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.pmax, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.tmax, new BsonRegularExpression(filter, "i")) |
-                    Builders<Lab>.Filter.Regex(t => t.noted, new BsonRegularExpression(filter, "i"));
+                    Builders<Lab>.Filter.Regex(t => t.nomor, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t._id, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.nama_alat, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.spesifikasi, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.satuan, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.kegunaan, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.baru, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.lama, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.rusak, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.barang_masuk, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.stok_awal, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.stok_akhir, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.barang_keluar, new BsonRegularExpression(filter, "i")) |
+                    Builders<Lab>.Filter.Regex(t => t.keterangan, new BsonRegularExpression(filter, "i"));
             }
 
             if (!String.IsNullOrWhiteSpace(columnfilter))
@@ -78,32 +86,41 @@ namespace ssc.Areas.PE.Controllers
                 xcolfilter = Builders<Lab>.Filter.Ne("a", "b");
                 LabList colfilter = JsonConvert.DeserializeObject<LabList>(columnfilter);
 
-                if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Lab>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
-                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.compl_layer?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.compl_layer.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.compl_layer, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.layer_name?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.layer_name.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.layer_name, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.nomor?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.nomor.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.nomor, new BsonRegularExpression((string)c, "i"))));
+                // if (colfilter._id?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter._id.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t._id, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter._id?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter._id.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t._id, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.nama_alat?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.nama_alat.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.nama_alat, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.spesifikasi?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.spesifikasi.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.spesifikasi, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.satuan?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.satuan.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.satuan, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.kegunaan?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.satuan.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.satuan, new BsonRegularExpression((string)c, "i"))));
 
+                if (colfilter.baru?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.baru.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.baru, Convert.ToDecimal(c))));
+                if (colfilter.lama?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.lama.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.lama, Convert.ToDecimal(c))));
+                if (colfilter.rusak?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.rusak.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.rusak, Convert.ToDecimal(c))));
+                if (colfilter.stok_awal?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.stok_awal.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.stok_awal, Convert.ToDecimal(c))));
+                if (colfilter.barang_masuk?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.barang_masuk.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.barang_masuk, Convert.ToDecimal(c))));
+                if (colfilter.barang_keluar?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.barang_keluar.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.barang_keluar, Convert.ToDecimal(c))));
+                if (colfilter.stok_akhir?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.stok_akhir.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.stok_akhir, Convert.ToDecimal(c))));
 
-                if (colfilter.perfo_interval?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.perfo_interval.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq("perfo_interval", ((string)c).Split(",").Select(i => i.Split("-")).ToArray())));
-                if (colfilter.meas_type?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.meas_type.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.meas_type, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.meas_depth?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.meas_depth.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Regex(t => t.meas_depth, new BsonRegularExpression((string)c, "i"))));
-
-                if (colfilter.pmax?.Length > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.pmax.ToList().Select(c => Builders<Lab>.Filter.Regex(t => t.pmax, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.tmax?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Lab>.Filter.Or(colfilter.tmax.ToList().Where(c => !(c is JObject)).Select(c => Builders<Lab>.Filter.Eq(t => t.tmax, Convert.ToDecimal(c))));
 
                 foreach (string log in DailyCommon._logical)
                 {
-                    if (colfilter.date?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
-                    if (colfilter.well?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.well.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$well\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.compl_layer?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.compl_layer.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$compl_layer\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.layer_name?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.layer_name.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$in:[true,{{$map:{{input:\"$layer_name\",in:{{$regexMatch:{{input:{{$toString:\"$$this\"}},regex:\"{0}\",options:\"i\"}}}}}}}}]}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.perfo_interval?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.perfo_interval.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$perfo_interval\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.meas_type?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.meas_type.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$meas_type\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.meas_depth?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.meas_type.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$meas_depth\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.nomor?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.nomor.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$nomor\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    // if (colfilter._id?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter._id.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$_id\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter._id?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter._id.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$_id\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.nama_alat?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.nama_alat.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$nama_alat\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.spesifikasi?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.spesifikasi.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$spesifikasi\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.satuan?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.satuan.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$satuan\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.kegunaan?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.kegunaan.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$kegunaan\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     // if (colfilter.meas_depth?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.meas_depth.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$meas_depth\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.pmax?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pmax.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pmax\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.tmax?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.tmax.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$tmax\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.noted?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.noted.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$noted\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.baru?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.baru.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$baru\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.lama?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.lama.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$lama\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.rusak?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.rusak.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$rusak\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.stok_awal?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.stok_awal.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$stok_awal\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.barang_masuk?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.barang_masuk.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$barang_masuk\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.barang_keluar?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.barang_keluar.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$barang_keluar\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.stok_akhir?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.stok_akhir.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$stok_akhir\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.keterangan?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.keterangan.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$keterangan\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                 }
 
                 xfilter = xfilter & xcolfilter;
@@ -114,16 +131,20 @@ namespace ssc.Areas.PE.Controllers
 
             switch (sort)
             {
-                case "date": _items = (order == "asc") ? _items.SortBy(t => t.date) : _items.SortByDescending(t => t.date); break;
-                case "well": _items = (order == "asc") ? _items.SortBy(t => t.well) : _items.SortByDescending(t => t.well); break;
-                case "compl_layer": _items = (order == "asc") ? _items.SortBy(t => t.compl_layer) : _items.SortByDescending(t => t.compl_layer); break;
-                case "layer_name": _items = (order == "asc") ? _items.SortBy(t => t.layer_name) : _items.SortByDescending(t => t.layer_name); break;
-                case "perfo_interval": _items = (order == "asc") ? _items.SortBy(t => t.perfo_interval) : _items.SortByDescending(t => t.perfo_interval); break;
-                case "meas_type": _items = (order == "asc") ? _items.SortBy(t => t.meas_type) : _items.SortByDescending(t => t.meas_type); break;
-                case "meas_depth": _items = (order == "asc") ? _items.SortBy(t => t.meas_depth) : _items.SortByDescending(t => t.meas_depth); break;
-                case "pmax": _items = (order == "asc") ? _items.SortBy(t => t.pmax) : _items.SortByDescending(t => t.pmax); break;
-                case "tmax": _items = (order == "asc") ? _items.SortBy(t => t.tmax) : _items.SortByDescending(t => t.tmax); break;
-                case "noted": _items = (order == "asc") ? _items.SortBy(t => t.noted) : _items.SortByDescending(t => t.noted); break;
+                case "nomor": _items = (order == "asc") ? _items.SortBy(t => t.nomor) : _items.SortByDescending(t => t.nomor); break;
+                case "_id": _items = (order == "asc") ? _items.SortBy(t => t._id) : _items.SortByDescending(t => t._id); break;
+                case "nama_alat": _items = (order == "asc") ? _items.SortBy(t => t.nama_alat) : _items.SortByDescending(t => t.nama_alat); break;
+                case "spesifikasi": _items = (order == "asc") ? _items.SortBy(t => t.spesifikasi) : _items.SortByDescending(t => t.spesifikasi); break;
+                case "satuan": _items = (order == "asc") ? _items.SortBy(t => t.satuan) : _items.SortByDescending(t => t.satuan); break;
+                case "kegunaan": _items = (order == "asc") ? _items.SortBy(t => t.kegunaan) : _items.SortByDescending(t => t.kegunaan); break;
+                case "baru": _items = (order == "asc") ? _items.SortBy(t => t.baru) : _items.SortByDescending(t => t.baru); break;
+                case "lama": _items = (order == "asc") ? _items.SortBy(t => t.lama) : _items.SortByDescending(t => t.lama); break;
+                case "rusak": _items = (order == "asc") ? _items.SortBy(t => t.rusak) : _items.SortByDescending(t => t.rusak); break;
+                case "stok_awal": _items = (order == "asc") ? _items.SortBy(t => t.stok_awal) : _items.SortByDescending(t => t.stok_awal); break;
+                case "barang_masuk": _items = (order == "asc") ? _items.SortBy(t => t.barang_masuk) : _items.SortByDescending(t => t.barang_masuk); break;
+                case "barang_keluar": _items = (order == "asc") ? _items.SortBy(t => t.barang_keluar) : _items.SortByDescending(t => t.barang_keluar); break;
+                case "stok_akhir": _items = (order == "asc") ? _items.SortBy(t => t.stok_akhir) : _items.SortByDescending(t => t.stok_akhir); break;
+                case "keterangan": _items = (order == "asc") ? _items.SortBy(t => t.keterangan) : _items.SortByDescending(t => t.keterangan); break;
             }
 
             switch (mode)
@@ -194,23 +215,27 @@ namespace ssc.Areas.PE.Controllers
         {
             var workbook = new ExcelPackage();
             var ws = workbook.Workbook.Worksheets.Add("Lab");
-            ws.Cells[1, 1].Value = "Date";
-            ws.Cells[1, 2].Value = "Well";
-            ws.Cells[1, 3].Value = "Compl Layer";
-            ws.Cells[1, 4].Value = "Layer Name";
-            ws.Cells[1, 5].Value = "Perforation Interval";
-            ws.Cells[1, 6].Value = "Meas Type";
-            ws.Cells[1, 7].Value = "Mead Depth)";
-            ws.Cells[1, 8].Value = "Pmax";
-            ws.Cells[1, 9].Value = "Tmax";
-            ws.Cells[1, 10].Value = "Remarks";
+            ws.Cells[1, 1].Value = "Nomor";
+            ws.Cells[1, 2].Value = "ID";
+            ws.Cells[1, 3].Value = "Nama Alat";
+            ws.Cells[1, 4].Value = "Spesifikasi";
+            ws.Cells[1, 5].Value = "Satuan";
+            ws.Cells[1, 6].Value = "Kegunaan";
+            ws.Cells[1, 7].Value = "Baru";
+            ws.Cells[1, 8].Value = "Lama";
+            ws.Cells[1, 9].Value = "Rusak";
+            ws.Cells[1, 10].Value = "Stok Awal";
+            ws.Cells[1, 11].Value = "Barang Masuk";
+            ws.Cells[1, 12].Value = "Barang Keluar";
+            ws.Cells[1, 13].Value = "Stok Akhir";
+            ws.Cells[1, 14].Value = "Keterangan";
 
 
-            ws.Cells[1, 1, 1, 10].Style.Font.Bold = true;
-            ws.Cells[1, 1, 1, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            ws.Cells[1, 1, 1, 10].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 1, 1, 14].Style.Font.Bold = true;
+            ws.Cells[1, 1, 1, 14].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 1, 14].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
-            for (int c = 1; c <= 10; c++)
+            for (int c = 1; c <= 14; c++)
             {
                 //ws.Column(c).AutoFit();
             }
@@ -218,17 +243,21 @@ namespace ssc.Areas.PE.Controllers
             for (int i = 0; i < items.Count(); i++)
             {
                 var t = items.ElementAt(i);
-                ws.Cells[2 + i, 1].Style.Numberformat.Format = "d-MMM-yy";
-                ws.Cells[2 + i, 1].Value = t.date.HasValue ? t.date.Value.ToLocalTime().ToOADate() : (double?)null;
-                ws.Cells[2 + i, 2].Value = t.well;
-                ws.Cells[2 + i, 3].Value = t.compl_layer;
-                ws.Cells[2 + i, 4].Value = t.layer_name;
-                ws.Cells[2 + i, 5].Value = t.perfo_interval;
-                ws.Cells[2 + i, 6].Value = t.meas_type;
-                ws.Cells[2 + i, 7].Value = t.meas_depth;
-                ws.Cells[2 + i, 8].Value = t.pmax;
-                ws.Cells[2 + i, 9].Value = t.tmax;
-                ws.Cells[2 + i, 10].Value = t.noted;
+                // ws.Cells[2 + i, 1].Style.Numberformat.Format = "d-MMM-yy";
+                ws.Cells[2 + i, 1].Value = t.nomor;
+                ws.Cells[2 + i, 2].Value = t._id;
+                ws.Cells[2 + i, 3].Value = t.nama_alat;
+                ws.Cells[2 + i, 4].Value = t.spesifikasi;
+                ws.Cells[2 + i, 5].Value = t.satuan;
+                ws.Cells[2 + i, 6].Value = t.kegunaan;
+                ws.Cells[2 + i, 7].Value = t.baru;
+                ws.Cells[2 + i, 8].Value = t.lama;
+                ws.Cells[2 + i, 9].Value = t.rusak;
+                ws.Cells[2 + i, 10].Value = t.stok_awal;
+                ws.Cells[2 + i, 11].Value = t.barang_masuk;
+                ws.Cells[2 + i, 12].Value = t.barang_keluar;
+                ws.Cells[2 + i, 13].Value = t.stok_akhir;
+                ws.Cells[2 + i, 14].Value = t.keterangan;
             }
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
@@ -264,98 +293,22 @@ namespace ssc.Areas.PE.Controllers
             List<Lab> items = new List<Lab>();
             int error_count = 0;
 
-            for (var r = 2; r <= rowCount; r++)
+            for (var r = 5; r <= rowCount; r++)
             {
-                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
+                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                 {
                     Lab _row = new Lab();
                     LabError _row_error = new LabError();
                     int last_error_count = error_count;
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
-                    {
-                        try
-                        {
-                            if (ws.Cells[r, 1].Value.GetType() == DateTime.Now.GetType())
-                            {
-                                _row.date = (DateTime?)ws.Cells[r, 1].Value;
-                            }
-                            else
-                            {
-                                _row.date = DateTime.FromOADate(double.Parse(ws.Cells[r, 1].Value?.ToString().Trim()));
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _row_error.date = new ErrorItem { value = ws.Cells[r, 1].Value?.ToString(), message = e.Message };
-                            error_count++;
-                        }
-                    }
-                    else
-                    {
-                        _row_error.date = new ErrorItem { value = "(Blank)", message = "Blank date is not allowed" };
-                        error_count++;
-                    }
-
-                    var arrayMappings = new[]
-                    {
-                        new
-                        {
-                            key = "layer_name",
-                            col = 4,
-                            required = false,
-                            errorMsg = "Blank zone is not allowed",
-                            parse = new Func<string, object>(val => val.Split(",").Select(z => z.Trim()).ToArray())
-                        },
-                        new
-                        {
-                            key = "perfo_interval",
-                            col = 5,
-                            required = false,
-                            errorMsg = "Blank interval is not allowed",
-                            parse = new Func<string, object>(val => val.Split(",").Select(i => i.Trim().Split("-").Select(j => decimal.Parse(j.Trim())).ToArray()).ToArray())
-                        }
-                    };
-
-                    foreach (var mapping in arrayMappings)
-                    {
-                        var rawValue = ws.Cells[r, mapping.col].Value;
-                        var strValue = rawValue?.ToString().Trim();
-
-                        var prop = typeof(Lab).GetProperty(mapping.key);
-                        var errorProp = typeof(LabError).GetProperty(mapping.key);
-
-                        if (!string.IsNullOrWhiteSpace(strValue))
-                        {
-                            try
-                            {
-                                var parsedValue = mapping.parse(strValue);
-                                prop?.SetValue(_row, parsedValue);
-                            }
-                            catch (Exception e)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
-                                error_count++;
-                            }
-                        }
-                        else
-                        {
-                            if (mapping.required)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
-                                error_count++;
-                            }
-                            prop?.SetValue(_row, null);
-                        }
-                    }
-
                     var stringMappings = new[]
                     {
-                        new { key = "well", col = 2, required = true, errorMsg = "Blank Well String name is not allowed" },
-                        new { key = "compl_layer", col = 3, required = false, errorMsg = "" },
-                        new { key = "meas_type", col = 6, required = false, errorMsg = "" },
-                        new { key = "noted", col = 10, required = false, errorMsg = "" },
-                        new { key = "meas_depth", col = 7, required = false, errorMsg = "" },
+                        new { key = "_id", col = 3, required = true, errorMsg = "ID wajib diisi"},
+                        new { key = "nama_alat", col = 4, required = true, errorMsg = "" },
+                        new { key = "spesifikasi", col = 5, required = false, errorMsg = "" },
+                        new { key = "satuan", col = 6, required = false, errorMsg = "" },
+                        new { key = "kegunaan", col = 7, required = false, errorMsg = "" },
+                        new { key = "keterangan", col = 15, required = false, errorMsg = "" },
                     };
 
                     foreach (var mapping in stringMappings)
@@ -386,8 +339,14 @@ namespace ssc.Areas.PE.Controllers
                     var mappings = new[]
                     {
 
-                        new { key = "pmax", col = 8 },
-                        new { key = "tmax", col = 9 },
+                        new { key = "nomor", col = 2 },
+                        new { key = "baru", col = 8 },
+                        new { key = "lama", col = 9 },
+                        new { key = "rusak", col = 10 },
+                        new { key = "stok_awal", col = 11 },
+                        new { key = "barang_masuk", col = 12 },
+                        new { key = "barang_keluar", col = 13 },
+                        new { key = "stok_akhir", col = 14 },
                     };
 
                     foreach (var mapping in mappings)
@@ -444,13 +403,13 @@ namespace ssc.Areas.PE.Controllers
                     }
 
 
-                    if (_row_error.date == null && _row_error.well == null)
-                    {
-                        if (_lab.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
-                        {
-                            _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
-                        }
-                    }
+                    // if (_row_error.date == null && _row_error.well == null)
+                    // {
+                    //     if (_lab.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
+                    //     {
+                    //         _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
+                    //     }
+                    // }
                     if (error_count > last_error_count)
                     {
                         _row_error._row = new ErrorItem { value = "error", message = "Error found" };
@@ -531,8 +490,8 @@ namespace ssc.Areas.PE.Controllers
 
                 List<Lab> items = _tmp.items.ToList();
 
-                DateTime? min_date = items.Select(m => m.date).Min();
-                string[] wells = items.Select(m => m.well).ToArray();
+                // DateTime? min_date = items.Select(m => m.date).Min();
+                // string[] wells = items.Select(m => m.well).ToArray();
 
                 long modified_count = 0;
                 long created_count = items.Count();
@@ -541,23 +500,27 @@ namespace ssc.Areas.PE.Controllers
                 {
                     item._error = null;
 
-                    var update = Builders<Lab>.Update.Set(t => t.date, item.date)
-                        .Set(t => t.well, item.well)
-                        .Set(t => t.compl_layer, item.compl_layer)
-                        .Set(t => t.layer_name, item.layer_name)
-                        .Set(t => t.perfo_interval, item.perfo_interval)
-                        .Set(t => t.meas_type, item.meas_type)
-                        .Set(t => t.meas_depth, item.meas_depth)
-                        .Set(t => t.pmax, item.pmax)
-                        .Set(t => t.tmax, item.tmax)
-                        .Set(t => t.noted, item.noted)
+                    var update = Builders<Lab>.Update.Set(t => t.nomor, item.nomor)
+                        .Set(t => t._id, item._id)
+                        .Set(t => t.nama_alat, item.nama_alat)
+                        .Set(t => t.spesifikasi, item.spesifikasi)
+                        .Set(t => t.satuan, item.satuan)
+                        .Set(t => t.kegunaan, item.kegunaan)
+                        .Set(t => t.baru, item.baru)
+                        .Set(t => t.lama, item.lama)
+                        .Set(t => t.rusak, item.rusak)
+                        .Set(t => t.stok_awal, item.stok_awal)
+                        .Set(t => t.barang_masuk, item.barang_masuk)
+                        .Set(t => t.barang_keluar, item.barang_keluar)
+                        .Set(t => t.stok_akhir, item.stok_akhir)
+                        .Set(t => t.keterangan, item.keterangan)
                         .Set(t => t.updated_by, User.Identity.Name)
                         .Set(t => t.updated_date, DateTime.Now)
                         .SetOnInsert(t => t.created_by, User.Identity.Name)
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
                     UpdateResult res = _lab.UpdateOne(
-                        Builders<Lab>.Filter.Eq(t => t.date, item.date) & Builders<Lab>.Filter.Eq(t => t.well, item.well),
+                        Builders<Lab>.Filter.Eq(t => t._id, item._id),
                         update, new UpdateOptions() { IsUpsert = true });
 
                     modified_count += res.ModifiedCount;
@@ -605,35 +568,35 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-        [Authorize("PeLab Read")]
-        [HttpGet]
-        private ActionResult Data_Lab(string type, DateTime? start, DateTime? end, string[] well)
-        {
-            switch (type)
-            {
-                case "lab_chart":
+        // [Authorize("PeLab Read")]
+        // [HttpGet]
+        // private ActionResult Data_Lab()
+        // {
+        // switch (type)
+        // {
+        //     case "lab_chart":
 
-                    // var startLocal = TimeZoneInfo.ConvertTimeFromUtc(start.Value, TimeZoneInfo.Local);
-                    // var endLocal = TimeZoneInfo.ConvertTimeFromUtc(end.Value, TimeZoneInfo.Local);
+        //         // var startLocal = TimeZoneInfo.ConvertTimeFromUtc(start.Value, TimeZoneInfo.Local);
+        //         // var endLocal = TimeZoneInfo.ConvertTimeFromUtc(end.Value, TimeZoneInfo.Local);
 
-                    var lab = _lab.Find(
-                        r => well.Contains(r.well) &&
-                        r.date >= start && r.date <= end
-                    ).Project<Lab>(_fields).ToList().OrderBy(t => t.date).Select(s => new
-                    {
-                        date = System.TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, System.TimeZoneInfo.Local),
-                        well = s.well,
-                        pmax = s.pmax,
-                        tmax = s.tmax,
+        //         var lab = _lab.Find(
+        //             r => well.Contains(r.well) &&
+        //             r.date >= start && r.date <= end
+        //         ).Project<Lab>(_fields).ToList().OrderBy(t => t.date).Select(s => new
+        //         {
+        //             date = System.TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, System.TimeZoneInfo.Local),
+        //             well = s.well,
+        //             pmax = s.pmax,
+        //             tmax = s.tmax,
 
-                    });
+        //         });
 
-                    return Ok(new { items = lab });
+        //         return Ok(new { items = lab });
 
-                default:
-                    return Ok(new { });
-            }
-        }
+        //     default:
+        //         return Ok(new { });
+        // }
+        // }
 
     }
 }

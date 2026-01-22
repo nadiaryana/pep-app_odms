@@ -23,7 +23,7 @@ export class PeLabAddComponent {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
-	bhpForm: FormGroup;
+	labForm: FormGroup;
 	
 	isUploading = false;
 	isLoading = false;
@@ -43,7 +43,7 @@ export class PeLabAddComponent {
 
 	data: PeLab[] = [];
 	data_error_count: number = 0;
-	displayedColumns: string[] = ["info", "date","well","compl_layer","layer_name","perfo_interval","meas_type","meas_depth","pmax","tmax", "noted","Actions"];
+	displayedColumns: string[] = ["info","nomor", "id", "nama_alat", "spesifikasi", "satuan", "kegunaan", "baru", "lama", "rusak", "stok_awal", "barang_masuk", "barang_keluar", "stok_akhir", "keterangan","Actions"];
 
 	constructor(
 		private formBuilder: FormBuilder,
@@ -58,24 +58,24 @@ export class PeLabAddComponent {
 		this.loading = true;
 		//this.snackBar.dismiss();
 		this.snackbarService.status.next(new SnackbarApi(false));
-		this.bhpForm.disable();
+		this.labForm.disable();
 	}
 
-	get f() { return this.bhpForm.controls; }
+	get f() { return this.labForm.controls; }
 
 	ngOnInit() { 
 
 		this.titleService.titleSource.next({
-          title: "Add BHP",
+          title: "Add Inventory",
           icon:"add",
 	      breadcrumbs: [
 	        {label: 'Petroleum Engineering', routerLink: ''}, 
-	        {label: 'BHP', routerLink: 'pe/bhp'},
+	        {label: 'Lab', routerLink: 'pe/lab'},
 	        {label: 'Add', routerLink: ''}, 
 	      ]}
 	    );
 
-		this.bhpForm = this.formBuilder.group({
+		this.labForm = this.formBuilder.group({
 			//sensor_id: ['', Validators.required],
 			location_id: [''],
 			is_anchor: [''],
@@ -90,7 +90,7 @@ export class PeLabAddComponent {
 	}
 
 	canDeactivate(): Observable<boolean> | boolean {
-		if (this.bhpForm.pristine) {
+		if (this.labForm.pristine) {
 			return true;
 		}
 		return this.dialogService.confirm('Discard changes?');
@@ -111,7 +111,7 @@ export class PeLabAddComponent {
 		const fd = new FormData();
 		this.isUploading = true;
 		fd.append('files', this.fileInput.nativeElement.files[0]);
-		this.http.post('/api/pe/bhp/UploadFiles', fd, {
+		this.http.post('/api/pe/lab/UploadFiles', fd, {
 			reportProgress: true,
 			observe: 'events'
 		})
@@ -142,7 +142,7 @@ export class PeLabAddComponent {
 			}
 		}
 		
-		this.http.get<any>('/api/pe/bhp/Tmp', httpOption).subscribe(res => {
+		this.http.get<any>('/api/pe/lab/Tmp', httpOption).subscribe(res => {
 			this.isLoading = false;
 			this.data = res['items'];
 			this.data_error_count = res['error_count'];
@@ -157,7 +157,7 @@ export class PeLabAddComponent {
 
 	saveData() {
 		this.isSaving = true;
-		this.http.get<any>('/api/pe/bhp/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+		this.http.get<any>('/api/pe/lab/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
 			this.isSaving = false;
 			this.modified_count = res["modified_count"];
 			this.created_count = res["created_count"];
@@ -193,7 +193,7 @@ export class PeLabAddComponent {
 
 	@HostListener('window:beforeunload', ['$event'])
 	unloadNotification($event: any) {
-		return this.bhpForm.pristine;
+		return this.labForm.pristine;
 	}
 
 }
