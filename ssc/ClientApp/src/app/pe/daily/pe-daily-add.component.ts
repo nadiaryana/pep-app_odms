@@ -195,7 +195,7 @@ export class PeDailyAddComponent {
 			params: {
 				_id: this.tmp_id,
 				page: this.paginator.pageIndex.toString(),
-				pageSize: this.paginator.pageSize.toString(), 
+				pagesize: this.paginator.pageSize.toString(), 
 				mode: this.data_mode
 			}
 		}

@@ -191,6 +191,8 @@ namespace ssc.Areas.PE.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string _id { get; set; }
+        public string status { get; set; }
+        public string message { get; set; }
         public int error_count { get; set; }
         public int batch_index { get; set; }
         public DateTime upload_date { get; set; }

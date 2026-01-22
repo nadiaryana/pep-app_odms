@@ -716,24 +716,56 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeDaily Add")]
         [HttpPost("UploadFiles")]
+
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
-            long size = files.Sum(f => f.Length);
+            if (files == null || files.Count == 0)
+                return BadRequest("No file uploaded");
 
-            // full path to file in temp location
-            var filePath = Path.GetTempFileName();
+            var filePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + Path.GetExtension(files[0].FileName));
 
-            foreach (var formFile in files)
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                if (formFile.Length > 0)
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await formFile.CopyToAsync(stream);
-                    }
-                }
+                await files[0].CopyToAsync(stream);
             }
 
+            // BUAT TMP DULU
+            DailyTmp tmp = new DailyTmp
+            {
+                status = "processing",
+                error_count = 0,
+                items = Array.Empty<Daily>(),
+                message = "Processing started"
+            };
+
+            _daily_tmp.InsertOne(tmp);
+
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    ProcessExcel(filePath, tmp._id);
+                }
+                catch (Exception ex)
+                {
+                    _daily_tmp.UpdateOne(
+                        t => t._id == tmp._id,
+                        Builders<DailyTmp>.Update
+                            .Set(t => t.status, "failed")
+                            .Set(t => t.message, ex.Message)
+                    );
+                }
+            });
+
+            return Ok(new
+            {
+                _id = tmp._id,
+                message = "File uploaded. Processing in background."
+            });
+        }
+
+        private void ProcessExcel(string filePath, string tmpId)
+        {
             var fi = new FileInfo(filePath);
             var workbook = new ExcelPackage(fi);
             var ws = workbook.Workbook.Worksheets.First();
@@ -1025,21 +1057,344 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
-            DailyTmp _tmp = new DailyTmp
+            _daily_tmp.UpdateOne(
+                t => t._id == tmpId,
+                Builders<DailyTmp>.Update
+                    .Set(t => t.items, items.ToArray())
+                    .Set(t => t.error_count, error_count)
+                    .Set(t => t.status, "done")
+                    .Set(t => t.message, "Processing completed")
+            );
 
-            {
-                error_count = error_count,
-                items = items.ToArray()
-            };
-            _daily_tmp.InsertOne(_tmp);
+            System.IO.File.Delete(filePath);
 
-            return Ok(new
-            {
-                _id = _tmp._id,
-                //items = items,
-                error_count = error_count
-            });
         }
+
+
+        // public async Task<IActionResult> Post(List<IFormFile> files)
+        // {
+        //     long size = files.Sum(f => f.Length);
+
+        //     // full path to file in temp location
+        //     var filePath = Path.GetTempFileName();
+
+        //     foreach (var formFile in files)
+        //     {
+        //         if (formFile.Length > 0)
+        //         {
+        //             using (var stream = new FileStream(filePath, FileMode.Create))
+        //             {
+        //                 await formFile.CopyToAsync(stream);
+        //             }
+        //         }
+        //     }
+
+        //     var fi = new FileInfo(filePath);
+        //     var workbook = new ExcelPackage(fi);
+        //     var ws = workbook.Workbook.Worksheets.First();
+        //     int rowCount = ws.Dimension.End.Row;
+
+        //     List<Daily> items = new List<Daily>();
+        //     int error_count = 0;
+
+        //     for (var r = 4; r <= rowCount; r++)
+        //     {
+        //         if (!string.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
+        //         {
+        //             Daily _row = new Daily();
+        //             DailyError _row_error = new DailyError();
+        //             int last_error_count = error_count;
+
+        //             if (!String.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
+        //             {
+        //                 try
+        //                 {
+        //                     if (ws.Cells[r, 1].Value.GetType() == DateTime.Now.GetType())
+        //                     {
+        //                         _row.date = (DateTime?)ws.Cells[r, 1].Value;
+        //                     }
+        //                     else
+        //                     {
+        //                         _row.date = DateTime.FromOADate(double.Parse(ws.Cells[r, 1].Value?.ToString().Trim()));
+        //                     }
+        //                 }
+        //                 catch (Exception e)
+        //                 {
+        //                     _row_error.date = new ErrorItem { value = ws.Cells[r, 1].Value?.ToString(), message = e.Message };
+        //                     error_count++;
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 _row_error.date = new ErrorItem { value = "(Blank)", message = "Blank date is not allowed" };
+        //                 error_count++;
+        //             }
+
+        //             if (!String.IsNullOrWhiteSpace(ws.Cells[r, 40].Value?.ToString()))
+        //             {
+        //                 try
+        //                 {
+        //                     var cellValue = ws.Cells[r, 40].Value;
+        //                     DateTime parsedDate;
+
+        //                     if (cellValue is DateTime dt)
+        //                     {
+        //                         parsedDate = dt;
+        //                     }
+        //                     else if (cellValue is double dbl)
+        //                     {
+        //                         parsedDate = DateTime.FromOADate(dbl);
+        //                     }
+        //                     else
+        //                     {
+        //                         var strValue = cellValue.ToString().Trim();
+        //                         if (DateTime.TryParse(strValue, out parsedDate))
+        //                         {
+        //                             // parsedDate is set
+        //                         }
+        //                         else if (double.TryParse(strValue, out dbl))
+        //                         {
+        //                             parsedDate = DateTime.FromOADate(dbl);
+        //                         }
+        //                         else
+        //                         {
+        //                             throw new Exception("Unable to parse date value: " + strValue);
+        //                         }
+        //                     }
+
+        //                     _row.ds_tgl_pengujian = parsedDate;
+        //                 }
+        //                 catch (Exception e)
+        //                 {
+        //                     _row_error.ds_tgl_pengujian = new ErrorItem { value = ws.Cells[r, 40].Value?.ToString(), message = e.Message };
+        //                     error_count++;
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 _row_error.ds_tgl_pengujian = null;
+        //             }
+
+        //             // Define mappings for string properties with their corresponding column indexes
+        //             // strings
+        //             var stringMappings = new[]
+        //             {
+        //                 new { key = "location", col = 3, required = true, errorMsg = "Blank location name is not allowed" },
+        //                 new { key = "well", col = 4, required = true, errorMsg = "Blank Well String name is not allowed" },
+        //                 new { key = "well_string", col = 5, required = false, errorMsg = "" },
+        //                 new { key = "ls_method", col = 24, required = false, errorMsg = "" },
+        //                 new { key = "ls_brandtype", col = 25, required = false, errorMsg = "" },
+        //                 new { key = "ls_prime_mover", col = 26, required = false, errorMsg = "" },
+        //                 new { key = "ls_hp", col = 27, required = false, errorMsg = "" },
+        //                 // new { key = "ds_tgl_pengujian", col = 40, required = false, errorMsg = "" },
+        //                 new { key = "noted", col = 41, required = false, errorMsg = "" },
+        //             };
+
+        //             foreach (var mapping in stringMappings)
+        //             {
+        //                 var rawValue = ws.Cells[r, mapping.col].Value;
+        //                 var strValue = rawValue?.ToString().Trim();
+
+        //                 var prop = typeof(Daily).GetProperty(mapping.key);
+        //                 var errorProp = typeof(DailyError).GetProperty(mapping.key);
+
+        //                 if (!string.IsNullOrWhiteSpace(strValue))
+        //                 {
+        //                     prop?.SetValue(_row, strValue);
+        //                 }
+        //                 else
+        //                 {
+        //                     if (mapping.required)
+        //                     {
+        //                         errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
+        //                         error_count++;
+        //                     }
+        //                     prop?.SetValue(_row, null);
+        //                 }
+        //             }
+
+        //             //try
+        //             //{
+        //             //    _row.zone = ws.Cells[r, 6].Value?.ToString().Trim().Split(",").Select(z => z.Trim()).ToArray();
+        //             //}
+        //             //catch (Exception e)
+        //             //{
+        //             //    _row_error.zone = new ErrorItem { value = ws.Cells[r, 6].Value?.ToString(), message = e.Message };
+        //             //    error_count++;
+        //             //}
+
+        //             // Define mappings for array properties with their corresponding column indexes, parsing logic, and required flag
+        //             var arrayMappings = new[]
+        //             {
+        //                 new
+        //                 {
+        //                     key = "zone",
+        //                     col = 6,
+        //                     required = false,
+        //                     errorMsg = "Blank zone is not allowed",
+        //                     parse = new Func<string, object>(val => val.Split(",").Select(z => z.Trim()).ToArray())
+        //                 },
+        //                 new
+        //                 {
+        //                     key = "interval",
+        //                     col = 7,
+        //                     required = false,
+        //                     errorMsg = "Blank interval is not allowed",
+        //                     parse = new Func<string, object>(val => val.Split(",").Select(i => i.Trim().Split("-").Select(j => decimal.Parse(j.Trim())).ToArray()).ToArray())
+        //                 }
+        //             };
+
+        //             foreach (var mapping in arrayMappings)
+        //             {
+        //                 var rawValue = ws.Cells[r, mapping.col].Value;
+        //                 var strValue = rawValue?.ToString().Trim();
+
+        //                 var prop = typeof(Daily).GetProperty(mapping.key);
+        //                 var errorProp = typeof(DailyError).GetProperty(mapping.key);
+
+        //                 if (!string.IsNullOrWhiteSpace(strValue))
+        //                 {
+        //                     try
+        //                     {
+        //                         var parsedValue = mapping.parse(strValue);
+        //                         prop?.SetValue(_row, parsedValue);
+        //                     }
+        //                     catch (Exception e)
+        //                     {
+        //                         errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
+        //                         error_count++;
+        //                     }
+        //                 }
+        //                 else
+        //                 {
+        //                     if (mapping.required)
+        //                     {
+        //                         errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
+        //                         error_count++;
+        //                     }
+        //                     prop?.SetValue(_row, null);
+        //                 }
+        //             }
+
+
+        //             // decimal mappings
+        //             // Column indexes based on the provided Excel structure
+        //             var mappings = new[]
+        //             {
+        //                 new { key = "nomor", col = 2 },
+        //                 new { key = "potensi_prod_gross", col = 8 },
+        //                 new { key = "potensi_prod_net", col = 9 },
+        //                 new { key = "tes_prod_gross", col = 10 },
+        //                 new { key = "tes_prod_net", col = 11 },
+        //                 new { key = "fig_last_gross", col = 12 },
+        //                 new { key = "fig_last_net", col = 13 },
+        //                 new { key = "fig_curr_gross", col = 14 },
+        //                 new { key = "fig_curr_net", col = 15 },
+        //                 new { key = "thp_last_fig", col = 16 },
+        //                 new { key = "thp_potensi", col = 17 },
+        //                 new { key = "wc", col = 18 },
+        //                 new { key = "prod_hours", col = 19 },
+        //                 new { key = "wor", col = 20 },
+        //                 new { key = "gas", col = 21 },
+        //                 new { key = "gor", col = 22 },
+        //                 new { key = "glr", col = 23 },
+        //                 new { key = "ds_bean", col = 28 },
+        //                 new { key = "ds_whp", col = 29 },
+        //                 new { key = "ds_fl", col = 30 },
+        //                 new { key = "ds_casing", col = 31 },
+        //                 new { key = "ds_separator", col = 32 },
+        //                 new { key = "ds_spm", col = 33 },
+        //                 new { key = "ds_size", col = 34 },
+        //                 new { key = "ds_pump_displace", col = 35 },
+        //                 new { key = "ds_efficiency", col = 36 },
+        //                 new { key = "ds_sl", col = 37 },
+        //                 new { key = "ds_kd", col = 38 },
+        //                 new { key = "sm", col = 39 },
+        //             };
+
+        //             foreach (var mapping in mappings)
+        //             {
+        //                 var rawValue = ws.Cells[r, mapping.col].Value;
+        //                 var strValue = rawValue?.ToString().Trim();
+
+        //                 if (!string.IsNullOrEmpty(strValue))
+        //                 {
+        //                     string valueToParse = strValue;
+        //                     // if the column is "wc", handle percentage and fraction cases
+        //                     if (mapping.key == "wc" || mapping.key == "ds_efficiency")
+        //                     {
+        //                         // Remove percent sign and whitespace for wc
+        //                         valueToParse = valueToParse.Replace("%", "").Trim();
+        //                         // If value is less than or equal to 1, assume it's a fraction and convert to percent
+        //                         if (decimal.TryParse(valueToParse, out decimal wcNum) && wcNum <= 1)
+        //                         {
+        //                             wcNum *= 100;
+        //                             valueToParse = wcNum.ToString(CultureInfo.InvariantCulture);
+        //                         }
+        //                     }
+
+        //                     if (decimal.TryParse(valueToParse, out decimal num))
+        //                     {
+        //                         var prop = typeof(Daily).GetProperty(mapping.key);
+        //                         if (prop != null)
+        //                             prop.SetValue(_row, num);
+        //                     }
+        //                     else
+        //                     {
+        //                         var prop = typeof(Daily).GetProperty(mapping.key);
+        //                         if (prop != null)
+        //                             prop.SetValue(_row, null);
+
+        //                         var errorProp = typeof(DailyError).GetProperty(mapping.key);
+        //                         if (errorProp != null)
+        //                             errorProp.SetValue(_row_error, new ErrorItem { value = strValue, message = "Invalid number" });
+
+        //                         error_count++;
+        //                     }
+        //                 }
+        //                 else
+        //                 {
+        //                     var prop = typeof(Daily).GetProperty(mapping.key);
+        //                     if (prop != null)
+        //                         prop.SetValue(_row, null);
+        //                 }
+        //             }
+        //             // ...existing code...
+
+
+        //             if (_row_error.date == null && _row_error.well == null)
+        //             {
+        //                 if (_daily.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
+        //                 {
+        //                     _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
+        //                 }
+        //             }
+        //             if (error_count > last_error_count)
+        //             {
+        //                 _row_error._row = new ErrorItem { value = "error", message = "Error found" };
+        //             }
+
+        //             _row._error = _row_error;
+
+        //             items.Add(_row);
+        //         }
+        //     }
+
+        //     DailyTmp _tmp = new DailyTmp
+
+        //     {
+        //         error_count = error_count,
+        //         items = items.ToArray()
+        //     };
+        //     _daily_tmp.InsertOne(_tmp);
+
+        //     return Ok(new
+        //     {
+        //         _id = _tmp._id,
+        //         //items = items,
+        //         error_count = error_count
+        //     });
+        // }
 
         [Authorize("PeDaily Add")]
         [HttpGet("Tmp")]
