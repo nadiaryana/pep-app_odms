@@ -5,17 +5,22 @@
       <div>
         <input style="display: none" (change)="handleFile($event)" type="file" #fileInput />
       </div>
-      <button mat-raised-button color="basic" (click)="fileInput.click()" class="margin-10"><mat-icon>file_open</mat-icon> Pick File</button> {{ fileName }}
-      <div class="loading-shade" *ngIf="isUploading">
+      <button mat-raised-button color="basic" (click)="fileInput.click()" class="margin-10" [disabled]="isUploading || isProcessing"><mat-icon>file_open</mat-icon> Pick File</button> {{ fileName }}
+      <div class="loading-shade" *ngIf="isUploading || isProcessing">
         <mat-spinner></mat-spinner>
+        <p *ngIf="isProcessing" style="margin-top: 10px; text-align: center;">{{ processingStatus }}</p>
       </div>
       <span class="margin-10"></span>
-      <button mat-raised-button color="secondary" (click)="onUpload()" *ngIf="fileName"><mat-icon>upload</mat-icon> Upload</button>
+      <button mat-raised-button color="secondary" (click)="onUpload()" *ngIf="fileName" [disabled]="isUploading || isProcessing"><mat-icon>upload</mat-icon> Upload</button>
       <!--div>
       <button mat-button matStepperNext>Next</button>
     </div-->
       <div class="progress-bar" *ngIf="isUploading">
         <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+      </div>
+      <div class="progress-bar" *ngIf="isProcessing">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <p>Processing data in background... This may take a while for large files.</p>
       </div>
     </mat-step>
     <mat-step completed=false>

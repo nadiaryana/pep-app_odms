@@ -19,9 +19,11 @@ using System.Text;
 using System.IO;
 using ssc.Models;
 using ssc.Areas.PE.Models;
+using ssc.Services;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 
 namespace ssc
 {
@@ -51,6 +53,11 @@ namespace ssc
 
 
             services.AddHttpClient();
+
+            // Register Background Task Queue and Hosted Service
+            services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+            services.AddHostedService<QueuedHostedService>();
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowOrigin",
@@ -98,7 +105,7 @@ namespace ssc
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
         {
             if (env.IsDevelopment())
             {

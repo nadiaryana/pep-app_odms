@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using MongoDB.Bson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ssc.Areas.PE.Models;
+using ssc.Services;
 using System.Globalization;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -28,8 +30,9 @@ namespace ssc.Areas.PE.Controllers
         private ProjectionDefinition<Daily> _fields_daily;
         private ProjectionDefinition<Structure> _fields_structure;
         private readonly IMongoCollection<Production> _production;
+        private readonly IBackgroundTaskQueue _taskQueue;
 
-        public DailyController(IPEDatabaseSettings settings)
+        public DailyController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue)
         {
 
             _daily = DailyCommon._daily;
@@ -38,6 +41,7 @@ namespace ssc.Areas.PE.Controllers
             _structure = DailyCommon._structure;
             _fields_daily = DailyCommon._fields_daily;
             _fields_structure = DailyCommon._fields_structure;
+            _taskQueue = taskQueue;
         }
 
         [Authorize("PeDaily Read")]
@@ -735,20 +739,23 @@ namespace ssc.Areas.PE.Controllers
                 status = "processing",
                 error_count = 0,
                 items = Array.Empty<Daily>(),
-                message = "Processing started"
+                message = "Processing started",
+                upload_date = DateTime.Now
             };
 
             _daily_tmp.InsertOne(tmp);
 
-            _ = Task.Run(() =>
+            // Queue background task - ini akan dijalankan oleh QueuedHostedService
+            // yang tidak tergantung pada request lifecycle
+            _taskQueue.QueueBackgroundWorkItem(async token =>
             {
                 try
                 {
-                    ProcessExcel(filePath, tmp._id);
+                    await Task.Run(() => ProcessExcel(filePath, tmp._id), token);
                 }
                 catch (Exception ex)
                 {
-                    _daily_tmp.UpdateOne(
+                    DailyCommon._daily_tmp.UpdateOne(
                         t => t._id == tmp._id,
                         Builders<DailyTmp>.Update
                             .Set(t => t.status, "failed")
@@ -760,8 +767,38 @@ namespace ssc.Areas.PE.Controllers
             return Ok(new
             {
                 _id = tmp._id,
+                status = "processing",
                 message = "File uploaded. Processing in background."
             });
+        }
+
+        // Endpoint untuk cek status upload
+        [Authorize("PeDaily Add")]
+        [HttpGet("UploadStatus")]
+        public ActionResult GetUploadStatus(string _id)
+        {
+            try
+            {
+                var tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
+                if (tmp == null)
+                {
+                    return NotFound(new { message = "Upload not found" });
+                }
+
+                return Ok(new
+                {
+                    _id = tmp._id,
+                    status = tmp.status,
+                    message = tmp.message,
+                    error_count = tmp.error_count,
+                    item_count = tmp.items?.Length ?? 0,
+                    upload_date = tmp.upload_date
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         private void ProcessExcel(string filePath, string tmpId)
@@ -1041,7 +1078,7 @@ namespace ssc.Areas.PE.Controllers
 
                     if (_row_error.date == null && _row_error.well == null)
                     {
-                        if (_daily.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
+                        if (DailyCommon._daily.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
                         {
                             _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
                         }
@@ -1057,7 +1094,8 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
-            _daily_tmp.UpdateOne(
+            // Gunakan DailyCommon._daily_tmp karena ini dijalankan di background thread
+            DailyCommon._daily_tmp.UpdateOne(
                 t => t._id == tmpId,
                 Builders<DailyTmp>.Update
                     .Set(t => t.items, items.ToArray())

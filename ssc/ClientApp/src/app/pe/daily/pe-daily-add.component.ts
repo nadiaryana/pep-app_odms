@@ -1,10 +1,11 @@
-import { Component, Input, HostListener, ViewChild } from '@angular/core';
+import { Component, Input, HostListener, ViewChild, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatStepper } from '@angular/material/stepper';
 import { Router } from "@angular/router";
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subscription, interval } from 'rxjs';
 import { HttpClient, HttpEventType } from '@angular/common/http';
+import { takeWhile, switchMap } from 'rxjs/operators';
 
 import { Daily }    from './daily';
 import { PeDaily }    from './pe-daily';
@@ -19,7 +20,7 @@ import { TitleService } from '../../navigation/title/title.service';
 	styleUrls: ['./pe-daily.scss']
 })
 
-export class PeDailyAddComponent {
+export class PeDailyAddComponent implements OnDestroy {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
@@ -29,6 +30,8 @@ export class PeDailyAddComponent {
 	isUploading = false;
 	isLoading = false;
 	isSaving = false;
+	isProcessing = false;
+	processingStatus = '';
 	modified_count = 0;
 	created_count = 0;
 	progressPercent: number;
@@ -44,6 +47,8 @@ export class PeDailyAddComponent {
 
 	data: PeDaily[] = [];
 	data_error_count: number = 0;
+	
+	private statusPollSubscription: Subscription;
 	
 	displayedColumns: string[] = ["info","date","nomor","location","well","well_string","zone","interval","potensi_prod_gross","potensi_prod_net","tes_prod_gross","tes_prod_net",
                                 "fig_last_gross","fig_last_net","fig_curr_gross","fig_curr_net","thp_last_fig","thp_potensi","wc","prod_hours","wor","gas","gor","glr",
@@ -64,6 +69,12 @@ export class PeDailyAddComponent {
 		private titleService: TitleService,
 		private http: HttpClient,
 		) { }
+
+	ngOnDestroy() {
+		if (this.statusPollSubscription) {
+			this.statusPollSubscription.unsubscribe();
+		}
+	}
 
 	onSubmit() { 
 		this.loading = true;
@@ -148,6 +159,8 @@ export class PeDailyAddComponent {
 	onUpload() {
 		const fd = new FormData();
 		this.isUploading = true;
+		this.isProcessing = false;
+		this.processingStatus = '';
 		fd.append('files', this.fileInput.nativeElement.files[0]);
 		this.http.post('/api/pe/daily/UploadFiles', fd, {
 			reportProgress: true,
@@ -157,23 +170,57 @@ export class PeDailyAddComponent {
 			if (event.type === HttpEventType.UploadProgress) {
 				this.progressPercent = Math.round((event.loaded / event.total) * 100);
 			} else if (event.type === HttpEventType.Response) {
-				this.isUploading = false;
-				//this.data = event.body['items'];
-				this.data_error_count = event.body['error_count'];
+				// File uploaded, now start polling for processing status
 				this.tmp_id = event.body['_id'];
-				this.stepper.selected.completed = true;
-				this.stepper.next();
-				this.loadData();
-				if(this.data_error_count > 0) this.snackbarService.status.next(new SnackbarApi(true, "There are "+this.data_error_count+" error(s) in your data.", 'dismiss'));
+				this.isUploading = false;
+				this.isProcessing = true;
+				this.processingStatus = 'Processing file...';
+				this.startStatusPolling();
 			}
     }, error => {
       if (error) {
         this.isUploading = false;
+        this.isProcessing = false;
         this.resetData();
         this.snackbarService.status.next(new SnackbarApi(true, "Wrong template file!", 'dismiss'));
       }
     });
     }
+
+	startStatusPolling() {
+		// Poll every 2 seconds
+		let isPolling = true;
+		this.statusPollSubscription = interval(2000).pipe(
+			takeWhile(() => isPolling),
+			switchMap(() => this.http.get<any>('/api/pe/daily/UploadStatus', { params: { _id: this.tmp_id } }))
+		).subscribe(
+			res => {
+				this.processingStatus = res.message || 'Processing...';
+				
+				if (res.status === 'done') {
+					isPolling = false;
+					this.isProcessing = false;
+					this.data_error_count = res.error_count;
+					this.stepper.selected.completed = true;
+					this.stepper.next();
+					this.loadData();
+					if (this.data_error_count > 0) {
+						this.snackbarService.status.next(new SnackbarApi(true, "There are " + this.data_error_count + " error(s) in your data.", 'dismiss'));
+					}
+				} else if (res.status === 'failed') {
+					isPolling = false;
+					this.isProcessing = false;
+					this.resetData();
+					this.snackbarService.status.next(new SnackbarApi(true, "Processing failed: " + res.message, 'dismiss'));
+				}
+			},
+			error => {
+				isPolling = false;
+				this.isProcessing = false;
+				this.snackbarService.status.next(new SnackbarApi(true, "Error checking status: " + error.message, 'dismiss'));
+			}
+		);
+	}
 
   onSaveOpsog() {
     this.isUploading = true;
@@ -230,9 +277,14 @@ export class PeDailyAddComponent {
 	}
 
 	resetData() {
+		if (this.statusPollSubscription) {
+			this.statusPollSubscription.unsubscribe();
+		}
 		this.isUploading = false;
 		this.isLoading = false;
 		this.isSaving = false;
+		this.isProcessing = false;
+		this.processingStatus = '';
 		this.modified_count = 0;
 		this.created_count = 0;
 		this.progressPercent = 0;
