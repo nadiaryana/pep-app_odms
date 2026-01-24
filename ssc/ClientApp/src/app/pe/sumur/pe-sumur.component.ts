@@ -1,10 +1,10 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from "@angular/core";
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from "@angular/core";
 import { TitleService } from "src/app/navigation/title/title.service";
 import { HttpClient } from "@angular/common/http";
 import * as Highcharts from "highcharts";
 import { FormControl } from "@angular/forms";
 import { MatDatepicker, MatPaginator, MatSort } from "@angular/material";
-import { merge, of as observableOf } from 'rxjs';
+import { merge, of as observableOf, Subscription } from 'rxjs';
 import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operators';
 
 interface Well {
@@ -20,7 +20,7 @@ interface Well {
   templateUrl: "./pe-sumur.component.html",
   styleUrls: ["./pe-sumur.component.scss"],
 })
-export class SumurComponent implements OnInit, AfterViewInit {
+export class SumurComponent implements OnInit, OnDestroy {
   Highcharts: typeof Highcharts = Highcharts;
   chartOptions: Highcharts.Options | null = null;
 
@@ -37,6 +37,9 @@ export class SumurComponent implements OnInit, AfterViewInit {
 
   @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
   @ViewChild(MatSort, {static: false}) sort: MatSort;
+
+  private paginatorSubscription: Subscription;
+  private sortSubscription: Subscription;
 
   constructor(private titleService: TitleService, private http: HttpClient) {}
   todayDate: string = new Date().toLocaleDateString("id-ID");
@@ -59,36 +62,42 @@ export class SumurComponent implements OnInit, AfterViewInit {
     this.refreshAllWellStatuses();
   }
 
-  ngAfterViewInit(): void {
-    // Setup paginator and sort listener after view init
-    if (this.paginator) {
-      this.paginator.page.subscribe(() => {
-        if (this.selectedWell && this.isDateRangeValid()) {
-          this.loadTableData(false); // Don't reset pagination when user clicks page buttons
-        }
-      });
+  ngOnDestroy(): void {
+    // Unsubscribe to prevent memory leaks
+    if (this.paginatorSubscription) {
+      this.paginatorSubscription.unsubscribe();
+    }
+    if (this.sortSubscription) {
+      this.sortSubscription.unsubscribe();
+    }
+  }
+
+  setupPaginationAndSort(): void {
+    // Setup pagination and sort subscriptions after table is rendered
+    // This is called from loadTableData() after data is loaded
+    
+    // Only setup once - check if already subscribed
+    if (this.paginatorSubscription && this.sortSubscription) {
+      return; // Already setup
     }
 
-    if (this.sort) {
-      this.sort.sortChange.subscribe(() => {
-        if (this.selectedWell && this.isDateRangeValid()) {
-          this.loadTableData(true); // Reset pagination when sorting
-        }
-      });
-    }
-
-    // Date change listeners
-    this.dateStartControl.valueChanges.subscribe(() => {
-      if (this.paginator) {
-        this.paginator.pageIndex = 0;
+    // Wait for next tick to ensure paginator and sort are available
+    setTimeout(() => {
+      if (this.paginator && !this.paginatorSubscription) {
+        this.paginatorSubscription = this.paginator.page.subscribe(() => {
+          this.loadTableData();
+        });
       }
-    });
 
-    this.dateEndControl.valueChanges.subscribe(() => {
-      if (this.paginator) {
-        this.paginator.pageIndex = 0;
+      if (this.sort && !this.sortSubscription) {
+        this.sortSubscription = this.sort.sortChange.subscribe(() => {
+          if (this.paginator) {
+            this.paginator.pageIndex = 0;
+          }
+          this.loadTableData();
+        });
       }
-    });
+    }, 0);
   }
 
   isDateRangeValid(): boolean {
@@ -138,12 +147,38 @@ export class SumurComponent implements OnInit, AfterViewInit {
       sort: this.sort ? this.sort.active || 'date' : 'date',
       order: this.sort ? this.sort.direction || 'desc' : 'desc',
       page: this.paginator ? this.paginator.pageIndex.toString() : '0',
-      pagesize: this.paginator ? this.paginator.pageSize.toString() : '50',
+      pagesize: this.paginator ? this.paginator.pageSize.toString() : '10',
       filter: '',
       columnfilter: columnfilter
     };
 
     return this.http.get<any>('/api/pe/sumur', { params });
+  }
+
+  loadTableData(): void {
+    if (!this.selectedWell || !this.isDateRangeValid()) {
+      // Clear data if validation fails
+      this.data = [];
+      this.resultsLength = 0;
+      return;
+    }
+
+    this.getTableData().subscribe(
+      (response) => {
+        this.isLoadingResults = false;
+        this.data = response.items || [];
+        this.resultsLength = response.total_count || 0;
+        
+        // Setup pagination and sort after data is loaded and table is rendered
+        this.setupPaginationAndSort();
+      },
+      (error) => {
+        this.isLoadingResults = false;
+        console.error('Failed to load table data', error);
+        this.data = [];
+        this.resultsLength = 0;
+      }
+    );
   }
 
   private evaluateStatusFromValue(value: number): "ON" | "OFF" {
@@ -256,34 +291,6 @@ export class SumurComponent implements OnInit, AfterViewInit {
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
   end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
-
-  loadTableData(resetPagination: boolean = false): void {
-    if (!this.selectedWell || !this.isDateRangeValid()) {
-      // Clear data if validation fails
-      this.data = [];
-      this.resultsLength = 0;
-      return;
-    }
-
-    // Reset paginator to first page only when explicitly requested (e.g., new search, change well)
-    if (resetPagination && this.paginator) {
-      this.paginator.pageIndex = 0;
-    }
-
-    this.getTableData().subscribe(
-      (response) => {
-        this.isLoadingResults = false;
-        this.data = response.items || [];
-        this.resultsLength = response.total_count || 0;
-      },
-      (error) => {
-        this.isLoadingResults = false;
-        console.error('Failed to load table data', error);
-        this.data = [];
-        this.resultsLength = 0;
-      }
-    );
-  }
 
   dailyCurrent(){
 
