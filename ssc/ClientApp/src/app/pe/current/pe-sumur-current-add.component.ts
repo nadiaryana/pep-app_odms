@@ -33,6 +33,7 @@ export class PeSumurCurrentAddComponent {
         created_count = 0;
         progressPercent: number;
         fileName: string;
+        selectedWell: string = '';
         @ViewChild('fileInput', {static: true}) fileInput;
         @ViewChild('stepper', {static: true}) private stepper: MatStepper;
     
@@ -44,8 +45,16 @@ export class PeSumurCurrentAddComponent {
     
         data: PeSumur[] = [];
         data_error_count: number = 0;
-        displayedColumns: string[] = ["date", "entry_id", "field_1", "field_2"];
-        headerColumns1: string[] = ["date", "entry_id", "field_1", "field_2"];
+        displayedColumns: string[] = ["info", "date", "wellName", "entry_id", "field_1", "field_2"];
+        headerColumns1: string[] = ["info", "date", "wellName", "entry_id", "field_1", "field_2"];
+
+        // data untuk well selection
+        wells = [
+            { name: 'ST-092', value: 'ST-092' },
+            { name: 'ST-182', value: 'ST-182' },
+            { name: 'ST-159', value: 'ST-159' },
+            { name: 'ST-161', value: 'ST-161' },
+        ];
     
         constructor(
             private formBuilder: FormBuilder,
@@ -81,6 +90,7 @@ export class PeSumurCurrentAddComponent {
                 //sensor_id: ['', Validators.required],
                 location_id: [''],
                 is_anchor: [''],
+                wellName: ['', Validators.required], // Ubah ke wellName dengan validasi required
             });
     
             this.paginator.page.subscribe(() => this.loadData());
@@ -110,6 +120,12 @@ export class PeSumurCurrentAddComponent {
         }
     
         onUpload() {
+            // Validasi wellName selection
+            if (!this.sumurForm.get('wellName').value) {
+                this.snackbarService.status.next(new SnackbarApi(true, "Please select a well first!", 'dismiss'));
+                return;
+            }
+
             const file = this.fileInput.nativeElement.files[0];
 
             if (!file) {
@@ -127,7 +143,9 @@ export class PeSumurCurrentAddComponent {
 
             const fd = new FormData();
             this.isUploading = true;
+            this.selectedWell = this.sumurForm.get('wellName').value; // Simpan selected well
             fd.append('files', this.fileInput.nativeElement.files[0]);
+            fd.append('wellName', this.selectedWell); // Kirim wellName ke backend
             this.http.post('/api/pe/sumur/UploadFiles', fd, {
                 reportProgress: true,
                 observe: 'events'
@@ -174,7 +192,12 @@ export class PeSumurCurrentAddComponent {
     
         saveData() {
             this.isSaving = true;
-            this.http.get<any>('/api/pe/sumur/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+            this.http.get<any>('/api/pe/sumur/SaveData', {
+                params: {
+                    _id: this.tmp_id,
+                    wellName: this.selectedWell // Kirim wellName ke backend saat save
+                }
+            }).subscribe(res => {
                 this.isSaving = false;
                 this.modified_count = res["modified_count"];
                 this.created_count = res["created_count"];
@@ -196,6 +219,8 @@ export class PeSumurCurrentAddComponent {
             this.created_count = 0;
             this.progressPercent = 0;
             this.fileName = "";
+            this.selectedWell = "";
+            this.sumurForm.get('wellName').setValue(''); // Reset wellName selection
             this.data = [];
             this.data_error_count = 0;
             this.resultsLength = 0;

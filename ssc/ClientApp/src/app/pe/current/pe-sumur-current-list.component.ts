@@ -23,8 +23,8 @@ import { PeSumur } from './pe-sumur';
 })
 export class PeSumurCurrentListComponent implements OnInit {
 
-    displayedColumns: string[] = ["select", "date","entry_id", "field_1", "field_2"];
-    headerColumns1: string[] = ['select','date','entry_id','field_1','field_2'];
+    displayedColumns: string[] = ["select", "date", "wellName", "entry_id", "field_1", "field_2"];
+    headerColumns1: string[] = ['select','date','wellName','entry_id','field_1','field_2'];
     exampleDatabase: ExampleHttpDao | null;
     data: PeSumur[] = [];
   
@@ -47,11 +47,13 @@ export class PeSumurCurrentListComponent implements OnInit {
     filterControl = new FormControl('');
   
     dateFilter = new FormControl('');
+    wellNameFilter = new FormControl('');
     entry_idFilter = new FormControl('');
     field_1Filter = new FormControl('');
     field_2Filter = new FormControl('');
   
     date_xSelected = [];
+    wellName_xSelected = [];
     entry_id_xSelected = [];
     field_1_xSelected = [];
     field_2_xSelected = [];
@@ -115,6 +117,7 @@ export class PeSumurCurrentListComponent implements OnInit {
       this.paginator.page, 
       this.filterControl.valueChanges.pipe(debounceTime(300)),
       this.dateFilter.valueChanges.pipe(debounceTime(300)),
+      this.wellNameFilter.valueChanges.pipe(debounceTime(300)),
       this.entry_idFilter.valueChanges.pipe(debounceTime(300)),
       this.field_1Filter.valueChanges.pipe(debounceTime(300)),
       this.field_2Filter.valueChanges.pipe(debounceTime(300)),
@@ -246,7 +249,7 @@ export class PeSumurCurrentListComponent implements OnInit {
     getColumnFilter() {
       var columnfilter = {};
       if(this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
-      // if(this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
+      if(this.wellName_xSelected.length) columnfilter["wellName"] = this.wellName_xSelected;
       if(this.entry_id_xSelected.length) columnfilter["entry_id"] = this.entry_id_xSelected;
       if(this.field_1_xSelected.length) columnfilter["field_1"] = this.field_1_xSelected;
       if(this.field_2_xSelected.length) columnfilter["field_2"] = this.field_2_xSelected;

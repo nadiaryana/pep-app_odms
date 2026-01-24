@@ -18,6 +18,17 @@
   }
 }
 
+.selected-well {
+  background-color: #e3f2fd !important; // Light blue background
+  border-left: 4px solid #2196F3; // Blue left border
+  border-radius: 6px;
+  font-weight: 500;
+  
+  &:hover {
+    background-color: #bbdefb !important; // Darker blue on hover
+  }
+}
+
 .status-on {
   color: green;
   font-weight: bold;
@@ -28,4 +39,8 @@
   color: red;
   font-weight: bold;
   margin-left: 40px;
+}
+
+::ng-deep .mat-list-item-content {
+  width: 100% !important;
 }

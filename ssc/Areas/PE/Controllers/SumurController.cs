@@ -39,7 +39,7 @@ namespace ssc.Areas.PE.Controllers
 
             // projection field1 yang mau diambil
             _fields = Builders<Sumur>.Projection
-                .Include(t => t.WellName)
+                .Include(t => t.wellName)
                 .Include(t => t.Current)
                 .Include(t => t.Timestamp)
                 .Include(t => t.date)
@@ -100,7 +100,7 @@ namespace ssc.Areas.PE.Controllers
                     {
                         list.Add(new Sumur
                         {
-                            WellName = wellName,
+                            wellName = wellName,
                             Current = double.TryParse((string)f["field1"], out double val) ? val : 0,
                             Timestamp = DateTime.TryParse((string)f["created_at"], out DateTime ts) ? ts : DateTime.UtcNow
                         });
@@ -144,6 +144,7 @@ namespace ssc.Areas.PE.Controllers
                 filter = filter.ToLower();
                 xfilter =
                     Builders<Sumur>.Filter.Regex(t => t.date, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sumur>.Filter.Regex(t => t.wellName, new BsonRegularExpression(filter, "i")) |
                     Builders<Sumur>.Filter.Regex(t => t.entry_id, new BsonRegularExpression(filter, "i")) |
                     Builders<Sumur>.Filter.Regex(t => t.field_1, new BsonRegularExpression(filter, "i")) |
                     Builders<Sumur>.Filter.Regex(t => t.field_2, new BsonRegularExpression(filter, "i"));
@@ -156,7 +157,7 @@ namespace ssc.Areas.PE.Controllers
                 SumurList colfilter = JsonConvert.DeserializeObject<SumurList>(columnfilter);
 
                 if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Sumur>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
-                // if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sensor>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sensor>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.wellName?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.wellName.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Regex(t => t.wellName, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.entry_id?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.entry_id.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.entry_id, Convert.ToDecimal(c))));
                 if (colfilter.field_1?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.field_1.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.field_1, Convert.ToDecimal(c))));
                 if (colfilter.field_2?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sumur>.Filter.Or(colfilter.field_2.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sumur>.Filter.Eq(t => t.field_2, Convert.ToDecimal(c))));
@@ -164,7 +165,7 @@ namespace ssc.Areas.PE.Controllers
                 foreach (string log in DailyCommon._logical)
                 {
                     if (colfilter.date?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
-                    // if (colfilter.well?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.well.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$well\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.wellName?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wellName.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$wellName\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.entry_id?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.entry_id.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$entry_id\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.field_1?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.field_1.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$field_1\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.field_2?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.field_2.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$field_2\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
@@ -180,7 +181,7 @@ namespace ssc.Areas.PE.Controllers
             switch (sort)
             {
                 case "date": _items = (order == "asc") ? _items.SortBy(t => t.date) : _items.SortByDescending(t => t.date); break;
-                // case "well": _items = (order == "asc") ? _items.SortBy(t => t.well) : _items.SortByDescending(t => t.well); break;
+                case "wellName": _items = (order == "asc") ? _items.SortBy(t => t.wellName) : _items.SortByDescending(t => t.wellName); break;
                 case "entry_id": _items = (order == "asc") ? _items.SortBy(t => t.entry_id) : _items.SortByDescending(t => t.entry_id); break;
                 case "field_1": _items = (order == "asc") ? _items.SortBy(t => t.field_1) : _items.SortByDescending(t => t.field_1); break;
                 case "field_2": _items = (order == "asc") ? _items.SortBy(t => t.field_2) : _items.SortByDescending(t => t.field_2); break;
@@ -214,6 +215,7 @@ namespace ssc.Areas.PE.Controllers
                     dynamic res;
                     switch (mode)
                     {
+                        case "wellName":
                         case "well":
                         case "esp":
                             res = _sumur.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
@@ -255,15 +257,16 @@ namespace ssc.Areas.PE.Controllers
             var workbook = new ExcelPackage();
             var ws = workbook.Workbook.Worksheets.Add("Sumur");
             ws.Cells[1, 1].Value = "Date";
-            ws.Cells[1, 2].Value = "Entry ID";
-            ws.Cells[1, 3].Value = "Field 1";
-            ws.Cells[1, 4].Value = "Field 2";
+            ws.Cells[1, 2].Value = "Well Name";
+            ws.Cells[1, 3].Value = "Entry ID";
+            ws.Cells[1, 4].Value = "Field 1";
+            ws.Cells[1, 5].Value = "Field 2";
 
-            ws.Cells[1, 1, 1, 4].Style.Font.Bold = true;
-            ws.Cells[1, 1, 1, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            ws.Cells[1, 1, 1, 4].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 1, 1, 5].Style.Font.Bold = true;
+            ws.Cells[1, 1, 1, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 1, 5].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
-            for (int c = 1; c <= 4; c++)
+            for (int c = 1; c <= 5; c++)
             {
                 //ws.Column(c).AutoFit();
             }
@@ -273,9 +276,10 @@ namespace ssc.Areas.PE.Controllers
                 var t = items.ElementAt(i);
                 ws.Cells[2 + i, 1].Style.Numberformat.Format = "d-MMM-yy";
                 ws.Cells[2 + i, 1].Value = t.date.HasValue ? t.date.Value.ToLocalTime().ToOADate() : (double?)null;
-                ws.Cells[2 + i, 2].Value = t.entry_id;
-                ws.Cells[2 + i, 3].Value = t.field_1;
-                ws.Cells[2 + i, 4].Value = t.field_2;
+                ws.Cells[2 + i, 2].Value = t.wellName;
+                ws.Cells[2 + i, 3].Value = t.entry_id;
+                ws.Cells[2 + i, 4].Value = t.field_1;
+                ws.Cells[2 + i, 5].Value = t.field_2;
             }
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
@@ -285,10 +289,16 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeSumur Add")]
         [HttpPost("UploadFiles")]
-        public async Task<IActionResult> Post(List<IFormFile> files)
+        public async Task<IActionResult> Post(List<IFormFile> files, [FromForm] string wellName)
         {
             try
             {
+                // Validasi wellName parameter
+                if (string.IsNullOrWhiteSpace(wellName))
+                {
+                    return BadRequest(new { message = "wellName parameter is required" });
+                }
+
                 long size = files.Sum(f => f.Length);
 
                 // full path to file in temp location
@@ -320,6 +330,9 @@ namespace ssc.Areas.PE.Controllers
                     Sumur _row = new Sumur();
                     SumurError _row_error = new SumurError();
                     int last_error_count = error_count;
+
+                    // Set well name dari parameter
+                    _row.wellName = wellName;
 
                     // Define mappings for date property
                     var dateMapping = new[]
@@ -438,6 +451,15 @@ namespace ssc.Areas.PE.Controllers
                         }
                     }
 
+                    // Cek duplikat data - jika date dan wellName tidak ada error, cek apakah data sudah ada di database
+                    if (_row_error.date == null && !string.IsNullOrWhiteSpace(_row.wellName))
+                    {
+                        if (_sumur.Find(t => t.date == _row.date && t.wellName == _row.wellName).CountDocuments() > 0)
+                        {
+                            _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
+                        }
+                    }
+
                     if (error_count > last_error_count)
                     {
                         _row_error._row = new ErrorItem { value = "error", message = "Error found" };
@@ -482,7 +504,16 @@ namespace ssc.Areas.PE.Controllers
             }
             else if (mode == "warning")
             {
-                _tmpitems = _tmpitems.Where(r => r._error._row?.value == "warning").ToList();
+                _tmpitems = _tmpitems.Where(r => r._error._row?.value == "warning").OrderByDescending(r => r._error != null).ToList();
+            }
+            else
+            {
+                // Sort by error first, then warning, then normal
+                _tmpitems = _tmpitems
+                    .OrderByDescending(r => r._error._row?.value == "error") // error dulu
+                    .ThenByDescending(r => r._error._row?.value == "warning") // lanjut warning
+                    .ThenBy(r => r.date) // sisanya diurutkan berdasarkan date
+                    .ToList();
             }
             int total_count = _tmpitems.Count();
             if (pagesize * (page + 1) > total_count) pagesize = total_count - (page * pagesize);
@@ -511,10 +542,16 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeSumur Add")]
         [HttpGet("SaveData")]
-        public ActionResult SaveData(string _id)
+        public ActionResult SaveData(string _id, string wellName)
         {
             try
             {
+                // Validasi wellName parameter
+                if (string.IsNullOrWhiteSpace(wellName))
+                {
+                    return BadRequest(new { message = "wellName parameter is required" });
+                }
+
                 SumurTmp _tmp = _sumur_tmp.Find(t => t._id == _id).FirstOrDefault();
 
                 if (_tmp == null || _tmp.error_count > 0)
@@ -525,7 +562,6 @@ namespace ssc.Areas.PE.Controllers
                 List<Sumur> items = _tmp.items.ToList();
 
                 DateTime? min_date = items.Select(m => m.date).Min();
-                // string[] wells = items.Select(m => m.well).ToArray();
 
                 long modified_count = 0;
                 long created_count = items.Count();
@@ -533,6 +569,9 @@ namespace ssc.Areas.PE.Controllers
                 foreach (Sumur item in items)
                 {
                     item._error = null;
+                    
+                    // Pastikan well name tersimpan
+                    item.wellName = wellName;
 
                     var update = Builders<Sumur>.Update.Set(t => t.date, item.date)
                         .Set(t => t.entry_id, item.entry_id)
@@ -540,7 +579,7 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.field_2, item.field_2)
 
                         // other fields if exists set, if not set null
-                        .Set(t => t.WellName, item.WellName)
+                        .Set(t => t.wellName, item.wellName) // Simpan well name
                         .Set(t => t.Current, item.Current)
                         .Set(t => t.Timestamp, item.Timestamp)
 
@@ -551,15 +590,13 @@ namespace ssc.Areas.PE.Controllers
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
                     UpdateResult res = _sumur.UpdateOne(
-                        Builders<Sumur>.Filter.Eq(t => t.date, item.date),
+                        Builders<Sumur>.Filter.Eq(t => t.date, item.date) & Builders<Sumur>.Filter.Eq(t => t.wellName, item.wellName),
                         update, new UpdateOptions() { IsUpsert = true });
 
                     modified_count += res.ModifiedCount;
                     created_count -= res.ModifiedCount;
                 }
                 _sumur_tmp.DeleteOne(d => d._id == _id);
-
-                // modified_count += DailyCommon.RecalculateFields(min_date, wells, User.Identity.Name);
 
                 return Ok(new
                 {

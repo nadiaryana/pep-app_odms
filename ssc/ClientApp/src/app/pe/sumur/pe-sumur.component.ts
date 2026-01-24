@@ -1,9 +1,11 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild, AfterViewInit } from "@angular/core";
 import { TitleService } from "src/app/navigation/title/title.service";
 import { HttpClient } from "@angular/common/http";
 import * as Highcharts from "highcharts";
 import { FormControl } from "@angular/forms";
-import { MatDatepicker } from "@angular/material";
+import { MatDatepicker, MatPaginator, MatSort } from "@angular/material";
+import { merge, of as observableOf } from 'rxjs';
+import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operators';
 
 interface Well {
   id: number;
@@ -18,9 +20,23 @@ interface Well {
   templateUrl: "./pe-sumur.component.html",
   styleUrls: ["./pe-sumur.component.scss"],
 })
-export class SumurComponent implements OnInit {
+export class SumurComponent implements OnInit, AfterViewInit {
   Highcharts: typeof Highcharts = Highcharts;
   chartOptions: Highcharts.Options | null = null;
+
+  // Table properties
+  displayedColumns: string[] = ["date", "wellName", "entry_id", "field_1", "field_2"];
+  data: any[] = [];
+  resultsLength = 0;
+  isLoadingResults = false;
+
+  // Date filter properties
+  dateStartControl = new FormControl(null);
+  dateEndControl = new FormControl(null);
+  dateRangeError: string = '';
+
+  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+  @ViewChild(MatSort, {static: false}) sort: MatSort;
 
   constructor(private titleService: TitleService, private http: HttpClient) {}
   todayDate: string = new Date().toLocaleDateString("id-ID");
@@ -41,6 +57,93 @@ export class SumurComponent implements OnInit {
   ngOnInit(): void {
     // refresh statuses on init
     this.refreshAllWellStatuses();
+  }
+
+  ngAfterViewInit(): void {
+    // Setup paginator and sort listener after view init
+    if (this.paginator) {
+      this.paginator.page.subscribe(() => {
+        if (this.selectedWell && this.isDateRangeValid()) {
+          this.loadTableData(false); // Don't reset pagination when user clicks page buttons
+        }
+      });
+    }
+
+    if (this.sort) {
+      this.sort.sortChange.subscribe(() => {
+        if (this.selectedWell && this.isDateRangeValid()) {
+          this.loadTableData(true); // Reset pagination when sorting
+        }
+      });
+    }
+
+    // Date change listeners
+    this.dateStartControl.valueChanges.subscribe(() => {
+      if (this.paginator) {
+        this.paginator.pageIndex = 0;
+      }
+    });
+
+    this.dateEndControl.valueChanges.subscribe(() => {
+      if (this.paginator) {
+        this.paginator.pageIndex = 0;
+      }
+    });
+  }
+
+  isDateRangeValid(): boolean {
+    const startDate = this.dateStartControl.value;
+    const endDate = this.dateEndControl.value;
+
+    // Both dates must be filled
+    if (!startDate || !endDate) {
+      this.dateRangeError = 'Pilih tanggal mulai dan tanggal akhir';
+      return false;
+    }
+
+    // End date must not be before start date
+    if (new Date(endDate) < new Date(startDate)) {
+      this.dateRangeError = 'Tanggal akhir tidak boleh kurang dari tanggal mulai';
+      return false;
+    }
+
+    this.dateRangeError = '';
+    return true;
+  }
+
+  private getTableData() {
+    if (!this.selectedWell || !this.isDateRangeValid()) {
+      return observableOf({ items: [], total_count: 0 });
+    }
+
+    this.isLoadingResults = true;
+
+    const columnfilter = JSON.stringify({
+      wellName: [this.selectedWell.name],
+      date: [
+        {
+          log: 'and',
+          opr: 'gte',
+          val: this.dateStartControl.value.toISOString()
+        },
+        {
+          log: 'and',
+          opr: 'lte',
+          val: this.dateEndControl.value.toISOString()
+        }
+      ]
+    });
+
+    const params = {
+      sort: this.sort ? this.sort.active || 'date' : 'date',
+      order: this.sort ? this.sort.direction || 'desc' : 'desc',
+      page: this.paginator ? this.paginator.pageIndex.toString() : '0',
+      pagesize: this.paginator ? this.paginator.pageSize.toString() : '50',
+      filter: '',
+      columnfilter: columnfilter
+    };
+
+    return this.http.get<any>('/api/pe/sumur', { params });
   }
 
   private evaluateStatusFromValue(value: number): "ON" | "OFF" {
@@ -74,6 +177,18 @@ export class SumurComponent implements OnInit {
 
   selectWell(well: Well): void {
     this.selectedWell = well;
+
+    // Clear table data and reset date filters
+    this.data = [];
+    this.resultsLength = 0;
+    this.dateStartControl.setValue(null);
+    this.dateEndControl.setValue(null);
+    this.dateRangeError = '';
+    
+    // Reset pagination to first page when selecting a new well
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
 
     // Call backend instead of full ThingSpeak API
     const backendUrl = `/api/pe/sumur/fetch`;
@@ -141,6 +256,34 @@ export class SumurComponent implements OnInit {
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
   end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+
+  loadTableData(resetPagination: boolean = false): void {
+    if (!this.selectedWell || !this.isDateRangeValid()) {
+      // Clear data if validation fails
+      this.data = [];
+      this.resultsLength = 0;
+      return;
+    }
+
+    // Reset paginator to first page only when explicitly requested (e.g., new search, change well)
+    if (resetPagination && this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+
+    this.getTableData().subscribe(
+      (response) => {
+        this.isLoadingResults = false;
+        this.data = response.items || [];
+        this.resultsLength = response.total_count || 0;
+      },
+      (error) => {
+        this.isLoadingResults = false;
+        console.error('Failed to load table data', error);
+        this.data = [];
+        this.resultsLength = 0;
+      }
+    );
+  }
 
   dailyCurrent(){
 

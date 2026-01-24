@@ -15,7 +15,7 @@ namespace ssc.Areas.PE.Models
         public string _id { get; set; }
         public DateTime Timestamp { get; set; } // Waktu dari ThingSpeak
         public DateTime? date { get; set; }
-        public string WellName { get; set; }   // Nama sumur
+        public string wellName { get; set; }   // Nama sumur
 
         public double Current { get; set; }    // Nilai arus
         public decimal? entry_id { get; set; }
