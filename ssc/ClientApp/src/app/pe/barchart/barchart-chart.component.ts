@@ -222,38 +222,10 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     // 1. mapping warna untuk setiap Job sudah ada di jobColors property
     // Tidak perlu mapping ulang karena sudah didefinisikan di class property
 
-    // 2. Persiapkan data series untuk chart
-    const seriesData = this.chartData.map((item, index) => {
-      // Parse tanggal menggunakan toLocaleDateString (tanggal lokal, tanpa timezone issue)
-      const startDate = item.plan_start ? Date.parse(new Date(item.plan_start).toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" })) : null;
-      const endDate = item.plan_end ? Date.parse(new Date(item.plan_end).toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" })) : null;
-      
-      return {
-        name: item.well || 'Unknown Well',  // Nama well untuk label
-        id: 'task-' + index,                 // ID unik untuk setiap bar
-        start: startDate,                    // Tanggal mulai (timestamp)
-        end: endDate,                        // Tanggal selesai (timestamp)
-        y: index,                            // Posisi vertikal (baris ke-n)
-        color: this.getJobColor(item.job), // Warna berdasarkan job
-        
-        // Data custom untuk ditampilkan di tooltip
-        custom: {
-          well: item.well,
-          job: item.job,
-          rig: item.rig,
-          plan_start: Date.parse(new Date(item.plan_start).toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" })),
-          plan_end: Date.parse(new Date(item.plan_end).toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" }))
-        }
-      };
-    }).filter(item => item.start && item.end); // Filter data yang tidak punya tanggal
-
-    // 3. Siapkan kategori untuk sumbu Y (daftar well)
-    // const categories = seriesData.map(item => item.name);
-
-    // 4. Simpan reference ke component untuk digunakan di tooltip
+    // 2. Simpan reference ke component untuk digunakan di tooltip
     const self = this;
 
-    // 5. Hitung lebar chart berdasarkan range tanggal
+    // 3. Hitung lebar chart berdasarkan range tanggal
     const allDates = [...wellSeries.map(d => d.start), ...wellSeries.map(d => d.end)];
     const minDate = Math.min(...allDates);
     const maxDate = Math.max(...allDates);
@@ -263,14 +235,14 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     const minWidthPerDay = 30;
     const scrollableWidth = Math.max(1200, daysDiff * minWidthPerDay);
 
-    // 6. Buat dan render chart dengan Highcharts Gantt
+    // 4. Buat dan render chart dengan Highcharts Gantt
     this.chart = HighchartsGantt.ganttChart(this.ganttChartEl.nativeElement, {
       
       // Konfigurasi chart container
       chart: {
-        // Tinggi chart dinamis berdasarkan jumlah data
-        // Minimal 400px, atau 50px per baris + 150px untuk header/footer (2 bar per baris)
-        height: Math.max(400, seriesData.length * 50 + 150),
+        // Tinggi chart fixed berdasarkan jumlah categories (rig)
+        // Sesuaikan dengan cellHeight 150: 150px per baris + 300px untuk header/footer
+        height: Math.max(400, categories.length * 150 + 300),
         // Full width - ikut container
         width: null,
         scrollablePlotArea: {
@@ -346,7 +318,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       
       // Konfigurasi sumbu Y (kategori well)
       yAxis: {
-        top: 70,
+        top: 180,
         type: 'category',
         categories: categories,
         grid: {
@@ -356,7 +328,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             },
             categories: categories
           }],
-          cellHeight: 90  
+          cellHeight: 120  // Tinggi cell lebih besar untuk remarks maksimal 5 baris
         }
       },
       
@@ -380,7 +352,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           // Jika ini bar Well
           if (this.series.name === 'Well') {
             return `
-              <div style="padding: 8px; max-width: 300px;">
+              <div style="padding: 8px; min-width: 300px;">
                 <b style="font-size: 14px; color: #333;">${custom.label || 'N/A'}</b><br>
                 <table style="margin-top: 6px; font-size: 12px;">
                   <tr><td style="color: #666; padding-right: 8px;">Rig:</td><td><b>${custom.rig || '-'}</b></td></tr>
@@ -396,7 +368,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           
           // Jika ini bar Remarks
           return `
-            <div style="padding: 8px; max-width: 300px;">
+            <div style="padding: 8px; min-width: 300px;">
               <b style="font-size: 13px; color: #333;">${custom.well || 'Remarks'}</b><br>
               <div style="margin-top: 6px; font-size: 12px; color: #555; white-space: pre-wrap;">${label || '-'}</div>
               <div style="margin-top: 6px; font-size: 11px; color: #888;">
@@ -413,17 +385,19 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Well',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 28,             // Ukuran bar well (lebih kecil)
-              pointPlacement: -0.15,      // Posisi bar di atas
+              pointWidth: 35,             // Ukuran bar well yang lebih besar
+              pointPlacement: -0.3,      // Lebih ke atas agar pas dengan border atas
               borderRadius: 4,
+              minPointLength: 10,         // Minimum panjang bar agar terlihat
 
               dataLabels: {
                 enabled: true,
                 align: 'center',
-                verticalAlign: 'middle',
+                verticalAlign: 'top',     // Align top untuk well name
+                y: 0,                      // Posisi label tepat di atas bar
                 format: '{point.name}',
                 style: {
-                  fontSize: '16px',
+                  fontSize: '17px',        // Besarkan font well name
                   fontWeight: 'bold',
                   textOutline: 'none',
                 },
@@ -453,30 +427,28 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Remarks',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 25,             // Ukuran bar remarks lebih besar
-              pointPlacement: 0.18,       // Posisi bar di bawah
+              pointWidth: 30,             // Bar remarks sedikit lebih besar
+              pointPlacement: -0.15,       // Posisi bar lebih dekat ke well bar
               borderRadius: 0,
+              minPointLength: 10,
               dataLabels: {
                 verticalAlign: 'top',
-                y: -15,
+                y: 3,
                 enabled: true,
                 useHTML: true,
-                inside: true,
+                inside: false,
                 allowOverlap: true,
 
                 formatter: function () {
-                    // Limit to 2 lines, show ellipsis if overflow
                     const point: any = this.point;
                     const text = point.name || '';
 
-                    // sanitize text for title attribute
                     const safe = String(text)
                       .replace(/&/g, '&amp;')
                       .replace(/</g, '&lt;')
                       .replace(/>/g, '&gt;')
                       .replace(/"/g, '&quot;');
 
-                    // try to get rendered bar width; fallback to estimate (days * 30px)
                     const dayMs = 24 * 3600 * 1000;
                     const estimatedDayPx = 30;
                     const widthPx =
@@ -484,24 +456,17 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       ? point.shapeArgs.width
                       : (point.end && point.start ? Math.max(0, (point.end - point.start) / dayMs * estimatedDayPx) : 0);
 
-                    // If bar is extremely narrow, hide label to avoid overlap
                     if (widthPx < 40) {
                       return '';
                     }
 
-                    // For small bars show single-line truncated text with tooltip
-                    // If bar is extremely narrow, hide label to avoid overlap
-                    if (widthPx < 40) {
-                      return '';
-                    }
-
-                    // For narrow bars show single-line truncated text with tooltip
                     if (widthPx < 100) {
                       const short = text.length > 30 ? text.substr(0, 30) + '…' : text;
                       return `
                         <div title="${safe}"
                              style="
                                width: ${Math.max(30, Math.floor(widthPx))}px;
+                               max-height: 100px;
                                white-space: nowrap;
                                overflow: hidden;
                                text-overflow: ellipsis;
@@ -514,10 +479,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       `;
                     }
 
-                    // For wider bars allow up to 4 lines with ellipsis
-                    const maxLines = 10;
+                    const maxLines = 5;  // Maksimal 5 baris untuk remarks
                     const remarks = safe.replace(/\n/g, '<br>');
-                    // if text length is more than 200 chars text allign left
                     let textAlign = 'center';
                     if (text.length > 200) {
                       textAlign = 'left';
@@ -526,7 +489,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       <div title="${safe}"
                       style="
                         width: ${Math.max(80, Math.floor(widthPx))}px;
-                        font-size: 12px;
+                        max-height: 100px;
+                        font-size: 14px;
                         line-height: 14px;
                         color: #333;
                         text-align: ${textAlign};
@@ -536,6 +500,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: normal;
+                        margin: 0;
+                        padding: 0;
                       ">
                       ${remarks}
                       </div>
@@ -798,6 +764,4 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
   return { wellSeries, remarkSeries, categories };
 }
-
-
 }
