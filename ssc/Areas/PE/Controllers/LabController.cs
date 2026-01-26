@@ -402,14 +402,19 @@ namespace ssc.Areas.PE.Controllers
                         }
                     }
 
+                    decimal baru = _row.baru ?? 0;
+                    decimal lama = _row.lama ?? 0;
+                    decimal rusak = _row.rusak ?? 0;
+                    decimal masuk = _row.barang_masuk ?? 0;
+                    decimal keluar = _row.barang_keluar ?? 0;
 
-                    // if (_row_error.date == null && _row_error.well == null)
-                    // {
-                    //     if (_lab.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
-                    //     {
-                    //         _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
-                    //     }
-                    // }
+                    // stok_awal
+                    _row.stok_awal = baru + lama + rusak;
+
+                    // stok_akhir 
+                    _row.stok_akhir = _row.stok_awal + masuk - keluar;
+
+
                     if (error_count > last_error_count)
                     {
                         _row_error._row = new ErrorItem { value = "error", message = "Error found" };

@@ -219,7 +219,7 @@ export class PeModule {
         new PanelItem("Diagnostic Chart", "pe/grafik", "assessment", this.pePermission.passPermission("pe/grafik")),
         new PanelItem("Laboratorium", "", "science", this.pePermission.passPermission("pe/dasboard"), true, [
             // new PanelSubItem("Analysis", "pe/lab", "analytics", this.pePermission.passPermission("pe/lab")),
-            new PanelSubItem("Report", "pe/lab", "summarize", this.pePermission.passPermission("pe/lab")),
+            new PanelSubItem("Assets", "pe/lab", "summarize", this.pePermission.passPermission("pe/lab")),
             // new PanelSubItem("Measurement Result", "pe/lab", "data_exploration", this.pePermission.passPermission("pe/lab")),
             // new PanelSubItem("Performance & Inventory", "pe/lab", "trending_up", this.pePermission.passPermission("pe/lab")),
 

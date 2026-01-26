@@ -74,3 +74,33 @@ ng::host .mat-horizontal-stepper-content {
   top: -5px;
 }
 
+// .mat-column-kegunaan {
+//   flex: 2;
+//   white-space: normal;
+// }
+
+// .col-kegunaan {
+//   flex: 0 0 500px;     
+//   width: 500px;
+//   max-width: 420px;
+
+//   white-space: normal;   
+//   word-break: break-word;
+// }
+
+::ng-deep .mat-column-kegunaan {
+  flex: 1 1 520px !important;
+  width: 520px !important;
+  max-width: 520px !important;
+
+  white-space: normal !important;
+}
+
+
+// ::ng-deep .mat-header-cell,
+// ::ng-deep .mat-cell {
+//   align-items: stretch;
+// }
+
+
+

@@ -526,7 +526,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       <div title="${safe}"
                       style="
                         width: ${Math.max(80, Math.floor(widthPx))}px;
-                        font-size: 14px;
+                        font-size: 12px;
                         line-height: 14px;
                         color: #333;
                         text-align: ${textAlign};

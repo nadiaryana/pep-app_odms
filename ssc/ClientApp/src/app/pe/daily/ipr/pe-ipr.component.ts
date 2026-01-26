@@ -724,9 +724,7 @@ export class IprComponent implements OnInit {
     this.prod_reservoir.setValue(prod_reservoir);
 
 
-    // ===============================
     // OPERATING DESIGN (GUARD)
-    // ===============================
     const sm2_raw = this.sm2.value;
     const kd2_raw = this.ds_kd2.value;
 
@@ -748,12 +746,8 @@ export class IprComponent implements OnInit {
       return;
     }
 
-    // ===============================
     // HITUNG OPERATING DESIGN
-    // ===============================
-    const pwf2 =
-      (0.433 * wcAvg / 100 + 0.346 * (1 - wcAvg / 100)) *
-      (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+    const pwf2 = (0.433 * wcAvg / 100 + 0.346 * (1 - wcAvg / 100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
 
     this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
 
@@ -762,9 +756,7 @@ export class IprComponent implements OnInit {
 
     console.log(`Operating Design:
       Pwf_design = ${pwf2}
-      q_design   = ${q_design}`);
-
-    
+      q_design   = ${q_design}`);   
   }
 
   getPwf(sbhp: any, iteration = 1) {
