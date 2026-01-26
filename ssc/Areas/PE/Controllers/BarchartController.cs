@@ -115,9 +115,9 @@ namespace ssc.Areas.PE.Controllers
                     // list template rig untuk pengurutan
                     var templateOrderRig = new List<string> { "H-25", "L-350", "MH-262", "Rigless" };
                     var chartData = _barchart.Find(
-                        r => 
+                        r =>
                             // jika masih dialam range
-                            (r.plan_start >= start_date && 
+                            (r.plan_start >= start_date &&
                             r.plan_end <= end_date) ||
                             // atau jika plan_start lebih kecil dari start_date dan plan_end lebih besar dari start_date
                             (r.plan_start <= start_date &&
@@ -301,9 +301,9 @@ namespace ssc.Areas.PE.Controllers
                     }
 
                     // Check for existing data
-                    if (_row_error.well == null && _row.plan_start != null)
+                    if (_row_error.well == null && _row.plan_start != null && _row.plan_end != null)
                     {
-                        if (_barchart.Find(t => t.well == _row.well && t.plan_start == _row.plan_start).CountDocuments() > 0)
+                        if (_barchart.Find(t => t.well == _row.well && t.plan_start == _row.plan_start && t.plan_end == _row.plan_end).CountDocuments() > 0)
                         {
                             _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
                         }
