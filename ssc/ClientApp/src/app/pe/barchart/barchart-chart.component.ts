@@ -256,8 +256,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       // Konfigurasi chart container
       chart: {
         // Tinggi chart fixed berdasarkan jumlah categories (rig)
-        // Sesuaikan dengan cellHeight 150: 150px per baris + 300px untuk header/footer
-        height: Math.max(400, categories.length * 150 + 300),
+        // Gunakan cellHeight dinamis yang sudah dihitung
+        height: Math.max(400, categories.length * cellHeight + 300),
         // Full width - ikut container
         width: null,
         scrollablePlotArea: {
@@ -346,7 +346,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             },
             categories: categories
           }],
-          cellHeight: 120  // Tinggi cell lebih besar untuk remarks maksimal 5 baris
+          cellHeight: cellHeight  // Gunakan cellHeight dinamis
         },
       },
       
@@ -501,7 +501,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       `;
                     }
 
-                    const maxLines = 20;  // Maksimal 5 baris untuk remarks
+                    const maxLines = 50;  // Tingkatkan maksimal baris untuk remarks panjang
                     const remarks = safe.replace(/\n/g, '<br>');
                     let textAlign = 'center';
                     if (text.length > 200) {
@@ -511,9 +511,9 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       <div title="${safe}"
                       style="
                         width: ${Math.max(80, Math.floor(widthPx))}px;
-                        max-height: 180px;
+                        max-height: 800px;
                         font-size: 13px;
-                        line-height: 14px;
+                        line-height: 16px;
                         color: #333;
                         text-align: ${textAlign};
                         display: -webkit-box;
@@ -743,8 +743,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     });
   });
 
-  const baseHeight = 60;   // tinggi minimum baris
-  const lineHeight = 16;  // tinggi per baris teks
+  const baseHeight = 80;   // tinggi minimum baris (dinaikkan)
+  const lineHeight = 20;  // tinggi per baris teks (dinaikkan untuk jarak lebih lapang)
 
   const maxLines = Math.max(...Object.values(maxLinesPerRig));
   const dynamicCellHeight = baseHeight + (maxLines * lineHeight);
