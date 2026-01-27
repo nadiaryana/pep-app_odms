@@ -401,7 +401,8 @@ namespace ssc.Areas.PE.Controllers
             foreach (var item in tmpItems)
             {
                 var filter = Builders<Barchart>.Filter.Eq(t => t.well, item.well) &
-                             Builders<Barchart>.Filter.Eq(t => t.plan_start, item.plan_start);
+                             Builders<Barchart>.Filter.Eq(t => t.plan_start, item.plan_start) &
+                             Builders<Barchart>.Filter.Eq(t => t.plan_end, item.plan_end);
 
                 var existing = _barchart.Find(filter).FirstOrDefault();
 

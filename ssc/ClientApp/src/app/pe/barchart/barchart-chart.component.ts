@@ -6,6 +6,7 @@ import { FormControl } from '@angular/forms';
 import { MatDatepicker } from '@angular/material';
 import { style } from '@angular/animations';
 import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
+import { max } from 'rxjs/operators';
 
 // ============================================
 // Import Highcharts Gantt module
@@ -217,7 +218,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       this.jobLegend = [];
       return;
     }
-    const { wellSeries, remarkSeries, categories } = this.reformatDataGantt();
+    const { wellSeries, remarkSeries, categories, cellHeight } = this.reformatDataGantt();
 
     // 1. mapping warna untuk setiap Job sudah ada di jobColors property
     // Tidak perlu mapping ulang karena sudah didefinisikan di class property
@@ -234,6 +235,20 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     // Minimal 30px per hari, agar label tetap terlihat
     const minWidthPerDay = 30;
     const scrollableWidth = Math.max(1200, daysDiff * minWidthPerDay);
+
+    //Gunakan tanggal filter user
+    const filterStartDate = this.start_dateControl.value ? Date.UTC(
+      this.start_dateControl.value.getFullYear(),
+      this.start_dateControl.value.getMonth(),
+      this.start_dateControl.value.getDate(),
+    ) : minDate;
+  
+    const filterEndDate = this.end_dateControl.value ? Date.UTC(
+      this.end_dateControl.value.getFullYear(),
+      this.end_dateControl.value.getMonth(),
+      this.end_dateControl.value.getDate(),
+    ) + (24 * 60 * 60 * 1000) : maxDate;
+
 
     // 4. Buat dan render chart dengan Highcharts Gantt
     this.chart = HighchartsGantt.ganttChart(this.ganttChartEl.nativeElement, {
@@ -270,6 +285,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         { // tanggal perhari
           type: 'datetime',
           top: 150,
+          min: filterStartDate,
+          max: filterEndDate,
 
           tickInterval: 24 * 3600 * 1000, // 1 hari = 1 kolom
 
@@ -322,6 +339,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         type: 'category',
         categories: categories,
         grid: {
+          backgroundColor: "#ffffff",
           columns: [{
             title: {
               text: 'RIG'  // Header kolom
@@ -329,7 +347,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             categories: categories
           }],
           cellHeight: 120  // Tinggi cell lebih besar untuk remarks maksimal 5 baris
-        }
+        },
       },
       
       // Konfigurasi tooltip (muncul saat hover)
@@ -386,7 +404,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               pointPadding: 0,
               groupPadding: 0,
               pointWidth: 35,             // Ukuran bar well yang lebih besar
-              pointPlacement: -0.3,      // Lebih ke atas agar pas dengan border atas
+              pointPlacement: -0.4,      // Lebih ke atas agar pas dengan border atas
               borderRadius: 4,
               minPointLength: 10,         // Minimum panjang bar agar terlihat
 
@@ -394,10 +412,10 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                 enabled: true,
                 align: 'center',
                 verticalAlign: 'top',     // Align top untuk well name
-                y: 0,                      // Posisi label tepat di atas bar
+                y: 8,                      // Posisi label tepat di atas bar
                 format: '{point.name}',
                 style: {
-                  fontSize: '17px',        // Besarkan font well name
+                  fontSize: '15px',        // Besarkan font well name
                   fontWeight: 'bold',
                   textOutline: 'none',
                 },
@@ -428,16 +446,18 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               pointPadding: 0,
               groupPadding: 0,
               pointWidth: 30,             // Bar remarks sedikit lebih besar
-              pointPlacement: -0.15,       // Posisi bar lebih dekat ke well bar
+              pointPlacement: -0.20,       // Posisi bar lebih dekat ke well bar
               borderRadius: 0,
               minPointLength: 10,
               dataLabels: {
                 verticalAlign: 'top',
-                y: 3,
+                y: -14,
                 enabled: true,
                 useHTML: true,
                 inside: false,
                 allowOverlap: true,
+                alignTo: 'plotEdges',
+              
 
                 formatter: function () {
                     const point: any = this.point;
@@ -448,6 +468,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       .replace(/</g, '&lt;')
                       .replace(/>/g, '&gt;')
                       .replace(/"/g, '&quot;');
+
+
 
                     const dayMs = 24 * 3600 * 1000;
                     const estimatedDayPx = 30;
@@ -479,7 +501,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       `;
                     }
 
-                    const maxLines = 5;  // Maksimal 5 baris untuk remarks
+                    const maxLines = 20;  // Maksimal 5 baris untuk remarks
                     const remarks = safe.replace(/\n/g, '<br>');
                     let textAlign = 'center';
                     if (text.length > 200) {
@@ -489,8 +511,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       <div title="${safe}"
                       style="
                         width: ${Math.max(80, Math.floor(widthPx))}px;
-                        max-height: 100px;
-                        font-size: 14px;
+                        max-height: 180px;
+                        font-size: 13px;
                         line-height: 14px;
                         color: #333;
                         text-align: ${textAlign};
@@ -520,14 +542,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       
       // Navigator untuk scroll horizontal
       navigator: {
-        enabled: true,
+        enabled: false,
         series: {
           type: 'gantt',
           pointWidth: 1
         },
         yAxis: {
-          min: 0,
-          max: 1,
           reversed: true,
           categories: []
         }
@@ -535,9 +555,10 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
       // Scrollbar horizontal
       scrollbar: {
-        enabled: true
+        enabled: false
       },
 
+      
       // Range selector 
       rangeSelector: {
         enabled: true,
@@ -627,61 +648,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     return this.jobColors[key] || '#bfbfbf';
   }
 
-
-
-  // fungsi reformat data dari API ke series Highcharts
-  // private reformatDataGantt() {
-  //   const wellSeries: any[] = [];
-  //   const remarkSeries: any[] = [];
-  //   const categories: string[] = [];
-
-  //   this.chartData.forEach((d, index) => {
-
-  //     // label kiri (rig)
-  //     categories.push(d.rig);
-
-  //     // Parse tanggal dan set ke awal hari (00:00:00) agar bar mulai tepat di tanggal
-  //     const startDate = new Date(d.plan_start);
-  //     const start = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
-      
-  //     const endDate = new Date(d.plan_end);
-  //     // Tambah 1 hari ke end agar bar mencakup sampai akhir tanggal tersebut
-  //     // Karena Highcharts Gantt menggunakan exclusive end (bar berhenti sebelum end date)
-  //     let end = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()) + (24 * 60 * 60 * 1000);
-
-  //     /* === BARIS ATAS (WELL NAME) === */
-  //     wellSeries.push({
-  //       name: d.well,
-  //       start,
-  //       end,
-  //       y: index,
-  //       color: '#B4A7D6',
-  //       custom: {
-  //         label: d.well,
-  //         rig: d.rig,
-  //         job: d.job,
-  //         remarks: d.remarks
-  //       }
-  //     });
-
-  //     /* === BARIS BAWAH (REMARKS) === */
-  //     remarkSeries.push({
-  //       name: d.remarks,
-  //       start,
-  //       end,
-  //       y: index, // PENTING: y sama → visually connected
-  //       color: '#FFD966',
-  //       custom: {
-  //         label: d.remarks,
-  //         well: d.well,
-  //         rig: d.rig,
-  //         job: d.job
-  //       }
-  //     });
-  //   });
-
-  //   return { wellSeries, remarkSeries, categories };
-  // }
+  private estimateLines(text: string): number {
+    if (!text) return 1;
+    const charsPerLine = 35; // estimasi lebar teks
+    return Math.ceil(text.length / charsPerLine);
+  }
 
   private reformatDataGantt() {
 
@@ -691,6 +662,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
   const rigMap = new Map<string, number>();
   let rigIndex = 0;
+
+  const maxLinesPerRig: { [rig: string]: number } = {};
 
   this.chartData.forEach((d) => {
 
@@ -702,6 +675,14 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       categories[rigIndex] = d.rig;
       rigIndex++;
     }
+
+    // ⬇️ HITUNG JUMLAH BARIS REMARKS
+    const lines = this.estimateLines(d.remarks);
+
+    if (!maxLinesPerRig[d.rig] || maxLinesPerRig[d.rig] < lines) {
+      maxLinesPerRig[d.rig] = lines;
+    }
+
 
     const y = rigMap.get(d.rig);
 
@@ -761,6 +742,20 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       }
     });
   });
+
+  const baseHeight = 60;   // tinggi minimum baris
+  const lineHeight = 16;  // tinggi per baris teks
+
+  const maxLines = Math.max(...Object.values(maxLinesPerRig));
+  const dynamicCellHeight = baseHeight + (maxLines * lineHeight);
+
+  return {
+    wellSeries,
+    remarkSeries,
+    categories,
+    cellHeight: dynamicCellHeight   // ⬅️ kirim ke luar
+  };
+
 
   return { wellSeries, remarkSeries, categories };
 }

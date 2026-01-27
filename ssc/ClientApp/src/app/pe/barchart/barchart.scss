@@ -182,7 +182,7 @@ ng::host .mat-horizontal-stepper-content {
 .gantt-chart-wrapper {
   width: 100%;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   padding: 16px 0;
   background: #ffffff;
   border-radius: 4px;
@@ -268,4 +268,8 @@ ng::host .mat-horizontal-stepper-content {
   align-items: center;
   justify-content: center;
   z-index: 10;
+}
+
+:host ::ng-deep .highcharts-grid-background {
+  fill: #ffffff !important;
 }
