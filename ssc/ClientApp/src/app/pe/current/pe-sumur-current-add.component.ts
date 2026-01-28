@@ -54,6 +54,10 @@ export class PeSumurCurrentAddComponent {
             { name: 'ST-182', value: 'ST-182' },
             { name: 'ST-159', value: 'ST-159' },
             { name: 'ST-161', value: 'ST-161' },
+            { name: 'ST-080', value: 'ST-080' },
+            { name: 'ST-185', value: 'ST-185' },
+            { name: 'ST-160', value: 'ST-160' },
+            { name: 'ST-210', value: 'ST-210' },
         ];
     
         constructor(

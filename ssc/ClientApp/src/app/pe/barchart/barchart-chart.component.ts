@@ -446,7 +446,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               pointPadding: 0,
               groupPadding: 0,
               pointWidth: 30,             // Bar remarks sedikit lebih besar
-              pointPlacement: -0.20,       // Posisi bar lebih dekat ke well bar
+              pointPlacement: -0.18,       // Posisi bar lebih dekat ke well bar
               borderRadius: 0,
               minPointLength: 10,
               dataLabels: {
@@ -511,7 +511,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       <div title="${safe}"
                       style="
                         width: ${Math.max(80, Math.floor(widthPx))}px;
-                        max-height: 800px;
+                        max-height: 810px;
                         font-size: 13px;
                         line-height: 16px;
                         color: #333;
@@ -743,7 +743,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     });
   });
 
-  const baseHeight = 80;   // tinggi minimum baris (dinaikkan)
+  const baseHeight = 100;   // tinggi minimum baris (dinaikkan)
   const lineHeight = 20;  // tinggi per baris teks (dinaikkan untuk jarak lebih lapang)
 
   const maxLines = Math.max(...Object.values(maxLinesPerRig));
