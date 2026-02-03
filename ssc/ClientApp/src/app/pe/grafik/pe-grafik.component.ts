@@ -104,7 +104,7 @@ export class PeGrafikComponent implements OnInit {
     next: (res) => {
 
       this.chartOptions = {
-        chart: { type: 'line' },
+        chart: { type: 'line', zoomType: 'x' },
         title: { text: `${res.y1} & ${res.y2}` },
         xAxis: { type: 'datetime' },
         yAxis: [{
@@ -113,20 +113,27 @@ export class PeGrafikComponent implements OnInit {
           title: { text: res.y2 },
           opposite: true
         }],
+        plotOptions: {
+          series: {
+            marker: { enabled: false },
+            lineWidth: 1,
+            turboThreshold: 50000
+          }
+        },
         series: [{
           type: 'line',
           name: res.y1,
           data: res.series1,
           yAxis: 0,
-          step: 'center', 
-          marker: { enabled: false }
+          // step: 'center', 
+          // marker: { enabled: false }
         },{
           type: 'line',
           name: res.y2,
           data: res.series2,
           yAxis: 1,
-          step: 'center', 
-          marker: { enabled: false }
+          // step: 'center', 
+          // marker: { enabled: false }
         }]
       };
 
