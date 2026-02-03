@@ -316,10 +316,19 @@ export class PeDailyChartComponent {
   end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
+  @ViewChild('start_datePicker2', { static: true }) start_datePicker2: MatDatepicker<any>;
+  start_dateControl2 = new FormControl(new Date(new Date().setDate(new Date().getDate() - 4)));
+  start_dateInput2 = this.start_dateControl2.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+
+  @ViewChild('end_datePicker2', { static: true }) end_datePicker2: MatDatepicker<any>;
+  end_dateControl2 = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  end_dateInput2 = this.end_dateControl2.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
 
   isLoadingResults: boolean = false;
+  isLoadingResults2: boolean = false;
 
   constructor(
     private http: HttpClient,
@@ -355,6 +364,13 @@ export class PeDailyChartComponent {
     })
     this.end_dateControl.valueChanges.subscribe(r => {
       this.refresh_Daily();
+    })
+
+    this.start_dateControl2.valueChanges.subscribe(r => {
+      this.refresh_Quadrant();
+    })
+    this.end_dateControl2.valueChanges.subscribe(r => {
+      this.refresh_Quadrant();
     })
   }
 
@@ -711,6 +727,32 @@ export class PeDailyChartComponent {
     }, () => {
 
     });
+  }
+
+  start_dateChange2(evt) {
+    this.start_dateInput2 = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  }
+
+  end_dateChange2(evt) {
+    this.end_dateInput2 = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  }
+
+  refresh_Quadrant() {
+    // Implementasi logika untuk menyegarkan grafik kuadran
+    let annotationList = [];
+    let params = new HttpParams();
+    params = params.append("type", "quadrant_chart")
+      .append("date", this.start_dateControl2.value.toISOString())
+      .append("end_date", this.end_dateControl2.value.toISOString());
+    // for (const w of this.well_xSelected) {
+    //   params = params.append("well", w);
+    //   console.log("Well Parameter: "+w);
+    // }
+
+    this.http.get('/api/pe/daily/GetChart', { params: params }).subscribe(res => {
+      console.log("Quadrant Chart Data: ", res);
+    });
+
   }
 
 }

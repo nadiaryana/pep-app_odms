@@ -449,6 +449,29 @@ namespace ssc.Areas.PE.Controllers
                     });
 
                     return Ok(new { data = daily_chart });
+                case "quadrant_chart":
+                    // average sm and wc per well & date
+                    var quadrant_data = _daily.Find(
+                        r => r.date >= date && r.date <= end_date
+                    ).Project<Daily>(_fields_daily).ToList();
+
+                    // Group by well and date, then calculate average sm and wc
+                    var quadrant_chart = quadrant_data
+                        .GroupBy(s => new { 
+                            well = s.well, 
+                            date = s.date.HasValue ? s.date.Value.Date : DateTime.MinValue 
+                        })
+                        .Select(g => new
+                        {
+                            date = TimeZoneInfo.ConvertTimeFromUtc(g.Key.date, TimeZoneInfo.Local),
+                            well = g.Key.well,
+                            avg_sm = g.Where(x => x.sm.HasValue).Any() ? g.Where(x => x.sm.HasValue).Average(x => x.sm.Value) : 0,
+                            avg_wc = g.Where(x => x.wc.HasValue).Any() ? g.Where(x => x.wc.HasValue).Average(x => x.wc.Value) : 0
+                        })
+                        .OrderBy(t => t.date)
+                        .ThenBy(t => t.well);
+
+                    return Ok(new { data = quadrant_chart });
                 default:
                     return Ok(new { });
             }
@@ -1948,6 +1971,180 @@ namespace ssc.Areas.PE.Controllers
                 items = paged,
                 total_count = totalCount,
                 message = "Success"
+            });
+        }
+
+        [Authorize("PeDaily Read")]
+        [HttpGet("optimasi")]
+        public IActionResult GetDailyOptimasi(
+            // DateTime? date,
+            DateTime? startDate,
+            DateTime? endDate,
+            int page = 0,
+            int pagesize = 50,
+            string sort = "well",
+            string order = "asc",
+            string mode = "",
+            string columnfilter = ""
+        )
+        {
+            // Jika date tidak dipilih, kembalikan data kosong
+            if (!startDate.HasValue || !endDate.HasValue)
+            {
+                return Ok(new
+                {
+                    items = new List<object>(),
+                    total_count = 0,
+                    message = "No date selected"
+                });
+            }
+            
+            var todayDate = endDate.Value.ToUniversalTime().Date;
+            var yesterdayDate = startDate.Value.ToUniversalTime().Date;
+            // xfilter = filter tambahan dari columnfilter (well, dll)
+            FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
+            if (!string.IsNullOrWhiteSpace(columnfilter))
+            {
+                try
+                {
+                    dynamic colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
+
+                    // Filter WELL jika ada
+                    if (colfilter?.well != null)
+                    {
+                        var jarr = colfilter.well as Newtonsoft.Json.Linq.JArray;
+                        if (jarr != null && jarr.Count > 0)
+                        {
+                            // Ambil list string well
+                            var wells = jarr
+                                .Where(x => !(x is Newtonsoft.Json.Linq.JObject))
+                                .Select(x => x.ToString())
+                                .ToList();
+
+                            if (wells.Any())
+                            {
+                                // Gunakan Regex OR (mirror behaviour lama)
+                                var regexFilters = wells
+                                    .Select(w =>
+                                        Builders<Daily>.Filter.Regex(
+                                            d => d.well,
+                                            new MongoDB.Bson.BsonRegularExpression(w, "i")
+                                        )
+                                    )
+                                    .ToList();
+
+                                xfilter = Builders<Daily>.Filter.Or(regexFilters);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Handle error
+                }
+            }
+            if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "optimasi")
+            {
+                switch (mode)
+                {
+                    case "well":
+                        var wells = _daily.Distinct<string>("well", xfilter)
+                            .ToEnumerable().OrderBy(t => t).ToList();
+                        return Ok(new { items = wells });
+                    default:
+                        return Ok(new { items = new List<string>() });
+                }
+            }
+
+            var mongoFilter = Builders<Daily>.Filter.And(
+                xfilter,
+                Builders<Daily>.Filter.Gte(d => d.date, yesterdayDate),
+                Builders<Daily>.Filter.Lt(d => d.date, todayDate.AddDays(1))
+            );
+
+            var rawData = _daily
+                .Find(mongoFilter)
+                .SortByDescending(d => d.date)
+                .ToList();
+
+            // Group by well dan hitung average dari sm, ds_efficiency
+            var groupedData = rawData
+                .GroupBy(d => d.well)
+                .Select(g => {
+                    var avgSm = g.Where(x => x.sm.HasValue).Any() 
+                        ? g.Where(x => x.sm.HasValue).Average(x => x.sm.Value) 
+                        : 0;
+                    
+                    var avgEfficiency = g.Where(x => x.ds_efficiency.HasValue).Any() 
+                        ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency.Value) 
+                        : 0;
+                    
+                    // Konversi ke percent jika nilai <= 1 (format decimal 0.0-1.0 menjadi 0-100)
+                    if (avgEfficiency > 0 && avgEfficiency <= 1)
+                    {
+                        avgEfficiency *= 100;
+                    }
+                    
+                    return new
+                    {
+                        well = g.Key,
+                        avg_sm = avgSm,
+                        avg_ds_efficiency = avgEfficiency,
+                        data_count = g.Count()
+                    };
+                })
+                .ToList();
+
+            // Sorting
+            if (order == "asc")
+            {
+                switch (sort)
+                {
+                    case "well":
+                        groupedData = groupedData.OrderBy(x => x.well).ToList();
+                        break;
+                    case "avg_sm":
+                        groupedData = groupedData.OrderBy(x => x.avg_sm).ToList();
+                        break;
+                    case "avg_ds_efficiency":
+                        groupedData = groupedData.OrderBy(x => x.avg_ds_efficiency).ToList();
+                        break;
+                    default:
+                        groupedData = groupedData.OrderBy(x => x.well).ToList();
+                        break;
+                }
+            }
+            else
+            {
+                switch (sort)
+                {
+                    case "well":
+                        groupedData = groupedData.OrderByDescending(x => x.well).ToList();
+                        break;
+                    case "avg_sm":
+                        groupedData = groupedData.OrderByDescending(x => x.avg_sm).ToList();
+                        break;
+                    case "avg_ds_efficiency":
+                        groupedData = groupedData.OrderByDescending(x => x.avg_ds_efficiency).ToList();
+                        break;
+                    default:
+                        groupedData = groupedData.OrderByDescending(x => x.well).ToList();
+                        break;
+                }
+            }
+
+            var totalCount = groupedData.Count;
+
+            // Pagination
+            var pagedData = groupedData
+                .Skip(page * pagesize)
+                .Take(pagesize)
+                .ToList();
+
+            return Ok(new
+            {
+                items = pagedData,
+                total_count = totalCount
             });
         }
 

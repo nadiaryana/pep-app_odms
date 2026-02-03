@@ -1,78 +1,181 @@
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+<div
+  class="container-top-bar"
+  [ngClass.gt-sm]="'top-flow'"
+  [ngClass.lt-md]="'top-flow-xs'"
+>
   <!--mat-form-field>
     <input matInput placeholder="Filter" [formControl]="filterControl">
   </mat-form-field-->
-  <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/chan-plot/chart']"><mat-icon>bar_chart</mat-icon>Chart</button> -->
+  
+  <mat-form-field class="filter" floatLabel="never">
+		<mat-label>Start Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" readonly >
+		<input matInput [(ngModel)]="start_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+  
+	<mat-form-field class="filter" floatLabel="never">
+		<mat-label>End Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" readonly>
+		<input matInput [(ngModel)]="end_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+  
+  <button
+    mat-button
+    color="tertiary"
+    [disabled]="isLoadingResults"
+    [routerLink]="['/pe/chan-plot/chart']"
+  >
+    <mat-icon>bar_chart</mat-icon>Chart
+  </button>
 </div>
 
-<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-
+<div
+  class="container-content"
+  [ngClass.gt-sm]="'top-flow'"
+  [ngClass.lt-md]="'top-flow-xs'"
+>
   <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
     <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
   </div>
-  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
-
-    <table mat-table [dataSource]="data" class="pe-table"
-           matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
-      <ng-container matColumnDef="select" >
+  <div
+    class="container-table"
+    [style.max-height]="
+      commonService.Math.max(commonService.screenHeight - 180, 250) + 'px'
+    "
+  >
+    <table
+      mat-table
+      [dataSource]="data"
+      class="pe-table"
+      matSort
+      matSortActive="well"
+      matSortDisableClear
+      matSortDirection="asc"
+    >
+      <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
-          <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
-                        [checked]="selection.hasValue() && isAllSelected()"
-                        [indeterminate]="selection.hasValue() && !isAllSelected()"
-                        [aria-label]="checkboxLabel()"
-                        [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+          <mat-checkbox
+            (change)="$event && !isEditing ? masterToggle() : null"
+            [checked]="selection.hasValue() && isAllSelected()"
+            [indeterminate]="selection.hasValue() && !isAllSelected()"
+            [aria-label]="checkboxLabel()"
+            [disabled]="isEditing"
+            *ngIf="pePermissionService.passPermission('pe/daily/delete')"
+          >
           </mat-checkbox>
         </th>
         <td mat-cell *matCellDef="let row">
-          <mat-checkbox (click)="$event.stopPropagation()"
-                        (change)="($event && !isEditing) ? selection.toggle(row) : null"
-                        [checked]="selection.isSelected(row)"
-                        [aria-label]="checkboxLabel(row)"
-                        [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="$event && !isEditing ? selection.toggle(row) : null"
+            [checked]="selection.isSelected(row)"
+            [aria-label]="checkboxLabel(row)"
+            [disabled]="isEditing"
+            *ngIf="pePermissionService.passPermission('pe/daily/delete')"
+          >
           </mat-checkbox>
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="date" >
-		  <th mat-header-cell *matHeaderCellDef rowspan="2">
-			<div fxLayout="row" fxLayoutAlign="start center">
-			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
-			  <app-xfilter title="Date" column="date" format="date" [selected]="date_xSelected"></app-xfilter>
-			</div>
-		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
-	  </ng-container>
-		<ng-container matColumnDef="well" >
-		  <th mat-header-cell *matHeaderCellDef rowspan="2">
-			<div fxLayout="row" fxLayoutAlign="start center">
-			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
-			  <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
-			</div>
-		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
-		</ng-container>
-		<!-- <ng-container matColumnDef="last_prod"> -->
-		  <!-- <th mat-header-cell *matHeaderCellDef colspan="3">Last Production</th> -->
-		<!-- </ng-container> -->
-		<ng-container matColumnDef="wc">
-		  <th mat-header-cell *matHeaderCellDef>
-			<div fxLayout="row" fxLayoutAlign="start center">
-			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
-			  <app-xfilter title="wc" column="wc" format="number" [selected]="wc_xSelected"></app-xfilter>
-			</div>
-		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc | number : '1.0-0') || '-'}}</td>
-		</ng-container>
-		<ng-container matColumnDef="sm">
-		  <th mat-header-cell *matHeaderCellDef>
-			<div fxLayout="row" fxLayoutAlign="start center">
-			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
-			  <app-xfilter title="SM" column="sm" format="number" [selected]="sm_xSelected"></app-xfilter>
-			</div>
-		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm | number : '1.0-0') || '-'}}</td>
-		</ng-container>
-		
+      <ng-container matColumnDef="date">
+        <!-- <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Date</span
+            >
+            <app-xfilter
+              title="Date"
+              column="date"
+              format="date"
+              [selected]="date_xSelected"
+            ></app-xfilter>
+          </div>
+        </th> -->
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.date ? (row.date | date: 'dd MMM y') : '-' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="well">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Well</span
+            >
+            <app-xfilter
+              title="Well"
+              column="well"
+              [selected]="well_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-center"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ row.well }}
+        </td>
+      </ng-container>
+      <!-- <ng-container matColumnDef="last_prod"> -->
+      <!-- <th mat-header-cell *matHeaderCellDef colspan="3">Last Production</th> -->
+      <!-- </ng-container> -->
+      <ng-container matColumnDef="avg_sm">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Avg SM</span
+            >
+            <app-xfilter
+              title="Avg SM"
+              column="avg_sm"
+              format="number"
+              [selected]="avg_sm_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.avg_sm | number: '1.2-2') || '-' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="avg_ds_efficiency">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header"
+              >Avg DS Efficiency</span
+            >
+            <app-xfilter
+              title="Avg DS Efficiency"
+              column="avg_ds_efficiency"
+              format="number"
+              [selected]="avg_ds_efficiency_xSelected"
+            ></app-xfilter>
+          </div>
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="cell-right"
+          [class.clicked_row]="selection.isSelected(row)"
+        >
+          {{ (row.avg_ds_efficiency | percent : "1.0-0") || "-" }}
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="Actions">
         <th mat-header-cell *matHeaderCellDef rowspan="2">Action</th>
         <td mat-cell *matCellDef="let row">
@@ -80,15 +183,20 @@
       <button mat-button *ngIf="passPermission('/pe/daily/delete')" (click)="deletePeDaily(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button-->
         </td>
       </ng-container>
-      <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
+      <tr mat-header-row *matHeaderRowDef="headerColumns1; sticky: true"></tr>
       <!--<tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr> -->
-      <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        (click)="!isEditing ? selection.toggle(row) : null"
+      ></tr>
     </table>
-
   </div>
 
-  <mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+  <mat-paginator
+    [length]="resultsLength"
+    [pageSizeOptions]="[50, 100, 500, 1000]"
+  ></mat-paginator>
   <router-outlet></router-outlet>
   <router-outlet name="overlay2"></router-outlet>
 </div>
-

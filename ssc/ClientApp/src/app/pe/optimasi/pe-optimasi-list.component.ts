@@ -22,17 +22,17 @@ import { PeDaily } from '../daily/pe-daily';
 @Component({
   selector: 'app-pe-optimasi-list',
   templateUrl: './pe-optimasi-list.component.html',
-  styleUrls: ['./pe-optimasi-list.component.scss']
+  styleUrls: ['../daily/pe-daily.scss']
 })
 export class PeOptimasiListComponent implements OnInit {
 
-  displayedColumns: string[] = ['select','date','well','wc', 'sm'];
+  displayedColumns: string[] = ['select','well', 'avg_sm', 'avg_ds_efficiency'];
 
-  headerColumns1: string[] = ["select","date","well","wc", "sm"];
-  
-  
+  headerColumns1: string[] = ["select","well", "avg_sm", "avg_ds_efficiency"];
+
+
     @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
-    start_dateControl = new FormControl(new Date());
+    start_dateControl = new FormControl();
     start_dateInput = this.start_dateControl.value
       ? this.start_dateControl.value.toLocaleDateString("en-US", {
           month: "short",
@@ -43,8 +43,8 @@ export class PeOptimasiListComponent implements OnInit {
     
     @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
     // end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
-    end_dateControl = new FormControl(new Date());
-    end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+    end_dateControl = new FormControl();
+    end_dateInput = this.end_dateControl.value ? this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" }) : "";
   
     exampleDatabase: ExampleHttpDao | null;
     data: any[] = [];
@@ -71,13 +71,15 @@ export class PeOptimasiListComponent implements OnInit {
     end_dateFilter = new FormControl('');
     wellFilter = new FormControl('');
     dateFilter = new FormControl('');
-    wcFilter = new FormControl('');
-    smFilter = new FormControl('');
+    avg_wcFilter = new FormControl('');
+    avg_smFilter = new FormControl('');
+    avg_ds_efficiencyFilter = new FormControl('');
 
     date_xSelected = [];
     well_xSelected = [];
-    wc_xSelected = [];
-    sm_xSelected = [];
+    avg_wc_xSelected = [];
+    avg_sm_xSelected = [];
+    avg_ds_efficiency_xSelected = [];
 
     filterSubscription: Subscription;
     selectedSubscription: Subscription;
@@ -144,13 +146,20 @@ export class PeOptimasiListComponent implements OnInit {
       this.end_dateControl.valueChanges.pipe(debounceTime(300)),
       this.dateFilter.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.wcFilter.valueChanges.pipe(debounceTime(300)),
-      this.smFilter.valueChanges.pipe(debounceTime(300)),
+      this.avg_wcFilter.valueChanges.pipe(debounceTime(300)),
+      this.avg_smFilter.valueChanges.pipe(debounceTime(300)),
+      this.avg_ds_efficiencyFilter.valueChanges.pipe(debounceTime(300)),
 
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
       switchMap(() => {
+        if (!this.start_dateControl.value || !this.end_dateControl.value) {
+          return observableOf({
+            items: [],
+            total_count: 0
+          });
+        }
         this.isLoadingResults = true;
         var columnfilter = this.getColumnFilter();
         return this.exampleDatabase!.getRepoIssues(
@@ -160,6 +169,10 @@ export class PeOptimasiListComponent implements OnInit {
           this.paginator.pageSize,
           this.filterControl.value,
           columnfilter,
+          "",
+          {},
+          this.start_dateControl.value,
+          this.end_dateControl.value
         );
       }),
       map(data => {
@@ -214,8 +227,8 @@ export class PeOptimasiListComponent implements OnInit {
       column,
       {},
       // this.end_dateInput
-      // this.start_dateControl.value,
-      // this.end_dateControl.value
+      this.start_dateControl.value,
+      this.end_dateControl.value
     ).pipe(map((res) => {
       return res;
     })).subscribe(res => {
@@ -228,8 +241,9 @@ export class PeOptimasiListComponent implements OnInit {
     var columnfilter = {};
     if (this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
     if (this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if (this.wc_xSelected.length) columnfilter["wc"] = this.wc_xSelected;
-    if (this.sm_xSelected.length) columnfilter["sm"] = this.sm_xSelected;
+    if (this.avg_wc_xSelected.length) columnfilter["avg_wc"] = this.avg_wc_xSelected;
+    if (this.avg_sm_xSelected.length) columnfilter["avg_sm"] = this.avg_sm_xSelected;
+    if (this.avg_ds_efficiency_xSelected.length) columnfilter["avg_ds_efficiency"] = this.avg_ds_efficiency_xSelected;
 	
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
@@ -290,6 +304,34 @@ export class PeOptimasiListComponent implements OnInit {
         }
       });
     }
+
+    
+  formatDate(date: Date): string {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      year: 'numeric',
+      day: 'numeric'
+    });
+  }
+
+  start_dateChange(event: any) {
+  if (!event.value) return;
+
+  this.start_dateControl.setValue(event.value);
+  this.start_dateInput = this.formatDate(event.value);
+
+  // this.loadData();
+  }
+
+  end_dateChange(event: any) {
+    if (!event.value) return;
+
+    this.end_dateControl.setValue(event.value);
+    this.end_dateInput = this.formatDate(event.value);
+
+    // this.loadData();
+  }
 }
 
 export interface editR {
@@ -310,7 +352,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) { }
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<any> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}, startDate: Date, endDate: Date): Observable<any> {
 
     var params = {};
     if (sort != null) params["sort"] = sort;
@@ -321,9 +363,14 @@ export class ExampleHttpDao {
     if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
     if (mode != null) params["mode"] = mode;
 
+    // Gunakan format ISO untuk backend
+    params["startDate"] = startDate.toISOString();
+    params["endDate"] = endDate.toISOString();
+
     httpOption["params"] = params;
 
-    return this.http.get<any>('/api/pe/daily', httpOption);
+    // Gunakan endpoint optimasi yang sudah dibuat
+    return this.http.get<any>('/api/pe/daily/optimasi', httpOption);
   }
 } 
 
