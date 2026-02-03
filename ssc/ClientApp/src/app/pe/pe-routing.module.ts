@@ -67,6 +67,8 @@ import { PeLabComponent } from './lab/pe-lab.component';
 import { PeLabListComponent } from './lab/pe-lab-list.component';
 import { PeLabAddComponent } from './lab/pe-lab-add.component';
 import { PeLabChartComponent } from './lab/pe-lab-chart.component';
+import { PeOptimasiListComponent } from './optimasi/pe-optimasi-list.component';
+import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -130,6 +132,10 @@ const peRoutes: Routes = [
       { path: 'add', component: PeLabAddComponent, canActivate: [PePermissionGuard] },
       { path: 'chart', component: PeLabChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full" },
+    ]},
+    { path: 'optimasi', component: PeOptimasiComponent, children:[
+      { path: 'list', component: PeOptimasiListComponent, canActivate: [PePermissionGuard]},
+      { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
 
 

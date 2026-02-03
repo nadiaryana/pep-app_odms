@@ -79,6 +79,10 @@ import { PeLabAddComponent } from './lab/pe-lab-add.component';
 import { PeLabDeleteDialogComponent, PeLabListComponent } from './lab/pe-lab-list.component';
 import { PeLabChartComponent } from './lab/pe-lab-chart.component';
 import { PeLabComponent } from './lab/pe-lab.component';
+import { PeOptimasiListComponent } from './optimasi/pe-optimasi-list.component';
+import { PeOptimasiAddComponent } from './optimasi/pe-optimasi-add.component';
+import { PeOptimasiChartComponent } from './optimasi/pe-optimasi-chart.component';
+import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -148,6 +152,10 @@ import { PeLabComponent } from './lab/pe-lab.component';
   PeLabListComponent,
   PeLabDeleteDialogComponent,
   PeLabChartComponent,
+  PeOptimasiListComponent,
+  PeOptimasiAddComponent,
+  PeOptimasiChartComponent,
+  PeOptimasiComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -210,6 +218,7 @@ export class PeModule {
             new PanelSubItem("Chan Plot", "pe/chan-plot", "scatter_plot"),
             new PanelSubItem("Aggregate", "pe/aggregate", "change_history"),
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
+            new PanelSubItem("Optimasi", "pe/optimasi", "analytics"),
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [

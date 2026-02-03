@@ -67,6 +67,7 @@ export class PePermissionService {
 	new Menu("aggregate", true, null, ["PeAggregate Read"]),
 	new Menu("aggregate/list", true, null, ["PeAggregate Read"]),
 
+	
 	// barchart permission
 	new Menu("barchart", true,null, ["PeBarchart Read"]),
 	new Menu("barchart/list", true,null, ["PeBarchart Read"]),
@@ -74,7 +75,7 @@ export class PePermissionService {
 	new Menu("barchart/edit", true,null, ["PeBarchart Edit"]),
 	new Menu("barchart/delete", true,null, ["PeBarchart Delete"]),
 	new Menu("barchart/chart", true, null, ["PeBarchart Read"]),
-
+	
 	// new Menu("one-slide", true, null, ["PeOneSlide Read"]),
 
 	new Menu("lab", true,null, ["PeLab Read"]),
@@ -84,7 +85,9 @@ export class PePermissionService {
 	new Menu("lab/edit", true, /[a-z]/i, ["PeLab Edit"]),
 	new Menu("lab/delete", true,null, ["PeLab Delete"]),
 	new Menu("lab/chart", true,null, ["PeLab Read"]),
-
+	
+	new Menu("optimasi", true, null, ["PeOptimasi Read"]),
+	new Menu("optimasi/list", true, null, ["PeOptimasi Read"]),
 	];
 	
 	
