@@ -86,12 +86,24 @@ export class PeOptimasiChartComponent implements OnInit {
   };
 
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
-  start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 4)));
-  start_dateInput = this.start_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+    start_dateControl = new FormControl();
+    start_dateInput = this.start_dateControl.value
+      ? this.start_dateControl.value.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+          day: "numeric",
+        })
+      : "";  
 
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
-  end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
-  end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  end_dateControl = new FormControl();
+  end_dateInput = this.end_dateControl.value
+    ? this.end_dateControl.value.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+        day: "numeric",
+      })
+    : "";
 
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
@@ -113,14 +125,45 @@ export class PeOptimasiChartComponent implements OnInit {
     ]
   });
 
-  this.refreshQuadrant();
+  // this.refreshQuadrant();
 
   this.start_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
   this.end_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
   }
+  
+  formatDate(date: Date): string {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      year: 'numeric',
+      day: 'numeric'
+    });
+  }
+  start_dateChange(event: any) {
+  if (!event.value) return;
+
+  this.start_dateControl.setValue(event.value);
+  this.start_dateInput = this.formatDate(event.value);
+
+  // this.refreshQuadrant();
+  }
+
+  end_dateChange(event: any) {
+    if (!event.value) return;
+
+    this.end_dateControl.setValue(event.value);
+    this.end_dateInput = this.formatDate(event.value);
+
+    // this.refreshQuadrant();
+  }
 
   refreshQuadrant() {
-  this.isLoadingResults = true;
+    
+    // if start date or end date empty show warning
+    if (!this.start_dateControl.value || !this.end_dateControl.value) {
+      return;
+    }
+    this.isLoadingResults = true;
 
   const params = new HttpParams()
     .append('startDate', this.start_dateControl.value.toISOString())

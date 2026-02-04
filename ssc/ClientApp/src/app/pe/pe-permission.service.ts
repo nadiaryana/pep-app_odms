@@ -88,6 +88,7 @@ export class PePermissionService {
 	
 	new Menu("optimasi", true, null, ["PeOptimasi Read"]),
 	new Menu("optimasi/list", true, null, ["PeOptimasi Read"]),
+	new Menu("optimasi/chart", true, null, ["PeOptimasi Read"]),
 	];
 	
 	
