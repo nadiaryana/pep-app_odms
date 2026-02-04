@@ -149,6 +149,7 @@ export class PeOptimasiListComponent implements OnInit {
       this.avg_wcFilter.valueChanges.pipe(debounceTime(300)),
       this.avg_smFilter.valueChanges.pipe(debounceTime(300)),
       this.avg_ds_efficiencyFilter.valueChanges.pipe(debounceTime(300)),
+      
 
       this.xfilterService.selected,
     ).pipe(
@@ -241,10 +242,10 @@ export class PeOptimasiListComponent implements OnInit {
     var columnfilter = {};
     if (this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
     if (this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if (this.avg_wc_xSelected.length) columnfilter["avg_wc"] = this.avg_wc_xSelected;
     if (this.avg_sm_xSelected.length) columnfilter["avg_sm"] = this.avg_sm_xSelected;
     if (this.avg_ds_efficiency_xSelected.length) columnfilter["avg_ds_efficiency"] = this.avg_ds_efficiency_xSelected;
-	
+	 
+
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     //if(this.group) columnfilter['group'] = this.group;

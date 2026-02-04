@@ -27,7 +27,7 @@
     mat-button
     color="tertiary"
     [disabled]="isLoadingResults"
-    [routerLink]="['/pe/chan-plot/chart']"
+    [routerLink]="['/pe/optimasi/chart']"
   >
     <mat-icon>bar_chart</mat-icon>Chart
   </button>
@@ -172,7 +172,8 @@
           class="cell-right"
           [class.clicked_row]="selection.isSelected(row)"
         >
-          {{ (row.avg_ds_efficiency | percent : "1.0-0") || "-" }}
+          {{ row.avg_ds_efficiency | number:'1.0-2' }}%
+
         </td>
       </ng-container>
 

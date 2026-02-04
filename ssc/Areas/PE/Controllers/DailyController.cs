@@ -445,6 +445,7 @@ namespace ssc.Areas.PE.Controllers
                         sm = s.sm,
                         whp = s.ds_whp,
                         size = s.ds_size,
+                        efficiency = s.ds_efficiency
 
                     });
 
@@ -457,16 +458,17 @@ namespace ssc.Areas.PE.Controllers
 
                     // Group by well and date, then calculate average sm and wc
                     var quadrant_chart = quadrant_data
-                        .GroupBy(s => new { 
-                            well = s.well, 
-                            date = s.date.HasValue ? s.date.Value.Date : DateTime.MinValue 
+                        .GroupBy(s => new
+                        {
+                            well = s.well,
+                            date = s.date.HasValue ? s.date.Value.Date : DateTime.MinValue
                         })
                         .Select(g => new
                         {
                             date = TimeZoneInfo.ConvertTimeFromUtc(g.Key.date, TimeZoneInfo.Local),
                             well = g.Key.well,
                             avg_sm = g.Where(x => x.sm.HasValue).Any() ? g.Where(x => x.sm.HasValue).Average(x => x.sm.Value) : 0,
-                            avg_wc = g.Where(x => x.wc.HasValue).Any() ? g.Where(x => x.wc.HasValue).Average(x => x.wc.Value) : 0
+                            avg_ds_efficiency = g.Where(x => x.ds_efficiency.HasValue).Any() ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency.Value) : 0
                         })
                         .OrderBy(t => t.date)
                         .ThenBy(t => t.well);
@@ -1998,7 +2000,7 @@ namespace ssc.Areas.PE.Controllers
                     message = "No date selected"
                 });
             }
-            
+
             var todayDate = endDate.Value.ToUniversalTime().Date;
             var yesterdayDate = startDate.Value.ToUniversalTime().Date;
             // xfilter = filter tambahan dari columnfilter (well, dll)
@@ -2070,21 +2072,21 @@ namespace ssc.Areas.PE.Controllers
             // Group by well dan hitung average dari sm, ds_efficiency
             var groupedData = rawData
                 .GroupBy(d => d.well)
-                .Select(g => {
-                    var avgSm = g.Where(x => x.sm.HasValue).Any() 
-                        ? g.Where(x => x.sm.HasValue).Average(x => x.sm.Value) 
+                .Select(g =>
+                {
+                    var avgSm = g.Where(x => x.sm.HasValue).Any()
+                        ? g.Where(x => x.sm.HasValue).Average(x => x.sm.Value)
                         : 0;
-                    
-                    var avgEfficiency = g.Where(x => x.ds_efficiency.HasValue).Any() 
-                        ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency.Value) 
+
+                    var avgEfficiency = g.Where(x => x.ds_efficiency.HasValue).Any()
+                        ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency.Value)
                         : 0;
-                    
-                    // Konversi ke percent jika nilai <= 1 (format decimal 0.0-1.0 menjadi 0-100)
-                    if (avgEfficiency > 0 && avgEfficiency <= 1)
+
+                    // Konversi ke percent jika nilai <= 1(format decimal 0.0 - 1.0 menjadi 0 - 100)
+                    if (avgEfficiency > 0 && avgEfficiency < 2)
                     {
                         avgEfficiency *= 100;
                     }
-                    
                     return new
                     {
                         well = g.Key,
