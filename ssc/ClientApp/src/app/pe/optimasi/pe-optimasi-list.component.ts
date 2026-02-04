@@ -170,7 +170,7 @@ export class PeOptimasiListComponent implements OnInit {
           this.paginator.pageSize,
           this.filterControl.value,
           columnfilter,
-          "",
+          "optimasi",
           {},
           this.start_dateControl.value,
           this.end_dateControl.value

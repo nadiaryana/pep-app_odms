@@ -168,7 +168,7 @@ export class PeOptimasiChartComponent implements OnInit {
   const params = new HttpParams()
     .append('startDate', this.start_dateControl.value.toISOString())
     .append('endDate', this.end_dateControl.value.toISOString())
-    .append('mode', 'optimasi');
+    .append('mode', 'optimasi_chart');
 
   this.http.get('/api/pe/daily/optimasi', { params })
     .subscribe((res: any) => {

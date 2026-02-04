@@ -2045,7 +2045,7 @@ namespace ssc.Areas.PE.Controllers
                     // Handle error
                 }
             }
-            if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "optimasi")
+            if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "optimasi" && mode != "optimasi_chart")
             {
                 switch (mode)
                 {
@@ -2137,11 +2137,15 @@ namespace ssc.Areas.PE.Controllers
 
             var totalCount = groupedData.Count;
 
-            // Pagination
-            var pagedData = groupedData
-                .Skip(page * pagesize)
-                .Take(pagesize)
-                .ToList();
+            // show all if optimasi chart mode
+            var pagedData = groupedData.ToList();
+            // Pagination if optimasi mode (for list table)
+            if (mode == "optimasi"){
+                pagedData = groupedData
+                    .Skip(page * pagesize)
+                    .Take(pagesize)
+                    .ToList();
+            }
 
             return Ok(new
             {
