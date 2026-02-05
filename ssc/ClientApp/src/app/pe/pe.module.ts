@@ -83,6 +83,11 @@ import { PeOptimasiListComponent } from './optimasi/pe-optimasi-list.component';
 import { PeOptimasiAddComponent } from './optimasi/pe-optimasi-add.component';
 import { PeOptimasiChartComponent } from './optimasi/pe-optimasi-chart.component';
 import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
+import { MatSliderModule } from '@angular/material';
+import { PeLaporanLabListComponent } from './laporan/pe-laporan-lab-list.component';
+import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component';
+import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
+import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -156,6 +161,10 @@ import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
   PeOptimasiAddComponent,
   PeOptimasiChartComponent,
   PeOptimasiComponent,
+  PeLaporanLabListComponent,
+  PeLaporanLabAddComponent,
+  PeLaporanLabChartComponent,
+  PeLaporanLabComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -168,6 +177,7 @@ import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
   FlexLayoutModule,
   //MatFileUploadModule,
   ChartModule,
+  MatSliderModule,
   MatGridListModule,
   xFilterModule,
     MatSlideToggleModule,
@@ -175,6 +185,7 @@ import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
     MatChipsModule,
   
     RouterModule,
+
   // NgChartsModule,
 
   ],
@@ -229,7 +240,7 @@ export class PeModule {
         new PanelItem("Laboratorium", "", "science", this.pePermission.passPermission("pe/dasboard"), true, [
             // new PanelSubItem("Analysis", "pe/lab", "analytics", this.pePermission.passPermission("pe/lab")),
             new PanelSubItem("Assets", "pe/lab", "summarize", this.pePermission.passPermission("pe/lab")),
-            // new PanelSubItem("Measurement Result", "pe/lab", "data_exploration", this.pePermission.passPermission("pe/lab")),
+            new PanelSubItem("Measurement Result", "pe/laporan", "data_exploration", this.pePermission.passPermission("pe/laporan")),
             // new PanelSubItem("Performance & Inventory", "pe/lab", "trending_up", this.pePermission.passPermission("pe/lab")),
 
           ]),

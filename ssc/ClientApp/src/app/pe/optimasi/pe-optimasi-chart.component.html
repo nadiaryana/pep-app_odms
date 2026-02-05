@@ -1,11 +1,10 @@
-<p>pe-optimasi-chart works!</p>
 <div class="container-top-bar top-flow" fxLayoutGap="10px">
 	
-	<mat-form-field class="field-well" floatLabel="never">
+	<!-- <mat-form-field class="field-well" floatLabel="never">
 		<mat-label class="select-well">Select Well</mat-label>
 		<input matInput [(ngModel)]="well_xSelected" disabled>
 		<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
-	</mat-form-field>
+	</mat-form-field> -->
 
 	<mat-form-field class="filter" floatLabel="never">
 		<mat-label>Start Date</mat-label>
@@ -23,6 +22,72 @@
 	</mat-form-field>
 </div>
 
+<div class="container-top-bar top-flow"
+     fxLayout="row"
+     fxLayoutAlign="start center"
+     fxLayoutGap="20px">
+
+ 	<div fxFlex>
+		<div class="slider-label">Y Axis Max (%)</div>
+
+		<mat-slider
+		min="10"
+		max="300"
+		step="5"
+		thumbLabel
+		tickInterval="25"
+		[(ngModel)]="yAxisMax"
+		(input)="updateYAxis()">
+		</mat-slider>
+
+		<div class="slider-value">
+			Max: <b>{{ yAxisMax }} %</b>
+		</div>
+	</div>
+ 	<div fxFlex>
+		<div class="slider-label">X Axis Max (%)</div>
+
+		<mat-slider
+		min="10"
+		max="300"
+		step="5"
+		thumbLabel
+		tickInterval="25"
+		[(ngModel)]="xAxisMax"
+		(input)="updateXAxis()">
+		</mat-slider>
+
+		<div class="slider-value">
+			Max: <b>{{ xAxisMax }} %</b>
+		</div>
+	</div>
+</div>
+
+<div class="container-top-bar top-flow"
+     fxLayout="row"
+     fxLayoutAlign="start center"
+     fxLayoutGap="20px">
+
+  <!-- Input Kuadran X -->
+  <mat-form-field class="filter" floatLabel="never">
+    <mat-label>Kuadran X (SM)</mat-label>
+    <input matInput
+           type="number"
+           [(ngModel)]="quadrantX"
+           (input)="updateQuadrantLines()">
+  </mat-form-field>
+
+  <!-- Input Kuadran Y -->
+  <mat-form-field class="filter" floatLabel="never">
+    <mat-label>Kuadran Y (%)</mat-label>
+    <input matInput
+           type="number"
+           [(ngModel)]="quadrantY"
+           (input)="updateQuadrantLines()">
+  </mat-form-field>
+
+</div>
+
 <div class="container-content top-flow" fxLayout="column" fxLayoutGap="20px">
 	<div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
 		
@@ -30,9 +95,5 @@
 	<mat-card class="chart-card">
 		<div #quadrant_chart_el style="height: 500px;"></div>
 	</mat-card>
-<!-- 	
-	<mat-card class="chart-card">
-		<div #per_area_chart_off_el class="per_area_chart_off"></div>
-	</mat-card> -->
 	
 </div>

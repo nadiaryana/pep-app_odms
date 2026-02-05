@@ -70,6 +70,10 @@ import { PeLabChartComponent } from './lab/pe-lab-chart.component';
 import { PeOptimasiListComponent } from './optimasi/pe-optimasi-list.component';
 import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
 import { PeOptimasiChartComponent } from './optimasi/pe-optimasi-chart.component';
+import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
+import { PeLaporanLabListComponent } from './laporan/pe-laporan-lab-list.component';
+import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
+import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -139,6 +143,13 @@ const peRoutes: Routes = [
       { path: 'chart', component: PeOptimasiChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
+    { path: 'laporan', component: PeLaporanLabComponent, children:[
+      { path: 'list', component: PeLaporanLabListComponent, canActivate: [PePermissionGuard]},
+      { path: 'add', component: PeLaporanLabAddComponent, canActivate: [PePermissionGuard] },
+      { path: 'chart', component: PeLaporanLabChartComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full"},
+    ]},
+
 
 
   ]},

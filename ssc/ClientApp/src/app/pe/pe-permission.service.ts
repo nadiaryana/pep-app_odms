@@ -89,6 +89,14 @@ export class PePermissionService {
 	new Menu("optimasi", true, null, ["PeOptimasi Read"]),
 	new Menu("optimasi/list", true, null, ["PeOptimasi Read"]),
 	new Menu("optimasi/chart", true, null, ["PeOptimasi Read"]),
+
+	new Menu("laporan", true,null, ["PeLaporanLab Read"]),
+	new Menu("laporan/list", true,null, ["PeLaporanLab Read"]),
+	new Menu("laporan/add", true,null, ["PeLaporanLab Add"]),
+	new Menu("laporan/edit", true,null, ["PeLaporanLab Edit"]),
+	// new Menu("lab/edit", true, /[a-z]/i, ["PeLab Edit"]),
+	new Menu("laporan/delete", true,null, ["PeLaporanLab Delete"]),
+	new Menu("laporan/chart", true,null, ["PeLaporanLab Read"]),
 	];
 	
 	

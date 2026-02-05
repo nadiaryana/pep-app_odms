@@ -2140,7 +2140,8 @@ namespace ssc.Areas.PE.Controllers
             // show all if optimasi chart mode
             var pagedData = groupedData.ToList();
             // Pagination if optimasi mode (for list table)
-            if (mode == "optimasi"){
+            if (mode == "optimasi")
+            {
                 pagedData = groupedData
                     .Skip(page * pagesize)
                     .Take(pagesize)

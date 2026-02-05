@@ -22,7 +22,7 @@ import { ExampleHttpDao } from './pe-optimasi-list.component';
 @Component({
   selector: 'app-pe-optimasi-chart',
   templateUrl: './pe-optimasi-chart.component.html',
-  styleUrls: ['../daily/pe-daily.scss']
+  styleUrls: ['./pe-optimasi.scss']
 })
 export class PeOptimasiChartComponent implements OnInit {
   
@@ -33,7 +33,14 @@ export class PeOptimasiChartComponent implements OnInit {
   
   // quadrant_chart_options:
   isLoadingResults: boolean = false;
-  
+
+  xAxisMax: number = 200;
+  yAxisMax: number = 200;
+  chart: Highcharts.Chart;
+  public quadrantX: number = 50;
+  public quadrantY: number = 25;
+
+
   quadrant_chart_options: any = {
     chart: {
       type: 'scatter',
@@ -46,13 +53,15 @@ export class PeOptimasiChartComponent implements OnInit {
     title: { text: 'Quadrant – SM vs Efficiency' },
 
     xAxis: {
-      title: { text: 'Avg SM' },
-      plotLines: []   // diisi dinamis
+      title: { text: 'Avg Submergence' },
+      plotLines: []   
     },
 
     yAxis: {
-      title: { text: 'Avg DS Efficiency (%)' },
-      plotLines: []   // diisi dinamis
+      title: { text: 'Avg Pump Efficiency (%)' },
+      min: 0,
+      max: this.yAxisMax,
+      plotLines: []   
     },
 
     tooltip: {
@@ -72,9 +81,15 @@ export class PeOptimasiChartComponent implements OnInit {
 
     plotOptions: {
       scatter: {
+        dataLabels: {
+          enabled: true,
+          formatter: function () {
+            return this.point.name;
+          },
         marker: {
           radius: 6,
-          symbol: 'circle'
+          symbol: 'circle',
+        } 
         }
       }
     },
@@ -107,6 +122,8 @@ export class PeOptimasiChartComponent implements OnInit {
 
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
+
+
 
   constructor(
         private http: HttpClient,
@@ -182,37 +199,92 @@ export class PeOptimasiChartComponent implements OnInit {
       }));
 
       // === hitung garis kuadran ===
-      const avgX = items.reduce((s, d) => s + d.avg_sm, 0) / items.length;
-      const avgY = items.reduce((s, d) => s + d.avg_ds_efficiency, 0) / items.length;
+      // const avgX = items.reduce((s, d) => s + d.avg_sm, 0) / items.length;
+      // const avgY = items.reduce((s, d) => s + d.avg_ds_efficiency, 0) / items.length;
+
+      const thresholdX = 50;  // 50%
+      const thresholdY = 25;  // 25%
 
       // update series
       this.quadrant_chart_options.series[0].data = points;
 
       // update plotLines
       this.quadrant_chart_options.xAxis.plotLines = [{
-        value: avgX,
+        value: thresholdX,
         color: 'red',
         dashStyle: 'Dash',
         width: 2,
-        label: { text: 'AVG SM' }
+        // label: { text: 'AVG SM' }
       }];
 
       this.quadrant_chart_options.yAxis.plotLines = [{
-        value: avgY,
+        value: thresholdY,
         color: 'red',
         dashStyle: 'Dash',
         width: 2,
-        label: { text: 'AVG Efficiency' }
+        // label: { text: 'AVG Efficiency' }
       }];
 
-      Highcharts.chart(
+      this.chart = Highcharts.chart(
         this.quadrant_chart_el.nativeElement,
         this.quadrant_chart_options
       );
 
       this.isLoadingResults = false;
     }, _ => this.isLoadingResults = false);
+
+    
 }
+
+updateXAxis() {
+  if (!this.chart) return;
+
+  this.chart.xAxis[0].update({
+    min: 0,
+    max: this.xAxisMax
+  });
+}
+
+
+updateYAxis() {
+  if (!this.chart) return;
+
+  this.chart.yAxis[0].update({
+    min: 0,
+    max: this.yAxisMax
+  }, true);
+}
+  updateQuadrantLines() {
+    if (!this.chart) return;
+
+    // Hapus dan tambah garis X
+    this.chart.xAxis[0].removePlotLine('quadrant-x');
+    this.chart.xAxis[0].addPlotLine({
+      id: 'quadrant-x',
+      value: this.quadrantX,
+      color: '#FF0000',
+      width: 2,
+      dashStyle: 'Dash',
+      label: {
+        text: `X = ${this.quadrantX}`,
+        align: 'right'
+      }
+    });
+
+    // Hapus dan tambah garis Y
+    this.chart.yAxis[0].removePlotLine('quadrant-y');
+    this.chart.yAxis[0].addPlotLine({
+      id: 'quadrant-y',
+      value: this.quadrantY,
+      color: '#0000FF',
+      width: 2,
+      dashStyle: 'Dash',
+      label: {
+        text: `Y = ${this.quadrantY}%`,
+        align: 'right'
+      }
+    });
+  }
 
 }
 
