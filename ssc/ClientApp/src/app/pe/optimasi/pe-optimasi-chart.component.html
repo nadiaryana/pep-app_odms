@@ -1,27 +1,45 @@
-<div class="container-top-bar top-flow" fxLayoutGap="10px">
+<div class="container-top-bar top-flow"  style="margin-top: 2.5rem;"
+     fxLayout="row wrap"
+     fxLayoutAlign="start center"
+     fxLayoutGap="20px">
 	
-	<!-- <mat-form-field class="field-well" floatLabel="never">
-		<mat-label class="select-well">Select Well</mat-label>
-		<input matInput [(ngModel)]="well_xSelected" disabled>
-		<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
-	</mat-form-field> -->
-
-	<mat-form-field class="filter" floatLabel="never">
+	<!-- Date Filters -->
+	<mat-form-field class="filter">
 		<mat-label>Start Date</mat-label>
 		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
 		<input matInput [(ngModel)]="start_dateInput" disabled>
 		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
 		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
 	</mat-form-field>
-	<mat-form-field class="filter" floatLabel="never">
+
+	<mat-form-field class="filter">
 		<mat-label>End Date</mat-label>
 		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" disabled>
 		<input matInput [(ngModel)]="end_dateInput" disabled>
 		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
 		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
 	</mat-form-field>
+
+	<!-- Quadrant Line Inputs -->
+	<mat-form-field class="filter">
+		<mat-label>Kuadran X (SM)</mat-label>
+		<input matInput
+		       type="number"
+		       [(ngModel)]="quadrantX"
+		       (input)="updateQuadrantLines()">
+	</mat-form-field>
+
+	<mat-form-field class="filter">
+		<mat-label>Kuadran Y (%)</mat-label>
+		<input matInput
+		       type="number"
+		       [(ngModel)]="quadrantY"
+		       (input)="updateQuadrantLines()">
+	</mat-form-field>
+
 </div>
 
+<!-- Axis Sliders -->
 <div class="container-top-bar top-flow"
      fxLayout="row"
      fxLayoutAlign="start center"
@@ -29,63 +47,31 @@
 
  	<div fxFlex>
 		<div class="slider-label">Y Axis Max (%)</div>
-
-		<mat-slider
-		min="10"
-		max="300"
-		step="5"
-		thumbLabel
-		tickInterval="25"
-		[(ngModel)]="yAxisMax"
-		(input)="updateYAxis()">
-		</mat-slider>
-
+		<input type="range"
+		       min="10"
+		       max="300"
+		       step="5"
+		       class="custom-slider"
+		       [(ngModel)]="yAxisMax"
+		       (input)="updateYAxis($event)">
 		<div class="slider-value">
 			Max: <b>{{ yAxisMax }} %</b>
 		</div>
 	</div>
+
  	<div fxFlex>
 		<div class="slider-label">X Axis Max (%)</div>
-
-		<mat-slider
-		min="10"
-		max="300"
-		step="5"
-		thumbLabel
-		tickInterval="25"
-		[(ngModel)]="xAxisMax"
-		(input)="updateXAxis()">
-		</mat-slider>
-
+		<input type="range"
+		       min="10"
+		       max="300"
+		       step="5"
+		       class="custom-slider"
+		       [(ngModel)]="xAxisMax"
+		       (input)="updateXAxis($event)">
 		<div class="slider-value">
 			Max: <b>{{ xAxisMax }} %</b>
 		</div>
 	</div>
-</div>
-
-<div class="container-top-bar top-flow"
-     fxLayout="row"
-     fxLayoutAlign="start center"
-     fxLayoutGap="20px">
-
-  <!-- Input Kuadran X -->
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>Kuadran X (SM)</mat-label>
-    <input matInput
-           type="number"
-           [(ngModel)]="quadrantX"
-           (input)="updateQuadrantLines()">
-  </mat-form-field>
-
-  <!-- Input Kuadran Y -->
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>Kuadran Y (%)</mat-label>
-    <input matInput
-           type="number"
-           [(ngModel)]="quadrantY"
-           (input)="updateQuadrantLines()">
-  </mat-form-field>
-
 </div>
 
 <div class="container-content top-flow" fxLayout="column" fxLayoutGap="20px">

@@ -54,6 +54,11 @@ export class PeOptimasiChartComponent implements OnInit {
 
     xAxis: {
       title: { text: 'Avg Submergence' },
+      min: 0,
+      max: 200,
+      endOnTick: false,  // Jangan auto-adjust max value
+      startOnTick: true,  // Mulai dari 0
+      tickInterval: 5,  // Interval tetap 5
       plotLines: []   
     },
 
@@ -61,6 +66,9 @@ export class PeOptimasiChartComponent implements OnInit {
       title: { text: 'Avg Pump Efficiency (%)' },
       min: 0,
       max: this.yAxisMax,
+      endOnTick: false,  // Jangan auto-adjust max value
+      startOnTick: true,  // Mulai dari 0
+      tickInterval: 5,  // Interval tetap 5
       plotLines: []   
     },
 
@@ -215,6 +223,10 @@ export class PeOptimasiChartComponent implements OnInit {
         dashStyle: 'Dash',
         width: 2,
         // label: { text: 'AVG SM' }
+        label: {
+          text: `X = ${thresholdX}`,
+          align: 'right'
+        }
       }];
 
       this.quadrant_chart_options.yAxis.plotLines = [{
@@ -223,6 +235,10 @@ export class PeOptimasiChartComponent implements OnInit {
         dashStyle: 'Dash',
         width: 2,
         // label: { text: 'AVG Efficiency' }
+        label: {
+          text: `X = ${thresholdY}`,
+          align: 'right'
+        }
       }];
 
       this.chart = Highcharts.chart(
@@ -236,54 +252,68 @@ export class PeOptimasiChartComponent implements OnInit {
     
 }
 
-updateXAxis() {
+updateXAxis(event?: any) {
   if (!this.chart) return;
+  // update xAxisMax dari event target value (HTML range input)
+  if (event && event.target && event.target.value) {
+    this.xAxisMax = Number(event.target.value);
+  }
 
   this.chart.xAxis[0].update({
     min: 0,
-    max: this.xAxisMax
+    max: this.xAxisMax,
+    endOnTick: false,  // Jangan auto-adjust tick terakhir
+    startOnTick: true,  // Mulai dari 0 dengan tick
+    tickInterval: 5  // Interval tetap 5
   });
 }
 
-
-updateYAxis() {
+updateYAxis(event?: any) {
   if (!this.chart) return;
+  // update yAxisMax dari event target value (HTML range input)
+  if (event && event.target && event.target.value) {
+    this.yAxisMax = Number(event.target.value);
+  }
 
   this.chart.yAxis[0].update({
     min: 0,
-    max: this.yAxisMax
+    max: this.yAxisMax,
+    endOnTick: false,  // Jangan auto-adjust tick terakhir
+    startOnTick: true,  // Mulai dari 0 dengan tick
+    tickInterval: 5  // Interval tetap 5
   }, true);
 }
   updateQuadrantLines() {
     if (!this.chart) return;
 
-    // Hapus dan tambah garis X
-    this.chart.xAxis[0].removePlotLine('quadrant-x');
-    this.chart.xAxis[0].addPlotLine({
-      id: 'quadrant-x',
-      value: this.quadrantX,
-      color: '#FF0000',
-      width: 2,
-      dashStyle: 'Dash',
-      label: {
-        text: `X = ${this.quadrantX}`,
-        align: 'right'
-      }
-    });
+    // Update plot lines untuk X Axis
+    this.chart.xAxis[0].update({
+      plotLines: [{
+        value: this.quadrantX,
+        color: 'red',
+        dashStyle: 'Dash',
+        width: 2,
+        label: {
+          text: `X = ${this.quadrantX}`,
+          align: 'right'
+        }
+      }]
+    }, false); // false = tidak redraw dulu
 
-    // Hapus dan tambah garis Y
-    this.chart.yAxis[0].removePlotLine('quadrant-y');
-    this.chart.yAxis[0].addPlotLine({
-      id: 'quadrant-y',
-      value: this.quadrantY,
-      color: '#0000FF',
-      width: 2,
-      dashStyle: 'Dash',
-      label: {
-        text: `Y = ${this.quadrantY}%`,
-        align: 'right'
-      }
-    });
+    // Update plot lines untuk Y Axis
+    this.chart.yAxis[0].update({
+      plotLines: [{
+        value: this.quadrantY,
+        color: 'red',
+        dashStyle: 'Dash',
+        width: 2,
+        label: {
+          text: `Y = ${this.quadrantY}%`,
+          align: 'right'
+        }
+      }]
+    }, true); // true = redraw sekarang
+
   }
 
 }
