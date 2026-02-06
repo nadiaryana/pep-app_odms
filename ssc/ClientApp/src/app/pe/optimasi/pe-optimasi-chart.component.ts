@@ -50,10 +50,10 @@ export class PeOptimasiChartComponent implements OnInit {
       }
     },
 
-    title: { text: 'Quadrant – SM vs Efficiency' },
+    title: { text: 'Quadrant Chart' },
 
     xAxis: {
-      title: { text: 'Avg Submergence' },
+      title: { text: 'Submergence (m)' },
       min: 0,
       max: 200,
       endOnTick: false,  // Jangan auto-adjust max value
@@ -63,7 +63,7 @@ export class PeOptimasiChartComponent implements OnInit {
     },
 
     yAxis: {
-      title: { text: 'Avg Pump Efficiency (%)' },
+      title: { text: 'Pump Efficiency (%)' },
       min: 0,
       max: this.yAxisMax,
       endOnTick: false,  // Jangan auto-adjust max value
@@ -206,12 +206,8 @@ export class PeOptimasiChartComponent implements OnInit {
         y: x.avg_ds_efficiency
       }));
 
-      // === hitung garis kuadran ===
-      // const avgX = items.reduce((s, d) => s + d.avg_sm, 0) / items.length;
-      // const avgY = items.reduce((s, d) => s + d.avg_ds_efficiency, 0) / items.length;
-
-      const thresholdX = 50;  // 50%
-      const thresholdY = 25;  // 25%
+      const thresholdX = 50;  
+      const thresholdY = 25;  
 
       // update series
       this.quadrant_chart_options.series[0].data = points;
@@ -236,7 +232,7 @@ export class PeOptimasiChartComponent implements OnInit {
         width: 2,
         // label: { text: 'AVG Efficiency' }
         label: {
-          text: `X = ${thresholdY}`,
+          text: `Y = ${thresholdY}`,
           align: 'right'
         }
       }];
@@ -270,7 +266,7 @@ updateXAxis(event?: any) {
 
 updateYAxis(event?: any) {
   if (!this.chart) return;
-  // update yAxisMax dari event target value (HTML range input)
+  // update yAxisMax dari event target value 
   if (event && event.target && event.target.value) {
     this.yAxisMax = Number(event.target.value);
   }
