@@ -89,7 +89,7 @@ export class PeLabListComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     public dialog: MatDialog,
-    //public snackBar: MatSnackBar,
+    public snackBar: MatSnackBar,
     private pe_bhpService: PeLabService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
@@ -185,7 +185,7 @@ export class PeLabListComponent implements OnInit {
         this.isRateLimitReached = true;
         return observableOf([]);
       })
-      ).subscribe(data => {
+      ).subscribe((data: PeLab[]) => {
         this.data = data.map(d => ({
           ...d,
           isEdit: false   
@@ -206,41 +206,96 @@ export class PeLabListComponent implements OnInit {
   }
 
   save(row: PeLabRow) {
-  const payload: Partial<PeLab> = { ...row };
+    const payload: Partial<PeLab> = { ...row };
+    // Simpan backup untuk undo
+    const backupData = { ...row._backup };
 
-  // buang properti frontend
-  delete (payload as any).isEdit;
-  delete (payload as any)._backup;
+    // buang properti frontend
+    delete (payload as any).isEdit;
+    delete (payload as any)._backup;
 
-  this.service.updatePeLab(row._id, payload).subscribe({
-    next: (res) => {
+    this.service.updatePeLab(row._id, payload).subscribe({
+      next: (res) => {
+        // Update row state
+        row.isEdit = false;
+        delete row._backup;
 
-      const idx = this.dataSource.data.findIndex(
-        d => d._id === row._id
-      );
-      if (idx !== -1) {
-        this.dataSource.data[idx] = {
-          ...this.dataSource.data[idx],
-          ...payload,
-          isEdit: false
-        };
+        // Update dataSource
+        const idx = this.dataSource.data.findIndex(
+          d => d._id === row._id
+        );
+        if (idx !== -1) {
+          this.dataSource.data[idx] = {
+            ...this.dataSource.data[idx],
+            ...payload,
+            isEdit: false
+          };
+          this.dataSource.data = [...this.dataSource.data];
+        }
+
+        // Show success notification with undo option (5 seconds)
+        const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', {
+          duration: 5000
+        });
+
+        snackBarRef.onAction().subscribe(() => {
+          // User clicked UNDO - revert to backup
+          this.undoUpdate(row._id, backupData);
+        });
+      },
+      error: (error) => {
+        // rollback kalau gagal
+        this.cancel(row);
+        this.snackBar.open(error.message ? error.message : 'Gagal mengupdate data', 'Tutup', {
+          duration: 5000
+        });
       }
+    });
+  }
 
-      // row.isEdit = false;
-      // delete row._backup;
+  undoUpdate(id: string, backupData: any) {
+    const payload = { ...backupData };
+    delete payload.isEdit;
+    delete payload._backup;
 
-      this.dataSource.data = [...this.dataSource.data];
-      console.log(this.dataSource.data.find(d => d._id === row._id));
-      console.log(this.dataSource)
+    this.service.updatePeLab(id, payload).subscribe({
+      next: (res) => {
+        // Update this.data array
+        const dataIdx = this.data.findIndex(d => d._id === id);
+        if (dataIdx !== -1) {
+          // Update the object in place and create new reference
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup') {
+              (this.data[dataIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.data[dataIdx] as any).isEdit = false;
+          delete (this.data[dataIdx] as any)._backup;
+        }
 
-
-    },
-    error: () => {
-      // rollback kalau gagal
-      this.cancel(row);
-    }
-  });
-}
+        // Update dataSource.data array
+        const dsIdx = this.dataSource.data.findIndex(d => d._id === id);
+        if (dsIdx !== -1) {
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup') {
+              (this.dataSource.data[dsIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.dataSource.data[dsIdx] as any).isEdit = false;
+          delete (this.dataSource.data[dsIdx] as any)._backup;
+        }
+        
+        // Force Angular to detect changes by creating new array reference
+        this.data = [...this.data];
+        this.dataSource.data = [...this.data];
+        
+        this.snackBar.open('Perubahan dibatalkan', 'Tutup', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snackBar.open('Gagal membatalkan perubahan', 'Tutup', { duration: 5000 });
+      }
+    });
+  }
 
 
   cancel(row: PeLabRow) {

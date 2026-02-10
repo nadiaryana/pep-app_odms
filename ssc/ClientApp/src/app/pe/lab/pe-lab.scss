@@ -96,6 +96,12 @@ ng::host .mat-horizontal-stepper-content {
   white-space: normal !important;
 }
 
+// Sticky action column
+.action-column {
+  background-color: white;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
 
 // ::ng-deep .mat-header-cell,
 // ::ng-deep .mat-cell {
