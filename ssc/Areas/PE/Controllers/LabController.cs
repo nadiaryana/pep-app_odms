@@ -548,6 +548,45 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
+        [Authorize("PeLab Add")]
+        [HttpPatch("{id}")]
+        public IActionResult Update(string id, [FromBody] Lab payload)
+        {
+            if (payload == null)
+                return BadRequest();
+
+            var update = Builders<Lab>.Update
+                .Set(t => t.nomor, payload.nomor)
+                .Set(t => t.nama_alat, payload.nama_alat)
+                .Set(t => t.spesifikasi, payload.spesifikasi)
+                .Set(t => t.satuan, payload.satuan)
+                .Set(t => t.kegunaan, payload.kegunaan)
+                .Set(t => t.baru, payload.baru)
+                .Set(t => t.lama, payload.lama)
+                .Set(t => t.rusak, payload.rusak)
+                .Set(t => t.stok_awal, payload.stok_awal)
+                .Set(t => t.barang_masuk, payload.barang_masuk)
+                .Set(t => t.barang_keluar, payload.barang_keluar)
+                .Set(t => t.stok_akhir, payload.stok_akhir)
+                .Set(t => t.keterangan, payload.keterangan)
+                .Set(t => t.updated_by, User.Identity.Name)
+                .Set(t => t.updated_date, DateTime.Now);
+
+            var result = _lab.UpdateOne(
+                Builders<Lab>.Filter.Eq(t => t._id, id),
+                update
+            );
+
+            if (result.MatchedCount == 0)
+                return NotFound();
+
+            return Ok(new
+            {
+                modified_count = result.ModifiedCount
+            });
+        }
+
+
         [Authorize("PeLab Delete")]
         [HttpDelete]
         public ActionResult Delete(string[] _ids)

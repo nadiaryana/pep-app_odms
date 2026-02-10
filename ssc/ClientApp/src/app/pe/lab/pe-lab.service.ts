@@ -46,4 +46,9 @@ export class PeLabService {
 			return new PeLab(res.PE_TICKET_ID, res.MACHINE_ID, res.PRESENCE_LOCATION_ID, res.DEVICE_ROLE);
 		})); 
 	}
+	updatePeLab(id: string, payload: Partial<PeLab>) {
+		return this.http.patch(`/api/pe/lab/${id}`, payload);
+	}
+
+
 }

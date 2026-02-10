@@ -17,6 +17,11 @@ import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
 
+type PeLabRow = PeLab & {
+  isEdit?: boolean;
+  _backup?: Partial<PeLab>;
+};
+
 @Component({
   selector: 'pe-lab-list',
   templateUrl: './pe-lab-list.component.html',
@@ -24,7 +29,7 @@ import { CommonService } from '../../common.service';
 })
 export class PeLabListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "nomor", "id", "nama_alat", "spesifikasi", "satuan", "kegunaan", "baru", "lama", "rusak", "stok_awal", "barang_masuk", "barang_keluar", "stok_akhir", "keterangan"];
+  displayedColumns: string[] = ["select", "nomor", "id", "nama_alat", "spesifikasi", "satuan", "kegunaan", "baru", "lama", "rusak", "stok_awal", "barang_masuk", "barang_keluar", "stok_akhir", "keterangan", "action"];
   exampleDatabase: ExampleHttpDao | null;
   data: PeLab[] = [];
 
@@ -92,6 +97,7 @@ export class PeLabListComponent implements OnInit {
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
+    private service: PeLabService,
     ) {}
 
   ngOnInit() {
@@ -180,12 +186,69 @@ export class PeLabListComponent implements OnInit {
         return observableOf([]);
       })
       ).subscribe(data => {
-        this.data = data;
-        this.dataSource = new MatTableDataSource<any>(this.data);
+        this.data = data.map(d => ({
+          ...d,
+          isEdit: false   
+        }));
+
+        // this.dataSource = new MatTableDataSource<any>(this.data);
+        this.dataSource.data = data.map(item => ({
+          ...item,
+          isEdit: false
+        }));
         this.selection.clear();
       });
-
   }
+
+  edit(row: PeLabRow) {
+    row._backup = { ...row };
+    row.isEdit = true;
+  }
+
+  save(row: PeLabRow) {
+  const payload: Partial<PeLab> = { ...row };
+
+  // buang properti frontend
+  delete (payload as any).isEdit;
+  delete (payload as any)._backup;
+
+  this.service.updatePeLab(row._id, payload).subscribe({
+    next: (res) => {
+
+      const idx = this.dataSource.data.findIndex(
+        d => d._id === row._id
+      );
+      if (idx !== -1) {
+        this.dataSource.data[idx] = {
+          ...this.dataSource.data[idx],
+          ...payload,
+          isEdit: false
+        };
+      }
+
+      // row.isEdit = false;
+      // delete row._backup;
+
+      this.dataSource.data = [...this.dataSource.data];
+      console.log(this.dataSource.data.find(d => d._id === row._id));
+      console.log(this.dataSource)
+
+
+    },
+    error: () => {
+      // rollback kalau gagal
+      this.cancel(row);
+    }
+  });
+}
+
+
+  cancel(row: PeLabRow) {
+    Object.assign(row, row._backup);
+    row.isEdit = false;
+  }
+
+  
 
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
@@ -357,8 +420,7 @@ export class PeLabListComponent implements OnInit {
         })
       }
     });
-}
-
+  }
 }
 
 export interface PeLabApi {
