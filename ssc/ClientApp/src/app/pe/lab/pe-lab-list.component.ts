@@ -205,8 +205,10 @@ export class PeLabListComponent implements OnInit {
   }
 
   save(row: PeLabRow) {
+    this.hitungSemuaStok(row);
+
     const payload: Partial<PeLab> = { ...row };
-    // Simpan backup untuk undo
+    // Simpan backup 
     const backupData = { ...row._backup };
 
     // buang properti frontend
@@ -294,6 +296,39 @@ export class PeLabListComponent implements OnInit {
         this.snackBar.open('Gagal membatalkan perubahan', 'Tutup', { duration: 5000 });
       }
     });
+  }
+
+  toNumber(val: any): number {
+    if (val === null || val === undefined || val === '') {
+      return 0;
+    }
+    return Number(val);
+  }
+
+  hitungStokAwal(row: any) {
+    const baru = this.toNumber(row.baru);
+    const lama = this.toNumber(row.lama);
+    const rusak = this.toNumber(row.rusak);
+    
+
+    row.stok_awal = baru + lama + rusak;
+  }
+
+  hitungStokAkhir(row: any) {
+    const stokAwal = this.toNumber(row.stok_awal);
+    const barangMasuk = this.toNumber(row.barang_masuk);
+    const barangKeluar = this.toNumber(row.barang_keluar);
+    
+    row.stok_akhir = stokAwal + barangMasuk - barangKeluar;
+  }
+
+  hitungSemuaStok(row: any) {
+    this.hitungStokAwal(row);
+    this.hitungStokAkhir(row);
+  }
+
+  onValueChange(row: any) {
+    this.hitungSemuaStok(row);
   }
 
 

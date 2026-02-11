@@ -157,6 +157,7 @@
                 [(ngModel)]="row.baru"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
                 autofocus>
             </ng-template>
           </td>
@@ -178,6 +179,7 @@
                 [(ngModel)]="row.lama"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
                 autofocus>
             </ng-template>
           </td>
@@ -199,6 +201,7 @@
               [(ngModel)]="row.rusak"
               (keydown.enter)="save(row)"
               (keydown.escape)="cancel(row)"
+              (ngModelChange)="onValueChange(row)"
               autofocus>
           </ng-template></td>
         </ng-container>
@@ -219,6 +222,7 @@
                 [(ngModel)]="row.stok_awal"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
                 autofocus>
             </ng-template>
           </td>
@@ -240,6 +244,7 @@
                 [(ngModel)]="row.barang_masuk"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
                 autofocus>
             </ng-template>
           </td>
@@ -261,6 +266,7 @@
                 [(ngModel)]="row.barang_keluar"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
                 autofocus>
             </ng-template>
           </td>
@@ -282,6 +288,7 @@
                 [(ngModel)]="row.stok_akhir"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
                 autofocus>
             </ng-template>
           </td>

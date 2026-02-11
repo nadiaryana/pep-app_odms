@@ -277,7 +277,7 @@ export class PeOptimasiListComponent implements OnInit {
     deleteSelected() {
       this.snackbarService.status.next(new SnackbarApi(false));
   
-      const dialogRef = this.dialog.open(PeDailyChanPlotDeleteDialogComponent, {
+      const dialogRef = this.dialog.open(PeDailyOptimasiDeleteDialogComponent, {
         width: '250px',
         data: this.selection.selected.length
       });
@@ -381,10 +381,10 @@ export class ExampleHttpDao {
   styleUrls: ['./pe-optimasi.scss']
 })
 
-export class PeDailyChanPlotDeleteDialogComponent {
+export class PeDailyOptimasiDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeDailyChanPlotDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeDailyOptimasiDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) { }
 
   onNoClick(): void {

@@ -79,7 +79,7 @@ import { PeLabAddComponent } from './lab/pe-lab-add.component';
 import { PeLabDeleteDialogComponent, PeLabListComponent } from './lab/pe-lab-list.component';
 import { PeLabChartComponent } from './lab/pe-lab-chart.component';
 import { PeLabComponent } from './lab/pe-lab.component';
-import { PeOptimasiListComponent } from './optimasi/pe-optimasi-list.component';
+import { PeDailyOptimasiDeleteDialogComponent, PeOptimasiListComponent } from './optimasi/pe-optimasi-list.component';
 import { PeOptimasiAddComponent } from './optimasi/pe-optimasi-add.component';
 import { PeOptimasiChartComponent } from './optimasi/pe-optimasi-chart.component';
 import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
@@ -161,6 +161,7 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeOptimasiAddComponent,
   PeOptimasiChartComponent,
   PeOptimasiComponent,
+  PeDailyOptimasiDeleteDialogComponent,
   PeLaporanLabListComponent,
   PeLaporanLabAddComponent,
   PeLaporanLabChartComponent,
@@ -204,11 +205,11 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeBhpDeleteDialogComponent,
   BarchartDeleteDialogComponent,
   PeLabDeleteDialogComponent,
-  PeSumurDeleteDialogComponent,
-  PeDailyZoneChartDeleteDialogComponent,
-  PeDailyGasDeleteDialogComponent,
-  PeDailyChanPlotDeleteDialogComponent,
-  PeDailyAggregateDeleteDialogComponent,
+  // PeSumurDeleteDialogComponent,
+  // PeDailyZoneChartDeleteDialogComponent,
+  // PeDailyGasDeleteDialogComponent,
+  // PeDailyChanPlotDeleteDialogComponent,
+  // PeDailyAggregateDeleteDialogComponent,
   ],
 })
 
