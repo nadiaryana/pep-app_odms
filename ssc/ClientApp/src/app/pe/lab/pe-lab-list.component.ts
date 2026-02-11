@@ -35,7 +35,6 @@ export class PeLabListComponent implements OnInit {
 
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
-  isEditing:boolean = false;
 
   resultsLength = 0;
   isLoadingResults = true;
@@ -457,7 +456,7 @@ export class PeLabListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/bhp', {
+        this.http.delete<any>('/api/pe/lab', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -521,7 +520,7 @@ export class ExampleHttpDao {
 }
 
 @Component({
-  selector: 'app-bhp-delete-dialog',
+  selector: 'app-lab-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
   styleUrls: ['./pe-lab.scss']
 })

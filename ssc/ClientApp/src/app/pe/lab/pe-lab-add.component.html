@@ -57,7 +57,7 @@
 
 				    <ng-container matColumnDef="id">
 				      <th mat-header-cell *matHeaderCellDef>ID</th>
-				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.id?.value}" [matTooltip]="row._error.id?.message" matTooltipPosition="after">{{row.id || row._error.id?.value || '-'}}</td>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error._id?.value}" [matTooltip]="row._error.id?.message" matTooltipPosition="after">{{row._id || row._error._id?.value || '-'}}</td>
 				    </ng-container>
 
 				    <ng-container matColumnDef="nama_alat">

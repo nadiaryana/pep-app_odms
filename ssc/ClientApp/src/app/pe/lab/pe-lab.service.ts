@@ -47,7 +47,9 @@ export class PeLabService {
 		})); 
 	}
 	updatePeLab(id: string, payload: Partial<PeLab>) {
-		return this.http.patch(`/api/pe/lab/${id}`, payload);
+		// Encode ID to handle special characters like #
+		const encodedId = encodeURIComponent(id);
+		return this.http.patch(`/api/pe/lab/${encodedId}`, payload);
 	}
 
 

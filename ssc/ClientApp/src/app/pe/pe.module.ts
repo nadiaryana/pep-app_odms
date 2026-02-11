@@ -203,6 +203,12 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeSonologDeleteDialogComponent,
   PeBhpDeleteDialogComponent,
   BarchartDeleteDialogComponent,
+  PeLabDeleteDialogComponent,
+  PeSumurDeleteDialogComponent,
+  PeDailyZoneChartDeleteDialogComponent,
+  PeDailyGasDeleteDialogComponent,
+  PeDailyChanPlotDeleteDialogComponent,
+  PeDailyAggregateDeleteDialogComponent,
   ],
 })
 
