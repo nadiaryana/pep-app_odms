@@ -449,6 +449,13 @@ namespace ssc.Areas.PE.Controllers
                         }
 
                         string strValue = rawValue.ToString().Trim();
+                        // if value equal '-' → null
+                        if (strValue == "-")
+                        {
+                            typeof(LaporanLab).GetProperty(mapping.key)?.SetValue(_row, null);
+                            continue;
+                        }
+
                         decimal num;
                         bool parsed = false;
 
@@ -583,37 +590,43 @@ namespace ssc.Areas.PE.Controllers
                 string[] wells = items.Select(m => m.well).ToArray();
 
                 long created_count = 0;
+                long modified_count = 0;
+
                 foreach (LaporanLab item in items)
                 {
                     item._error = null;
 
-                    var insert = new LaporanLab()
-                    {
-                        nomor = item.nomor,
-                        date = item.date,
-                        well = item.well,
-                        sed = item.sed,
-                        water = item.water,
-                        sludge = item.sludge,
-                        // cdfl = item.cdfl,
-                        total = item.total,
-                        api = item.api,
-                        sg = item.sg,
-                        density_obs = item.density_obs,
-                        density_dua = item.density_dua,
-                        pp = item.pp,
-                        temperature = item.temperature,
-                        visc = item.visc,
-                        cl = item.cl,
-                        rw = item.rw,
-                        keterangan = item.keterangan,
-                        updated_by = User.Identity.Name,
-                        updated_date = DateTime.Now,
-                        created_by = User.Identity.Name,
-                        created_date = DateTime.Now
-                    };
-                    _laporan.InsertOne(insert);
-                    created_count++;
+                    var update = Builders<LaporanLab>.Update
+                        .Set(t => t.nomor, item.nomor)
+                        .Set(t => t.date, item.date)
+                        .Set(t => t.well, item.well)
+                        .Set(t => t.sed, item.sed)
+                        .Set(t => t.water, item.water)
+                        .Set(t => t.sludge, item.sludge)
+                        .Set(t => t.total, item.total)
+                        .Set(t => t.api, item.api)
+                        .Set(t => t.sg, item.sg)
+                        .Set(t => t.density_obs, item.density_obs)
+                        .Set(t => t.density_dua, item.density_dua)
+                        .Set(t => t.pp, item.pp)
+                        .Set(t => t.temperature, item.temperature)
+                        .Set(t => t.visc, item.visc)
+                        .Set(t => t.cl, item.cl)
+                        .Set(t => t.rw, item.rw)
+                        .Set(t => t.keterangan, item.keterangan)
+                        .Set(t => t.updated_by, User.Identity.Name)
+                        .Set(t => t.updated_date, DateTime.Now)
+                        .SetOnInsert(t => t.created_by, User.Identity.Name)
+                        .SetOnInsert(t => t.created_date, DateTime.Now);
+
+                    UpdateResult res = _laporan.UpdateOne(
+                        Builders<LaporanLab>.Filter.Eq(t => t.date, item.date) & Builders<LaporanLab>.Filter.Eq(t => t.well, item.well),
+                        update,
+                        new UpdateOptions() { IsUpsert = true }
+                    );
+
+                    modified_count += res.ModifiedCount;
+                    created_count += res.ModifiedCount;
                 }
                 _laporan_tmp.DeleteOne(d => d._id == _id);
 
@@ -621,14 +634,60 @@ namespace ssc.Areas.PE.Controllers
 
                 return Ok(new
                 {
+                    modified_count = modified_count,
                     created_count = created_count,
-                    // modified_count = modified_count,
                     total_count = items.Count()
                 });
             }
             catch (Exception e)
             {
                 return BadRequest();
+            }
+        }
+
+        [Authorize("PeLaporanLab Read")]
+        [HttpGet("GetChart")]
+        public ActionResult GetChart([FromQuery] DateTime? start_date, [FromQuery] DateTime? end_date, [FromQuery] string[] well)
+        {
+            try
+            {
+                if (!start_date.HasValue || !end_date.HasValue || well == null || well.Length == 0)
+                {
+                    return BadRequest(new { message = "start_date, end_date, and well parameters are required" });
+                }
+
+                // Get laporan data
+                var laporan_data = _laporan.Find(
+                    r => well.Contains(r.well) &&
+                    r.date >= start_date && r.date <= end_date
+                ).Project<LaporanLab>(_fields).ToList()
+                    .OrderBy(t => t.date)
+                    .ThenBy(t => t.well)
+                    .Select(s => new
+                    {
+                        date = s.date.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, TimeZoneInfo.Local) : (DateTime?)null,
+                        well = s.well,
+                        water = s.water,
+                        sed = s.sed,
+                        sludge = s.sludge,
+                        total = s.total,
+                        api = s.api,
+                        sg = s.sg,
+                        density_obs = s.density_obs,
+                        density_dua = s.density_dua,
+                        pp = s.pp,
+                        temperature = s.temperature,
+                        visc = s.visc,
+                        cl = s.cl,
+                        rw = s.rw,
+                        keterangan = s.keterangan
+                    });
+
+                return Ok(new { data = laporan_data });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = "Error retrieving chart data", error = e.Message });
             }
         }
 

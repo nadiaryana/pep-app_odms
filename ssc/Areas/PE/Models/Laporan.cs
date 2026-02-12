@@ -10,6 +10,7 @@ namespace ssc.Areas.PE.Models
     public class LaporanLab
     {
         [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
         public string _id { get; set; }
         public decimal? nomor { get; set; }
         public DateTime? date { get; set; }
