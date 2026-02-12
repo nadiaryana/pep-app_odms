@@ -1613,7 +1613,9 @@ namespace ssc.Areas.PE.Controllers
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
                     UpdateResult res = _daily.UpdateOne(
-                        Builders<Daily>.Filter.Eq(t => t.date, item.date) & Builders<Daily>.Filter.Eq(t => t.well, item.well),
+                        Builders<Daily>.Filter.Eq(t => t.date, item.date) &
+                        Builders<Daily>.Filter.Eq(t => t.well, item.well) &
+                        Builders<Daily>.Filter.Eq(t => t.interval, item.interval),
                         update, new UpdateOptions() { IsUpsert = true });
 
                     modified_count += res.ModifiedCount;

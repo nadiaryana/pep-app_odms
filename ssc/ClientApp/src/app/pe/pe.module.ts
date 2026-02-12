@@ -162,6 +162,7 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeOptimasiChartComponent,
   PeOptimasiComponent,
   PeDailyOptimasiDeleteDialogComponent,
+  
   PeLaporanLabListComponent,
   PeLaporanLabAddComponent,
   PeLaporanLabChartComponent,
