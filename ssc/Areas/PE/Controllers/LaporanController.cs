@@ -620,7 +620,9 @@ namespace ssc.Areas.PE.Controllers
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
                     UpdateResult res = _laporan.UpdateOne(
-                        Builders<LaporanLab>.Filter.Eq(t => t.date, item.date) & Builders<LaporanLab>.Filter.Eq(t => t.well, item.well),
+                        Builders<LaporanLab>.Filter.Eq(t => t.date, item.date) &
+                        Builders<LaporanLab>.Filter.Eq(t => t.well, item.well) &
+                        Builders<LaporanLab>.Filter.Eq(t => t.api, item.api),
                         update,
                         new UpdateOptions() { IsUpsert = true }
                     );

@@ -81,13 +81,14 @@ export class PeLaporanLabChartComponent implements OnInit {
     },
     series: [{
       name: 'Water (Laporan)',
-      type: 'line',
+      type: 'scatter',
       yAxis: 0,
       data: [],
       color: '#1f77b4',
       zIndex: 9,
       marker: {
-        enabled: false
+        enabled: true,
+        symbol: 'star',
       },
       tooltip: {
         valueSuffix: ' bbl',
@@ -101,7 +102,7 @@ export class PeLaporanLabChartComponent implements OnInit {
       color: '#ff7f0e',
       zIndex: 8,
       marker: {
-        enabled: false
+        enabled: true
       },
       tooltip: {
         valueSuffix: ' bbl',

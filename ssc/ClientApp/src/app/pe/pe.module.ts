@@ -84,7 +84,7 @@ import { PeOptimasiAddComponent } from './optimasi/pe-optimasi-add.component';
 import { PeOptimasiChartComponent } from './optimasi/pe-optimasi-chart.component';
 import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
 import { MatSliderModule } from '@angular/material';
-import { PeLaporanLabListComponent } from './laporan/pe-laporan-lab-list.component';
+import { PeLaporanLabDeleteDialogComponent, PeLaporanLabListComponent } from './laporan/pe-laporan-lab-list.component';
 import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component';
 import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
 import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
@@ -167,6 +167,7 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeLaporanLabAddComponent,
   PeLaporanLabChartComponent,
   PeLaporanLabComponent,
+  PeLaporanLabDeleteDialogComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -206,6 +207,8 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeBhpDeleteDialogComponent,
   BarchartDeleteDialogComponent,
   PeLabDeleteDialogComponent,
+  PeLaporanLabDeleteDialogComponent,
+  
   // PeSumurDeleteDialogComponent,
   // PeDailyZoneChartDeleteDialogComponent,
   // PeDailyGasDeleteDialogComponent,
