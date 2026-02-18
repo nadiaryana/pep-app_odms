@@ -234,7 +234,7 @@ export class PeLaporanLabListComponent implements OnInit {
         ).pipe(map((res) => {
           this.isLoadingResults = false;
           return {
-            filename: 'Sonolog.xlsx',
+            filename: 'Laporan Lab.xlsx',
             data: new Blob(
               [res['body']],
               { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}

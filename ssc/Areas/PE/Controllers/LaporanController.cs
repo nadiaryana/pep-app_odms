@@ -179,10 +179,10 @@ namespace ssc.Areas.PE.Controllers
                         StatusCode = StatusCodes.Status200OK
                     };
 
-                // case "excel":
-                //     return GetExcel(_items
-                //     //.Limit(10000)
-                //     .Project<LaporanLab>(_fields).ToList());
+                case "excel":
+                    return GetExcel(_items
+                    //.Limit(10000)
+                    .Project<LaporanLab>(_fields).ToList());
 
                 default:
                     dynamic res;
@@ -223,106 +223,74 @@ namespace ssc.Areas.PE.Controllers
             return str;
         }
 
-        // public ActionResult GetExcel(List<LaporanLab> items)
-        // {
-        //     var workbook = new ExcelPackage();
-        //     var ws = workbook.Workbook.Worksheets.Add("LaporanLab");
-        //     ws.Cells[1, 1].Value = "Date";
-        //     ws.Cells[1, 1, 3, 1].Merge = true;
-        //     ws.Cells[1, 2].Value = "Well";
-        //     ws.Cells[1, 2, 3, 2].Merge = true;
-        //     ws.Cells[1, 3].Value = "Pump Intake";
-        //     ws.Cells[1, 3, 2, 3].Merge = true;
-        //     ws.Cells[3, 3].Value = "meter";
+        public ActionResult GetExcel(List<LaporanLab> items)
+        {
+            var workbook = new ExcelPackage();
+            var ws = workbook.Workbook.Worksheets.Add("LaporanLab");
+            ws.Cells[1, 1].Value = "Nomor";
+            ws.Cells[1, 1, 2, 1].Merge = true;
+            ws.Cells[1, 2].Value = "Date";
+            ws.Cells[1, 2, 2, 2].Merge = true;
+            ws.Cells[1, 3].Value = " Well";
+            ws.Cells[1, 3, 2, 3].Merge = true;
 
-        //     ws.Cells[1, 4].Value = "Fluid Level";
-        //     ws.Cells[1, 4, 1, 5].Merge = true;
-        //     ws.Cells[2, 4].Value = "Dynamic";
-        //     ws.Cells[3, 4].Value = "meter";
-        //     // ws.Cells[2, 5].Value = "Cor. Dynamic";
-        //     // ws.Cells[3, 5].Value = "meter";
-        //     ws.Cells[2, 5].Value = "Static";
-        //     ws.Cells[3, 5].Value = "meter";
+            ws.Cells[1, 4].Value = "BS&W";
+            ws.Cells[1, 4, 1, 7].Merge = true;
+            ws.Cells[2, 4].Value = "SED%"; ;
+            ws.Cells[2, 5].Value = "WATER%";
+            ws.Cells[2, 6].Value = "SLUDGE%";
+            ws.Cells[2, 7].Value = "TOTAL%";
 
-        //     ws.Cells[1, 6].Value = "Total Gaseous Liq. Column";
-        //     ws.Cells[1, 6, 2, 6].Merge = true;
-        //     ws.Cells[3, 6].Value = "meter";
+            ws.Cells[1, 8].Value = "Pemeriksaan Laboratorium%";
+            ws.Cells[1, 8, 1, 17].Merge = true;
+            ws.Cells[2, 8].Value = "API 60°F";
+            ws.Cells[2, 9].Value = "SG 60°F";
+            ws.Cells[2, 10].Value = "DENSITY OBS'D";
+            ws.Cells[2, 11].Value = "DENSITY 15°C";
+            ws.Cells[2, 12].Value = "PP °F";
+            ws.Cells[2, 13].Value = "TEMP °C";
+            ws.Cells[2, 14].Value = "VISC, cP";
+            ws.Cells[2, 15].Value = "CL-";
+            ws.Cells[2, 16].Value = "RW °F/Ω";
+            ws.Cells[2, 17].Value = "Keterangan";
 
-        //     ws.Cells[1, 7].Value = "Equivalent Gas Free Liq";
-        //     ws.Cells[1, 7, 2, 7].Merge = true;
-        //     ws.Cells[3, 7].Value = "meter";
+            ws.Cells[1, 1, 1, 17].Style.Font.Bold = true;
+            ws.Cells[1, 1, 3, 17].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 3, 17].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
-        //     ws.Cells[1, 8].Value = "Liquid";
-        //     ws.Cells[1, 8, 2, 8].Merge = true;
-        //     ws.Cells[3, 8].Value = "meter";
+            for (int c = 1; c <= 17; c++)
+            {
+                //ws.Column(c).AutoFit();
+            }
 
-        //     ws.Cells[1, 9].Value = "THP";
-        //     ws.Cells[1, 9, 2, 9].Merge = true;
-        //     ws.Cells[3, 9].Value = "meter";
+            for (int i = 0; i < items.Count(); i++)
+            {
+                var t = items.ElementAt(i);
 
-        //     ws.Cells[1, 10].Value = "SPM";
-        //     ws.Cells[1, 10, 2, 10].Merge = true;
-        //     ws.Cells[3, 10].Value = "meter";
+                ws.Cells[3 + i, 1].Value = t.nomor;
+                ws.Cells[3 + i, 2].Style.Numberformat.Format = "d-MMM-yy";
+                ws.Cells[3 + i, 2].Value = t.date.HasValue ? t.date.Value.ToLocalTime().ToOADate() : (double?)null;
+                ws.Cells[3 + i, 3].Value = t.well;
+                ws.Cells[3 + i, 4].Value = t.sed;
+                ws.Cells[3 + i, 5].Value = t.water;
+                ws.Cells[3 + i, 6].Value = t.sludge;
+                ws.Cells[3 + i, 7].Value = t.total;
+                ws.Cells[3 + i, 8].Value = t.api;
+                ws.Cells[3 + i, 9].Value = t.sg;
+                ws.Cells[3 + i, 10].Value = t.density_obs;
+                ws.Cells[3 + i, 11].Value = t.density_dua;
+                ws.Cells[3 + i, 12].Value = t.pp;
+                ws.Cells[3 + i, 13].Value = t.temperature;
+                ws.Cells[3 + i, 14].Value = t.visc;
+                ws.Cells[3 + i, 15].Value = t.cl;
+                ws.Cells[3 + i, 16].Value = t.rw;
+                ws.Cells[3 + i, 17].Value = t.keterangan;
+            }
 
-        //     ws.Cells[1, 11].Value = "Cassing Pressure";
-        //     ws.Cells[1, 11, 2, 11].Merge = true;
-        //     ws.Cells[3, 11].Value = "meter";
-
-        //     ws.Cells[1, 12].Value = "Annular Gas Flow";
-        //     ws.Cells[1, 12, 2, 12].Merge = true;
-        //     ws.Cells[3, 12].Value = "meter";
-
-        //     ws.Cells[1, 13].Value = "PBHP";
-        //     ws.Cells[1, 13, 2, 13].Merge = true;
-        //     ws.Cells[3, 13].Value = "meter";
-
-        //     ws.Cells[1, 14].Value = "SBHP";
-        //     ws.Cells[1, 14, 2, 14].Merge = true;
-        //     ws.Cells[3, 14].Value = "meter";
-
-        //     ws.Cells[1, 15].Value = "TIME";
-        //     ws.Cells[1, 15, 2, 15].Merge = true;
-        //     ws.Cells[3, 15].Value = "meter";
-
-        //     ws.Cells[1, 16].Value = "Keterangan";
-        //     ws.Cells[1, 16, 2, 16].Merge = true;
-
-        //     ws.Cells[1, 1, 1, 16].Style.Font.Bold = true;
-        //     ws.Cells[1, 1, 3, 16].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-        //     ws.Cells[1, 1, 3, 16].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
-
-        //     for (int c = 1; c <= 16; c++)
-        //     {
-        //         //ws.Column(c).AutoFit();
-        //     }
-
-        //     for (int i = 0; i < items.Count(); i++)
-        //     {
-        //         var t = items.ElementAt(i);
-        //         ws.Cells[4 + i, 1].Style.Numberformat.Format = "d-MMM-yy";
-        //         ws.Cells[4 + i, 1].Value = t.date.HasValue ? t.date.Value.ToLocalTime().ToOADate() : (double?)null;
-        //         ws.Cells[4 + i, 2].Value = t.well;
-        //         ws.Cells[4 + i, 3].Value = t.pump_intake;
-        //         ws.Cells[4 + i, 4].Value = t.dfl;
-        //         // ws.Cells[4 + i, 5].Value = t.cdfl;
-        //         ws.Cells[4 + i, 5].Value = t.sfl;
-        //         ws.Cells[4 + i, 6].Value = t.tglc;
-        //         ws.Cells[4 + i, 7].Value = t.egfl;
-        //         ws.Cells[4 + i, 8].Value = t.al;
-        //         ws.Cells[4 + i, 9].Value = t.thp;
-        //         ws.Cells[4 + i, 10].Value = t.spm;
-        //         ws.Cells[4 + i, 11].Value = t.cp;
-        //         ws.Cells[4 + i, 12].Value = t.agf;
-        //         ws.Cells[4 + i, 13].Value = t.pbhp;
-        //         ws.Cells[4 + i, 14].Value = t.sbhp;
-        //         ws.Cells[4 + i, 15].Value = t.time;
-        //         ws.Cells[4 + i, 16].Value = t.keterangan;
-        //     }
-
-        //     MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
-        //     memoryStream.Position = 0;
-        //     return File(memoryStream, "application/vnd.ms-excel", "LaporanLab.xlsx");
-        // }
+            MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
+            memoryStream.Position = 0;
+            return File(memoryStream, "application/vnd.ms-excel", "LaporanLab.xlsx");
+        }
 
         [Authorize("PeLaporanLab Add")]
         [HttpPost("UploadFiles")]

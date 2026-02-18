@@ -51,10 +51,11 @@ export class PeLaporanLabChartComponent implements OnInit {
       verticalAlign: 'top'
     },
     xAxis: [{
-      categories: [],
+      type: 'datetime',
       crosshair: true,
-      autoRotation: true,
-      labels: {}
+      labels: {
+        format: '{value:%d %b}'
+      }
     }],
     yAxis: [{
       title: {
@@ -71,7 +72,12 @@ export class PeLaporanLabChartComponent implements OnInit {
       }
     }],
     tooltip: {
-      shared: true
+      formatter: function () {
+        return `
+          <b>${Highcharts.dateFormat('%d %b %Y', this.x)}</b><br/>
+          ${this.series.name}: ${this.y} bbl
+        `;
+      }
     },
     legend: {
       layout: 'horizontal',
@@ -224,75 +230,119 @@ export class PeLaporanLabChartComponent implements OnInit {
         console.log('Daily Response:', dailyRes);
 
         // Prepare laporan data
+        // let laporanData = laporanRes.data || [];
+        // let laporanMap = new Map();
+
+        // console.log('Laporan Data Length:', laporanData.length);
+
+        // for (const item of laporanData) {
+        //   const dateStr = formatDate(item.date, "dd-MMM-yy", "en-US");
+        //   const well = item.well;
+        //   const key = `${dateStr}_${well}`;
+        //   laporanMap.set(key, item.water);
+        //   console.log('Laporan item:', { date: dateStr, well, water: item.water, key });
+        // }
+
+        // // Prepare daily data
+        // let dailyData = dailyRes.data || [];
+        // let dailyMap = new Map();
+
+        // console.log('Daily Data Length:', dailyData.length);
+
+        // for (const item of dailyData) {
+        //   const dateStr = formatDate(item.date, "dd-MMM-yy", "en-US");
+        //   const well = item.well;
+        //   const key = `${dateStr}_${well}`;
+        //   dailyMap.set(key, item.wc);
+        //   console.log('Daily item:', { date: dateStr, well, wc: item.wc, key });
+        // }
+
+        // // Combine dates and wells
+        // let allKeys = new Set();
+        // for (const key of laporanMap.keys()) {
+        //   allKeys.add(key);
+        // }
+        // for (const key of dailyMap.keys()) {
+        //   allKeys.add(key);
+        // }
+
+        // let sortedKeys = Array.from(allKeys).sort() as string[];
+
+        // console.log('Sorted Keys:', sortedKeys);
+
+        // // Extract categories and series data
+        // let categories = [];
+        // let laporanSeries = [];
+        // let dailySeries = [];
+
+        // for (const key of sortedKeys) {
+        //   const parts = (key as string).split('_');
+        //   const dateStr = parts[0];
+        //   const well = parts[1];
+        //   categories.push(`${dateStr}\n${well}`);
+        //   laporanSeries.push(laporanMap.get(key) || null);
+        //   dailySeries.push(dailyMap.get(key) || null);
+        // }
+
+        // console.log('Categories:', categories);
+        // console.log('Laporan Series:', laporanSeries);
+        // console.log('Daily Series:', dailySeries);
+
+        // // Update chart
+        // this.laporan_chart_options["xAxis"][0]["categories"] = categories;
+
         let laporanData = laporanRes.data || [];
-        let laporanMap = new Map();
-
-        console.log('Laporan Data Length:', laporanData.length);
-
-        for (const item of laporanData) {
-          const dateStr = formatDate(item.date, "dd-MMM-yy", "en-US");
-          const well = item.well;
-          const key = `${dateStr}_${well}`;
-          laporanMap.set(key, item.water);
-          console.log('Laporan item:', { date: dateStr, well, water: item.water, key });
-        }
-
-        // Prepare daily data
         let dailyData = dailyRes.data || [];
-        let dailyMap = new Map();
 
-        console.log('Daily Data Length:', dailyData.length);
+        // convert laporan ke format [timestamp, value]
+        let laporanSeries = laporanData.map(item => [
+        new Date(item.date).getTime(),
+        item.water
+        ]);
 
-        for (const item of dailyData) {
-          const dateStr = formatDate(item.date, "dd-MMM-yy", "en-US");
-          const well = item.well;
-          const key = `${dateStr}_${well}`;
-          dailyMap.set(key, item.wc);
-          console.log('Daily item:', { date: dateStr, well, wc: item.wc, key });
-        }
+        // convert daily ke format [timestamp, value]
+        let dailySeries = dailyData.map(item => [
+        new Date(item.date).getTime(),
+        item.wc
+        ]);
 
-        // Combine dates and wells
-        let allKeys = new Set();
-        for (const key of laporanMap.keys()) {
-          allKeys.add(key);
-        }
-        for (const key of dailyMap.keys()) {
-          allKeys.add(key);
-        }
+        // urutkan berdasarkan tanggal (WAJIB!)
+        laporanSeries.sort((a, b) => a[0] - b[0]);
+        dailySeries.sort((a, b) => a[0] - b[0]);
 
-        let sortedKeys = Array.from(allKeys).sort() as string[];
+        // set range sesuai filter
+        this.laporan_chart_options["xAxis"][0]["min"] =
+        new Date(this.start_dateControl.value).getTime();
 
-        console.log('Sorted Keys:', sortedKeys);
+        this.laporan_chart_options["xAxis"][0]["max"] =
+        new Date(this.end_dateControl.value).getTime();
 
-        // Extract categories and series data
-        let categories = [];
-        let laporanSeries = [];
-        let dailySeries = [];
+        // update title
+        this.laporan_chart_options["title"]["text"] =
+        this.well_xSelected.join(", ");
 
-        for (const key of sortedKeys) {
-          const parts = (key as string).split('_');
-          const dateStr = parts[0];
-          const well = parts[1];
-          categories.push(`${dateStr}\n${well}`);
-          laporanSeries.push(laporanMap.get(key) || null);
-          dailySeries.push(dailyMap.get(key) || null);
-        }
+        // update caption
+        this.laporan_chart_options["caption"]["text"] =
+        formatDate(this.start_dateControl.value, 'd MMM y', 'en-US')
+        + " - " +
+        formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
 
-        console.log('Categories:', categories);
-        console.log('Laporan Series:', laporanSeries);
-        console.log('Daily Series:', dailySeries);
-
-        // Update chart
-        this.laporan_chart_options["xAxis"][0]["categories"] = categories;
-        this.laporan_chart_options["title"]["text"] = this.well_xSelected.join(", ");
-        this.laporan_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+        // update series
         this.laporan_chart_options["series"][0]["data"] = laporanSeries;
         this.laporan_chart_options["series"][1]["data"] = dailySeries;
+
+        // render ulang
+        Highcharts.chart(this.laporan_chart_el.nativeElement, this.laporan_chart_options);
+
+        // this.laporan_chart_options["title"]["text"] = this.well_xSelected.join(", ");
+        // this.laporan_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+        // this.laporan_chart_options["series"][0]["data"] = laporanSeries;
+        // this.laporan_chart_options["series"][1]["data"] = dailySeries;
 
         console.log('Chart Options Updated:', this.laporan_chart_options);
 
         // Render chart to the element
-        Highcharts.chart(this.laporan_chart_el.nativeElement, this.laporan_chart_options);
+        // Highcharts.chart(this.laporan_chart_el.nativeElement, this.laporan_chart_options);
         console.log('Chart Rendered to element');
       },
       error => {
