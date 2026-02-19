@@ -541,7 +541,7 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeLaporanLab Add")]
         [HttpGet("SaveData")]
-        public ActionResult SaveData(string _id)
+        public async Task<ActionResult> SaveData(string _id)
         {
             try
             {
@@ -564,39 +564,40 @@ namespace ssc.Areas.PE.Controllers
                 {
                     item._error = null;
 
+                    var filter = Builders<LaporanLab>.Filter.And(
+                        Builders<LaporanLab>.Filter.Eq(t => t.nomor, item.nomor),
+                        Builders<LaporanLab>.Filter.Eq(t => t.date, item.date),
+                        Builders<LaporanLab>.Filter.Eq(t => t.well, item.well),
+                        Builders<LaporanLab>.Filter.Eq(t => t.sed, item.sed),
+                        Builders<LaporanLab>.Filter.Eq(t => t.water, item.water),
+                        Builders<LaporanLab>.Filter.Eq(t => t.sludge, item.sludge),
+                        Builders<LaporanLab>.Filter.Eq(t => t.total, item.total),
+                        Builders<LaporanLab>.Filter.Eq(t => t.api, item.api),
+                        Builders<LaporanLab>.Filter.Eq(t => t.sg, item.sg),
+                        Builders<LaporanLab>.Filter.Eq(t => t.density_obs, item.density_obs),
+                        Builders<LaporanLab>.Filter.Eq(t => t.density_dua, item.density_dua),
+                        Builders<LaporanLab>.Filter.Eq(t => t.pp, item.pp),
+                        Builders<LaporanLab>.Filter.Eq(t => t.temperature, item.temperature),
+                        Builders<LaporanLab>.Filter.Eq(t => t.visc, item.visc),
+                        Builders<LaporanLab>.Filter.Eq(t => t.cl, item.cl),
+                        Builders<LaporanLab>.Filter.Eq(t => t.rw, item.rw),
+                        Builders<LaporanLab>.Filter.Eq(t => t.keterangan, item.keterangan)
+                    );
+
                     var update = Builders<LaporanLab>.Update
-                        .Set(t => t.nomor, item.nomor)
-                        .Set(t => t.date, item.date)
-                        .Set(t => t.well, item.well)
-                        .Set(t => t.sed, item.sed)
-                        .Set(t => t.water, item.water)
-                        .Set(t => t.sludge, item.sludge)
-                        .Set(t => t.total, item.total)
-                        .Set(t => t.api, item.api)
-                        .Set(t => t.sg, item.sg)
-                        .Set(t => t.density_obs, item.density_obs)
-                        .Set(t => t.density_dua, item.density_dua)
-                        .Set(t => t.pp, item.pp)
-                        .Set(t => t.temperature, item.temperature)
-                        .Set(t => t.visc, item.visc)
-                        .Set(t => t.cl, item.cl)
-                        .Set(t => t.rw, item.rw)
-                        .Set(t => t.keterangan, item.keterangan)
                         .Set(t => t.updated_by, User.Identity.Name)
                         .Set(t => t.updated_date, DateTime.Now)
                         .SetOnInsert(t => t.created_by, User.Identity.Name)
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
-                    UpdateResult res = _laporan.UpdateOne(
-                        Builders<LaporanLab>.Filter.Eq(t => t.date, item.date) &
-                        Builders<LaporanLab>.Filter.Eq(t => t.well, item.well) &
-                        Builders<LaporanLab>.Filter.Eq(t => t.api, item.api),
+                    var result = await _laporan.UpdateOneAsync(
+                        filter,
                         update,
                         new UpdateOptions() { IsUpsert = true }
                     );
 
-                    modified_count += res.ModifiedCount;
-                    created_count += res.ModifiedCount;
+                    modified_count += result.ModifiedCount;
+                    created_count += result.ModifiedCount;
                 }
                 _laporan_tmp.DeleteOne(d => d._id == _id);
 
