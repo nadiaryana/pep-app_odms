@@ -101,12 +101,15 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.api?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.api.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Regex(t => t.api, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.sg?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.sg.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.sg, Convert.ToDecimal(c))));
                 if (colfilter.density_obs?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.density_obs.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.density_obs, Convert.ToDecimal(c))));
-                if (colfilter.density_dua?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.density_dua.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.density_dua, Convert.ToDecimal(c))));
+                // if (colfilter.density_dua?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.density_dua.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.density_dua, Convert.ToDecimal(c))));
+                if (colfilter.density_dua?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.density_dua.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Regex(t => t.density_dua, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.pp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.pp.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Regex(t => t.pp, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.temperature?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.temperature.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.temperature, Convert.ToDecimal(c))));
+                if (colfilter.temperature?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.temperature.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Regex(t => t.temperature, new BsonRegularExpression((string)c, "i"))));
+                // if (colfilter.temperature?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.temperature.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.temperature, Convert.ToDecimal(c))));
                 if (colfilter.visc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.visc.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.visc, Convert.ToDecimal(c))));
                 if (colfilter.cl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.cl.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Regex(t => t.cl, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.rw?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.rw.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.rw, Convert.ToDecimal(c))));
+                // if (colfilter.rw?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.rw.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Eq(t => t.rw, Convert.ToDecimal(c))));
+                if (colfilter.rw?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.rw.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Regex(t => t.rw, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.keterangan?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<LaporanLab>.Filter.Or(colfilter.keterangan.ToList().Where(c => !(c is JObject)).Select(c => Builders<LaporanLab>.Filter.Regex(t => t.keterangan, new BsonRegularExpression((string)c, "i"))));
 
 
@@ -361,7 +364,11 @@ namespace ssc.Areas.PE.Controllers
                         new { key = "api", col = 8, required = false, errorMsg = "" },
                         new { key = "keterangan", col = 17, required = false, errorMsg = "" },
                         new { key = "pp", col = 12, required = false, errorMsg = "" },
+                        new { key = "density_dua", col = 11, required = false, errorMsg = "" },
+                        new { key = "temperature", col = 13, required = false, errorMsg = "" },
                         new { key = "cl", col = 15, required = false, errorMsg = "" },
+                        new { key = "rw", col = 16, required = false, errorMsg = "" },
+
                     };
 
                     foreach (var mapping in stringMappings)
@@ -399,10 +406,8 @@ namespace ssc.Areas.PE.Controllers
                         new { key = "total", col = 7 },
                         new { key = "sg", col = 9 },
                         new { key = "density_obs", col = 10 },
-                        new { key = "density_dua", col = 11 },
-                        new { key = "temperature", col = 13 },
                         new { key = "visc", col = 14 },
-                        new { key = "rw", col = 16 },
+
                     };
 
                     foreach (var mapping in mappings)

@@ -58,6 +58,10 @@ export class AuthService {
     }
 	
     logout() {
+		const currentUrl = this.router.url;
+  		sessionStorage.setItem('returnUrl', currentUrl);
+		localStorage.removeItem('token');
+
 		return this.http.get<any>('api/account/logout')
 		.pipe(map(res => {
 			if (res.errMsg == null) { 
@@ -65,7 +69,7 @@ export class AuthService {
 				sessionStorage.removeItem('serverTimezone');
     		    this.currentUserSubject.next(null);
     		    this.router.navigate([{ outlets: { overlay: null } }])
-      				.then(_ => this.router.navigate(['/login']));
+      				.then(_ => this.router.navigate(['/landing']));
 				//this.router.navigate(['/login', {outlets: {overlay:null}}]);
 			}
 			return res;

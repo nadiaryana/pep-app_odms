@@ -1,0 +1,112 @@
+body {
+  // margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+:host {
+  display: block;
+}
+
+.hero .header h1 {
+  // padding: 10px;
+  font-size: 60px;
+  font-weight: bold;
+  color: #134E8E;
+  // color: black;
+  margin-bottom: 600px;
+  margin-left: 800px;
+  text-align: center;
+}
+
+.hero {
+  min-height: 100vh;   // WAJIB
+  width: 100vw;
+  height: calc(100vh - 64px);  
+  margin-left: calc(-50vw + 50%); 
+  margin-top: 0;
+  
+  background: url('/assets/image/bg.jpg');
+  // background: red !important;
+  background-size: cover;        
+  background-position: center;   
+  background-repeat: no-repeat;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  text-align: center;
+  // padding: 60px 20px;
+}
+
+.hero h2 {
+  font-size: 40px;
+  color: #3b3f5c;
+  margin-bottom: 40px;
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 650px;
+  gap: 30px;
+}
+
+.card {
+  width: 350px;
+  height: 180px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+}
+
+.card.admin h3 {
+  color: black;
+}
+
+.card.viewer h3 {
+  color: black;
+}
+
+.card:hover h3 {
+  color: #e53935;  
+}
+
+.icon {
+  width: 80px;
+  height: 80px;
+  background: #f8e1e7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+mat-icon {
+  font-size: 40px;
+  color: #ff4081;
+  justify-content: center;
+  height: 40px;
+  align-items: center;
+  // display: flex;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  background: #f5f5f5;
+  color: #555;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}

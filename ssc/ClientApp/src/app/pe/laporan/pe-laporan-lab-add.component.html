@@ -108,7 +108,7 @@
 					</ng-container>
 					<ng-container matColumnDef="density_dua">
 					  <th mat-header-cell *matHeaderCellDef>DENSITY 15˚C</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.density_dua?.value}" [matTooltip]="row._error.density_dua?.message" matTooltipPosition="after">{{(row.density_dua | number) || row._error.density_dua?.value || '-'}}</td>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.density_dua?.value}" [matTooltip]="row._error.density_dua?.message" matTooltipPosition="after">{{row.density_dua || row._error.density_dua?.value || '-'}}</td>
 					</ng-container>
 					<ng-container matColumnDef="pp">
 					  <th mat-header-cell *matHeaderCellDef>PP ˚F</th>
@@ -116,7 +116,7 @@
 					</ng-container>
 					<ng-container matColumnDef="temperature">
 					  <th mat-header-cell *matHeaderCellDef>TEMP ˚C</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.temperature?.value}" [matTooltip]="row._error.temperature?.message" matTooltipPosition="after">{{(row.temperature | number) || row._error.temperature?.value || '-'}}</td>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.temperature?.value}" [matTooltip]="row._error.temperature?.message" matTooltipPosition="after">{{row.temperature || row._error.temperature?.value || '-'}}</td>
 					</ng-container>
 					<ng-container matColumnDef="visc">
 					  <th mat-header-cell *matHeaderCellDef>VISC, cP</th>
@@ -128,7 +128,7 @@
 					</ng-container>
 					<ng-container matColumnDef="rw">
 					  <th mat-header-cell *matHeaderCellDef>RW ˚F / Ω</th>
-					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.rw?.value}" [matTooltip]="row._error.rw?.message" matTooltipPosition="after">{{(row.rw | number) || row._error.rw?.value || '-'}}</td>
+					  <td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.rw?.value}" [matTooltip]="row._error.rw?.message" matTooltipPosition="after">{{row.rw || row._error.rw?.value || '-'}}</td>
 					</ng-container>
 					<ng-container matColumnDef="keterangan">
 						<th mat-header-cell *matHeaderCellDef rowspan="2">Keterangan</th>

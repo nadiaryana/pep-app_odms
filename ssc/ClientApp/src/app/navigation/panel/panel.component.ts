@@ -42,9 +42,7 @@ export class PanelComponent implements OnInit {
         this.panels = [];
       }
     })
-
-
-    
+  
     this.panelService.currentMessage.subscribe(res => {
       if(res.title != null && res.items.filter(i => i.permission).length > 0) {
         this.addPanel(res);

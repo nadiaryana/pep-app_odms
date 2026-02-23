@@ -30,9 +30,10 @@ import { xFilterDialogDateComponent } from './xfilter/xfilter.component';
 import { xFilterDialogTextComponent } from './xfilter/xfilter.component';
 import { AuthInterceptor } from './auth.interceptor';
 import { HighchartsChartModule } from 'highcharts-angular';
-import { MatCardModule, MatListModule } from '@angular/material';
+import { MatCardModule, MatIconModule, MatListModule } from '@angular/material';
 import { SumurComponent } from './pe/sumur/pe-sumur.component';
 import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
+import { LandingComponent } from './landing/landing.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
     LoginComponent,
     LogoutComponent,
     DashboardComponent,
+    LandingComponent,
 
     LocationComponent,
     LocationListComponent,
@@ -67,6 +69,7 @@ import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
     MatListModule,
     CommonModule,
     HttpClientModule,
+    MatIconModule,
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

@@ -22,12 +22,12 @@ namespace ssc.Areas.PE.Models
         public string api { get; set; }
         public decimal? sg { get; set; }
         public decimal? density_obs { get; set; }
-        public decimal? density_dua { get; set; }
+        public string density_dua { get; set; }
         public string pp { get; set; }
-        public decimal? temperature { get; set; }
+        public string temperature { get; set; }
         public decimal? visc { get; set; }
         public string cl { get; set; }
-        public decimal? rw { get; set; }
+        public string rw { get; set; }
         public string keterangan { get; set; }
         public string created_by { get; set; }
         public DateTime? created_date { get; set; }

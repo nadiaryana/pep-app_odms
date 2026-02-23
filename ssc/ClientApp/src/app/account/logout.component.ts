@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material';
-
+import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -15,6 +15,7 @@ export class LogoutComponent {
 	constructor(
 		private authService: AuthService,
 		public snackBar: MatSnackBar,
+		private router: Router,
 	) { }
 	
 	ngOnInit() { 
@@ -25,9 +26,11 @@ export class LogoutComponent {
 				this.snackBar.open(res.errMsg, 'dismiss');
 			}
 			this.loading = false; 
+			this.router.navigate(['/landing']);
 		}, error => {
 			this.snackBar.open("Server error", 'dismiss');
 			this.loading = false; 
+			this.router.navigate(['/landing']);
 		}); 
 	};
 

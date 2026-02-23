@@ -2,7 +2,8 @@ import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { formatDate } from '@angular/common';
 import { FormControl } from '@angular/forms';
-import { forkJoin, Observable } from 'rxjs';
+import { of, forkJoin, Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { map } from 'rxjs/operators';
 import { Chart } from 'angular-highcharts';
 import * as Highcharts from 'highcharts';
@@ -220,8 +221,10 @@ export class PeLaporanLabChartComponent implements OnInit {
     }
 
     forkJoin([
-      this.http.get('/api/pe/laporan/GetChart', { params: laporanParams }),
+      this.http.get('/api/pe/laporan/GetChart', { params: laporanParams })
+      .pipe(catchError(() => of({ data: [] }))),
       this.http.get('/api/pe/daily/GetChart', { params: dailyParams })
+      .pipe(catchError(() => of({ data: [] })))
     ]).subscribe(
       ([laporanRes, dailyRes]: any[]) => {
         this.isLoadingResults = false;

@@ -6,6 +6,7 @@ import { Login }    from '../login';
 import { AuthService } from '../auth.service';
 //import { Company } from '../company';
 import { TitleService } from '../navigation/title/title.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -23,6 +24,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 		public snackBar: MatSnackBar,
 		private titleService: TitleService,
 		private http: HttpClient,
+		private router: Router,
+		private route: ActivatedRoute,
 	) { }
 	  
 	onSubmit() { 
@@ -34,11 +37,23 @@ export class LoginComponent implements OnInit, OnDestroy {
 			username: this.loginForm.controls.username.value,
 			password: this.loginForm.controls.password.value
 		}).subscribe(res => {
+			
 			if(res["errMsg"]) {
 				this.snackBar.open(res["errMsg"], 'dismiss');
+				this.submitting = false; 
+				this.loginForm.enable()
+				return;
 			}
+			localStorage.setItem('token', res.token);
+			this.router.navigate(['/dashboard']);
+			const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') 
+					|| '/dashboard';
+			// this.router.navigateByUrl(returnUrl);
+
 			this.submitting = false; 
-			this.loginForm.enable()
+			this.loginForm.enable();
+			console.log('LOGIN RESPONSE:', res);
+			
 		}, error => {
 			this.snackBar.open(error, 'dismiss');
 			this.submitting = false; 

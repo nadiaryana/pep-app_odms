@@ -15,9 +15,15 @@ import { HighchartsChartModule } from 'highcharts-angular';
 import { SumurComponent } from './pe/sumur/pe-sumur.component';
 import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
 import { PeLabComponent } from './pe/lab/pe-lab.component';
+import { LandingComponent } from './landing/landing.component';
 // import { PeSumurCurrentComponent } from './pe/current/pe-sumur-current.component';
 
 const appRoutes: Routes = [
+  // { path: 'login', component: LoginComponent },
+  { path: '', redirectTo: 'landing', pathMatch: 'full'  },
+  { path: 'landing', component: LandingComponent },
+  { path: 'admin/login', component: LoginComponent },
+  { path: 'viewer/login', component: LoginComponent },
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', redirectTo: 'pe/dashboard', pathMatch: 'full' },
   { path: 'pe', loadChildren: './pe/pe.module#PeModule', data: { preload: true, label: "PE" } },
