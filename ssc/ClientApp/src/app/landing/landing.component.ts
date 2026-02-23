@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { TitleService } from '../navigation/title/title.service';
 
 @Component({
   selector: 'app-landing',
@@ -8,14 +9,24 @@ import { Router } from '@angular/router';
 })
 export class LandingComponent {
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private titleService: TitleService) {}
 
   goAdmin() {
     const returnUrl = sessionStorage.getItem('returnUrl') || '/pe/dashboard';
-    this.router.navigate(['/admin/login'], { queryParams: { returnUrl } });
+    this.router.navigateByUrl('/admin/login');
   } 
 
   goViewer() {
-    this.router.navigate(['/viewer/login']);
+    this.router.navigateByUrl('/viewer/login');
+  }
+  
+  ngOnInit() {
+
+    this.titleService.titleSource.next({
+      title: "",
+      icon: "",
+      breadcrumbs: []
+    });
+
   }
 }

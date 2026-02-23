@@ -19,17 +19,17 @@ body {
 }
 
 .hero {
-  min-height: 100vh;   // WAJIB
+  // min-height: 100vh;   // WAJIB
   width: 100vw;
-  height: calc(100vh - 64px);  
+  // height: calc(100vh - 64px);  
   margin-left: calc(-50vw + 50%); 
   margin-top: 0;
   
-  background: url('/assets/image/bg.jpg');
+  // background: url('/assets/image/bg.jpg');
   // background: red !important;
-  background-size: cover;        
-  background-position: center;   
-  background-repeat: no-repeat;
+  // background-size: cover;        
+  // background-position: center;   
+  // background-repeat: no-repeat;
 
   display: flex;
   flex-direction: column;
@@ -38,6 +38,21 @@ body {
   position: relative;
   text-align: center;
   // padding: 60px 20px;
+}
+.hero-bg {
+  min-height: 100vh;   // WAJIB
+  width: 100vw;
+  // height: calc(100vh - 64px);  
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('/assets/image/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1;
 }
 
 .hero h2 {
@@ -49,18 +64,34 @@ body {
 .card-container {
   display: flex;
   justify-content: center;
-  margin-top: 650px;
+  // margin-top: 650px;
   gap: 30px;
+  position: fixed;
+  bottom: 10vh;
+}
+
+// small mobile screen
+@media (max-width: 599px) {
+  .card-container {
+    flex-direction: column;
+    gap: 20px;
+    bottom: 5vh;
+  }
+
+  footer {
+    padding: 10px !important;
+    font-size: 10px !important;
+  }
 }
 
 .card {
   width: 350px;
   height: 180px;
-  background: white;
+  background: rgba(255, 255, 255, 0.75);
   border-radius: 15px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -69,6 +100,7 @@ body {
 
 .card:hover {
   transform: translateY(-8px);
+  background: white;
 }
 
 .card.admin h3 {
@@ -84,7 +116,7 @@ body {
 }
 
 .icon {
-  width: 80px;
+  width: 70px;
   height: 80px;
   background: #f8e1e7;
   border-radius: 50%;
@@ -109,4 +141,7 @@ footer {
   color: #555;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
+  position: fixed;
+  bottom: 0;
+  left: 0;
 }
