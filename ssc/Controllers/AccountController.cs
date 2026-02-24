@@ -62,7 +62,7 @@ namespace ssc.Controllers
           }
         }
 
-        // ✅ Tambahkan izin manual PeProduction Add
+        //Tambahkan izin manual PeProduction Add
         identity.AddClaim(new Claim(ClaimTypes.Role, "PeProduction Add", user.role, "PEP"));
         identity.AddClaim(new Claim("RolePermission", JsonConvert.SerializeObject(role_permission)));
 
