@@ -29,7 +29,7 @@ namespace ssc.Controllers
                     email = "",
                     display_name = "Viewer",
                     role = "ssa-viewer",
-                    password_hash = BCrypt.Net.BCrypt.HashPassword("Pertamina@2025")
+                    password_hash = BCrypt.Net.BCrypt.HashPassword("viewer")
                 },
                 new User
                 {
@@ -37,7 +37,15 @@ namespace ssc.Controllers
                     email = "",
                     display_name = "Admin",
                     role = "ssa-pe-ro",
-                    password_hash = BCrypt.Net.BCrypt.HashPassword("Pertamina@2025")
+                    password_hash = BCrypt.Net.BCrypt.HashPassword("pe.admin")
+                },
+                new User
+                {
+                    username = "operator",
+                    email = "",
+                    display_name = "Operator",
+                    role = "ssa-viewer",
+                    password_hash = BCrypt.Net.BCrypt.HashPassword("Operator@2026")
                 }
             };
 

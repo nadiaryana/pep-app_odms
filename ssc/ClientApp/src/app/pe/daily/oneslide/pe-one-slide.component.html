@@ -237,10 +237,40 @@
                 disabled
               />
               <span matSuffix>psi</span>
+            </mat-form-field>          
+        </div>
+        <!-- <h3>Operating Design</h3>
+        <div fxLayout="row wrap" fxLayoutGap="12px">
+          <mat-form-field class="filter">
+              <mat-label>SM 2</mat-label>
+              <input
+                matInput
+                [formControl]="sm2"
+                type="number"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="SM 2"
+                (change)="generateChart()"
+              
+              />
+              <span matSuffix>m</span>
             </mat-form-field>
 
-            
-        </div>
+            <mat-form-field class="filter">
+              <mat-label>Pump Setting Depth 2</mat-label>
+              <input
+                matInput
+                [formControl]="ds_kd2"
+                type="number"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="Pump Setting Depth 2"
+                (change)="generateChart()"
+              
+              />
+              <span matSuffix>m</span>
+            </mat-form-field>
+        </div> -->
       </div>
     </mat-card-content>
   </mat-card>

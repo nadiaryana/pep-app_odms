@@ -84,9 +84,11 @@ export class OneSlideComponent implements OnInit {
   zone = new FormControl("");
   interval = new FormControl("");
   sm = new FormControl("");
+  sm2 = new FormControl("");
   qmax = new FormControl("");
   ls_method = new FormControl("");
   ds_kd = new FormControl("");
+  ds_kd2 = new FormControl("");
   ds_sl = new FormControl("");
   ds_spm = new FormControl("");
   size  = new FormControl("");
@@ -94,6 +96,7 @@ export class OneSlideComponent implements OnInit {
   prod_ratio = new FormControl("");  
   prod_reservoir = new FormControl(""); 
   factor_corr = new FormControl(""); 
+  q_design = new FormControl("");
     
 
   grossAvg = new FormControl("");  
@@ -107,6 +110,7 @@ export class OneSlideComponent implements OnInit {
   dynamic_fluid_level = new FormControl("");
   static_botthomhole_pressure = new FormControl("");
   flowing_bottomhole_pressure = new FormControl("");
+  flowing_bottomhole_pressure2 = new FormControl("");
 
   @ViewChild("ipr_chart_el", { static: true }) public ipr_chart_el: ElementRef;
   daily_table_data = [];
@@ -699,7 +703,42 @@ export class OneSlideComponent implements OnInit {
     }
 
     this.prod_reservoir.setValue(prod_reservoir);
-      }
+
+    // OPERATING DESIGN (GUARD)
+    const sm2_raw = this.sm2.value;
+    const kd2_raw = this.ds_kd2.value;
+
+    // 🔒 STOP jika belum diisi
+    if (
+      sm2_raw === null || sm2_raw === "" ||
+      kd2_raw === null || kd2_raw === ""
+    ) {
+      console.log("Operating Design belum diinput → dilewati");
+      return;
+    }
+
+    const sm2 = Number(sm2_raw);
+    const ds_kd2 = Number(kd2_raw);
+
+    // safety check
+    if (isNaN(sm2) || isNaN(ds_kd2)) {
+      console.warn("Operating Design input tidak valid");
+      return;
+    }
+
+    // HITUNG OPERATING DESIGN
+    const pwf2 = (0.433 * wcAvg / 100 + 0.346 * (1 - wcAvg / 100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+
+    this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
+
+    const q_design = pi * (ps - pwf2);
+    this.q_design.setValue(q_design.toFixed(2));
+
+    console.log(`Operating Design:
+      Pwf_design = ${pwf2}
+      q_design   = ${q_design}`);   
+
+    }
 
   getPwf(sbhp: any, iteration = 1) {
     const pwf_values = [];
@@ -1113,6 +1152,48 @@ export class OneSlideComponent implements OnInit {
         },
         zIndex: 2,
       },
+      {
+        name: "Operating Point",
+        type: "scatter",
+        data: [
+          {
+            x: Number(this.q_design.value),
+            y: Number(this.flowing_bottomhole_pressure2.value),
+          },
+        ],
+        color: "#E53935",
+        marker: {
+          radius: 6,
+          symbol: "circle",
+        },
+        zIndex: 5,
+      },
+      {
+        name: "Q_design",
+        type: "line",
+        data: [
+          { x: Number(this.q_design.value), y: 0 },
+          { x: Number(this.q_design.value), y: Number(this.static_botthomhole_pressure.value) },
+        ],
+        dashStyle: "Dash",
+        color: "#E53935",
+        marker: { enabled: false },
+        enableMouseTracking: false,
+        zIndex: 1,
+      },
+      {
+        name: "Pwf_design",
+        type: "line",
+        data: [
+          { x: 0, y: Number(this.flowing_bottomhole_pressure2.value) },
+          { x: Number(this.qmax.value), y: Number(this.flowing_bottomhole_pressure2.value) },
+        ],
+        dashStyle: "Dash",
+        color: "#E53935",
+        marker: { enabled: false },
+        enableMouseTracking: false,
+        zIndex: 1,
+      },
     ],
     xAxis: {
       title: { text: "Qmax (Liquid Rate)" },
@@ -1132,7 +1213,6 @@ export class OneSlideComponent implements OnInit {
 
   Highcharts.chart(this.ipr_chart_el.nativeElement, this.ipr_chart_options);
 }
-
 
 
 

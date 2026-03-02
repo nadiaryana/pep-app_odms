@@ -124,7 +124,7 @@ export class IprComponent implements OnInit {
                   val = p.options.y;
                 tot += isFinite(val) ? val : 0;
               });
-              return tot;
+              return tot; 
             });
             var order = sums
               .map(function (sum: number, i: number) {

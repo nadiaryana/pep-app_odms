@@ -654,109 +654,301 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     return Math.ceil(text.length / charsPerLine);
   }
 
-  private reformatDataGantt() {
+//   private reformatDataGantt() {
+
+//   const wellSeries: any[] = [];
+//   const remarkSeries: any[] = [];
+//   const categories: string[] = [];
+
+//   const rigMap = new Map<string, number>();
+//   let rigIndex = 0;
+//   const rigLevels: { [rig: string]: any[] } = {};
+//   const rigBaseIndex: { [rig: string]: number } = {};
+
+//   let globalIndex = 0;
+
+  // 🔹 GROUP DATA PER RIG
+//   const grouped: { [rig: string]: any[] } = {};
+
+//   const maxLinesPerRig: { [rig: string]: number } = {};
+//   const rigTasks: { [rig: string]: any[] } = {};
+
+//   this.chartData.forEach((d) => {
+
+//     if (!d.rig) return;
+
+    // === GROUP BY RIG ===
+//     if (!rigMap.has(d.rig)) {
+//       rigMap.set(d.rig, rigIndex);
+//       categories[rigIndex] = d.rig;
+//       rigIndex++;
+//     }
+
+    // ⬇️ HITUNG JUMLAH BARIS REMARKS
+//     const lines = this.estimateLines(d.remarks);
+
+//     if (!maxLinesPerRig[d.rig] || maxLinesPerRig[d.rig] < lines) {
+//       maxLinesPerRig[d.rig] = lines;
+//     }
+
+
+//     const y = rigMap.get(d.rig);
+
+    // === TANGGAL FIX - Ambil tanggal lokal dari UTC ===
+//     const rawStart = new Date(d.plan_start);
+//     const rawEnd   = new Date(d.plan_end);
+
+    // Ambil tanggal tanpa timezone offset
+//     const start = Date.UTC(
+//       rawStart.getUTCFullYear(),
+//       rawStart.getUTCMonth(),
+//       rawStart.getUTCDate(),
+//       0, 0, 0, 0
+//     );
+
+    // End date: tanggal sebenarnya (untuk display di tooltip)
+//     const endActual = Date.UTC(
+//       rawEnd.getUTCFullYear(),
+//       rawEnd.getUTCMonth(),
+//       rawEnd.getUTCDate(),
+//       0, 0, 0, 0
+//     );
+
+    // End date untuk bar: tambah 1 hari agar bar mencakup sampai akhir end date
+//     const endForBar = endActual + (24 * 60 * 60 * 1000);
+//     const jobColor = this.getJobColor(d.job);
+
+    // === WELL BAR ===
+//     wellSeries.push({
+//       name: d.well,
+//       start,
+//       end: endForBar,  // Bar sampai akhir end date
+//       y,
+//       color: jobColor,
+//       custom: {
+//         label: d.well,
+//         rig: d.rig,
+//         job: d.job,
+//         remarks: d.remarks,
+//         actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
+//       }
+//     });
+
+    // === REMARK BAR ===
+//     remarkSeries.push({
+//       name: d.remarks,
+//       start,
+//       end: endForBar,  // Bar sampai akhir end date
+//       y,
+//       color: '#FFFFFF',
+//       custom: {
+//         label: d.remarks,
+//         well: d.well,
+//         rig: d.rig,
+//         job: d.job,
+//         actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
+//       }
+//     });
+//   });
+
+
+  // 🔹 PROSES PER RIG
+//   Object.keys(grouped).forEach(rig => {
+
+//     const jobs = grouped[rig];
+
+//     rigLevels[rig] = [];
+
+    // sort by start date
+//     jobs.sort((a, b) =>
+//       new Date(a.plan_start).getTime() -
+//       new Date(b.plan_start).getTime()
+//     );
+
+    // assign level (anti overlap)
+//     jobs.forEach(job => {
+
+//       const rawStart = new Date(job.plan_start);
+//       const rawEnd   = new Date(job.plan_end);
+
+//       const start = Date.UTC(
+//         rawStart.getUTCFullYear(),
+//         rawStart.getUTCMonth(),
+//         rawStart.getUTCDate()
+//       );
+
+//       const endActual = Date.UTC(
+//         rawEnd.getUTCFullYear(),
+//         rawEnd.getUTCMonth(),
+//         rawEnd.getUTCDate()
+//       );
+
+//       const endForBar = endActual + 24 * 3600 * 1000;
+
+//       let level = 0;
+
+//       while (true) {
+//         const overlap = rigLevels[rig].find(t =>
+//           t.level === level &&
+//           !(endForBar <= t.start || start >= t.end)
+//         );
+
+//         if (!overlap) break;
+//         level++;
+//       }
+
+//       rigLevels[rig].push({ start, end: endForBar, level });
+
+      // 🔹 SET y REAL (BUKAN DECIMAL)
+//       const y = globalIndex + level;
+
+//       wellSeries.push({
+//         name: job.well,
+//         start,
+//         end: endForBar,
+//         y,
+//         color: this.getJobColor(job.job),
+//         custom: {
+//           label: job.well,
+//           rig: job.rig,
+//           job: job.job,
+//           remarks: job.remarks,
+//           actualEnd: endActual
+//         }
+//       });
+
+//       remarkSeries.push({
+//         name: job.remarks,
+//         start,
+//         end: endForBar,
+//         y,
+//         color: '#FFFFFF',
+//         custom: {
+//           label: job.remarks,
+//           well: job.well,
+//           rig: job.rig,
+//           job: job.job,
+//           actualEnd: endActual
+//         }
+//       });
+//     });
+    // 🔹 BUAT CATEGORY SEBANYAK LEVEL
+//     const maxLevel = Math.max(...rigLevels[rig].map(x => x.level), 0);
+
+//     for (let i = 0; i <= maxLevel; i++) {
+//       categories.push(i === 0 ? rig : '');
+//     }
+
+//     globalIndex += maxLevel + 1;
+//   });
+
+//   const baseHeight = 100;   // tinggi minimum baris (dinaikkan)
+//   const lineHeight = 20;  // tinggi per baris teks (dinaikkan untuk jarak lebih lapang)
+//   // const cellHeight = 90;
+
+//   const maxLines = Math.max(...Object.values(maxLinesPerRig));
+//   const dynamicCellHeight = baseHeight + (maxLines * lineHeight);
+
+//   return {
+//     wellSeries,
+//     remarkSeries,
+//     categories,
+//     cellHeight: dynamicCellHeight   // ⬅️ kirim ke luar
+//   };
+
+
+//   return { wellSeries, remarkSeries, categories };
+// }
+
+private reformatDataGantt() {
 
   const wellSeries: any[] = [];
   const remarkSeries: any[] = [];
   const categories: string[] = [];
 
   const rigMap = new Map<string, number>();
-  let rigIndex = 0;
-
+  const rigLevels: { [rig: string]: any[] } = {};
   const maxLinesPerRig: { [rig: string]: number } = {};
 
+  // Actually populate grouped
+  const grouped: { [rig: string]: any[] } = {};
+
   this.chartData.forEach((d) => {
-
     if (!d.rig) return;
+    if (!grouped[d.rig]) grouped[d.rig] = [];
+    grouped[d.rig].push(d);
 
-    // === GROUP BY RIG ===
-    if (!rigMap.has(d.rig)) {
-      rigMap.set(d.rig, rigIndex);
-      categories[rigIndex] = d.rig;
-      rigIndex++;
-    }
-
-    // ⬇️ HITUNG JUMLAH BARIS REMARKS
+    // Track max remark lines per rig
     const lines = this.estimateLines(d.remarks);
-
     if (!maxLinesPerRig[d.rig] || maxLinesPerRig[d.rig] < lines) {
       maxLinesPerRig[d.rig] = lines;
     }
-
-
-    const y = rigMap.get(d.rig);
-
-    // === TANGGAL FIX - Ambil tanggal lokal dari UTC ===
-    const rawStart = new Date(d.plan_start);
-    const rawEnd   = new Date(d.plan_end);
-
-    // Ambil tanggal tanpa timezone offset
-    const start = Date.UTC(
-      rawStart.getUTCFullYear(),
-      rawStart.getUTCMonth(),
-      rawStart.getUTCDate(),
-      0, 0, 0, 0
-    );
-
-    // End date: tanggal sebenarnya (untuk display di tooltip)
-    const endActual = Date.UTC(
-      rawEnd.getUTCFullYear(),
-      rawEnd.getUTCMonth(),
-      rawEnd.getUTCDate(),
-      0, 0, 0, 0
-    );
-
-    // End date untuk bar: tambah 1 hari agar bar mencakup sampai akhir end date
-    const endForBar = endActual + (24 * 60 * 60 * 1000);
-    const jobColor = this.getJobColor(d.job);
-
-    // === WELL BAR ===
-    wellSeries.push({
-      name: d.well,
-      start,
-      end: endForBar,  // Bar sampai akhir end date
-      y,
-      color: jobColor,
-      custom: {
-        label: d.well,
-        rig: d.rig,
-        job: d.job,
-        remarks: d.remarks,
-        actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
-      }
-    });
-
-    // === REMARK BAR ===
-    remarkSeries.push({
-      name: d.remarks,
-      start,
-      end: endForBar,  // Bar sampai akhir end date
-      y,
-      color: '#FFFFFF',
-      custom: {
-        label: d.remarks,
-        well: d.well,
-        rig: d.rig,
-        job: d.job,
-        actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
-      }
-    });
   });
 
-  const baseHeight = 100;   // tinggi minimum baris (dinaikkan)
-  const lineHeight = 20;  // tinggi per baris teks (dinaikkan untuk jarak lebih lapang)
+  let globalIndex = 0;
 
-  const maxLines = Math.max(...Object.values(maxLinesPerRig));
+  // Single loop with overlap detection
+  Object.keys(grouped).forEach(rig => {
+    const jobs = grouped[rig];
+    rigLevels[rig] = [];
+
+    // Sort by start date
+    jobs.sort((a, b) =>
+      new Date(a.plan_start).getTime() - new Date(b.plan_start).getTime()
+    );
+
+    jobs.forEach(job => {
+      const rawStart = new Date(job.plan_start);
+      const rawEnd   = new Date(job.plan_end);
+
+      const start = Date.UTC(rawStart.getUTCFullYear(), rawStart.getUTCMonth(), rawStart.getUTCDate());
+      const endActual = Date.UTC(rawEnd.getUTCFullYear(), rawEnd.getUTCMonth(), rawEnd.getUTCDate());
+      const endForBar = endActual + 24 * 3600 * 1000;
+
+      //Overlap detection: find a free level
+      let level = 0;
+      while (true) {
+        const overlap = rigLevels[rig].find(t =>
+          t.level === level && !(endForBar <= t.start || start >= t.end)
+        );
+        if (!overlap) break;
+        level++;
+      }
+      rigLevels[rig].push({ start, end: endForBar, level });
+
+      const y = globalIndex + level;
+      const jobColor = this.getJobColor(job.job);
+
+      wellSeries.push({
+        name: job.well,
+        start, end: endForBar, y,
+        color: jobColor,
+        custom: { label: job.well, rig: job.rig, job: job.job, remarks: job.remarks, actualEnd: endActual }
+      });
+
+      remarkSeries.push({
+        name: job.remarks,
+        start, end: endForBar, y,
+        color: '#FFFFFF',
+        custom: { label: job.remarks, well: job.well, rig: job.rig, job: job.job, actualEnd: endActual }
+      });
+    });
+
+    // Build categories for this rig's levels
+    const maxLevel = Math.max(...rigLevels[rig].map(x => x.level), 0);
+    for (let i = 0; i <= maxLevel; i++) {
+      categories.push(i === 0 ? rig : '');
+    }
+    globalIndex += maxLevel + 1;
+  });
+
+  const baseHeight = 100;
+  const lineHeight = 20;
+  const maxLines = Object.values(maxLinesPerRig).length > 0
+    ? Math.max(...Object.values(maxLinesPerRig))
+    : 1;
   const dynamicCellHeight = baseHeight + (maxLines * lineHeight);
 
-  return {
-    wellSeries,
-    remarkSeries,
-    categories,
-    cellHeight: dynamicCellHeight   // ⬅️ kirim ke luar
-  };
-
-
-  return { wellSeries, remarkSeries, categories };
+  return { wellSeries, remarkSeries, categories, cellHeight: dynamicCellHeight };
 }
 }
