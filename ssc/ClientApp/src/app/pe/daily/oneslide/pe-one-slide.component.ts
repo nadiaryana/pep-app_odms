@@ -266,6 +266,17 @@ export class OneSlideComponent implements OnInit {
       }
     });
 
+    this.sm2.valueChanges.subscribe(() => {
+      if (this.showChart) {
+        this.testData();
+      }
+    });
+
+    this.ds_kd2.valueChanges.subscribe(() => {
+      if (this.showChart) {
+        this.testData();
+      }
+    });
 
   }
 
