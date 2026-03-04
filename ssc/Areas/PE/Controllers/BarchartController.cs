@@ -200,6 +200,13 @@ namespace ssc.Areas.PE.Controllers
             {
                 if (formFile.Length > 0)
                 {
+                    var extension = Path.GetExtension(formFile.FileName).ToLower();
+
+                    if (extension != ".xlsx" && extension != ".xlsm")
+                    {
+                        return BadRequest("Only .xlsx and .xlsm files are allowed");
+                    }
+
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await formFile.CopyToAsync(stream);
@@ -215,18 +222,18 @@ namespace ssc.Areas.PE.Controllers
             List<Barchart> items = new List<Barchart>();
             int error_count = 0;
 
-            for (var r = 3; r <= rowCount; r++)
+            for (var r = 15; r <= rowCount; r++)
             {
-                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString()))
+                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                 {
                     Barchart _row = new Barchart();
                     BarchartError _row_error = new BarchartError();
                     int last_error_count = error_count;
 
                     // Well (Column A) - Required
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                     {
-                        _row.well = ws.Cells[r, 2].Value?.ToString().Trim();
+                        _row.well = ws.Cells[r, 3].Value?.ToString().Trim();
                     }
                     else
                     {
@@ -235,42 +242,18 @@ namespace ssc.Areas.PE.Controllers
                     }
 
                     // Job (Column B)
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString()))
                     {
-                        _row.job = ws.Cells[r, 3].Value?.ToString().Trim();
+                        _row.job = ws.Cells[r, 4].Value?.ToString().Trim();
                     }
 
                     // Rig (Column C)
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString()))
                     {
-                        _row.rig = ws.Cells[r, 4].Value?.ToString().Trim();
+                        _row.rig = ws.Cells[r, 5].Value?.ToString().Trim();
                     }
 
                     // Plan Start (Column D)
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString()))
-                    {
-                        try
-                        {
-                            DateTime parsedDate;
-                            if (ws.Cells[r, 5].Value.GetType() == DateTime.Now.GetType())
-                            {
-                                parsedDate = (DateTime)ws.Cells[r, 5].Value;
-                            }
-                            else
-                            {
-                                parsedDate = DateTime.FromOADate(double.Parse(ws.Cells[r, 5].Value?.ToString().Trim()));
-                            }
-                            // Set jam ke 12:00 UTC agar tidak bergeser hari saat timezone conversion
-                            _row.plan_start = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, 12, 0, 0, DateTimeKind.Utc);
-                        }
-                        catch (Exception e)
-                        {
-                            _row_error.plan_start = new ErrorItem { value = ws.Cells[r, 5].Value?.ToString(), message = e.Message };
-                            error_count++;
-                        }
-                    }
-
-                    // Plan End (Column E)
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 6].Value?.ToString()))
                     {
                         try
@@ -285,19 +268,43 @@ namespace ssc.Areas.PE.Controllers
                                 parsedDate = DateTime.FromOADate(double.Parse(ws.Cells[r, 6].Value?.ToString().Trim()));
                             }
                             // Set jam ke 12:00 UTC agar tidak bergeser hari saat timezone conversion
+                            _row.plan_start = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, 12, 0, 0, DateTimeKind.Utc);
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.plan_start = new ErrorItem { value = ws.Cells[r, 6].Value?.ToString(), message = e.Message };
+                            error_count++;
+                        }
+                    }
+
+                    // Plan End (Column E)
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 7].Value?.ToString()))
+                    {
+                        try
+                        {
+                            DateTime parsedDate;
+                            if (ws.Cells[r, 7].Value.GetType() == DateTime.Now.GetType())
+                            {
+                                parsedDate = (DateTime)ws.Cells[r, 7].Value;
+                            }
+                            else
+                            {
+                                parsedDate = DateTime.FromOADate(double.Parse(ws.Cells[r, 7].Value?.ToString().Trim()));
+                            }
+                            // Set jam ke 12:00 UTC agar tidak bergeser hari saat timezone conversion
                             _row.plan_end = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, 12, 0, 0, DateTimeKind.Utc);
                         }
                         catch (Exception e)
                         {
-                            _row_error.plan_end = new ErrorItem { value = ws.Cells[r, 6].Value?.ToString(), message = e.Message };
+                            _row_error.plan_end = new ErrorItem { value = ws.Cells[r, 7].Value?.ToString(), message = e.Message };
                             error_count++;
                         }
                     }
 
                     // Remarks (Column F)
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 7].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 8].Value?.ToString()))
                     {
-                        _row.remarks = ws.Cells[r, 7].Value?.ToString().Trim();
+                        _row.remarks = ws.Cells[r, 8].Value?.ToString().Trim();
                     }
 
                     // Check for existing data
