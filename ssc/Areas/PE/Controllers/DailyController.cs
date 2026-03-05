@@ -1806,14 +1806,25 @@ namespace ssc.Areas.PE.Controllers
                         // .Take(2)
                         .ToList();
 
+                    // !! lama
+                    // var today = ordered
+                    //     .FirstOrDefault(x => x.date.Value.Date == todayDate);
+                    // !! baru
                     var today = ordered
-                        .FirstOrDefault(x => x.date.Value.Date == todayDate);
+                        .Where(x => x.date.Value.Date == todayDate)
+                        .OrderByDescending(x => x.fig_curr_gross)
+                        .FirstOrDefault();
 
                     // var yesterday = ordered
                     //     .FirstOrDefault(x => x.date.Value.Date < todayDate);
-
+                    // !! lama
+                    // var yesterday = ordered
+                    //     .FirstOrDefault(x => x.date.Value.Date == yesterdayDate);
+                    // !! baru
                     var yesterday = ordered
-                        .FirstOrDefault(x => x.date.Value.Date == yesterdayDate);
+                        .Where(x => x.date.Value.Date == yesterdayDate)
+                        .OrderByDescending(x => x.fig_curr_gross)
+                        .FirstOrDefault();
 
                     if (today == null) return null;
 
