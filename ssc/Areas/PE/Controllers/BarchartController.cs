@@ -194,7 +194,8 @@ namespace ssc.Areas.PE.Controllers
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
             long size = files.Sum(f => f.Length);
-            var filePath = Path.GetTempFileName();
+            string filePath = null;
+            // var filePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + extension);
 
             foreach (var formFile in files)
             {
@@ -207,16 +208,28 @@ namespace ssc.Areas.PE.Controllers
                         return BadRequest("Only .xlsx and .xlsm files are allowed");
                     }
 
+                    filePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + extension);
+
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await formFile.CopyToAsync(stream);
                     }
                 }
             }
-
             var fi = new FileInfo(filePath);
             var workbook = new ExcelPackage(fi);
-            var ws = workbook.Workbook.Worksheets.First();
+            // var ws = workbook.Workbook.Worksheets.First();
+            // var ws = workbook.Workbook.Worksheets.FirstOrDefault(s => s.GetType() == typeof(ExcelWorksheet));
+            // if (ws == null)
+            // {
+            //     return BadRequest("No valid worksheet found in the file");
+            // }
+            // Option 2: Get by sheet name (more reliable)
+            var ws = workbook.Workbook.Worksheets["TABLE"];
+            if (ws == null)
+            {
+                return BadRequest("Required worksheet 'TABLE' not found in the file");
+            }
             int rowCount = ws.Dimension.End.Row;
 
             List<Barchart> items = new List<Barchart>();
@@ -224,6 +237,7 @@ namespace ssc.Areas.PE.Controllers
 
             for (var r = 15; r <= rowCount; r++)
             {
+
                 if (!string.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                 {
                     Barchart _row = new Barchart();
@@ -327,6 +341,12 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
+            // Clean up temp file after processing
+            if (filePath != null && System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
             BarchartTmp _tmp = new BarchartTmp
             {
                 error_count = error_count,
@@ -340,6 +360,7 @@ namespace ssc.Areas.PE.Controllers
                 _id = _tmp._id,
                 error_count = error_count
             });
+
         }
 
         [Authorize("PeBarchart Add")]

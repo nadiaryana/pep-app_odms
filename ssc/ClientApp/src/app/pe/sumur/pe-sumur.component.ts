@@ -53,6 +53,9 @@ export class SumurComponent implements OnInit, OnDestroy {
     { id: 6, name: "ST-210", status: "UNKNOWN", channelId: "3204974", apiKey: "8RD7XSL5RYH316QZ" },
     { id: 7, name: "ST-160", status: "UNKNOWN", channelId: "3204973", apiKey: "MQOJ581E85X3R0O2" },
     { id: 8, name: "ST-185", status: "UNKNOWN", channelId: "3204962", apiKey: "ETAFMZF67RMBTPVO" },
+    { id: 9, name: "ST-149", status: "UNKNOWN", channelId: "3276849", apiKey: "R418ELYI42WAAARK" },
+    { id: 10, name: "ST-206", status: "UNKNOWN", channelId: "3276850", apiKey: "SMCYKUB8AVI6G74Z" },
+    { id: 11, name: "ST-082", status: "UNKNOWN", channelId: "3280056", apiKey: "MPR2UKWB9X9YC5B5" },
   ];
 
   selectedWell: Well | null = null;
