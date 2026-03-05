@@ -794,7 +794,7 @@ export class OneSlideComponent implements OnInit {
 
 
       const gross = data.map(d => d.gross || 0);
-      const water = data.map(d => (d.gross - d.net) || 0);
+      const water = data.map(d => d.wc || 0);
       const net = data.map(d => d.net || 0);
       const gas = data.map(d => d.gas || 0);
       // const sm = data.map(d => d.sm < 0 ? 0 : d.sm);
@@ -825,7 +825,7 @@ export class OneSlideComponent implements OnInit {
         yAxis: [{
           title: { text: 'Liquid (bfpd), Oil (bopd)' }
         }, {
-          title: { text: 'WC (fraction), Gas (MMscfd)' },
+          title: { text: 'WC (%), Gas (MMscfd)' },
           opposite: true
         }],
         tooltip: {
