@@ -625,6 +625,11 @@ namespace ssc.Areas.PE.Controllers
             {
                 _tmpitems = _tmpitems.Where(r => r._error._row?.value == "warning").ToList();
             }
+
+            _tmpitems = _tmpitems
+            .OrderByDescending(x => x._error?._row?.value == "error")
+            .ThenByDescending(x => x.date)
+            .ToList();
             int total_count = _tmpitems.Count();
             if (pagesize * (page + 1) > total_count) pagesize = total_count - (page * pagesize);
 
