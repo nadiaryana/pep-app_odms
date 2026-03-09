@@ -2,6 +2,26 @@
 
 .container-top-bar {
   margin-right: 5%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  @media (max-width: 959px) {
+    margin-right: 0;
+    padding: 4px;
+
+    button {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 12px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
 }
 
 mat-card { 
@@ -38,10 +58,6 @@ mat-form-field {
 ::ng-deep .mat-card-header-text {
   margin-left: 0 !important;
   margin-right: 0 !important;
-}
-
-mat-card-content {
-  
 }
 
 mat-card-actions {

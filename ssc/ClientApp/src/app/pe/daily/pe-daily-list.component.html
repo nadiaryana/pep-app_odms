@@ -20,7 +20,7 @@
 
       <table mat-table [dataSource]="data" class="pe-table" 
              matSort matSortActive="date" matSortDisableClear matSortDirection="desc" responsive="true">
-        <ng-container matColumnDef="select" sticky>
+        <ng-container matColumnDef="select" [sticky]="!isMobile">
           <th mat-header-cell *matHeaderCellDef rowspan="3">
             <div fxLayout="row" center>
               <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
@@ -52,7 +52,7 @@
           </th>
           <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
         </ng-container>
-        <ng-container matColumnDef="nomor" sticky>
+        <ng-container matColumnDef="nomor" [sticky]="!isMobile">
           <th mat-header-cell *matHeaderCellDef rowspan="3">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">No</span>
@@ -62,7 +62,7 @@
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.nomor | number : '1.0-0') || '-'}}</td>
         </ng-container>
         
-        <ng-container matColumnDef="location" sticky>
+        <ng-container matColumnDef="location" [sticky]="!isMobile">
           <th mat-header-cell *matHeaderCellDef rowspan="3">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Location</span>
@@ -71,7 +71,7 @@
           </th>
           <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.location}}</td>
         </ng-container>
-        <ng-container matColumnDef="well" sticky>
+        <ng-container matColumnDef="well" [sticky]="!isMobile">
           <th mat-header-cell *matHeaderCellDef rowspan="3">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
@@ -80,7 +80,7 @@
           </th>
           <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
         </ng-container>
-        <ng-container matColumnDef="well_string" sticky>
+        <ng-container matColumnDef="well_string">
           <th mat-header-cell *matHeaderCellDef rowspan="3">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well String</span>

@@ -51,22 +51,22 @@
     <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
   </mat-select>
 </mat-form-field> -->
-  <div class="container-top-bar top-flow" fxLayoutGap="10px">
-    <mat-form-field class="field-well" floatLabel="never" fxFlex="30%">
+  <div class="container-top-bar top-flow" fxLayout="row wrap" fxLayout.lt-md="column" fxLayoutGap="10px" fxLayoutGap.lt-md="4px">
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="25%" fxFlex.lt-md="100%">
       <mat-label>Y Axis 1</mat-label>
       <mat-select [(ngModel)]="selectedY1" (selectionChange)="onXYChange()">
         <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field class="field-well" floatLabel="never" fxFlex="30%">
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="25%" fxFlex.lt-md="100%">
       <mat-label>Y Axis 2</mat-label>
       <mat-select [(ngModel)]="selectedY2" (selectionChange)="onXYChange()">
         <mat-option *ngFor="let col of yColumns" [value]="col">{{ col }}</mat-option>
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field class="field-well" floatLabel="never" fxFlex="20%">
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="20%" fxFlex.lt-md="100%">
       <mat-label>Start Date</mat-label>
       <input
         matInput
@@ -82,7 +82,7 @@
       <mat-datepicker #start_datePicker></mat-datepicker>
     </mat-form-field>
 
-    <mat-form-field class="field-well" floatLabel="never" fxFlex="20%">
+    <mat-form-field class="field-well" floatLabel="never" fxFlex="20%" fxFlex.lt-md="100%">
       <mat-label>End Date</mat-label>
       <input
         matInput

@@ -31,6 +31,7 @@ export class PePermissionService {
 	new Menu("daily/chart", true,null, ["PeDaily Read"]),
   new Menu("daily/zonechart", true, null, ["PeDaily Read"]),
 
+	new Menu("production", true, null, ["PeProduction Read"]),
   new Menu("production/add", true, null, ["PeProduction Add"]),
 
 	new Menu("sonolog", true,null, ["PeSonolog Read"]),

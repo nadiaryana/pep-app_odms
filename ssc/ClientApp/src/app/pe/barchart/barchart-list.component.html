@@ -21,7 +21,7 @@
     <table mat-table [dataSource]="data" class="pe-table" matSort matSortActive="plan_start" matSortDisableClear
       matSortDirection="desc" responsive="true">
       
-      <ng-container matColumnDef="select" sticky>
+      <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef>
           <div fxLayout="row" center>
             <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"

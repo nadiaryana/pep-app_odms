@@ -43,7 +43,7 @@
     <h4 class="title_awy">Data History - {{ selectedWell.name }}</h4>
     
     <!-- Date Range Filter -->
-    <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center" style="margin: 15px 0;">
+    <div fxLayout="row wrap" fxLayout.lt-md="column" fxLayoutGap="10px" fxLayoutAlign="start center" style="margin: 15px 0;">
       <mat-form-field>
         <mat-label>Tanggal Mulai</mat-label>
         <input matInput [matDatepicker]="pickerStart" [formControl]="dateStartControl" placeholder="Pilih tanggal mulai">

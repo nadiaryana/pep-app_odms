@@ -244,8 +244,8 @@
   </mat-card>
 
   <div #screenshotArea id="screenshot-area">
-  <div fxLayout="row" fxLayoutGap="12px" fxLayoutAlign="start stretch">
-    <div fxFlex="50" fxLayout="column" fxLayoutGap="12px">
+  <div fxLayout="row" fxLayout.lt-md="column" fxLayoutGap="12px" fxLayoutAlign="start stretch">
+    <div fxFlex="50" fxFlex.lt-md="100" fxLayout="column" fxLayoutGap="12px">
       <!-- charts left-->
         <mat-card class="dasboard_card chart-card">
           <mat-card-content class="chart-content">
@@ -264,7 +264,7 @@
         </mat-card>
     </div>
 
-    <div fxFlex="50" fxLayout="column" fxLayoutGap="12px" class="right-column">
+    <div fxFlex="50" fxFlex.lt-md="100" fxLayout="column" fxLayoutGap="12px" class="right-column">
 
       
       <!-- right: IPR chart -->
@@ -277,9 +277,9 @@
       </mat-card>
       
       <!-- other data -->
-      <div fxLayout="row" fxLayoutGap="12px" fxFlex="60" class="data-row">
+      <div fxLayout="row" fxLayout.lt-md="column" fxLayoutGap="12px" fxFlex="60" class="data-row">
         <!-- Subsurface Data -->
-        <mat-card class="dasboard_card" fxFlex="33%">
+        <mat-card class="dasboard_card" fxFlex="33%" fxFlex.lt-md="100">
           <mat-card-content>
             <div
               class="filter-form"
@@ -364,7 +364,7 @@
         </mat-card>
 
         <!-- Lifting Parameter  -->
-        <mat-card class="dasboard_card" fxFlex="33%">
+        <mat-card class="dasboard_card" fxFlex="33%" fxFlex.lt-md="100">
           <mat-card-content>
             <div
               class="filter-form"
@@ -449,7 +449,7 @@
         </mat-card>
 
         <!-- Production Data -->
-        <mat-card class="dasboard_card" fxFlex="33%">
+        <mat-card class="dasboard_card" fxFlex="33%" fxFlex.lt-md="100">
           <mat-card-content>
             <div
               class="filter-form"

@@ -250,6 +250,29 @@ ng::host .mat-horizontal-stepper-content {
   height: 10%;
 }
 
+@media (max-width: 959px) {
+  .chart-card {
+    height: 300px;
+  }
+
+  .ipr_chart-card {
+    height: auto;
+    min-height: 280px;
+  }
+
+  .chart-content {
+    height: 280px;
+  }
+
+  .data-row {
+    height: auto !important;
+  }
+
+  mat-card {
+    height: auto !important;
+  }
+}
+
 .chart-wrapper {
   // height: 100%;
   // height: 320px;   /* tinggi chart konsisten */

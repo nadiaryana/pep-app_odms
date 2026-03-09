@@ -16,6 +16,7 @@ import { PePermissionService } from '../pe-permission.service';
 import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
 
 @Component({
@@ -140,6 +141,8 @@ export class PeDailyListComponent implements OnInit {
   sm_xSelected = [];
   noted_xSelected = [];
 
+  isMobile = false;
+
   filterSubscription:Subscription;
   selectedSubscription:Subscription;
   listSubscription:Subscription;
@@ -156,9 +159,14 @@ export class PeDailyListComponent implements OnInit {
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
+    private breakpointObserver: BreakpointObserver,
     ) {}
 
   ngOnInit() {
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Small])
+      .subscribe(result => {
+        this.isMobile = result.matches;
+      });
 
     this.titleService.titleSource.next({
       title: "Daily",

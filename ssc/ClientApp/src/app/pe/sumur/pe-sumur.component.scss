@@ -3,6 +3,11 @@
   padding: 10px;
   max-width: 50%;       
   margin: 0 auto;
+
+  @media (max-width: 959px) {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 .well-item {
@@ -43,4 +48,14 @@
 
 ::ng-deep .mat-list-item-content {
   width: 100% !important;
+}
+
+@media (max-width: 959px) {
+  mat-form-field {
+    width: 100%;
+  }
+
+  highcharts-chart {
+    height: 300px !important;
+  }
 }
