@@ -194,6 +194,7 @@ namespace ssc.Areas.PE.Models
         public string status { get; set; }
         public string message { get; set; }
         public int error_count { get; set; }
+        public int item_count { get; set; }
         public int batch_index { get; set; }
         public DateTime upload_date { get; set; }
         public Daily[] items { get; set; }

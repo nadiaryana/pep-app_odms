@@ -804,7 +804,19 @@ namespace ssc.Areas.PE.Controllers
         {
             try
             {
-                var tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
+                var projection = Builders<DailyTmp>.Projection
+                    .Include(t => t._id)
+                    .Include(t => t.status)
+                    .Include(t => t.message)
+                    .Include(t => t.error_count)
+                    .Include(t => t.item_count)
+                    .Include(t => t.upload_date)
+                    .Exclude(t => t.items);
+
+                var tmp = _daily_tmp.Find(t => t._id == _id)
+                    .Project<DailyTmp>(projection)
+                    .FirstOrDefault();
+
                 if (tmp == null)
                 {
                     return NotFound(new { message = "Upload not found" });
@@ -816,7 +828,7 @@ namespace ssc.Areas.PE.Controllers
                     status = tmp.status,
                     message = tmp.message,
                     error_count = tmp.error_count,
-                    item_count = tmp.items?.Length ?? 0,
+                    item_count = tmp.item_count,
                     upload_date = tmp.upload_date
                 });
             }
@@ -832,6 +844,50 @@ namespace ssc.Areas.PE.Controllers
             var workbook = new ExcelPackage(fi);
             var ws = workbook.Workbook.Worksheets.First();
             int rowCount = ws.Dimension.End.Row;
+
+            // Pre-scan: collect all dates and wells from the sheet first
+            var scannedDates = new List<DateTime?>();
+            var scannedWells = new List<string>();
+            for (var r = 4; r <= rowCount; r++)
+            {
+                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
+                {
+                    try
+                    {
+                        DateTime? d = null;
+                        if (ws.Cells[r, 1].Value.GetType() == DateTime.Now.GetType())
+                            d = (DateTime?)ws.Cells[r, 1].Value;
+                        else
+                            d = DateTime.FromOADate(double.Parse(ws.Cells[r, 1].Value?.ToString().Trim()));
+                        scannedDates.Add(d);
+                    }
+                    catch { }
+
+                    var well = ws.Cells[r, 4].Value?.ToString().Trim();
+                    if (!string.IsNullOrWhiteSpace(well))
+                        scannedWells.Add(well);
+                }
+            }
+
+            // Pre-load existing date+well keys in ONE query instead of N queries
+            HashSet<string> existingKeys = new HashSet<string>();
+            if (scannedDates.Count > 0)
+            {
+                var minDate = scannedDates.Where(d => d.HasValue).Select(d => d.Value).DefaultIfEmpty().Min();
+                var maxDate = scannedDates.Where(d => d.HasValue).Select(d => d.Value).DefaultIfEmpty().Max();
+                var existingProjection = Builders<Daily>.Projection
+                    .Include(t => t.date)
+                    .Include(t => t.well);
+                var existingDocs = DailyCommon._daily
+                    .Find(t => t.date >= minDate && t.date <= maxDate)
+                    .Project<Daily>(existingProjection)
+                    .ToList();
+                existingKeys = new HashSet<string>(
+                    existingDocs
+                        .Where(d => d.date.HasValue && d.well != null)
+                        .Select(d => $"{d.date.Value:yyyy-MM-dd}_{d.well}")
+                );
+            }
 
             List<Daily> items = new List<Daily>();
             int error_count = 0;
@@ -1103,7 +1159,8 @@ namespace ssc.Areas.PE.Controllers
 
                     if (_row_error.date == null && _row_error.well == null)
                     {
-                        if (DailyCommon._daily.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
+                        var existingKey = $"{_row.date.Value:yyyy-MM-dd}_{_row.well}";
+                        if (existingKeys.Contains(existingKey))
                         {
                             _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
                         }
@@ -1124,6 +1181,7 @@ namespace ssc.Areas.PE.Controllers
                 t => t._id == tmpId,
                 Builders<DailyTmp>.Update
                     .Set(t => t.items, items.ToArray())
+                    .Set(t => t.item_count, items.Count)
                     .Set(t => t.error_count, error_count)
                     .Set(t => t.status, "done")
                     .Set(t => t.message, "Processing completed")
