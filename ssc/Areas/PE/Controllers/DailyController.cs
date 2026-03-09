@@ -871,9 +871,12 @@ namespace ssc.Areas.PE.Controllers
             {
                 var minDate = scannedDates.Where(d => d.HasValue).Select(d => d.Value).DefaultIfEmpty().Min();
                 var maxDate = scannedDates.Where(d => d.HasValue).Select(d => d.Value).DefaultIfEmpty().Max();
+                // Pure exclude: hindari mix include+exclude yang error di MongoDB versi lama
                 var existingProjection = Builders<Daily>.Projection
-                    .Include(t => t.date)
-                    .Include(t => t.well);
+                    .Exclude("items")
+                    .Exclude("_error")
+                    .Exclude("zone")
+                    .Exclude("interval");
                 var existingDocs = DailyCommon._daily
                     .Find(t => t.date >= minDate && t.date <= maxDate)
                     .Project<Daily>(existingProjection)
@@ -1171,13 +1174,14 @@ namespace ssc.Areas.PE.Controllers
                     items.Add(_row);
                 }
             }
-
+                  
             // Gunakan DailyCommon._daily_tmp karena ini dijalankan di background thread
+            // Gunakan string field name untuk item_count agar kompatibel dengan MongoDB driver versi lama
             DailyCommon._daily_tmp.UpdateOne(
                 t => t._id == tmpId,
                 Builders<DailyTmp>.Update
                     .Set(t => t.items, items.ToArray())
-                    .Set(t => t.item_count, items.Count)
+                    .Set("item_count", items.Count)
                     .Set(t => t.error_count, error_count)
                     .Set(t => t.status, "done")
                     .Set(t => t.message, "Processing completed")
@@ -1518,7 +1522,11 @@ namespace ssc.Areas.PE.Controllers
         public ActionResult GetTmp(string _id, String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
         {
             DailyTmp _tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
-            List<Daily> _tmpitems = _tmp.items.ToList();
+            if (_tmp == null)
+            {
+                return NotFound(new { message = "Upload data not found" });
+            }
+            List<Daily> _tmpitems = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
             if (mode == "error")
             {
                 _tmpitems = _tmpitems.Where(r => r._error._row?.value == "error").ToList();
@@ -1566,9 +1574,16 @@ namespace ssc.Areas.PE.Controllers
             {
                 DailyTmp _tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
 
-                if (_tmp == null || _tmp.error_count > 0)
+                if (_tmp == null)
                 {
-                    throw new Exception();
+                    return BadRequest(new { message = "Upload data not found" });
+                }
+
+                // Hanya block jika ada error (bukan warning — warning = existing data, tetap bisa disimpan)
+                bool hasError = _tmp.items != null && _tmp.items.Any(i => i._error?._row?.value == "error");
+                if (hasError)
+                {
+                    return BadRequest(new { message = "Cannot save data with errors. Please fix errors first." });
                 }
 
                 List<Daily> items = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
@@ -1689,7 +1704,7 @@ namespace ssc.Areas.PE.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest();
+                return BadRequest(new { message = e.Message });
             }
         }
 

@@ -186,6 +186,7 @@ namespace ssc.Areas.PE.Models
         public string[] prefix { get; set; }
     }
 
+    [BsonIgnoreExtraElements]
     public class DailyTmp
     {
         [BsonId]
@@ -194,6 +195,8 @@ namespace ssc.Areas.PE.Models
         public string status { get; set; }
         public string message { get; set; }
         public int error_count { get; set; }
+        [BsonDefaultValue(0)]
+        [BsonElement("item_count")]
         public int item_count { get; set; }
         public int batch_index { get; set; }
         public DateTime upload_date { get; set; }
