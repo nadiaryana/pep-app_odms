@@ -804,13 +804,9 @@ namespace ssc.Areas.PE.Controllers
         {
             try
             {
+                // MongoDB tidak boleh campur Include dan Exclude dalam satu projection.
+                // Gunakan pure Exclude saja — field lain otomatis ikut semua.
                 var projection = Builders<DailyTmp>.Projection
-                    .Include(t => t._id)
-                    .Include(t => t.status)
-                    .Include(t => t.message)
-                    .Include(t => t.error_count)
-                    .Include(t => t.item_count)
-                    .Include(t => t.upload_date)
                     .Exclude(t => t.items);
 
                 var tmp = _daily_tmp.Find(t => t._id == _id)
