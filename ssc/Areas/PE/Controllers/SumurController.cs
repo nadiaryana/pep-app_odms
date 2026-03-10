@@ -585,7 +585,7 @@ namespace ssc.Areas.PE.Controllers
                 // [1] Load semua item dari tmp collection
                 var allItems = _sumur_tmp_items.Find(t => t.tmp_id == _id).ToList();
 
-                // [2] 1x query cek date yang sudah ada — hindari upsert per row yg sangat lambat
+                // [2] 1x query cek date yang sudah ada di sumur
                 var allDates = allItems.Where(x => x.date.HasValue).Select(x => x.date.Value).ToList();
                 var existingKeys = new HashSet<string>();
                 if (allDates.Count > 0)
@@ -599,51 +599,37 @@ namespace ssc.Areas.PE.Controllers
                     );
                 }
 
-                // [3] Pisahkan: data baru → InsertMany, data existing → BulkWrite Update
-                var toInsert = new List<Sumur>();
-                var toUpdate = new List<SumurTmpItem>();
+                // [3] Konversi semua item ke Sumur (insert-ready), catat mana yang existing
+                int modified_count = 0;
+                var toInsert = new List<Sumur>(allItems.Count);
+                var toReplace = new List<DateTime>(); // date yang perlu di-delete dulu
                 foreach (var item in allItems)
                 {
                     var key = item.date.HasValue ? item.date.Value.ToString("yyyy-MM-ddTHH:mm:ss") : null;
                     if (key != null && existingKeys.Contains(key))
-                        toUpdate.Add(item);
-                    else
-                        toInsert.Add(new Sumur
-                        {
-                            date = item.date, entry_id = item.entry_id,
-                            field_1 = item.field_1, field_2 = item.field_2,
-                            wellName = wellName, Current = item.Current, Timestamp = item.Timestamp,
-                            created_by = currentUser, created_date = now,
-                            updated_by = currentUser, updated_date = now,
-                        });
+                    {
+                        toReplace.Add(item.date.Value);
+                        modified_count++;
+                    }
+                    toInsert.Add(new Sumur
+                    {
+                        date = item.date, entry_id = item.entry_id,
+                        field_1 = item.field_1, field_2 = item.field_2,
+                        wellName = wellName, Current = item.Current, Timestamp = item.Timestamp,
+                        created_by = currentUser, created_date = now,
+                        updated_by = currentUser, updated_date = now,
+                    });
                 }
 
-                // [4] InsertMany untuk data baru — jauh lebih cepat dari upsert
+                // [4] DeleteMany untuk existing rows — 1x operasi, jauh lebih cepat dari UpdateOne per row
+                if (toReplace.Count > 0)
+                    _sumur.DeleteMany(t => t.wellName == wellName && toReplace.Contains(t.date.Value));
+
+                // [5] InsertMany semua — baik data baru maupun yang replace
                 const int BATCH = 10000;
                 for (int i = 0; i < toInsert.Count; i += BATCH)
                     _sumur.InsertMany(toInsert.GetRange(i, Math.Min(BATCH, toInsert.Count - i)),
                         new InsertManyOptions { IsOrdered = false });
-
-                // [5] BulkWrite UpdateOne untuk data existing
-                var bulkOps = new List<WriteModel<Sumur>>();
-                foreach (var item in toUpdate)
-                {
-                    var f = Builders<Sumur>.Filter.Eq(t => t.date, item.date) &
-                            Builders<Sumur>.Filter.Eq(t => t.wellName, wellName);
-                    var u = Builders<Sumur>.Update
-                        .Set(t => t.entry_id, item.entry_id).Set(t => t.field_1, item.field_1)
-                        .Set(t => t.field_2, item.field_2).Set(t => t.Current, item.Current)
-                        .Set(t => t.Timestamp, item.Timestamp)
-                        .Set(t => t.updated_by, currentUser).Set(t => t.updated_date, now);
-                    bulkOps.Add(new UpdateOneModel<Sumur>(f, u));
-                    if (bulkOps.Count >= BATCH)
-                    {
-                        _sumur.BulkWrite(bulkOps, new BulkWriteOptions { IsOrdered = false });
-                        bulkOps.Clear();
-                    }
-                }
-                if (bulkOps.Count > 0)
-                    _sumur.BulkWrite(bulkOps, new BulkWriteOptions { IsOrdered = false });
 
                 // [6] Cleanup tmp
                 _sumur_tmp_items.DeleteMany(t => t.tmp_id == _id);
@@ -651,8 +637,8 @@ namespace ssc.Areas.PE.Controllers
 
                 return Ok(new
                 {
-                    created_count  = toInsert.Count,
-                    modified_count = toUpdate.Count,
+                    created_count  = allItems.Count - modified_count,
+                    modified_count = modified_count,
                     total_count    = allItems.Count
                 });
             }
