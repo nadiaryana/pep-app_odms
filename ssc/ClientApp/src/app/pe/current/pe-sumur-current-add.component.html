@@ -30,6 +30,10 @@
       <div class="progress-bar" *ngIf="isUploading">
         <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
       </div>
+      <div *ngIf="isProcessing" class="processing-status">
+        <mat-spinner diameter="24" style="display:inline-block; vertical-align:middle; margin-right:8px;"></mat-spinner>
+        <span>{{ processingStatus }}</span>
+      </div>
     </mat-step>
 
 	    <mat-step completed=false>

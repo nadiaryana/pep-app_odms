@@ -61,6 +61,11 @@ export class SumurComponent implements OnInit, OnDestroy {
   selectedWell: Well | null = null;
 
   ngOnInit(): void {
+    this.titleService.titleSource.next({
+      title: "ISRP",
+      icon: "waves",
+      breadcrumbs: []
+    });
     // refresh statuses on init
     this.refreshAllWellStatuses();
   }

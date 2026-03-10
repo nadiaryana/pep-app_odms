@@ -1,10 +1,11 @@
-import { Component, Input, HostListener, ViewChild } from '@angular/core';
+import { Component, Input, HostListener, ViewChild, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatStepper } from '@angular/material/stepper';
 import { Router } from "@angular/router";
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subscription, interval } from 'rxjs';
 import { HttpClient, HttpEventType } from '@angular/common/http';
+import { takeWhile, switchMap } from 'rxjs/operators';
 
 //import { Sensor }    from './sensor';
 import { PeSumur }    from './pe-sumur';
@@ -19,7 +20,7 @@ import { TitleService } from '../../navigation/title/title.service';
     styleUrls: ['./pe-current.scss']
 })
 
-export class PeSumurCurrentAddComponent {
+export class PeSumurCurrentAddComponent implements OnDestroy {
 
     @Input() locations: Location[];
         //company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
@@ -29,6 +30,8 @@ export class PeSumurCurrentAddComponent {
         isUploading = false;
         isLoading = false;
         isSaving = false;
+        isProcessing = false;
+        processingStatus = '';
         modified_count = 0;
         created_count = 0;
         progressPercent: number;
@@ -59,6 +62,8 @@ export class PeSumurCurrentAddComponent {
             { name: 'ST-160', value: 'ST-160' },
             { name: 'ST-210', value: 'ST-210' },
         ];
+
+        private statusPollSubscription: Subscription;
     
         constructor(
             private formBuilder: FormBuilder,
@@ -69,6 +74,12 @@ export class PeSumurCurrentAddComponent {
             private http: HttpClient,
             ) { }
     
+        ngOnDestroy() {
+            if (this.statusPollSubscription) {
+                this.statusPollSubscription.unsubscribe();
+            }
+        }
+
         onSubmit() { 
             this.loading = true;
             //this.snackBar.dismiss();
@@ -147,9 +158,11 @@ export class PeSumurCurrentAddComponent {
 
             const fd = new FormData();
             this.isUploading = true;
-            this.selectedWell = this.sumurForm.get('wellName').value; // Simpan selected well
-            fd.append('files', this.fileInput.nativeElement.files[0]);
-            fd.append('wellName', this.selectedWell); // Kirim wellName ke backend
+            this.isProcessing = false;
+            this.processingStatus = '';
+            this.selectedWell = this.sumurForm.get('wellName').value;
+            fd.append('files', file);
+            fd.append('wellName', this.selectedWell);
             this.http.post('/api/pe/sumur/UploadFiles', fd, {
                 reportProgress: true,
                 observe: 'events'
@@ -158,16 +171,55 @@ export class PeSumurCurrentAddComponent {
                 if (event.type === HttpEventType.UploadProgress) {
                     this.progressPercent = Math.round((event.loaded / event.total) * 100);
                 } else if (event.type === HttpEventType.Response) {
-                    this.isUploading = false;
-                    //this.data = event.body['items'];
-                    this.data_error_count = event.body['error_count'];
+                    // File uploaded, now start polling for processing status
                     this.tmp_id = event.body['_id'];
-                    this.stepper.selected.completed = true;
-                    this.stepper.next();
-                    this.loadData();
-                    if(this.data_error_count > 0) this.snackbarService.status.next(new SnackbarApi(true, "There are "+this.data_error_count+" error(s) in your data.", 'dismiss'));
+                    this.isUploading = false;
+                    this.isProcessing = true;
+                    this.processingStatus = 'Processing file...';
+                    this.startStatusPolling();
+                }
+            }, error => {
+                if (error) {
+                    this.isUploading = false;
+                    this.isProcessing = false;
+                    this.resetData();
+                    this.snackbarService.status.next(new SnackbarApi(true, "Wrong template file!", 'dismiss'));
                 }
             });
+        }
+
+        startStatusPolling() {
+            let isPolling = true;
+            this.statusPollSubscription = interval(2000).pipe(
+                takeWhile(() => isPolling),
+                switchMap(() => this.http.get<any>('/api/pe/sumur/UploadStatus', { params: { _id: this.tmp_id } }))
+            ).subscribe(
+                res => {
+                    this.processingStatus = res.message || 'Processing...';
+
+                    if (res.status === 'done') {
+                        isPolling = false;
+                        this.isProcessing = false;
+                        this.data_error_count = res.error_count;
+                        this.stepper.selected.completed = true;
+                        this.stepper.next();
+                        this.loadData();
+                        if (this.data_error_count > 0) {
+                            this.snackbarService.status.next(new SnackbarApi(true, "There are " + this.data_error_count + " error(s) in your data.", 'dismiss'));
+                        }
+                    } else if (res.status === 'failed') {
+                        isPolling = false;
+                        this.isProcessing = false;
+                        this.resetData();
+                        this.snackbarService.status.next(new SnackbarApi(true, "Processing failed: " + res.message, 'dismiss'));
+                    }
+                },
+                error => {
+                    isPolling = false;
+                    this.isProcessing = false;
+                    this.snackbarService.status.next(new SnackbarApi(true, "Error checking status: " + error.message, 'dismiss'));
+                }
+            );
         }
     
         loadData() {
@@ -197,32 +249,33 @@ export class PeSumurCurrentAddComponent {
         saveData() {
             this.isSaving = true;
             this.http.get<any>('/api/pe/sumur/SaveData', {
-                params: {
-                    _id: this.tmp_id,
-                    wellName: this.selectedWell // Kirim wellName ke backend saat save
-                }
+                params: { _id: this.tmp_id, wellName: this.selectedWell }
             }).subscribe(res => {
                 this.isSaving = false;
-                this.modified_count = res["modified_count"];
-                this.created_count = res["created_count"];
+                this.modified_count = res['modified_count'];
+                this.created_count  = res['created_count'];
                 this.stepper.selected.completed = true;
                 this.stepper.next();
-                this.snackbarService.status.next(new SnackbarApi(true, res["total_count"] + " item(s) saved successfully.", 'dismiss'));
+                this.snackbarService.status.next(new SnackbarApi(true, res['total_count'] + ' item(s) saved successfully.', 'dismiss'));
             }, error => {
                 this.isSaving = false;
-                this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
-                console.log(error);
+                this.snackbarService.status.next(new SnackbarApi(true, error['error'] ? error['error'].message : 'Save failed', 'dismiss'));
             });
         }
     
         resetData() {
+            if (this.statusPollSubscription) {
+                this.statusPollSubscription.unsubscribe();
+            }
             this.isUploading = false;
             this.isLoading = false;
             this.isSaving = false;
+            this.isProcessing = false;
+            this.processingStatus = '';
             this.modified_count = 0;
             this.created_count = 0;
             this.progressPercent = 0;
-            this.fileName = "";
+            this.fileName = null;
             this.selectedWell = "";
             this.sumurForm.get('wellName').setValue(''); // Reset wellName selection
             this.data = [];

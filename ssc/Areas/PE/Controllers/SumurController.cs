@@ -16,6 +16,7 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.IO;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using ssc.Services;
 
 namespace ssc.Areas.PE.Controllers
 {
@@ -26,16 +27,20 @@ namespace ssc.Areas.PE.Controllers
         private IMongoDatabase database;
         private readonly IMongoCollection<Sumur> _sumur;
         private readonly IMongoCollection<SumurTmp> _sumur_tmp;
+        private readonly IMongoCollection<SumurTmpItem> _sumur_tmp_items;
         private readonly ProjectionDefinition<Sumur> _fields;
         private readonly HttpClient _httpClient;
+        private readonly IBackgroundTaskQueue _taskQueue;
 
-        public SumurController(IPEDatabaseSettings settings)
+        public SumurController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue)
         {
             var client = new MongoClient(settings.ConnectionString);
             database = client.GetDatabase("pe");
 
             _sumur = database.GetCollection<Sumur>("sumur");
             _sumur_tmp = database.GetCollection<SumurTmp>("sumur_tmp");
+            _sumur_tmp_items = database.GetCollection<SumurTmpItem>("sumur_tmp_items");
+            _taskQueue = taskQueue;
 
             // projection field1 yang mau diambil
             _fields = Builders<Sumur>.Projection
@@ -288,208 +293,234 @@ namespace ssc.Areas.PE.Controllers
         }
 
         [Authorize("PeSumur Add")]
-        [HttpPost("UploadFiles")]
+        [HttpPost("UploadFiles"), DisableRequestSizeLimit]
         public async Task<IActionResult> Post(List<IFormFile> files, [FromForm] string wellName)
+        {
+            if (string.IsNullOrWhiteSpace(wellName))
+                return BadRequest(new { message = "wellName parameter is required" });
+
+            if (files == null || files.Count == 0)
+                return BadRequest(new { message = "No file uploaded" });
+
+            var filePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + Path.GetExtension(files[0].FileName));
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await files[0].CopyToAsync(stream);
+            }
+
+            // Buat TMP record dulu
+            SumurTmp tmp = new SumurTmp
+            {
+                status = "processing",
+                message = "Processing started",
+                error_count = 0,
+                item_count = 0,
+                upload_date = DateTime.Now,
+                wellName = wellName,
+            };
+            _sumur_tmp.InsertOne(tmp);
+
+            // Queue background processing
+            var tmpId = tmp._id;
+            var sumur = _sumur;
+            var sumur_tmp = _sumur_tmp;
+            var sumur_tmp_items = _sumur_tmp_items;
+
+            _taskQueue.QueueBackgroundWorkItem(async token =>
+            {
+                try
+                {
+                    await Task.Run(() => ProcessExcel(filePath, tmpId, wellName, sumur, sumur_tmp, sumur_tmp_items), token);
+                }
+                catch (Exception ex)
+                {
+                    sumur_tmp.UpdateOne(
+                        t => t._id == tmpId,
+                        Builders<SumurTmp>.Update
+                            .Set(t => t.status, "failed")
+                            .Set(t => t.message, ex.Message)
+                    );
+                }
+            });
+
+            return Ok(new
+            {
+                _id = tmp._id,
+                status = "processing",
+                message = "File uploaded. Processing in background."
+            });
+        }
+
+        [Authorize("PeSumur Add")]
+        [HttpGet("UploadStatus")]
+        public ActionResult GetUploadStatus(string _id)
         {
             try
             {
-                // Validasi wellName parameter
-                if (string.IsNullOrWhiteSpace(wellName))
-                {
-                    return BadRequest(new { message = "wellName parameter is required" });
-                }
+                var tmp = _sumur_tmp.Find(t => t._id == _id).FirstOrDefault();
 
-                long size = files.Sum(f => f.Length);
-
-                // full path to file in temp location
-                var filePath = Path.GetTempFileName();
-
-                foreach (var formFile in files)
-                {
-                    if (formFile.Length > 0)
-                    {
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await formFile.CopyToAsync(stream);
-                        }
-                    }
-                }
-
-
-                var fi = new FileInfo(filePath);
-                var workbook = new ExcelPackage(fi);
-                var ws = workbook.Workbook.Worksheets.First();
-                int rowCount = ws.Dimension.End.Row;
-
-                List<Sumur> items = new List<Sumur>();
-                int error_count = 0;
-
-                var startRow = 2; // assume first row is header
-                for (var r = startRow; r <= rowCount; r++)
-                {
-                    Sumur _row = new Sumur();
-                    SumurError _row_error = new SumurError();
-                    int last_error_count = error_count;
-
-                    // Set well name dari parameter
-                    _row.wellName = wellName;
-
-                    // Define mappings for date property
-                    var dateMapping = new[]
-                    {
-                    new { key = "date", col = 1, required = true, errorMsg = "Blank date is not allowed" },
-                };
-                    // loop through date mappings
-                    foreach (var mapping in dateMapping)
-                    {
-                        var rawValue = ws.Cells[r, mapping.col].Value;
-                        var strValue = rawValue?.ToString().Trim();
-
-                        var prop = typeof(Sumur).GetProperty(mapping.key);
-                        var errorProp = typeof(SumurError).GetProperty(mapping.key);
-
-                        if (!string.IsNullOrWhiteSpace(strValue))
-                        {
-                            try
-                            {
-                                DateTime dateValue;
-                                if (rawValue.GetType() == DateTime.Now.GetType())
-                                {
-                                    dateValue = (DateTime)rawValue;
-                                }
-                                // if type is string
-                                else if (rawValue.GetType() == "".GetType())
-                                {
-                                    dateValue = DateTime.Parse(strValue);
-                                }
-                                else
-                                {
-                                    dateValue = DateTime.FromOADate(double.Parse(strValue));
-                                }
-                                prop?.SetValue(_row, dateValue);
-                            }
-                            catch (Exception e)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
-                                error_count++;
-                            }
-                        }
-                        else
-                        {
-                            if (mapping.required)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
-                                error_count++;
-                            }
-                            prop?.SetValue(_row, null);
-                        }
-                    }
-
-                    // define mappings for decimal properties with their corresponding column indexes
-                    var decimalMappings = new[]
-                    {
-                    new { key = "entry_id", col = 2, required = false, errorMsg = "Invalid decimal value" },
-                    new { key = "field_1", col = 3, required = false, errorMsg = "Invalid decimal value" },
-                    new { key = "field_2", col = 4, required = false, errorMsg = "Invalid decimal value" },
-                };
-                    // loop through decimal mappings
-                    foreach (var mapping in decimalMappings)
-                    {
-                        var rawValue = ws.Cells[r, mapping.col].Value;
-                        var strValue = rawValue?.ToString().Trim();
-
-                        var prop = typeof(Sumur).GetProperty(mapping.key);
-                        var errorProp = typeof(SumurError).GetProperty(mapping.key);
-
-                        if (!string.IsNullOrWhiteSpace(strValue))
-                        {
-                            try
-                            {
-                                decimal decimalValue = decimal.Parse(strValue);
-                                prop?.SetValue(_row, decimalValue);
-                            }
-                            catch (Exception e)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
-                                error_count++;
-                            }
-                        }
-                        else
-                        {
-                            prop?.SetValue(_row, null);
-                        }
-                    }
-
-
-                    // Define mappings for string properties with their corresponding column indexes
-                    // strings
-                    dynamic[] stringMappings = new dynamic[]
-                    {
-                        //new { key = "well", col = 2, required = true, errorMsg = "Blank well is not allowed" },
-                    };
-
-                    foreach (var mapping in stringMappings)
-                    {
-                        var rawValue = ws.Cells[r, mapping.col].Value;
-                        var strValue = rawValue?.ToString().Trim();
-
-                        var prop = typeof(Sumur).GetProperty(mapping.key);
-                        var errorProp = typeof(SumurError).GetProperty(mapping.key);
-
-                        if (!string.IsNullOrWhiteSpace(strValue))
-                        {
-                            prop?.SetValue(_row, strValue);
-                        }
-                        else
-                        {
-                            if (mapping.required)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
-                                error_count++;
-                            }
-                            prop?.SetValue(_row, null);
-                        }
-                    }
-
-                    // Cek duplikat data - jika date dan wellName tidak ada error, cek apakah data sudah ada di database
-                    if (_row_error.date == null && !string.IsNullOrWhiteSpace(_row.wellName))
-                    {
-                        if (_sumur.Find(t => t.date == _row.date && t.wellName == _row.wellName).CountDocuments() > 0)
-                        {
-                            _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
-                        }
-                    }
-
-                    if (error_count > last_error_count)
-                    {
-                        _row_error._row = new ErrorItem { value = "error", message = "Error found" };
-                    }
-
-                    _row._error = _row_error;
-
-                    items.Add(_row);
-                }
-
-                SumurTmp _tmp = new SumurTmp
-                {
-                    error_count = error_count,
-                    items = items.ToArray()
-                };
-                _sumur_tmp.InsertOne(_tmp);
+                if (tmp == null)
+                    return NotFound(new { message = "Upload not found" });
 
                 return Ok(new
                 {
-                    _id = _tmp._id,
-                    //items = items,
-                    error_count = error_count
+                    _id = tmp._id,
+                    status = tmp.status,
+                    message = tmp.message,
+                    error_count = tmp.error_count,
+                    item_count = tmp.item_count,
+                    upload_date = tmp.upload_date
                 });
-
             }
             catch (Exception ex)
             {
-                // PENTING: kirim error asli
-                return StatusCode(500, ex.ToString());
+                return BadRequest(new { message = ex.Message });
             }
+        }
+
+        private void ProcessExcel(string filePath, string tmpId, string wellName,
+            IMongoCollection<Sumur> sumur, IMongoCollection<SumurTmp> sumur_tmp,
+            IMongoCollection<SumurTmpItem> sumur_tmp_items)
+        {
+            var fi = new FileInfo(filePath);
+            using (var workbook = new ExcelPackage(fi))
+            {
+                var ws = workbook.Workbook.Worksheets.First();
+                int rowCount = ws.Dimension.End.Row;
+                int colCount = ws.Dimension.End.Column;
+
+                sumur_tmp.UpdateOne(t => t._id == tmpId,
+                    Builders<SumurTmp>.Update.Set(t => t.message, $"Reading {rowCount - 1} rows from Excel..."));
+
+                // Baca semua cells sekaligus ke array 2D — jauh lebih cepat dari akses cell satu-satu
+                var cellValues = (object[,])ws.Cells[1, 1, rowCount, Math.Max(colCount, 4)].Value;
+
+                var items = new List<SumurTmpItem>(rowCount);
+                var scannedDates = new List<DateTime?>(rowCount);
+                int error_count = 0;
+
+                for (var r = 2; r <= rowCount; r++)
+                {
+                    var c1 = cellValues[r - 1, 0]; // date
+                    var c2 = cellValues[r - 1, 1]; // entry_id
+                    if (c1 == null && c2 == null) continue;
+
+                    var _row = new SumurTmpItem { wellName = wellName, tmp_id = tmpId };
+                    var _row_error = new SumurError();
+                    int last_error_count = error_count;
+
+                    // --- Date (col 1) ---
+                    var dateRaw = c1;
+                    var dateStr = dateRaw?.ToString().Trim();
+                    if (!string.IsNullOrWhiteSpace(dateStr))
+                    {
+                        try
+                        {
+                            DateTime parsedDate;
+                            if (dateRaw is DateTime)
+                                parsedDate = (DateTime)dateRaw;
+                            else if (dateRaw is string)
+                                parsedDate = DateTime.Parse(dateStr);
+                            else
+                                parsedDate = DateTime.FromOADate(Convert.ToDouble(dateRaw));
+                            _row.date = parsedDate;
+                            scannedDates.Add(_row.date);
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.date = new ErrorItem { value = dateStr, message = e.Message };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row_error.date = new ErrorItem { value = "(Blank)", message = "Blank date is not allowed" };
+                        error_count++;
+                    }
+
+                    // --- Decimals (col 2,3,4) ---
+                    _row.entry_id = ParseDecimal(cellValues[r - 1, 1], ref _row_error, nameof(_row_error.entry_id), ref error_count);
+                    _row.field_1  = ParseDecimal(cellValues[r - 1, 2], ref _row_error, nameof(_row_error.field_1),  ref error_count);
+                    _row.field_2  = ParseDecimal(cellValues[r - 1, 3], ref _row_error, nameof(_row_error.field_2),  ref error_count);
+
+                    if (error_count > last_error_count)
+                        _row_error._row = new ErrorItem { value = "error", message = "Error found" };
+
+                    _row._error = _row_error;
+                    items.Add(_row);
+                }
+
+                // Bebaskan memory array 2D setelah selesai parsing
+                cellValues = null;
+
+                // ── 1x query MongoDB untuk cek existing (batch) ──
+                sumur_tmp.UpdateOne(t => t._id == tmpId,
+                    Builders<SumurTmp>.Update.Set(t => t.message, $"Checking {items.Count} rows against existing data..."));
+
+                if (scannedDates.Count > 0)
+                {
+                    var minDate = scannedDates.Min();
+                    var maxDate = scannedDates.Max();
+                    var existingKeys = new HashSet<string>(
+                        sumur.Find(t => t.wellName == wellName && t.date >= minDate && t.date <= maxDate)
+                             .Project<Sumur>(Builders<Sumur>.Projection.Include(t => t.date))
+                             .ToEnumerable()
+                             .Where(d => d.date.HasValue)
+                             .Select(d => d.date.Value.ToString("yyyy-MM-dd"))
+                    );
+                    foreach (var item in items)
+                        if (item._error?.date == null && item.date.HasValue)
+                            if (existingKeys.Contains(item.date.Value.ToString("yyyy-MM-dd")))
+                                item._error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
+                }
+
+                // ── InsertMany ke collection terpisah per batch ──
+                // Update status tiap 50k agar tidak terlalu banyak round-trip ke MongoDB
+                const int BATCH        = 10000;
+                const int UPDATE_EVERY = 50000;
+                int processed  = 0;
+                int nextUpdate = UPDATE_EVERY;
+
+                for (int i = 0; i < items.Count; i += BATCH)
+                {
+                    int len   = Math.Min(BATCH, items.Count - i);
+                    sumur_tmp_items.InsertMany(items.GetRange(i, len));
+                    processed += len;
+
+                    if (processed >= nextUpdate || processed == items.Count)
+                    {
+                        sumur_tmp.UpdateOne(t => t._id == tmpId,
+                            Builders<SumurTmp>.Update
+                                .Set(t => t.item_count, processed)
+                                .Set(t => t.message, $"Storing... {processed:N0}/{items.Count:N0}"));
+                        nextUpdate += UPDATE_EVERY;
+                    }
+                }
+
+                sumur_tmp.UpdateOne(t => t._id == tmpId,
+                    Builders<SumurTmp>.Update
+                        .Set(t => t.status, "done")
+                        .Set(t => t.error_count, error_count)
+                        .Set(t => t.item_count, items.Count)
+                        .Set(t => t.message, $"Done. {items.Count:N0} rows, {error_count} error(s)."));
+
+            } // end using workbook
+
+            System.IO.File.Delete(filePath);
+        }
+
+        // Helper: parse decimal tanpa reflection (lebih cepat 10x)
+        private decimal? ParseDecimal(object raw, ref SumurError err, string field, ref int error_count)
+        {
+            var str = raw?.ToString().Trim();
+            if (string.IsNullOrWhiteSpace(str)) return null;
+            if (decimal.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var val)) return val;
+
+            var errProp = typeof(SumurError).GetProperty(field);
+            errProp?.SetValue(err, new ErrorItem { value = str, message = "Invalid decimal value" });
+            error_count++;
+            return null;
         }
 
         [Authorize("PeSumur Add")]
@@ -497,47 +528,42 @@ namespace ssc.Areas.PE.Controllers
         public ActionResult GetTmp(string _id, String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
         {
             SumurTmp _tmp = _sumur_tmp.Find(t => t._id == _id).FirstOrDefault();
-            List<Sumur> _tmpitems = _tmp.items.ToList();
+            if (_tmp == null) return BadRequest();
+
+            // Baca dari collection terpisah
+            var filterDef = Builders<SumurTmpItem>.Filter.Eq(t => t.tmp_id, _id);
             if (mode == "error")
-            {
-                _tmpitems = _tmpitems.Where(r => r._error._row?.value == "error").ToList();
-            }
+                filterDef = filterDef & Builders<SumurTmpItem>.Filter.Eq("_error._row.value", "error");
             else if (mode == "warning")
-            {
-                _tmpitems = _tmpitems.Where(r => r._error._row?.value == "warning").OrderByDescending(r => r._error != null).ToList();
-            }
+                filterDef = filterDef & Builders<SumurTmpItem>.Filter.Eq("_error._row.value", "warning");
+
+            var total_count = _sumur_tmp_items.CountDocuments(filterDef);
+
+            // Sort: error dulu, warning, lalu by date
+            SortDefinition<SumurTmpItem> sortDef;
+            if (mode == "all" || string.IsNullOrEmpty(mode))
+                sortDef = Builders<SumurTmpItem>.Sort
+                    .Descending("_error._row.value")  // "error" > "warning" secara alphabetical desc
+                    .Ascending(t => t.date);
             else
-            {
-                // Sort by error first, then warning, then normal
-                _tmpitems = _tmpitems
-                    .OrderByDescending(r => r._error._row?.value == "error") // error dulu
-                    .ThenByDescending(r => r._error._row?.value == "warning") // lanjut warning
-                    .ThenBy(r => r.date) // sisanya diurutkan berdasarkan date
-                    .ToList();
-            }
-            int total_count = _tmpitems.Count();
-            if (pagesize * (page + 1) > total_count) pagesize = total_count - (page * pagesize);
+                sortDef = Builders<SumurTmpItem>.Sort.Ascending(t => t.date);
 
-            if (_tmp != null)
-            {
-                List<Sumur> items = _tmpitems.ToList().GetRange(page * pagesize, pagesize);
-                return new JsonResult(new
-                {
-                    total_count = total_count,
-                    error_count = _tmp.error_count,
-                    incomplete_result = false,
-                    items = items,
-                })
-                {
-                    StatusCode = StatusCodes.Status200OK
-                };
-            }
-            else
-            {
-                return BadRequest();
-            }
+            var items = _sumur_tmp_items.Find(filterDef)
+                .Sort(sortDef)
+                .Skip(page * pagesize)
+                .Limit(pagesize)
+                .ToList()
+                .Cast<Sumur>()
+                .ToList();
 
-
+            return new JsonResult(new
+            {
+                total_count = total_count,
+                error_count = _tmp.error_count,
+                incomplete_result = false,
+                items = items,
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
         [Authorize("PeSumur Add")]
@@ -546,68 +572,93 @@ namespace ssc.Areas.PE.Controllers
         {
             try
             {
-                // Validasi wellName parameter
                 if (string.IsNullOrWhiteSpace(wellName))
-                {
                     return BadRequest(new { message = "wellName parameter is required" });
-                }
 
                 SumurTmp _tmp = _sumur_tmp.Find(t => t._id == _id).FirstOrDefault();
-
                 if (_tmp == null || _tmp.error_count > 0)
+                    return BadRequest(new { message = _tmp == null ? "Tmp not found" : "Cannot save data with errors" });
+
+                DateTime now = DateTime.Now;
+                string currentUser = User.Identity.Name;
+
+                // [1] Load semua item dari tmp collection
+                var allItems = _sumur_tmp_items.Find(t => t.tmp_id == _id).ToList();
+
+                // [2] 1x query cek date yang sudah ada — hindari upsert per row yg sangat lambat
+                var allDates = allItems.Where(x => x.date.HasValue).Select(x => x.date.Value).ToList();
+                var existingKeys = new HashSet<string>();
+                if (allDates.Count > 0)
                 {
-                    throw new Exception();
+                    existingKeys = new HashSet<string>(
+                        _sumur.Find(t => t.wellName == wellName && t.date >= allDates.Min() && t.date <= allDates.Max())
+                              .Project<Sumur>(Builders<Sumur>.Projection.Include(t => t.date))
+                              .ToEnumerable()
+                              .Where(d => d.date.HasValue)
+                              .Select(d => d.date.Value.ToString("yyyy-MM-ddTHH:mm:ss"))
+                    );
                 }
 
-                List<Sumur> items = _tmp.items.ToList();
-
-                DateTime? min_date = items.Select(m => m.date).Min();
-
-                long modified_count = 0;
-                long created_count = items.Count();
-
-                foreach (Sumur item in items)
+                // [3] Pisahkan: data baru → InsertMany, data existing → BulkWrite Update
+                var toInsert = new List<Sumur>();
+                var toUpdate = new List<SumurTmpItem>();
+                foreach (var item in allItems)
                 {
-                    item._error = null;
-                    
-                    // Pastikan well name tersimpan
-                    item.wellName = wellName;
+                    var key = item.date.HasValue ? item.date.Value.ToString("yyyy-MM-ddTHH:mm:ss") : null;
+                    if (key != null && existingKeys.Contains(key))
+                        toUpdate.Add(item);
+                    else
+                        toInsert.Add(new Sumur
+                        {
+                            date = item.date, entry_id = item.entry_id,
+                            field_1 = item.field_1, field_2 = item.field_2,
+                            wellName = wellName, Current = item.Current, Timestamp = item.Timestamp,
+                            created_by = currentUser, created_date = now,
+                            updated_by = currentUser, updated_date = now,
+                        });
+                }
 
-                    var update = Builders<Sumur>.Update.Set(t => t.date, item.date)
-                        .Set(t => t.entry_id, item.entry_id)
-                        .Set(t => t.field_1, item.field_1)
-                        .Set(t => t.field_2, item.field_2)
+                // [4] InsertMany untuk data baru — jauh lebih cepat dari upsert
+                const int BATCH = 10000;
+                for (int i = 0; i < toInsert.Count; i += BATCH)
+                    _sumur.InsertMany(toInsert.GetRange(i, Math.Min(BATCH, toInsert.Count - i)),
+                        new InsertManyOptions { IsOrdered = false });
 
-                        // other fields if exists set, if not set null
-                        .Set(t => t.wellName, item.wellName) // Simpan well name
-                        .Set(t => t.Current, item.Current)
+                // [5] BulkWrite UpdateOne untuk data existing
+                var bulkOps = new List<WriteModel<Sumur>>();
+                foreach (var item in toUpdate)
+                {
+                    var f = Builders<Sumur>.Filter.Eq(t => t.date, item.date) &
+                            Builders<Sumur>.Filter.Eq(t => t.wellName, wellName);
+                    var u = Builders<Sumur>.Update
+                        .Set(t => t.entry_id, item.entry_id).Set(t => t.field_1, item.field_1)
+                        .Set(t => t.field_2, item.field_2).Set(t => t.Current, item.Current)
                         .Set(t => t.Timestamp, item.Timestamp)
-
-                        // audit trail
-                        .Set(t => t.updated_by, User.Identity.Name)
-                        .Set(t => t.updated_date, DateTime.Now)
-                        .SetOnInsert(t => t.created_by, User.Identity.Name)
-                        .SetOnInsert(t => t.created_date, DateTime.Now);
-
-                    UpdateResult res = _sumur.UpdateOne(
-                        Builders<Sumur>.Filter.Eq(t => t.date, item.date) & Builders<Sumur>.Filter.Eq(t => t.wellName, item.wellName),
-                        update, new UpdateOptions() { IsUpsert = true });
-
-                    modified_count += res.ModifiedCount;
-                    created_count -= res.ModifiedCount;
+                        .Set(t => t.updated_by, currentUser).Set(t => t.updated_date, now);
+                    bulkOps.Add(new UpdateOneModel<Sumur>(f, u));
+                    if (bulkOps.Count >= BATCH)
+                    {
+                        _sumur.BulkWrite(bulkOps, new BulkWriteOptions { IsOrdered = false });
+                        bulkOps.Clear();
+                    }
                 }
-                _sumur_tmp.DeleteOne(d => d._id == _id);
+                if (bulkOps.Count > 0)
+                    _sumur.BulkWrite(bulkOps, new BulkWriteOptions { IsOrdered = false });
+
+                // [6] Cleanup tmp
+                _sumur_tmp_items.DeleteMany(t => t.tmp_id == _id);
+                _sumur_tmp.DeleteOne(t => t._id == _id);
 
                 return Ok(new
                 {
-                    modified_count = modified_count,
-                    created_count = created_count,
-                    total_count = items.Count()
+                    created_count  = toInsert.Count,
+                    modified_count = toUpdate.Count,
+                    total_count    = allItems.Count
                 });
             }
             catch (Exception e)
             {
-                return BadRequest();
+                return BadRequest(new { message = e.Message });
             }
         }
 
