@@ -4,8 +4,24 @@
   </mat-form-field-->
   <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/delta']"><mat-icon>trending_up</mat-icon>Delta Chart</button> -->
   
+	<mat-form-field class="filter" floatLabel="never">
+		<mat-label>Week 1 Start Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="weekly_start_datePicker" [formControl]="weekly_start_dateControl" (dateChange)="weekly_start_dateChange($event)" readonly >
+		<input matInput [(ngModel)]="weekly_start_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="weekly_start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+		<mat-datepicker #weekly_start_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+  
+	<mat-form-field class="filter" floatLabel="never">
+		<mat-label>Week 1 End Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="weekly_end_datePicker" [formControl]="weekly_end_dateControl" (dateChange)="weekly_end_dateChange($event)" readonly>
+		<input matInput [(ngModel)]="weekly_end_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="weekly_end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+		<mat-datepicker #weekly_end_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+
   <mat-form-field class="filter" floatLabel="never">
-		<mat-label>Start Date</mat-label>
+		<mat-label>Week 2 Start Date</mat-label>
 		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" readonly >
 		<input matInput [(ngModel)]="start_dateInput" disabled>
 		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
@@ -13,7 +29,7 @@
 	</mat-form-field>
   
 	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>End Date</mat-label>
+		<mat-label>Week 2 End Date</mat-label>
 		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" readonly>
 		<input matInput [(ngModel)]="end_dateInput" disabled>
 		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
@@ -68,8 +84,8 @@
 		  </th>
 		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
 		</ng-container> 
-    <ng-container matColumnDef="yesterday">
-          <th mat-header-cell *matHeaderCellDef colspan="6">{{ start_dateInput ? (start_dateInput | date:'d MMMM y') : "Yesterday" }}</th>
+    <ng-container matColumnDef="week1">
+          <th mat-header-cell *matHeaderCellDef colspan="6">Week 1: {{ weekly_start_dateInput ? (weekly_start_dateInput) : "Week 1" }} - {{ weekly_end_dateInput ? (weekly_end_dateInput) : "" }}</th>
     </ng-container>
     <ng-container matColumnDef="fig_curr_gross_prev">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -120,8 +136,8 @@
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm_prev | number : '1.2-2') || '-'}}</td>
     </ng-container>
 
-    <ng-container matColumnDef="today">
-        <th mat-header-cell *matHeaderCellDef colspan="6">{{ end_dateInput ? (end_dateInput | date:'d MMMM y') : 'Today' }}</th>
+    <ng-container matColumnDef="week2">
+        <th mat-header-cell *matHeaderCellDef colspan="6">Week 2: {{ start_dateInput ? (start_dateInput) : "Week 2" }} - {{ end_dateInput ? (end_dateInput) : "" }}</th>
     </ng-container>
     <ng-container matColumnDef="fig_curr_gross_today">
           <th mat-header-cell *matHeaderCellDef rowspan="2">

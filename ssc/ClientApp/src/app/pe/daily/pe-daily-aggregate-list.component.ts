@@ -2,7 +2,7 @@ import { HttpClient, HttpParams, HttpResponse, HttpHeaders } from '@angular/comm
 import { Component, OnInit, ViewChild, Inject, OnDestroy } from '@angular/core';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA, MatDatepicker } from '@angular/material';
 import { MatTableDataSource } from '@angular/material/table';
-import { merge, Observable, of as observableOf, Subscription } from 'rxjs';
+import { merge, Observable, of as observableOf, Subscription, forkJoin } from 'rxjs';
 import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
@@ -56,7 +56,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   headerColumns1: string[] = [
     "select","well",
-    'yesterday',"today","delta"];
+    'week1',"week2","delta"];
 
   headerColumns2: string[] = [
     'fig_curr_gross_prev','fig_curr_net_prev','wc_prev','gas_prev','ds_efficiency_prev', 'sm_prev',
@@ -77,6 +77,20 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   // end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
   end_dateControl = new FormControl(new Date());
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+
+  @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any>;
+  weekly_start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 7)));
+  weekly_start_dateInput = this.weekly_start_dateControl.value
+    ? this.weekly_start_dateControl.value.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+        day: "numeric",
+      })
+    : "";
+
+  @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any>;
+  weekly_end_dateControl = new FormControl(new Date());
+  weekly_end_dateInput = this.weekly_end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
   exampleDatabase: ExampleHttpDao | null;
   data: any[] = [];
@@ -188,9 +202,10 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.sort.sortChange,
       this.paginator.page,
       this.filterControl.valueChanges.pipe(debounceTime(300)),
-      // this.dateFilter.valueChanges.pipe(debounceTime(300)),
       this.start_dateControl.valueChanges.pipe(debounceTime(300)),
       this.end_dateControl.valueChanges.pipe(debounceTime(300)),
+      this.weekly_start_dateControl.valueChanges.pipe(debounceTime(300)),
+      this.weekly_end_dateControl.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_grossFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_netFilter.valueChanges.pipe(debounceTime(300)),
@@ -203,7 +218,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       startWith({}),
       
       switchMap(() => {
-        if (!this.start_dateControl.value || !this.end_dateControl.value) {
+        if (!this.start_dateControl.value || !this.end_dateControl.value ||
+            !this.weekly_start_dateControl.value || !this.weekly_end_dateControl.value) {
           return observableOf({
             items: [],
             total_count: 0
@@ -211,38 +227,72 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         }
 
         this.isLoadingResults = true;
-        // var columnfilter = this.getColumnFilter();
-        return this.exampleDatabase!.getRepoIssues(
+        
+        // Fetch Week 2 (regular dates - 'today') data
+        const week2Observable = this.exampleDatabase!.getRepoIssues(
           this.sort.active,
           this.sort.direction,
           this.paginator.pageIndex,
           this.paginator.pageSize,
           this.filterControl.value,
           this.getColumnFilter(),
-          "delta",
+          "weekly_average",
           {},
-          // this.end_dateInput
           this.start_dateControl.value,
           this.end_dateControl.value
         );
+
+        // Fetch Week 1 (weekly dates - 'prev') data
+        const week1Observable = this.exampleDatabase!.getRepoIssues(
+          this.sort.active,
+          this.sort.direction,
+          this.paginator.pageIndex,
+          this.paginator.pageSize,
+          this.filterControl.value,
+          this.getColumnFilter(),
+          "weekly_average",
+          {},
+          this.weekly_start_dateControl.value,
+          this.weekly_end_dateControl.value
+        );
+
+        // Combine both requests
+        return forkJoin([week1Observable, week2Observable]).pipe(
+          map(([week1Data, week2Data]) => {
+            // Log raw data from both weeks
+            console.log("Week 1 (prev) raw API response count:",week1Data.items && week1Data.items.length ? week1Data.items.length : 0);
+            if (week1Data.items && week1Data.items.length > 0) {
+              console.log("Week 1 sample (first item):", week1Data.items[0]);
+            }
+            console.log("Week 2 (today) raw API response count:", week2Data.items && week2Data.items.length ? week2Data.items.length : 0);
+            if (week2Data.items && week2Data.items.length > 0) {
+              console.log("Week 2 sample (first item):", week2Data.items[0]);
+            }
+            
+            // Merge the data and calculate deltas
+            const mergedData = this.mergeWeeksData(week1Data.items || [], week2Data.items || []);
+            return {
+              items: mergedData,
+              total_count: mergedData.length
+            };
+          })
+        );
       }),
       map(data => {
-        // Flip flag to show that loading has finished.
         this.isLoadingResults = false;
         this.isRateLimitReached = false;
         this.resultsLength = data.total_count;
-
         return data.items;
       }),
       catchError(() => {
         this.isLoadingResults = false;
-        // Catch if the GitHub API has reached its rate limit. Return empty data.
         this.isRateLimitReached = true;
         return observableOf([]);
       })
     ).subscribe(data => {
-      this.data = data;
-      console.log("Isinya apa: "+this.data);
+      // Panggil function sortMergedData untuk mengurutkan data sesuai pilihan user (sort field & direction)
+      this.data = this.sortMergedData(data);
+      console.log("Weekly Comparison Data (Week 1 vs Week 2): ", this.data);
       this.dataSource = new MatTableDataSource<any>(this.data);
       this.selection.clear();
     });
@@ -268,8 +318,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   this.start_dateControl.setValue(event.value);
   this.start_dateInput = this.formatDate(event.value);
-
-  this.loadData();
   }
 
   end_dateChange(event: any) {
@@ -279,6 +327,20 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.end_dateInput = this.formatDate(event.value);
 
     // this.loadData();
+  }
+
+  weekly_start_dateChange(event: any) {
+    if (!event.value) return;
+
+    this.weekly_start_dateControl.setValue(event.value);
+    this.weekly_start_dateInput = this.formatDate(event.value);
+  }
+
+  weekly_end_dateChange(event: any) {
+    if (!event.value) return;
+
+    this.weekly_end_dateControl.setValue(event.value);
+    this.weekly_end_dateInput = this.formatDate(event.value);
   }
 
   // end_dateChange(evt) {
@@ -318,7 +380,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       columnfilter,
       "excel",
       httpOption,
-      // this.end_dateInput
       this.start_dateControl.value,
       this.end_dateControl.value
     ).pipe(map((res) => {
@@ -372,7 +433,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       columnfilter,
       column,
       {},
-      // this.end_dateInput
       this.start_dateControl.value,
       this.end_dateControl.value
     ).pipe(map((res) => {
@@ -382,6 +442,126 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     }, () => {
 
     });
+  }
+
+  // Function untuk mengurutkan (sort) merged data berdasarkan pilihan user
+  private sortMergedData(data: any[]): any[] {
+    // Jika data kosong atau null, langsung return tanpa diurutkan
+    if (!data || data.length === 0) return data;
+    
+    // Ambil nama field yang dipilih untuk sorting, jika tidak ada default ke 'well'
+    const sortField = this.sort && this.sort.active ? this.sort.active : 'well';
+    // Cek apakah sorting ascending (true) atau descending (false)
+    const isAsc = this.sort && this.sort.direction === 'asc';
+    
+    // Lakukan array.sort() dengan custom comparator function
+    return data.sort((a, b) => {
+      // Ambil nilai dari field yang akan diurutkan untuk item a dan b
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      
+      // Jika kedua nilai null/undefined, dianggap sama (tidak perlu diurutkan)
+      if (aVal == null && bVal == null) return 0;
+      // Jika hanya nilai a yang null, taruh di akhir (asc: 1, desc: -1)
+      if (aVal == null) return isAsc ? 1 : -1;
+      // Jika hanya nilai b yang null, taruh di akhir (asc: -1, desc: 1)
+      if (bVal == null) return isAsc ? -1 : 1;
+      
+      // Jika keduanya adalah string, ubah ke UPPERCASE agar case-insensitive
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        aVal = aVal.toUpperCase();
+        bVal = bVal.toUpperCase();
+      }
+      
+      // Bandingkan nilai a dengan nilai b
+      if (aVal < bVal) {
+        // Jika a lebih kecil dari b: return -1 untuk asc, return 1 untuk desc
+        return isAsc ? -1 : 1;
+      } else if (aVal > bVal) {
+        // Jika a lebih besar dari b: return 1 untuk asc, return -1 untuk desc
+        return isAsc ? 1 : -1;
+      }
+      // Jika nilai sama, return 0 (tidak perlu diubah urutan)
+      return 0;
+    });
+  }
+
+  private mergeWeeksData(week1Items: any[], week2Items: any[]): any[] {
+    // Create a map for week1 data by well
+    const week1Map = new Map();
+    week1Items.forEach(item => {
+      week1Map.set(item.well, item);
+    });
+
+    // Create a map for week2 data by well
+    const week2Map = new Map();
+    week2Items.forEach(item => {
+      week2Map.set(item.well, item);
+    });
+
+    console.log("=== mergeWeeksData DEBUG ===");
+    console.log("Week 1 Map size:", week1Map.size);
+    console.log("Week 2 Map size:", week2Map.size);
+    
+    // Log first item from each week for comparison
+    if (week1Map.size > 0) {
+      const firstWell = Array.from(week1Map.keys())[0];
+      const w1First = week1Map.get(firstWell);
+      const w2First = week2Map.get(firstWell);
+      console.log(`Comparing well '${firstWell}':`);
+      console.log("  Week 1:", w1First);
+      console.log("  Week 2:", w2First);
+      if (w1First && w2First) {
+        console.log(`  fig_curr_gross: W1=${w1First.fig_curr_gross}, W2=${w2First.fig_curr_gross}, Delta should be=${(w2First.fig_curr_gross || 0) - (w1First.fig_curr_gross || 0)}`);
+      }
+    }
+
+    // Get all unique wells
+    const allWells = new Set([...week1Map.keys(), ...week2Map.keys()]);
+
+    // Merge and calculate deltas
+    const mergedData = Array.from(allWells).map(well => {
+      const week1 = week1Map.get(well) || {};
+      const week2 = week2Map.get(well) || {};
+
+      const merged = {
+        well: well,
+        // Week 1 (prev) data
+        fig_curr_gross_prev: week1.fig_curr_gross || 0,
+        fig_curr_net_prev: week1.fig_curr_net || 0,
+        wc_prev: week1.wc || 0,
+        gas_prev: week1.gas || 0,
+        ds_efficiency_prev: week1.ds_efficiency || 0,
+        sm_prev: week1.sm || 0,
+        // Week 2 (today) data
+        fig_curr_gross_today: week2.fig_curr_gross || 0,
+        fig_curr_net_today: week2.fig_curr_net || 0,
+        wc_today: week2.wc || 0,
+        gas_today: week2.gas || 0,
+        ds_efficiency_today: week2.ds_efficiency || 0,
+        sm_today: week2.sm || 0,
+        // Calculate deltas (week2 - week1)
+        delta_fig_curr_gross: (week2.fig_curr_gross || 0) - (week1.fig_curr_gross || 0),
+        delta_fig_curr_net: (week2.fig_curr_net || 0) - (week1.fig_curr_net || 0),
+        delta_wc: (week2.wc || 0) - (week1.wc || 0),
+        delta_gas: (week2.gas || 0) - (week1.gas || 0),
+        delta_ds_efficiency: (week2.ds_efficiency || 0) - (week1.ds_efficiency || 0),
+        delta_sm: (week2.sm || 0) - (week1.sm || 0),
+        // Include other fields from original data
+        ...week1,
+        ...week2
+      };
+      
+      // Log first merged item for verification
+      if (well === Array.from(allWells)[0]) {
+        console.log(`First merged item (${well}):`, merged);
+      }
+      
+      return merged;
+    });
+
+    console.log("Final merged data count:", mergedData.length);
+    return mergedData;
   }
 
   getColumnFilter() {
@@ -495,38 +675,50 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   // }
 
   loadData(): void {
-    const start = this.start_dateControl.value;
-    const end = this.end_dateControl.value;
+    const week2Start = this.start_dateControl.value;
+    const week2End = this.end_dateControl.value;
+    const week1Start = this.weekly_start_dateControl.value;
+    const week1End = this.weekly_end_dateControl.value;
 
-    if (!start || !end) {
-      console.warn('Start / End date belum lengkap');
+    if (!week2Start || !week2End || !week1Start || !week1End) {
+      console.warn('All dates are required (Week 1 and Week 2)');
       return;
     }
 
-    // NORMALISASI JAM → cocok dengan Mongo + ToUniversalTime()
-    const startDate = new Date(start);
-    startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(end);
-    endDate.setHours(0, 0, 0, 0);
-
-    console.log('LOAD DATA:', startDate, endDate);
-
     this.isLoadingResults = true;
 
-    this.http.get<any>('/api/pe/daily/delta', {
+    // Fetch Week 1 data
+    const week1$ = this.http.get<any>('/api/pe/daily/delta', {
       params: {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        mode: 'delta',
+        startDate: new Date(week1Start).toISOString(),
+        endDate: new Date(week1End).toISOString(),
+        mode: 'weekly_average',
         page: '0',
         pagesize: '50',
         sort: 'well',
         order: 'asc'
       }
-    }).subscribe({
-      next: res => {
-        this.dataSource.data = res.items || [];
+    });
+
+    // Fetch Week 2 data
+    const week2$ = this.http.get<any>('/api/pe/daily/delta', {
+      params: {
+        startDate: new Date(week2Start).toISOString(),
+        endDate: new Date(week2End).toISOString(),
+        mode: 'weekly_average',
+        page: '0',
+        pagesize: '50',
+        sort: 'well',
+        order: 'asc'
+      }
+    });
+
+    forkJoin([week1$, week2$]).subscribe({
+      next: ([week1Res, week2Res]) => {
+        const mergedData = this.mergeWeeksData(week1Res.items || [], week2Res.items || []);
+        // Lakukan sorting pada merged data sesuai pilihan user (sort field & direction)
+        const sortedData = this.sortMergedData(mergedData);
+        this.dataSource.data = sortedData;
         this.isLoadingResults = false;
       },
       error: err => {
@@ -576,11 +768,12 @@ export class ExampleHttpDao {
     if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
     if (mode != null) params["mode"] = mode;
 
-    // params["date"] =  new Date(dateFilter).toISOString();
     params["startDate"] =  startDate.toISOString();
     params["endDate"] =  endDate.toISOString();
 
     httpOption["params"] = params;
+
+    console.log('API Request - Endpoint: /api/pe/daily/delta, Params:', params);
 
     return this.http.get<any>('/api/pe/daily/delta', httpOption);
   }

@@ -88,6 +88,8 @@ import { PeLaporanLabDeleteDialogComponent, PeLaporanLabListComponent } from './
 import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component';
 import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
 import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
+// import { PeMapSumurService } from './map/pe-map-sumur.service';
+import { MapSumurComponent } from './map/pe-map-sumur.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -141,6 +143,7 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeSumurCurrentListComponent,
   PeSumurCurrentAddComponent,
   PeSumurDeleteDialogComponent,
+
   PeDailyChanPlotComponent,
   PeDailyAggregateComponent,
   PeDailyAggregateListComponent,
@@ -168,6 +171,7 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
   PeLaporanLabChartComponent,
   PeLaporanLabComponent,
   PeLaporanLabDeleteDialogComponent,
+  MapSumurComponent,
   // PeGrafikComponent,
   ],
   imports: [
@@ -241,6 +245,7 @@ export class PeModule {
             new PanelSubItem("Aggregate", "pe/aggregate", "change_history"),
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
             new PanelSubItem("Optimasi", "pe/optimasi", "analytics"),
+            
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [
@@ -249,12 +254,13 @@ export class PeModule {
         ]),
         new PanelItem("Diagnostic Chart", "pe/grafik", "assessment", this.pePermission.passPermission("pe/grafik")),
         new PanelItem("Laboratorium", "", "science", this.pePermission.passPermission("pe/dasboard"), true, [
-            // new PanelSubItem("Analysis", "pe/lab", "analytics", this.pePermission.passPermission("pe/lab")),
-            new PanelSubItem("Assets", "pe/lab", "summarize", this.pePermission.passPermission("pe/lab")),
-            new PanelSubItem("Measurement Result", "pe/laporan", "data_exploration", this.pePermission.passPermission("pe/laporan")),
-            // new PanelSubItem("Performance & Inventory", "pe/lab", "trending_up", this.pePermission.passPermission("pe/lab")),
-
-          ]),
+          // new PanelSubItem("Analysis", "pe/lab", "analytics", this.pePermission.passPermission("pe/lab")),
+          new PanelSubItem("Assets", "pe/lab", "summarize", this.pePermission.passPermission("pe/lab")),
+          new PanelSubItem("Measurement Result", "pe/laporan", "data_exploration", this.pePermission.passPermission("pe/laporan")),
+          // new PanelSubItem("Performance & Inventory", "pe/lab", "trending_up", this.pePermission.passPermission("pe/lab")),
+          
+        ]),
+        new PanelItem("Map", "pe/map", "map", this.pePermission.passPermission("pe/map")),
       
         ]));
     });

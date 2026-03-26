@@ -1,14 +1,20 @@
 <div class="container-top-bar top-flow" fxLayoutGap="10px">
 
 	<mat-form-field class="field-well" floatLabel="never">
-    <mat-label>Area</mat-label>
-    <!-- <input matInput [value]="area_xSelected?.join(', ')" readonly /> -->
+    <!-- <mat-label>Area</mat-label>
+    <input matInput [value]="area_xSelected?.join(', ')" readonly />
     <input matInput [(ngModel)]="area_xSelected" disabled>
     <app-xfilter
       title="Area"
       column="area"
       [selected]="area_xSelected">
-    </app-xfilter>
+    </app-xfilter> -->
+    <mat-label>Metric</mat-label>
+    <mat-select [formControl]="metricControl">
+      <mat-option value="opr">OPR</mat-option>
+      <mat-option value="sot">SOT</mat-option>
+      <mat-option value="fig">FIG</mat-option>
+    </mat-select>
   </mat-form-field>
 
   <!-- <mat-form-field class="field-area" floatLabel="never">

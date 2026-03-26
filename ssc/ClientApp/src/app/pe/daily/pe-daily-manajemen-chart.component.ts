@@ -34,6 +34,7 @@ export class PeDailyManajemenChartComponent {
   @ViewChild('manajemen_chart_el', {static:true}) public manajemen_chart_el: ElementRef;
 
   areaControl = new FormControl(''); 
+  metricControl = new FormControl('opr'); // opr | sot | fig
   dateControl = new FormControl(new Date());
   date_xSelected = [];
   well_xSelected = [];
@@ -109,41 +110,41 @@ export class PeDailyManajemenChartComponent {
         }
     },
     series: [
-	{
-        name: 'Operation',
-        type: 'line',
-        data: [],
-        color: '#4dabf7'
-      },
-      {
-        name: 'SOT',
-        type: 'line',
-        data: [],
-        color: '#ff7f0e'
-      },
-      {
-        name: 'Figure',
-        type: 'line',
-        data: [],
-        color: '#8bc34a'
-      },
-      {
-        name: 'RKAP Oil',
-        type: 'line',
-        data: [],
-        dashStyle: 'ShortDash',
-        color: '#000000',
-        marker: { enabled: false }
-      },
-      {
-        name: 'WP&B Oil',
-        type: 'line',
-        data: [],
-        dashStyle: 'ShortDash',
-        color: '#ff0000',
-        marker: { enabled: false }
-      }
-    ],
+    {
+      name: 'SGT',
+      type: 'line',
+      data: [],
+      color: '#4dabf7'
+    },
+    {
+      name: 'SBR',
+      type: 'line',
+      data: [],
+      color: '#ff7f0e'
+    },
+    {
+      name: 'BD',
+      type: 'line',
+      data: [],
+      color: '#8bc34a'
+    },
+    {
+      name: 'RKAP',
+      type: 'line',
+      data: [],
+      dashStyle: 'ShortDash',
+      color: '#000000',
+      marker: { enabled: false }
+    },
+    {
+      name: 'WPNB',
+      type: 'line',
+      data: [],
+      dashStyle: 'ShortDash',
+      color: '#ff0000',
+      marker: { enabled: false }
+    }
+    ]
 };
 
   @ViewChild('start_datePicker', {static: true}) start_datePicker: MatDatepicker<any>;
@@ -183,6 +184,7 @@ export class PeDailyManajemenChartComponent {
     }
     );
     this.areaControl.valueChanges.subscribe(() => this.refresh_Production());
+    this.metricControl.valueChanges.subscribe(() => this.refresh_Production());
     this.dateControl.valueChanges.subscribe(() => this.refresh_Production());
 
     this.refresh_Production();
@@ -299,22 +301,129 @@ export class PeDailyManajemenChartComponent {
     this.end_dateInput = evt.value.toLocaleDateString("en-US", { month:"short", year:"numeric", day:"numeric" });
   }
 
+// refresh_Production() {
+
+//     this.isLoadingResults = false;
+
+//     // const area = this.areaControl.value.toLowerCase(); // sgt | sbr | bd
+
+//     const start_date = this.start_dateControl.value;
+//     const end_date   = this.end_dateControl.value;
+//     const area =
+//     this.areaControl.value ||
+//     (this.area_xSelected && this.area_xSelected.length > 0
+//       ? this.area_xSelected[0].toLowerCase()
+//       : 'sgt');
+
+//     console.log('areaControl:', this.areaControl.value);
+//     console.log('area_xSelected:', this.area_xSelected);
+
+//     let columnfilter: any = {
+//       date: [
+//         { opr: 'gte', val: start_date.toISOString(), log: 'and' },
+//         { opr: 'lte', val: end_date.toISOString(), log: 'and' }
+//       ]
+//     };
+
+//     // if (area) {
+//     //   columnfilter['area'] = [
+//     //     { opr: 'eq', val: area }
+//     //   ];
+//     // }
+
+//     this.http.get('/api/pe/production', {
+//       params: {
+//         sort: 'date',
+//         order: 'asc',
+//         pagesize: '10000',
+//         columnfilter: JSON.stringify(columnfilter)
+//       }
+//     }).subscribe((res: any) => {
+
+//       var categories = [];
+
+//       var series_operation = [];
+//       var series_sot = [];
+//       var series_figure = [];
+//       var series_rkap_oil = [];
+//       var series_wpnb_oil = [];
+
+//       this.manajemen_chart_options.series.forEach(s => s.data = []);
+
+//       res.items.map(d => {
+
+//         var xdt = new Date(d.date);
+//         var dt = [
+//           xdt.getDate(),
+//           xdt.toLocaleString('en', { month: 'short' }),
+//           xdt.getFullYear().toString().substr(-2)
+//         ].join('-');
+
+//         categories.push(dt);
+
+//         /** 🔑 AREA BASED */
+//         series_operation.push({ name: dt, y: d[`${area}_opr`] || 0});
+//         series_sot.push({ name: dt, y: d[`${area}_sot`] || 0});
+//         series_figure.push({ name: dt, y: d[`${area}_fig`] || 0});
+
+//         /** TARGET LINE */
+//         series_rkap_oil.push({ name: dt, y: d.rkap_oil });
+//         series_wpnb_oil.push({ name: dt, y: d.wpnb_oil });
+
+//         /** DAILY VALUE */
+//         if (
+//           this.dateControl.value.toLocaleDateString("id-ID") ===
+//           new Date(d.date).toLocaleDateString("id-ID")
+//         ) {
+//           this.valueOperation = d[`${area}_opr`];
+//           this.valueSOT = d[`${area}_sot`];
+//           this.valueFigure = d[`${area}_fig`];
+//         }
+//       });
+
+//       console.log('AREA:', area);
+//       console.log('Sample row:', res.items[0]);
+
+
+//       /** UPDATE CHART */
+//       this.manajemen_chart_options.title.text =
+//         'Oil Production - ' + area.toUpperCase(), 
+
+//       this.manajemen_chart_options.subtitle.text =
+//       `( ${start_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}` +
+//       ` - ${end_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })} )`;
+
+
+//       this.manajemen_chart_options.xAxis.categories = categories;
+
+//       this.manajemen_chart_options.series[0].data = series_operation;
+//       this.manajemen_chart_options.series[1].data = series_sot;
+//       this.manajemen_chart_options.series[2].data = series_figure;
+//       this.manajemen_chart_options.series[3].data = series_rkap_oil;
+//       this.manajemen_chart_options.series[4].data = series_wpnb_oil;
+
+//       this.chart = Highcharts.chart(
+//         this.manajemen_chart_el.nativeElement,
+//         this.manajemen_chart_options
+//       );
+
+//       this.isLoadingResults = false;
+
+
+//     }, error => {
+//       this.isLoadingResults = false;
+//       console.error(error);
+//     });
+
+//   }
 refresh_Production() {
 
-    this.isLoadingResults = false;
-
-    // const area = this.areaControl.value.toLowerCase(); // sgt | sbr | bd
+    this.isLoadingResults = true;
 
     const start_date = this.start_dateControl.value;
     const end_date   = this.end_dateControl.value;
-    const area =
-    this.areaControl.value ||
-    (this.area_xSelected && this.area_xSelected.length > 0
-      ? this.area_xSelected[0].toLowerCase()
-      : 'sgt');
 
-    console.log('areaControl:', this.areaControl.value);
-    console.log('area_xSelected:', this.area_xSelected);
+    const metric = this.metricControl.value || 'opr'; // opr | sot | fig
 
     let columnfilter: any = {
       date: [
@@ -322,12 +431,6 @@ refresh_Production() {
         { opr: 'lte', val: end_date.toISOString(), log: 'and' }
       ]
     };
-
-    // if (area) {
-    //   columnfilter['area'] = [
-    //     { opr: 'eq', val: area }
-    //   ];
-    // }
 
     this.http.get('/api/pe/production', {
       params: {
@@ -340,17 +443,16 @@ refresh_Production() {
 
       var categories = [];
 
-      var series_operation = [];
-      var series_sot = [];
-      var series_figure = [];
-      var series_rkap_oil = [];
-      var series_wpnb_oil = [];
-
-      this.manajemen_chart_options.series.forEach(s => s.data = []);
+      var series_sgt = [];
+      var series_sbr = [];
+      var series_bd = [];
+      var series_rkap = [];
+      var series_wpnb = [];
 
       res.items.map(d => {
 
         var xdt = new Date(d.date);
+
         var dt = [
           xdt.getDate(),
           xdt.toLocaleString('en', { month: 'short' }),
@@ -359,46 +461,39 @@ refresh_Production() {
 
         categories.push(dt);
 
-        /** 🔑 AREA BASED */
-        series_operation.push({ name: dt, y: d[`${area}_opr`] || 0});
-        series_sot.push({ name: dt, y: d[`${area}_sot`] || 0});
-        series_figure.push({ name: dt, y: d[`${area}_fig`] || 0});
+        /** AREA SERIES */
+        series_sgt.push({ name: dt, y: d[`sgt_${metric}`] || 0 });
+        series_sbr.push({ name: dt, y: d[`sbr_${metric}`] || 0 });
+        series_bd.push({ name: dt, y: d[`bd_${metric}`] || 0 });
 
-        /** TARGET LINE */
-        series_rkap_oil.push({ name: dt, y: d.rkap_oil });
-        series_wpnb_oil.push({ name: dt, y: d.wpnb_oil });
+        /** TARGET */
+        series_rkap.push({ name: dt, y: d.rkap_oil || 0 });
+        series_wpnb.push({ name: dt, y: d.wpnb_oil || 0 });
 
-        /** DAILY VALUE */
-        if (
-          this.dateControl.value.toLocaleDateString("id-ID") ===
-          new Date(d.date).toLocaleDateString("id-ID")
-        ) {
-          this.valueOperation = d[`${area}_opr`];
-          this.valueSOT = d[`${area}_sot`];
-          this.valueFigure = d[`${area}_fig`];
-        }
       });
 
-      console.log('AREA:', area);
-      console.log('Sample row:', res.items[0]);
+      /** UPDATE TITLE */
 
-
-      /** UPDATE CHART */
       this.manajemen_chart_options.title.text =
-        'Oil Production - ' + area.toUpperCase(), 
+        'Oil Production - ' + metric.toUpperCase();
 
       this.manajemen_chart_options.subtitle.text =
-      `( ${start_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}` +
-      ` - ${end_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })} )`;
+        `( ${start_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}` +
+        ` - ${end_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })} )`;
 
+      /** UPDATE AXIS */
 
       this.manajemen_chart_options.xAxis.categories = categories;
 
-      this.manajemen_chart_options.series[0].data = series_operation;
-      this.manajemen_chart_options.series[1].data = series_sot;
-      this.manajemen_chart_options.series[2].data = series_figure;
-      this.manajemen_chart_options.series[3].data = series_rkap_oil;
-      this.manajemen_chart_options.series[4].data = series_wpnb_oil;
+      /** UPDATE SERIES */
+
+      this.manajemen_chart_options.series[0].data = series_sgt;
+      this.manajemen_chart_options.series[1].data = series_sbr;
+      this.manajemen_chart_options.series[2].data = series_bd;
+      this.manajemen_chart_options.series[3].data = series_rkap;
+      this.manajemen_chart_options.series[4].data = series_wpnb;
+
+      /** RENDER CHART */
 
       this.chart = Highcharts.chart(
         this.manajemen_chart_el.nativeElement,
@@ -407,14 +502,14 @@ refresh_Production() {
 
       this.isLoadingResults = false;
 
-
     }, error => {
+
       this.isLoadingResults = false;
       console.error(error);
+
     });
 
   }
-
 }
 
 export interface PeWellApi {

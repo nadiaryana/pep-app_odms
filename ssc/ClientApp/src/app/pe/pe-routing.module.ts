@@ -74,6 +74,7 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
 import { PeLaporanLabListComponent } from './laporan/pe-laporan-lab-list.component';
 import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
 import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component';
+import { MapSumurComponent } from './map/pe-map-sumur.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -149,7 +150,7 @@ const peRoutes: Routes = [
       { path: 'chart', component: PeLaporanLabChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
-
+    { path: 'map', component: MapSumurComponent },
 
 
   ]},
