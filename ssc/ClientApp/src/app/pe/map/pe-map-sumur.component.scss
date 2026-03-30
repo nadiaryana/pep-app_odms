@@ -1,8 +1,167 @@
-@import '~leaflet/dist/leaflet.css';
+// pe-map-sumur.component.scss
+
+// =============================================
+// WRAPPERS
+// =============================================
+
+.map-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+// =============================================
+// HEADER
+// =============================================
+
+.map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+
+    mat-icon {
+      color: #1976d2;
+    }
+  }
+
+  &__legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.legend-item {
+  font-size: 13px;
+  color: #555;
+
+  &--total {
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+// =============================================
+// MAP CONTAINER
+// =============================================
+
+.map-container {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
 
 #map {
   width: 100%;
-  height: 600px;
-  // z-index: 1;
+  height: 500px;
+  z-index: 1;
 }
 
+.map-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #555;
+}
+
+// =============================================
+// SUMUR TABLE
+// =============================================
+
+.sumur-table-wrapper {
+  flex-shrink: 0;
+}
+
+.table-header-with-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.table-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+.sumur-table {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .mat-header-cell {
+    font-weight: 600;
+    color: #333;
+    background-color: #f5f5f5;
+  }
+
+  .mat-cell {
+    font-size: 13px;
+  }
+}
+
+.table-row--clickable {
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background-color: #e3f2fd;
+  }
+}
+
+// =============================================
+// LEAFLET POPUP OVERRIDE
+// =============================================
+
+::ng-deep {
+  .leaflet-pane {
+    z-index: 1 !important;
+  }
+
+  .leaflet-top,
+  .leaflet-bottom {
+    z-index: 2 !important;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .leaflet-popup-content {
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    margin: 10px 14px;
+
+    b {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+  }
+}

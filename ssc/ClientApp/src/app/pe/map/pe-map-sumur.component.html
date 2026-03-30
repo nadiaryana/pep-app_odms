@@ -1,1 +1,76 @@
-<div id="map"></div>
+<!-- pe-map-sumur.component.html -->
+<div class="map-wrapper">
+
+  <!-- Header -->
+  <div class="map-header">
+    <div class="map-header__title">
+      <mat-icon>map</mat-icon>
+      <span>Peta Sumur</span>
+    </div>
+    <div class="map-header__legend">
+      <span class="legend-item legend-item--total">
+        Total: {{ sumurList.length }} Sumur
+      </span>
+    </div>
+  </div>
+
+  <!-- Map Container -->
+  <div class="map-container">
+    <div id="map"></div>
+
+    <!-- Loading overlay -->
+    <div class="map-loading" *ngIf="isLoading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Memuat peta...</span>
+    </div>
+  </div>
+
+  <!-- Sumur Table -->
+  <div class="sumur-table-wrapper">
+    <div class="table-header-with-actions">
+      <h3 class="table-title">Daftar Sumur</h3>
+      <button 
+        mat-button 
+        color="primary" 
+        [disabled]="isLoadingResults" 
+        [routerLink]="['map/add']" 
+        *ngIf="pePermissionService?.passPermission('pe/map/add')">
+        <mat-icon>add</mat-icon> Upload
+      </button>
+      <!-- <button mat-button color="primary" [disabled]="isLoadingResults"><mat-icon>add</mat-icon> Upload</button> -->
+    </div>
+    <table mat-table [dataSource]="sumurList" class="sumur-table mat-elevation-z2">
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Nama Sumur</th>
+        <td mat-cell *matCellDef="let s">{{ s.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="latDMS">
+        <th mat-header-cell *matHeaderCellDef>Latitude</th>
+        <td mat-cell *matCellDef="let s">{{ s.latDMS }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="lngDMS">
+        <th mat-header-cell *matHeaderCellDef>Longitude</th>
+        <td mat-cell *matCellDef="let s">{{ s.lngDMS }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Aksi</th>
+        <td mat-cell *matCellDef="let s">
+          <button mat-icon-button color="primary" (click)="flyToSumur(s)" matTooltip="Lihat di peta">
+            <mat-icon>location_on</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          (click)="flyToSumur(row)"
+          class="table-row--clickable">
+      </tr>
+    </table>
+  </div>
+
+</div>

@@ -99,6 +99,12 @@ export class PePermissionService {
 	// new Menu("lab/edit", true, /[a-z]/i, ["PeLab Edit"]),
 	new Menu("laporan/delete", true,null, ["PeLaporanLab Delete"]),
 	new Menu("laporan/chart", true,null, ["PeLaporanLab Read"]),
+	
+
+	new Menu("map", true,null, ["PeMap Read"]),
+	new Menu("map/list", true,null, ["PeMap Read"]),
+	new Menu("map/add", true,null, ["PeMap Add"]),
+
 	];
 	
 	
