@@ -52,20 +52,7 @@ namespace ssc.Areas.PE.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string _id { get; set; }
-        public string status { get; set; }
-        public string message { get; set; }
         public int error_count { get; set; }
-        public int item_count { get; set; }
-        public DateTime? upload_date { get; set; }
-        public string wellName { get; set; }
-        // save progress
-        public string save_status { get; set; }    // "saving"|"saved"|"failed"
-        public string save_message { get; set; }
-        public long save_modified { get; set; }
-        public long save_created { get; set; }
-        public long save_total { get; set; }
-        // items TIDAK disimpan di sini — disimpan di collection sumur_tmp_items
-        [BsonIgnore]
         public Map[] items { get; set; }
     }
 

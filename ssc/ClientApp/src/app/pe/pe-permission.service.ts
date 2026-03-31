@@ -68,7 +68,6 @@ export class PePermissionService {
 	new Menu("aggregate", true, null, ["PeAggregate Read"]),
 	new Menu("aggregate/list", true, null, ["PeAggregate Read"]),
 
-	
 	// barchart permission
 	new Menu("barchart", true,null, ["PeBarchart Read"]),
 	new Menu("barchart/list", true,null, ["PeBarchart Read"]),

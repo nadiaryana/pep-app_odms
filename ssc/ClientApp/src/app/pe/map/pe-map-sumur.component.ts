@@ -5,20 +5,23 @@ import {
   OnInit,
   AfterViewInit,
   OnDestroy,
+  ViewChild,
 } from '@angular/core';
 import { TitleService } from 'src/app/navigation/title/title.service';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 import { PePermissionService } from '../pe-permission.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog, MatSnackBar, MatPaginator, MatTableDataSource } from '@angular/material';
+import { SnackbarService } from 'src/app/snackbar.service';
+import { xFilterService } from 'src/app/xfilter/xfilter.component';
+import { CommonService } from 'src/app/common.service';
 
-// =============================================
-// INTERFACE
-// =============================================
 
 export interface Sumur {
-  name: string;
-  latDMS: string;
-  lngDMS: string;
+  wellName: string;
+  lat: string;
+  lng: string;
 }
 
 @Component({
@@ -35,25 +38,26 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   map: L.Map | null = null;
   isLoading = true;
 
-  displayedColumns: string[] = ['name', 'latDMS', 'lngDMS', 'actions'];
+  displayedColumns: string[] = ['wellName', 'lat', 'lng', 'actions'];
 
-  sumurList: Sumur[] = [
-    { name: 'ST-080', latDMS: 'N 0° 27\' 37.433"', lngDMS: 'E 117° 31\' 24.826"' },
-    { name: 'ST-081', latDMS: 'N 0° 28\' 45.363"', lngDMS: 'E 117° 30\' 49.709"' },
-    { name: 'ST-082', latDMS: 'N 0° 27\' 59.356"', lngDMS: 'E 117° 31\' 12.714"' },
-    { name: 'ST-083', latDMS: 'N 0° 26\' 50.100"', lngDMS: 'E 117° 32\' 05.200"' },
-    { name: 'ST-084', latDMS: 'N 0° 29\' 10.500"', lngDMS: 'E 117° 31\' 40.300"' },
-    { name: 'ST-092', latDMS: 'N 0° 29\' 23.437"', lngDMS: 'E 117° 30\' 43.267"' },
-  ];
-
-  // =============================================
-  // CONSTRUCTOR
-  // =============================================
+  sumurList: Sumur[] = [];
+  dataSource = new MatTableDataSource<Sumur>();
+  
+  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+  
 
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
     public pePermissionService: PePermissionService,
+    private router: Router,
+    public dialog: MatDialog,
+    public snackBar: MatSnackBar,
+    public snackbarService: SnackbarService,
+    private route: ActivatedRoute,
+    private xfilterService: xFilterService,
+    public commonService: CommonService,
+
   ) {}
 
   // =============================================
@@ -68,12 +72,13 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.fixLeafletDefaultIcon();
+    this.loadSumurFromAPI();
   }
 
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.initMap();
-      this.loadMarkers();
+      // loadMarkers akan dipanggil setelah loadSumurFromAPI selesai load data dari API
 
       setTimeout(() => {
         if (this.map) {
@@ -88,17 +93,61 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.pePermissionService.passPermission(path);
   }
 
-  ngOnDestroy(): void {
-    if (this.map) {
-      this.map.remove();
-      this.map = null;
-    }
+  // Load data sumur dari API backend
+  private loadSumurFromAPI(): void {
+    this.http.get<any>('/api/pe/map', {
+      params: {
+        page: '0',
+        pagesize: '10000',
+        sort: 'wellName',
+        order: 'asc'
+      }
+    }).subscribe(
+      (response) => {
+        if (response && response.items) {
+          // Transform data dari API ke format Sumur interface
+          this.sumurList = response.items.map((item: any) => {
+            return {
+              wellName: item.wellName || '',
+              lat: item.lat || '',
+              lng: item.lng || ''
+            };
+          });
+          console.log('[MapSumur] Loaded', this.sumurList.length, 'sumur from API');
+          
+          // Set dataSource untuk pagination
+          this.dataSource.data = this.sumurList;
+          setTimeout(() => {
+            if (this.paginator) {
+              this.dataSource.paginator = this.paginator;
+            }
+          }, 0);
+          
+          // Reload markers setelah data berhasil diloading
+          if (this.map) {
+            this.loadMarkers();
+          }
+        }
+      },
+      (error) => {
+        console.error('[MapSumur] Error loading sumur:', error);
+        this.snackbarService.openSnackBar('Gagal mengambil data sumur', 'error');
+      }
+    );
   }
 
-  // =============================================
-  // MAP INITIALIZATION
-  // =============================================
+  ngOnDestroy(): void {
+    if (this.map) {
+      this.markers = [];
+      this.selectedMarker = null;
 
+      if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }}
+  }
+
+  // MAP INITIALIZATION
   private fixLeafletDefaultIcon(): void {
     delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -112,8 +161,17 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   private initMap(): void {
     if (this.map) return;
 
-    const centerLat = this.dmsToDecimal('N 0° 27\' 37.433"');
-    const centerLng = this.dmsToDecimal('E 117° 31\' 24.826"');
+    // Jika ada data sumur, gunakan data pertama sebagai center; kalau tidak, gunakan default
+    let centerLat = this.dmsToDecimal('N 0° 27\' 37.433"');
+    let centerLng = this.dmsToDecimal('E 117° 31\' 24.826"');
+    
+    if (this.sumurList && this.sumurList.length > 0) {
+      const firstSumur = this.sumurList[0];
+      if (firstSumur.lat && firstSumur.lng) {
+        centerLat = this.dmsToDecimal(firstSumur.lat);
+        centerLng = this.dmsToDecimal(firstSumur.lng);
+      }
+    }
 
     this.map = L.map('map', {
       center: [centerLat, centerLng],
@@ -128,12 +186,20 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     }).addTo(this.map);
   }
 
+  private markers: L.Marker[] = []; // ← simpan semua marker
+  private selectedMarker: L.Marker | null = null; // ← marker yang dipilih
+
   private loadMarkers(): void {
     if (!this.map) return;
 
     this.sumurList.forEach((sumur) => {
-      const lat = this.dmsToDecimal(sumur.latDMS);
-      const lng = this.dmsToDecimal(sumur.lngDMS);
+      // Skip marker jika lat atau lng kosong
+      if (!sumur.lat || !sumur.lng) {
+        return;
+      }
+
+      const lat = this.dmsToDecimal(sumur.lat);
+      const lng = this.dmsToDecimal(sumur.lng);
 
       // Semua marker seragam — biru
       const icon = L.divIcon({
@@ -153,19 +219,54 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         popupAnchor: [0, -12],
       });
 
-      L.marker([lat, lng], { icon })
+      const marker = L.marker([lat, lng], { icon })
         .addTo(this.map!)
         .bindPopup(`
-          <b>${sumur.name}</b>
+          <b>${sumur.wellName}</b>
           Lat: ${lat.toFixed(6)}<br>
           Lng: ${lng.toFixed(6)}
         `);
+      
+        marker.on('click', () => {
+      this.highlightMarker(marker);
+    });
+
+    this.markers.push(marker);
     });
   }
 
-  // =============================================
+  private createIcon(type: 'default' | 'selected'): L.DivIcon {
+    const isSelected = type === 'selected';
+    return L.divIcon({
+      html: `
+        <div style="
+          background-color: ${isSelected ? '#e53935' : '#1976d2'};
+          width: ${isSelected ? '24px' : '18px'};
+          height: ${isSelected ? '24px' : '18px'};
+          border-radius: 50%;
+          border: 2.5px solid ${isSelected ? '#b71c1c' : '#0d47a1'};
+          box-shadow: ${isSelected ? '0 0 0 4px rgba(229,57,53,0.3)' : '0 2px 6px rgba(0,0,0,0.3)'};
+          transition: all 0.2s ease;
+        "></div>
+      `,
+      className: '',
+      iconSize: isSelected ? [24, 24] : [18, 18],
+      iconAnchor: isSelected ? [12, 12] : [9, 9],
+      popupAnchor: [0, -12],
+    });
+  }
+
+  private highlightMarker(marker: L.Marker): void {
+    // Reset marker sebelumnya ke default
+    if (this.selectedMarker && this.selectedMarker !== marker) {
+      this.selectedMarker.setIcon(this.createIcon('default'));
+    }
+    // Set marker baru ke selected
+    marker.setIcon(this.createIcon('selected'));
+    this.selectedMarker = marker;
+  }
+
   // HELPER METHODS
-  // =============================================
 
   dmsToDecimal(dms: string): number {
     const regex = /([NSEW])\s*(\d+)[°\s]+(\d+)['\s]+(\d+\.?\d*)/;
@@ -193,8 +294,15 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   flyToSumur(sumur: Sumur): void {
     if (!this.map) return;
 
-    const lat = this.dmsToDecimal(sumur.latDMS);
-    const lng = this.dmsToDecimal(sumur.lngDMS);
+    const lat = this.dmsToDecimal(sumur.lat);
+    const lng = this.dmsToDecimal(sumur.lng);
+
+    // Cari marker yang sesuai dengan sumur
+    const index = this.sumurList.indexOf(sumur);
+    if (index !== -1 && this.markers[index]) {
+      this.highlightMarker(this.markers[index]);
+      this.markers[index].openPopup(); // ← buka popup sekalian
+    }
 
     this.map.flyTo([lat, lng], 16, {
       animate: true,

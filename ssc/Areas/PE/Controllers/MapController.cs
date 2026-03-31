@@ -240,22 +240,12 @@ namespace ssc.Areas.PE.Controllers
                 {
                     _row.lat = latStr;
                 }
-                else
-                {
-                    _row_error.lat = new ErrorItem { value = "(Blank)", message = "Latitude is required" };
-                    error_count++;
-                }
 
                 // --- Longitude (col 3) ---
                 var lngStr = c3?.ToString().Trim();
                 if (!string.IsNullOrWhiteSpace(lngStr))
                 {
                     _row.lng = lngStr;
-                }
-                else
-                {
-                    _row_error.lng = new ErrorItem { value = "(Blank)", message = "Longitude is required" };
-                    error_count++;
                 }
 
                 if (error_count > last_error_count)
@@ -293,8 +283,11 @@ namespace ssc.Areas.PE.Controllers
         [HttpGet("Tmp")]
         public ActionResult GetTmp(string _id, String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
         {
+            Console.WriteLine($"_id: {_id}");
             MapTmp _tmp = _map_tmp.Find(t => t._id == _id).FirstOrDefault();
-            List<Map> _tmpitems = _tmp.items.ToList();
+            Console.WriteLine($"_tmp: {(_tmp == null ? "NULL" : "FOUND")}");
+            Console.WriteLine($"items count: {_tmp?.items?.Length}");
+            List<Map> _tmpitems = _tmp.items != null ? _tmp.items.ToList() : new List<Map>();
             if (mode == "error")
             {
                 _tmpitems = _tmpitems.Where(r => r._error._row?.value == "error").ToList();
@@ -324,6 +317,7 @@ namespace ssc.Areas.PE.Controllers
             {
                 return BadRequest();
             }
+
 
 
         }
@@ -375,12 +369,15 @@ namespace ssc.Areas.PE.Controllers
                     modified_count = modified_count,
                     created_count = created_count,
                     total_count = items.Count()
+
                 });
+
             }
             catch (Exception e)
             {
                 return BadRequest(new { message = e.Message });
             }
+
         }
 
         [Authorize("PeMap Delete")]

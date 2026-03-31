@@ -91,6 +91,7 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
 // import { PeMapSumurService } from './map/pe-map-sumur.service';
 import { MapSumurComponent } from './map/pe-map-sumur.component';
 import { PeMapAddComponent } from './map/pe-map-add.component';
+import { PeMapComponent } from './map/pe-map.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -172,6 +173,7 @@ import { PeMapAddComponent } from './map/pe-map-add.component';
   PeLaporanLabChartComponent,
   PeLaporanLabComponent,
   PeLaporanLabDeleteDialogComponent,
+  PeMapComponent,
   MapSumurComponent,
   PeMapAddComponent,
   // PeGrafikComponent,

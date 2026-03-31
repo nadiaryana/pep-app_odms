@@ -22,7 +22,7 @@ export class PeMapAddComponent {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
-	bhpForm: FormGroup;
+	mapForm: FormGroup;
 	
 	isUploading = false;
 	isLoading = false;
@@ -42,7 +42,7 @@ export class PeMapAddComponent {
 
 	data: PeMap[] = [];
 	data_error_count: number = 0;
-	displayedColumns: string[] = ["info", "date","well","compl_layer","layer_name","perfo_interval","meas_type","meas_depth","pmax","tmax", "noted","Actions"];
+	displayedColumns: string[] = ["info", "wellName", "lat", "lng", "Actions"];
 
 	constructor(
 		private formBuilder: FormBuilder,
@@ -58,24 +58,24 @@ export class PeMapAddComponent {
 		this.loading = true;
 		//this.snackBar.dismiss();
 		this.snackbarService.status.next(new SnackbarApi(false));
-		this.bhpForm.disable();
+		this.mapForm.disable();
 	}
 
-	get f() { return this.bhpForm.controls; }
+	get f() { return this.mapForm.controls; }
 
 	ngOnInit() { 
 
 		this.titleService.titleSource.next({
-          title: "Add BHP",
+          title: "Add Map",
           icon:"add",
 	      breadcrumbs: [
 	        {label: 'Petroleum Engineering', routerLink: ''}, 
-	        {label: 'BHP', routerLink: 'pe/bhp'},
+	        {label: 'Map', routerLink: 'pe/map'},
 	        {label: 'Add', routerLink: ''}, 
 	      ]}
 	    );
 
-		this.bhpForm = this.formBuilder.group({
+		this.mapForm = this.formBuilder.group({
 			//sensor_id: ['', Validators.required],
 			location_id: [''],
 			is_anchor: [''],
@@ -90,7 +90,7 @@ export class PeMapAddComponent {
 	}
 
 	canDeactivate(): Observable<boolean> | boolean {
-		if (this.bhpForm.pristine) {
+		if (this.mapForm.pristine) {
 			return true;
 		}
 		return this.dialogService.confirm('Discard changes?');
@@ -111,7 +111,7 @@ export class PeMapAddComponent {
 		const fd = new FormData();
 		this.isUploading = true;
 		fd.append('files', this.fileInput.nativeElement.files[0]);
-		this.http.post('/api/pe/bhp/UploadFiles', fd, {
+		this.http.post('/api/pe/map/UploadFiles', fd, {
 			reportProgress: true,
 			observe: 'events'
 		})
@@ -132,17 +132,18 @@ export class PeMapAddComponent {
 	}
 
 	loadData() {
+		console.log('tmp_id:', this.tmp_id);
 		this.isLoading = true;
 		var httpOption = {
 			params: {
 				_id: this.tmp_id,
 				page: this.paginator.pageIndex.toString(),
-				pageSize: this.paginator.pageSize.toString(), 
+				pagesize: this.paginator.pageSize.toString(), 
 				mode: this.data_mode
 			}
 		}
 		
-		this.http.get<any>('/api/pe/bhp/Tmp', httpOption).subscribe(res => {
+		this.http.get<any>('/api/pe/map/Tmp', httpOption).subscribe(res => {
 			this.isLoading = false;
 			this.data = res['items'];
 			this.data_error_count = res['error_count'];
@@ -157,7 +158,7 @@ export class PeMapAddComponent {
 
 	saveData() {
 		this.isSaving = true;
-		this.http.get<any>('/api/pe/bhp/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+		this.http.get<any>('/api/pe/map/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
 			this.isSaving = false;
 			this.modified_count = res["modified_count"];
 			this.created_count = res["created_count"];
@@ -193,7 +194,7 @@ export class PeMapAddComponent {
 
 	@HostListener('window:beforeunload', ['$event'])
 	unloadNotification($event: any) {
-		return this.bhpForm.pristine;
+		return this.mapForm.pristine;
 	}
 
 }

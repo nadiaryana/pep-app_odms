@@ -59,9 +59,9 @@ export class PeMapSumurService {
 
   private mapToSumur(items: SumurApiItem[]): Sumur[] {
     return items.map((item) => ({
-      name: item.nama_sumur,
-      latDMS: item.latitude_dms,
-      lngDMS: item.longitude_dms,
+      wellName: item.nama_sumur,
+      lat: item.latitude_dms,
+      lng: item.longitude_dms,
     }));
   }
 }
