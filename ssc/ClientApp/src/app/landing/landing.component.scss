@@ -19,17 +19,15 @@ body {
 }
 
 .hero {
-  // min-height: 100vh;   // WAJIB
+  // Gunakan min-height dengan fallback untuk iOS Safari
+  // 100vh di iOS = tinggi termasuk address bar → menyebabkan blank putih
+  // -webkit-fill-available = tinggi visible area di iOS
+  min-height: 100vh;
+  min-height: -webkit-fill-available;  /* iOS Safari fix */
+  min-height: fill-available;
   width: 100vw;
-  // height: calc(100vh - 64px);  
   margin-left: calc(-50vw + 50%); 
   margin-top: 0;
-  
-  // background: url('/assets/image/bg.jpg');
-  // background: red !important;
-  // background-size: cover;        
-  // background-position: center;   
-  // background-repeat: no-repeat;
 
   display: flex;
   flex-direction: column;
@@ -37,12 +35,8 @@ body {
   justify-content: center;
   position: relative;
   text-align: center;
-  // padding: 60px 20px;
 }
 .hero-bg {
-  min-height: 100vh;   // WAJIB
-  width: 100vw;
-  // height: calc(100vh - 64px);  
   position: fixed;
   top: 0;
   left: 0;
@@ -64,10 +58,10 @@ body {
 .card-container {
   display: flex;
   justify-content: center;
-  // margin-top: 650px;
   gap: 30px;
   position: fixed;
-  bottom: 10vh;
+  // env(safe-area-inset-bottom) = jarak aman dari home indicator iPhone
+  bottom: calc(10vh + env(safe-area-inset-bottom, 0px));
 }
 
 // small mobile screen
@@ -75,7 +69,7 @@ body {
   .card-container {
     flex-direction: column;
     gap: 20px;
-    bottom: 5vh;
+    bottom: calc(5vh + env(safe-area-inset-bottom, 0px));
   }
 
   footer {
@@ -139,6 +133,8 @@ mat-icon {
 footer {
   text-align: center;
   padding: 20px;
+  // Tambah padding bawah untuk iPhone home indicator
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   background: #f5f5f5;
   color: #555;
   width: 100vw;

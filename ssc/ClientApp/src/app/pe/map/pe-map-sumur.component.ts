@@ -13,7 +13,7 @@ import * as L from 'leaflet';
 import { PePermissionService } from '../pe-permission.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog, MatSnackBar, MatPaginator, MatTableDataSource } from '@angular/material';
-import { SnackbarService } from 'src/app/snackbar.service';
+import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
 import { xFilterService } from 'src/app/xfilter/xfilter.component';
 import { CommonService } from 'src/app/common.service';
 
@@ -131,7 +131,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       (error) => {
         console.error('[MapSumur] Error loading sumur:', error);
-        this.snackbarService.openSnackBar('Gagal mengambil data sumur', 'error');
+        this.snackbarService.status.next(new SnackbarApi(true, 'Gagal mengambil data sumur', 'dismiss'));
       }
     );
   }
