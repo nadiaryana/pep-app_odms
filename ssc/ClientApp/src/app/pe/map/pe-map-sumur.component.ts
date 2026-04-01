@@ -31,10 +31,6 @@ export interface Sumur {
 })
 export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  // =============================================
-  // PROPERTIES
-  // =============================================
-
   map: L.Map | null = null;
   isLoading = true;
 
@@ -45,7 +41,6 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   
-
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
@@ -59,10 +54,6 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     public commonService: CommonService,
 
   ) {}
-
-  // =============================================
-  // LIFECYCLE HOOKS
-  // =============================================
 
   ngOnInit(): void {
     this.titleService.titleSource.next({
@@ -186,8 +177,9 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     }).addTo(this.map);
   }
 
-  private markers: L.Marker[] = []; // ← simpan semua marker
-  private selectedMarker: L.Marker | null = null; // ← marker yang dipilih
+  private markers: L.Marker[] = []; // simpan semua marker
+  private markerMap = new Map<string, L.Marker>(); // key = wellName
+  private selectedMarker: L.Marker | null = null; // marker yang dipilih
 
   private loadMarkers(): void {
     if (!this.map) return;
@@ -231,7 +223,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       this.highlightMarker(marker);
     });
 
-    this.markers.push(marker);
+    this.markerMap.set(sumur.wellName, marker); // instead of this.markers.push(marker)
     });
   }
 
@@ -267,7 +259,6 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // HELPER METHODS
-
   dmsToDecimal(dms: string): number {
     const regex = /([NSEW])\s*(\d+)[°\s]+(\d+)['\s]+(\d+\.?\d*)/;
     const match = dms.trim().match(regex);
@@ -297,16 +288,16 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     const lat = this.dmsToDecimal(sumur.lat);
     const lng = this.dmsToDecimal(sumur.lng);
 
-    // Cari marker yang sesuai dengan sumur
-    const index = this.sumurList.indexOf(sumur);
-    if (index !== -1 && this.markers[index]) {
-      this.highlightMarker(this.markers[index]);
-      this.markers[index].openPopup(); // ← buka popup sekalian
+    // Cari marker yang sesuai dengan nama sumur yang dipilih
+    const marker = this.markerMap.get(sumur.wellName);
+    if (marker) {
+      this.highlightMarker(marker);
+      marker.openPopup();
     }
 
-    this.map.flyTo([lat, lng], 16, {
+    this.map.flyTo([lat, lng], 16, {      //16 = level zoom
       animate: true,
-      duration: 1.2,
+      duration: 1.2,                      //animasi bergerak ke lokasi
     });
   }
 }
