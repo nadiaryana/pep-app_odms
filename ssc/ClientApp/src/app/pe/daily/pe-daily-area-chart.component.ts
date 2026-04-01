@@ -194,6 +194,22 @@ export class PeDailyAreaChartComponent implements OnInit {
         valueDecimals: 0
       }
     },
+    {
+      name: 'WC',
+      type: 'line',
+      yAxis: 1,
+      data: [],
+      color: '#0070C0',
+      zIndex: 6,
+      marker: {
+        enabled: false
+      },
+      tooltip: {
+        valueSuffix: ' %',
+        valueDecimals: 2
+      }
+
+    },
   ],
   
     responsive: {
@@ -334,6 +350,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 	  let g = res["data"].map(d => d["gross"]);
 	  let n = res["data"].map(d => d["net"]);
 	  let w = res["data"].map(d => d["well"]);
+	  let wc = res["data"].map(d => d["wc"]);
 	  console.log("w: "+w);
 	  let tanggal = 0;
 	  var tg = []
@@ -346,6 +363,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 	  let g1 = [];
 	  let n1 = [];
 	  let w1 = [];
+	  let wc1 = [];
 	  let sm1 = [];
 	  let gas1 = [];
 
@@ -354,12 +372,14 @@ export class PeDailyAreaChartComponent implements OnInit {
 	  let dt_grs = [];
 	  let dt_net = [];
 	  let dt_wc = [];
+	  let dt_wc_orig = [];
 	  let dt_sm = [];
 	  let dt_gas = [];
 	  
-	  let dt_grss = [];	  
+	  let dt_grss = []; 
 	  let dt_nett = [];
 	  let dt_wcc = [];
+	  let dt_wcc_orig = [];
 	  let dt_smm = [];
 	  let dt_gass = [];
 	  
@@ -383,8 +403,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 		  this.daily_chart_options["series"][1]["data"] = res["data"].map(d => d["gross"] - d["net"]);
 		  this.daily_chart_options["series"][2]["data"] = res["data"].map(d => d["net"]);
 		  this.daily_chart_options["series"][3]["data"] = sm;
-		  this.daily_chart_options["series"][4]["data"] = res["data"].map(d => (d["gas"] || 0) * 1000);
-
+		  this.daily_chart_options["series"][4]["data"] = res["data"].map(d => (d["gas"] || 0) * 1000);			this.daily_chart_options["series"][5]["data"] = res["data"].map(d => d["wc"] || 0);
 	  }
 	  else{
 	      for (var y = 0; y < tgl.length; y++){
@@ -399,6 +418,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 				// well[y] = 'SBJ-155';
 				g[y] = 0;
 				n1[y] = 0;
+				wc1[y] = 0;
 				sm1[y] = 0;
 				gas1[y] = 0;
 				
@@ -408,6 +428,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 			if (tanggal == tgl[y]){
 				g1[y] = g1[y-1] + g[y];
 				n1[y] = n1[y-1] + n[y];
+				wc1[y] = wc1[y-1] + (wc[y] || 0);
 				sm1[y] = sm1[y-1] + sm[y];
 				gas1[y] = gas1[y-1] + ((gas[y] || 0) * 1000);
 				
@@ -418,6 +439,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 					dt_grs[y] = [tg[y], g1[y]];
 					dt_wc[y] = [tg[y], g1[y]-n1[y]];
 					dt_net[y] = [tg[y], n1[y]];
+					dt_wc_orig[y] = [tg[y], wc1[y]/dt_well];
 					dt_sm[y] = [tg[y], sm1[y]/dt_well];
           dt_gas[y] = [tg[y], gas1[y]/dt_well];
 
@@ -431,6 +453,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 				g1[y] = g[y];
 				w1[y] = g[y] - n[y];
 				n1[y] = n[y];
+				wc1[y] = wc[y] || 0;
 				sm1[y] = sm[y];
         gas1[y] = (gas[y] || 0) * 1000;
 				
@@ -447,6 +470,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 				dt_grss[i] = dt_grs[x];
 				dt_wcc[i] = dt_wc[x];
 				dt_nett[i] = dt_net[x];
+				dt_wcc_orig[i] = dt_wc_orig[x];
 				dt_smm[i] = dt_sm[x];
         dt_gass[i] = dt_gas[x];
 
@@ -466,6 +490,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 		this.daily_chart_options["series"][2]["data"] = dt_nett;
 		this.daily_chart_options["series"][3]["data"] = dt_smm;
     this.daily_chart_options["series"][4]["data"] = dt_gass;
+		this.daily_chart_options["series"][5]["data"] = dt_wcc_orig;
 		
 	  }
 
