@@ -242,8 +242,12 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         "></div>
       `,
       className: '',
+
+      // Ukuran icon: [width, height] = 24x24px jika selected, 18x18px jika default
       iconSize: isSelected ? [24, 24] : [18, 18],
+      // Anchor point (titik pusat dari icon): [12, 12] jika selected, [9, 9] jika default
       iconAnchor: isSelected ? [12, 12] : [9, 9],
+      // Offset popup: muncul 12px ke atas dari center icon
       popupAnchor: [0, -12],
     });
   }
@@ -258,27 +262,37 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedMarker = marker;
   }
 
-  // HELPER METHODS
+  // Mengonversi format DMS (Degrees, Minutes, Seconds) menjadi Decimal Degrees
   dmsToDecimal(dms: string): number {
+    // Regular expression untuk mengekstrak komponen dari format DMS
+    // Groups: (1) Direction [NSEW], (2) Degrees, (3) Minutes, (4) Seconds
     const regex = /([NSEW])\s*(\d+)[°\s]+(\d+)['\s]+(\d+\.?\d*)/;
+    
+    // Trim whitespace dari input dan match dengan regex pattern di atas
     const match = dms.trim().match(regex);
 
+    // Validasi: jika format input tidak sesuai dengan pattern DMS
     if (!match) {
       console.warn(`[MapSumur] Format DMS tidak dikenali: ${dms}`);
       return 0;
     }
 
+    // Ekstrak nilai direction (arah) dari group pertama: N, S, E, atau W
     const direction = match[1];
     const deg      = parseFloat(match[2]);
     const min      = parseFloat(match[3]);
     const sec      = parseFloat(match[4]);
 
+    // Rumus konversi DMS ke Decimal
     let decimal = deg + min / 60 + sec / 3600;
 
+    // Jika arah adalah South (S) atau West (W), buat nilai menjadi negatif
+    // Karena South = negatif latitude, West = negatif longitude
     if (direction === 'S' || direction === 'W') {
       decimal *= -1;
     }
 
+    // Return hasil konversi dalam format decimal degrees
     return decimal;
   }
 
