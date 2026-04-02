@@ -14,18 +14,38 @@ export class PeGrafikComponent implements OnInit {
 
   constructor(private titleService: TitleService, private http: HttpClient) {}
 
-  // Pilihan kolom
-  xColumns: string[] = ["date"];
-  yColumns: string[] = ["ds_pump_displace", "ds_kd", "ds_sl", "fig_curr_gross", "fig_curr_net", "fig_last_gross", "fig_last_net"];
+  // Mapping antara Display Name dan Actual Field Name di MongoDB
+  fieldMapping: { [key: string]: string } = {
+    'Pump Displace': 'ds_pump_displace',
+    'KD': 'ds_kd',
+    'Stroke Length': 'ds_sl',
+    'Current Gross': 'fig_curr_gross',
+    'Current Net': 'fig_curr_net',
+    'Last Gross': 'fig_last_gross',
+    'Last Net': 'fig_last_net',
+    'SPM': 'ds_spm',
+    'WHP': 'ds_whp',
+    'FL': 'ds_fl',
+    'Casing': 'ds_casing',
+    'Separator': 'ds_separator',
+    'Efficiency': 'ds_efficiency',
+    'WC': 'wc',
+    'WOR': 'wor',
+    'GOR': 'gor',
+    'GLR': 'glr',
+    'SM': 'sm',
+  };
+
+  // Display names untuk dropdown 
+  yColumns: string[] = Object.keys(this.fieldMapping);
 
   selectedX: string = "date";
-  selectedY1: string = "ds_pump_displace";
-  selectedY2: string = "ds_kd";
+  selectedY1: string = "Pump Displace";      // Display name
+  selectedY2: string = "KD";                 // Display name
   startDate?: string | Date;
   endDate?: string | Date;
 
-  
-    dynamicChartOptions: Highcharts.Options = {};
+  dynamicChartOptions: Highcharts.Options = {};
 
 
   ngOnInit() {
@@ -78,72 +98,77 @@ export class PeGrafikComponent implements OnInit {
   //       this.chartOptions = null;
   //     },
   updateChart(): void {
-  if (!this.startDate || !this.endDate) {
-    alert("Please select both start date and end date.");
-    return;
+    if (!this.startDate || !this.endDate) {
+      alert("Please select both start date and end date.");
+      return;
+    }
+
+    // Ambil actual field names dari mapping
+    const y1FieldName = this.fieldMapping[this.selectedY1];
+    const y2FieldName = this.fieldMapping[this.selectedY2];
+
+    if (!y1FieldName || !y2FieldName) {
+      alert("Invalid field selection");
+      return;
+    }
+
+    const params = new URLSearchParams();
+    // Kirim actual field names ke backend
+    params.set("y1", y1FieldName);
+    params.set("y2", y2FieldName);
+
+    const formatDate = (d?: string | Date) => {
+      if (!d) return null;
+      if (d instanceof Date) return d.toISOString();
+      return d;
+    };
+
+    const s = formatDate(this.startDate);
+    const e = formatDate(this.endDate);
+    if (s) params.set("startDate", s);
+    if (e) params.set("endDate", e);
+
+    const url = `/api/pe/chart/DynamicChart?${params.toString()}`;
+
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        this.chartOptions = {
+          chart: { type: 'line', zoomType: 'x' },
+          // Gunakan display names dari selectedY1 dan selectedY2
+          title: { text: `${this.selectedY1} & ${this.selectedY2}` },
+          xAxis: { type: 'datetime' },
+          yAxis: [{
+            title: { text: this.selectedY1 }
+          },{
+            title: { text: this.selectedY2 },
+            opposite: true
+          }],
+          plotOptions: {
+            series: {
+              marker: { enabled: false },
+              lineWidth: 1,
+              turboThreshold: 50000
+            }
+          },
+          series: [{
+            type: 'line',
+            name: this.selectedY1,
+            data: res.series1,
+            yAxis: 0,
+          },{
+            type: 'line',
+            name: this.selectedY2,
+            data: res.series2,
+            yAxis: 1,
+          }]
+        };
+      },
+      error: (err) => {
+        alert("Terjadi kesalahan: " + err.error);
+        this.chartOptions = null;
+      },
+    });
   }
-
-  const params = new URLSearchParams();
-  params.set("y1", this.selectedY1);
-  params.set("y2", this.selectedY2);
-
-  const formatDate = (d?: string | Date) => {
-    if (!d) return null;
-    if (d instanceof Date) return d.toISOString();
-    return d;
-  };
-
-  const s = formatDate(this.startDate);
-  const e = formatDate(this.endDate);
-  if (s) params.set("startDate", s);
-  if (e) params.set("endDate", e);
-
-  const url = `/api/pe/chart/DynamicChart?${params.toString()}`;
-
-  this.http.get<any>(url).subscribe({
-    next: (res) => {
-
-      this.chartOptions = {
-        chart: { type: 'line', zoomType: 'x' },
-        title: { text: `${res.y1} & ${res.y2}` },
-        xAxis: { type: 'datetime' },
-        yAxis: [{
-          title: { text: res.y1 }
-        },{
-          title: { text: res.y2 },
-          opposite: true
-        }],
-        plotOptions: {
-          series: {
-            marker: { enabled: false },
-            lineWidth: 1,
-            turboThreshold: 50000
-          }
-        },
-        series: [{
-          type: 'line',
-          name: res.y1,
-          data: res.series1,
-          yAxis: 0,
-          // step: 'center', 
-          // marker: { enabled: false }
-        },{
-          type: 'line',
-          name: res.y2,
-          data: res.series2,
-          yAxis: 1,
-          // step: 'center', 
-          // marker: { enabled: false }
-        }]
-      };
-
-    },
-    error: (err) => {
-      alert("Terjadi kesalahan: " + err.error);
-      this.chartOptions = null;
-    },
-  });
-}
 
   onXYChange() {
     this.updateChart();
