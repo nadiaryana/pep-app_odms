@@ -47,6 +47,23 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   z-index: -1;
+
+  // Gradient overlay gelap dari bawah ke atas
+  // Setengah atas: transparan penuh (background image terlihat bersih)
+  // Setengah bawah: makin gelap menuju hitam 70% di paling bawah
+  // z-index tetap -1 sehingga berada di belakang semua konten
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,        /* atas: sama sekali tidak ada gelap */
+      transparent 40%,       /* sampai 40% dari atas tetap bersih */
+      rgba(0, 0, 0, 0.50) 65%,  /* mulai gelap di tengah-bawah */
+      rgba(0, 0, 0, 0.80) 100%  /* paling bawah: gelap 80% */
+    );
+  }
 }
 
 .hero h2 {

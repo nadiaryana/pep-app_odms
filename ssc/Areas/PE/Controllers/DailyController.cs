@@ -1797,17 +1797,31 @@ namespace ssc.Areas.PE.Controllers
 
                             if (wells.Any())
                             {
-                                // Gunakan Regex OR (mirror behaviour lama)
                                 var regexFilters = wells
-                                    .Select(w =>
-                                        Builders<Daily>.Filter.Regex(
-                                            d => d.well,
-                                            new MongoDB.Bson.BsonRegularExpression(w, "i")
-                                        )
-                                    )
+                                    .Select(w => Builders<Daily>.Filter.Regex(d => d.well, new MongoDB.Bson.BsonRegularExpression(w, "i")))
                                     .ToList();
-
                                 xfilter = Builders<Daily>.Filter.Or(regexFilters);
+                            }
+                        }
+                    }
+
+                    // Filter WELL_STRING jika ada
+                    if (colfilter?.well_string != null)
+                    {
+                        var jarr = colfilter.well_string as Newtonsoft.Json.Linq.JArray;
+                        if (jarr != null && jarr.Count > 0)
+                        {
+                            var wellStrings = jarr
+                                .Where(x => !(x is Newtonsoft.Json.Linq.JObject))
+                                .Select(x => x.ToString())
+                                .ToList();
+
+                            if (wellStrings.Any())
+                            {
+                                var regexFilters = wellStrings
+                                    .Select(w => Builders<Daily>.Filter.Regex(d => d.well_string, new MongoDB.Bson.BsonRegularExpression(w, "i")))
+                                    .ToList();
+                                xfilter = xfilter & Builders<Daily>.Filter.Or(regexFilters);
                             }
                         }
                     }
@@ -1827,6 +1841,10 @@ namespace ssc.Areas.PE.Controllers
                         var wells = _daily.Distinct<string>("well", xfilter)
                             .ToEnumerable().OrderBy(t => t).ToList();
                         return Ok(new { items = wells });
+                    case "well_string":
+                        var wellStrings = _daily.Distinct<string>("well_string", xfilter)
+                            .ToEnumerable().Where(t => !string.IsNullOrEmpty(t)).OrderBy(t => t).ToList();
+                        return Ok(new { items = wellStrings });
                     case "date":
                         var dates = _daily.Distinct<DateTime?>("date", xfilter)
                             .ToEnumerable().OrderByDescending(t => t).ToList();
@@ -1843,25 +1861,8 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
-            var allowedWells = new List<string>
-            {
-                "KRM-01","KRM-02","SBR-05","SBR-06","SBR-07","SBR-08","SBR-12","SBR-15","SBR-16","SBR-17","SBR-18","SBR-19",
-                "SBR-20","SBR-22","SBR-23","SBR-24","SBR-25","SBR-26","SBR-27","SBR-28","SBR-29","SBR-30","SBR-31","SBR-32",
-                "SBR-33","SBR-34","SBR-35","SBR-36","SBR-37B","SBR-38B","SBR-39B","SBR-40","SBR-41","SBR-42B","SBR-43B","SBR-44B",
-                "SBT-01","SBT-02","SBT-02A","SBT-06","SD-001","SD-002","SLR-001","ST-002","ST-003","ST-004","ST-005","ST-006","ST-008",
-                "ST-010","ST-016","ST-017","ST-021","ST-023","ST-026","ST-027","ST-038","ST-039","ST-040","ST-042","ST-043","ST-045",
-                "ST-047","ST-048","ST-050","ST-051","ST-053","ST-054","ST-058","ST-059","ST-061","ST-064","ST-068","ST-069","ST-080","ST-081",
-                "ST-082","ST-084","ST-088","ST-092","ST-099","ST-100","ST-103","ST-106","ST-108","ST-109","ST-112","ST-113","ST-116","ST-117",
-                "ST-118","ST-122","ST-124","ST-125","ST-126","ST-127","ST-129","ST-132","ST-134","ST-136","ST-138","ST-141","ST-144","ST-147",
-                "ST-148","ST-149","ST-150","ST-152","ST-153","ST-154","ST-155","ST-156","ST-157","ST-158","ST-159","ST-160","ST-161","ST-162",
-                "ST-163","ST-164","ST-168","ST-169","ST-170","ST-171","ST-173","ST-174","ST-176","ST-179","ST-181","ST-182","ST-183","ST-184",
-                "ST-185","ST-187","ST-188","ST-189","ST-190","ST-191","ST-192","ST-193","ST-194","ST-195","ST-196","ST-197","ST-198","ST-199",
-                "ST-200","ST-201","ST-202","ST-203","ST-204","ST-205","ST-206","ST-207","ST-208","ST-209","ST-210","ST-211","ST-212","ST-213",
-                "ST-214","ST-215","ST-216","ST-217","ST-218","ST-219","ST-220","ST-221","ST-222","ST-223", "ST-224",
-                "TPH-01","UKM-01","UKM-03","UKM-04"
-            };
-            xfilter = xfilter & Builders<Daily>.Filter.In(d => d.well, allowedWells);
-
+            // Tidak filter allowedWells secara hardcoded — biarkan semua well tampil
+            // (filter well bisa dilakukan via columnfilter dari frontend)
             var mongoFilter = Builders<Daily>.Filter.And(
                 xfilter,
                 Builders<Daily>.Filter.Gte(d => d.date, yesterdayDate),
@@ -1891,11 +1892,7 @@ namespace ssc.Areas.PE.Controllers
             else
             {
                 // No data found with current filter, try without time restriction to see if ANY data exists
-                var anyDataFilter = Builders<Daily>.Filter.And(
-                    xfilter,
-                    Builders<Daily>.Filter.In(d => d.well, allowedWells)
-                );
-                var anyData = _daily.Find(anyDataFilter).SortByDescending(d => d.date).Limit(3).ToList();
+                var anyData = _daily.Find(xfilter).SortByDescending(d => d.date).Limit(3).ToList();
                 System.Diagnostics.Debug.WriteLine($"No data in date range. Checking if any data exists in DB at all...");
                 System.Diagnostics.Debug.WriteLine($"Records found without date filter: {anyData.Count}");
                 if (anyData.Count > 0)
@@ -1913,14 +1910,16 @@ namespace ssc.Areas.PE.Controllers
             if (mode == "weekly_average")
             {
                 // Calculate average of all data within the date range
+                // GroupBy well + well_string agar satu well dengan string berbeda tidak digabung
                 result = rawData
                     .Where(x => x.date.HasValue)
-                    .GroupBy(x => x.well)
+                    .GroupBy(x => new { x.well, x.well_string })
                     .Select(g =>
                     {
                         return new
                         {
-                            well = g.Key,
+                            well = g.Key.well,
+                            well_string = g.Key.well_string,
                             location = g.FirstOrDefault()?.location,
 
                             fig_curr_gross = g.Where(x => x.fig_curr_gross.HasValue).Any()
@@ -1950,60 +1949,61 @@ namespace ssc.Areas.PE.Controllers
             else
             {
                 // Delta mode: compare yesterday vs today
+                // GroupBy well + well_string agar SBT-38B/LS dan SBT-38B/SS muncul sebagai baris terpisah
                 result = rawData
                     .Where(x => x.date.HasValue)
-                    .GroupBy(x => x.well)
+                    .GroupBy(x => new { x.well, x.well_string })
                     .Select(g =>
                     {
-                        // Urutkan per well berdasarkan tanggal DESC
-                        var ordered = g
-                            .OrderByDescending(x => x.date)
-                            .ToList();
+                        var ordered = g.OrderByDescending(x => x.date).ToList();
 
+                        // Ambil data today (endDate) — pilih yg fig_curr_gross tertinggi jika duplikat
                         var today = ordered
                             .Where(x => x.date.Value.Date == todayDate)
                             .OrderByDescending(x => x.fig_curr_gross)
                             .FirstOrDefault();
 
+                        // Ambil data yesterday (startDate) — pilih yg fig_curr_gross tertinggi jika duplikat
                         var yesterday = ordered
                             .Where(x => x.date.Value.Date == yesterdayDate)
                             .OrderByDescending(x => x.fig_curr_gross)
                             .FirstOrDefault();
 
-                        if (today == null) return null;
+                        // Jika keduanya null → skip (data tidak relevan)
+                        if (today == null && yesterday == null) return null;
 
-                        // Hitung delta
+                        // Pakai today jika ada, fallback ke yesterday untuk identitas well
+                        var reference = today ?? yesterday;
+
                         return new
                         {
-                            well = today.well,
-                            location = today.location,
+                            well        = reference.well,
+                            well_string = reference.well_string,
+                            location    = reference.location,
 
-                            fig_curr_gross_today = today.fig_curr_gross,
-                            fig_curr_gross_prev = yesterday?.fig_curr_gross,
-                            delta_fig_curr_gross =
-                                today.fig_curr_gross - (yesterday?.fig_curr_gross ?? 0),
+                            fig_curr_gross_today = today?.fig_curr_gross,
+                            fig_curr_gross_prev  = yesterday?.fig_curr_gross,
+                            delta_fig_curr_gross = (today?.fig_curr_gross ?? 0) - (yesterday?.fig_curr_gross ?? 0),
 
-                            fig_curr_net_today = today.fig_curr_net,
-                            fig_curr_net_prev = yesterday?.fig_curr_net,
-                            delta_fig_curr_net =
-                                today.fig_curr_net - (yesterday?.fig_curr_net ?? 0),
+                            fig_curr_net_today = today?.fig_curr_net,
+                            fig_curr_net_prev  = yesterday?.fig_curr_net,
+                            delta_fig_curr_net = (today?.fig_curr_net ?? 0) - (yesterday?.fig_curr_net ?? 0),
 
-                            wc_today = today.wc,
-                            wc_prev = yesterday?.wc,
-                            delta_wc = today.wc - (yesterday?.wc ?? 0),
+                            wc_today = today?.wc,
+                            wc_prev  = yesterday?.wc,
+                            delta_wc = (today?.wc ?? 0) - (yesterday?.wc ?? 0),
 
-                            gas_today = today.gas,
-                            gas_prev = yesterday?.gas,
-                            delta_gas = today.gas - (yesterday?.gas ?? 0),
+                            gas_today = today?.gas,
+                            gas_prev  = yesterday?.gas,
+                            delta_gas = (today?.gas ?? 0) - (yesterday?.gas ?? 0),
 
-                            sm_today = today.sm,
-                            sm_prev = yesterday?.sm,
-                            delta_sm = today.sm - (yesterday?.sm ?? 0),
+                            sm_today = today?.sm,
+                            sm_prev  = yesterday?.sm,
+                            delta_sm = (today?.sm ?? 0) - (yesterday?.sm ?? 0),
 
-                            ds_efficiency_today = today.ds_efficiency,
-                            ds_efficiency_prev = yesterday?.ds_efficiency,
-                            delta_ds_efficiency =
-                                today.ds_efficiency - (yesterday?.ds_efficiency ?? 0)
+                            ds_efficiency_today = today?.ds_efficiency,
+                            ds_efficiency_prev  = yesterday?.ds_efficiency,
+                            delta_ds_efficiency = (today?.ds_efficiency ?? 0) - (yesterday?.ds_efficiency ?? 0)
                         };
                     })
                     .Where(x => x != null)
@@ -2023,6 +2023,11 @@ namespace ssc.Areas.PE.Controllers
                     result = isDesc
                         ? result.OrderByDescending(x => x.well).ToList()
                         : result.OrderBy(x => x.well).ToList();
+                    break;
+                case "well_string":
+                    result = isDesc
+                        ? result.OrderByDescending(x => x.well_string).ToList()
+                        : result.OrderBy(x => x.well_string).ToList();
                     break;
                 case "location":
                     result = isDesc

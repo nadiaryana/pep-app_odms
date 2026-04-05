@@ -1,3 +1,14 @@
+/**
+ * pe-daily-aggregate-list.component.ts
+ *
+ * Komponen untuk menampilkan perbandingan data produksi harian antara 2 periode (Week 1 vs Week 2).
+ * - User memilih 2 rentang tanggal: Week 1 (periode lama) dan Week 2 (periode baru)
+ * - Data diambil dari API /api/pe/daily/delta dengan mode "weekly_average"
+ * - Data dari kedua minggu digabung (merge) lalu dihitung delta-nya di frontend
+ * - Grouping dilakukan berdasarkan kombinasi well + well_string agar well dengan 2 string
+ *   (misal SBT-38B/LS dan SBT-38B/SS) muncul sebagai 2 baris terpisah
+ */
+
 import { HttpClient, HttpParams, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild, Inject, OnDestroy } from '@angular/core';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA, MatDatepicker } from '@angular/material';
@@ -8,8 +19,6 @@ import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
 
-// import { PeDailyService } from './pe-daily.service';
-// import { PeDaily } from './pe-daily';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
@@ -25,10 +34,14 @@ import { CommonService } from '../../common.service';
 
 export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
+  /**
+   * Kolom yang ditampilkan di tabel Material.
+   * Urutan: identitas well → data Week 1 (prev) → data Week 2 (today) → selisih (delta)
+   */
   displayedColumns: string[] = [
-    'select','well',
+    'select', 'well', 'well_string',
 
-    // YESTERDAY
+    // === DATA WEEK 1 (periode lama / "prev") ===
     'fig_curr_gross_prev',
     'fig_curr_net_prev',
     'wc_prev',
@@ -36,7 +49,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     'ds_efficiency_prev',
     'sm_prev',
 
-    // TODAY
+    // === DATA WEEK 2 (periode baru / "today") ===
     'fig_curr_gross_today',
     'fig_curr_net_today',
     'wc_today',
@@ -44,7 +57,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     'ds_efficiency_today',
     'sm_today',
 
-    // DELTA
+    // === DELTA (Week 2 - Week 1) ===
     'delta_fig_curr_gross',
     'delta_fig_curr_net',
     'delta_wc',
@@ -53,17 +66,27 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     'delta_sm'
   ];
 
-
+  /**
+   * Header baris pertama (grup kolom): select, well, well_string, Week1, Week2, Delta
+   * Digunakan bersama headerColumns2 untuk multi-row header di HTML template.
+   */
   headerColumns1: string[] = [
-    "select","well",
-    'week1',"week2","delta"];
+    "select", "well", "well_string",
+    'week1', "week2", "delta"
+  ];
 
+  /**
+   * Header baris kedua: nama field individual di dalam setiap grup
+   */
   headerColumns2: string[] = [
-    'fig_curr_gross_prev','fig_curr_net_prev','wc_prev','gas_prev','ds_efficiency_prev', 'sm_prev',
-    "fig_curr_gross_today","fig_curr_net_today","wc_today","gas_today","ds_efficiency_today","sm_today",
-    "delta_fig_curr_gross","delta_fig_curr_net","delta_wc","delta_gas","delta_ds_efficiency","delta_sm"];
+    'fig_curr_gross_prev', 'fig_curr_net_prev', 'wc_prev', 'gas_prev', 'ds_efficiency_prev', 'sm_prev',
+    "fig_curr_gross_today", "fig_curr_net_today", "wc_today", "gas_today", "ds_efficiency_today", "sm_today",
+    "delta_fig_curr_gross", "delta_fig_curr_net", "delta_wc", "delta_gas", "delta_ds_efficiency", "delta_sm"
+  ];
 
+  // ─── Date Picker: Week 2 (periode baru = "today") ───────────────────────────
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
+  /** Tanggal awal Week 2 */
   start_dateControl = new FormControl(new Date());
   start_dateInput = this.start_dateControl.value
     ? this.start_dateControl.value.toLocaleDateString("en-US", {
@@ -71,14 +94,16 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         year: "numeric",
         day: "numeric",
       })
-    : "";  
-  
+    : "";
+
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
-  // end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  /** Tanggal akhir Week 2 */
   end_dateControl = new FormControl(new Date());
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
+  // ─── Date Picker: Week 1 (periode lama = "prev") ────────────────────────────
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any>;
+  /** Tanggal awal Week 1 (default 7 hari yang lalu) */
   weekly_start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 7)));
   weekly_start_dateInput = this.weekly_start_dateControl.value
     ? this.weekly_start_dateControl.value.toLocaleDateString("en-US", {
@@ -89,23 +114,24 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     : "";
 
   @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any>;
+  /** Tanggal akhir Week 1 */
   weekly_end_dateControl = new FormControl(new Date());
   weekly_end_dateInput = this.weekly_end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
+  // ─── State tabel ────────────────────────────────────────────────────────────
   exampleDatabase: ExampleHttpDao | null;
   data: any[] = [];
-
   dataSource = new MatTableDataSource<any>(this.data);
+  /** Model seleksi checkbox (multi-select) */
   selection = new SelectionModel<any>(true, []);
   isEditing: boolean = false;
-
-  
 
   resultsLength = 0;
   isLoadingResults = true;
   isRateLimitReached = false;
   submitting = false;
 
+  /** Parameter dari route (opsional, untuk filter awal dari halaman lain) */
   start_submitDate: Number;
   end_submitDate: Number;
   group: string;
@@ -113,22 +139,31 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
+  /** Filter teks bebas (search box umum) */
   filterControl = new FormControl('');
 
-  // dateFilter = new FormControl('');
+  // ─── FormControl untuk input filter per kolom (text input di header) ────────
   start_dateFilter = new FormControl('');
   end_dateFilter = new FormControl('');
   wellFilter = new FormControl('');
+  well_stringFilter = new FormControl('');
   fig_curr_grossFilter = new FormControl('');
   fig_curr_netFilter = new FormControl('');
-  // wor = new FormControl('');
   wcFilter = new FormControl('');
   gasFilter = new FormControl('');
   ds_efficiencyFilter = new FormControl('');
-  
 
+  /**
+   * Array nilai yang dipilih user dari komponen xfilter (dropdown filter per kolom).
+   * Nama property mengikuti pola: {nama_kolom}_xSelected
+   * Diisi otomatis oleh subscription xfilterService.selected di ngOnInit.
+   *
+   * [PERUBAHAN] well_string_xSelected ditambahkan agar filter well_string
+   * bisa dikirim ke backend melalui getColumnFilter() → columnfilter["well_string"]
+   */
   date_xSelected = [];
   well_xSelected = [];
+  well_string_xSelected = [];   // [BARU] filter untuk kolom well_string
   fig_curr_gross_xSelected = [];
   fig_curr_net_xSelected = [];
   gas_xSelected = [];
@@ -137,7 +172,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   wc_xSelected = [];
   ds_efficiency_xSelected = [];
 
-
+  // ─── Subscription RxJS (dibersihkan di ngOnDestroy) ─────────────────────────
   filterSubscription: Subscription;
   selectedSubscription: Subscription;
   listSubscription: Subscription;
@@ -157,47 +192,67 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    // this.start_dateControl.valueChanges.subscribe(() => this.loadData());
-    // this.end_dateControl.valueChanges.subscribe(() => this.loadData());
-
-    // this.loadData();
-	this.titleService.titleSource.next({
+    // Set judul halaman di navigation bar
+    this.titleService.titleSource.next({
       title: "Aggregate",
       icon: "change_history",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
         { label: 'Daily Aggregate', routerLink: '' }
       ]
-    }
-    );
-	
-	var p_start_submitDate = this.route.snapshot.paramMap.get('start_submitDate');
+    });
+
+    // ─── Baca parameter dari route URL (opsional, dikirim dari halaman lain) ──
+    var p_start_submitDate = this.route.snapshot.paramMap.get('start_submitDate');
     if (p_start_submitDate != null && p_start_submitDate.length > 0) {
-      //this.start_submitDate = isNaN(Number(p_start_submitDate)) ? new Date(Date.parse(p_start_submitDate)) : new Date(Number(p_start_submitDate));
       this.start_submitDate = Number(p_start_submitDate);
-      console.log(this.start_submitDate);
     }
     var p_end_submitDate = this.route.snapshot.paramMap.get('end_submitDate');
     if (p_end_submitDate != null && p_end_submitDate.length > 0) {
-      //this.end_submitDate = isNaN(Number(p_end_submitDate)) ? new Date(Date.parse(p_end_submitDate)) : new Date(Number(p_end_submitDate));
       this.end_submitDate = Number(p_end_submitDate);
-      console.log(this.end_submitDate);
     }
     this.group = this.route.snapshot.paramMap.get('group');
     this.status = this.route.snapshot.paramMap.get('status');
 
     this.exampleDatabase = new ExampleHttpDao(this.http);
 
-    // If the user changes the sort order, reset back to the first page.
+    // Reset ke halaman pertama setiap kali kolom sort berubah
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
+    /**
+     * Subscription ke xfilterService.filter:
+     * Dipanggil ketika user mengetik di search box dalam dropdown xfilter.
+     * Akan memanggil getColumnValues() untuk mengambil pilihan yang tersedia.
+     */
     this.filterSubscription = this.xfilterService.filter.subscribe(res => {
       if (res) this.getColumnValues(res);
-    })
+    });
+
+    /**
+     * Subscription ke xfilterService.selected:
+     * Dipanggil ketika user memilih/menghapus item di dropdown xfilter.
+     * Mengisi property {kolom}_xSelected secara dinamis, misal:
+     *   well_xSelected, well_string_xSelected, dll.
+     * Ini yang nantinya diambil oleh getColumnFilter() untuk dikirim ke backend.
+     */
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
       this[res["column"] + "_xSelected"] = res["selected"];
-    })
+    });
 
+    /**
+     * Subscription utama: memuat ulang data setiap kali ada perubahan pada:
+     * - sort / paginator
+     * - date picker (Week 1 atau Week 2)
+     * - filter teks / column filter
+     * - pilihan xfilter (selected)
+     *
+     * Alur:
+     * 1. Panggil API Week 2 (start_dateControl ~ end_dateControl) → mode: weekly_average
+     * 2. Panggil API Week 1 (weekly_start_dateControl ~ weekly_end_dateControl) → mode: weekly_average
+     * 3. forkJoin: tunggu keduanya selesai
+     * 4. mergeWeeksData: gabungkan berdasarkan composite key well+well_string, hitung delta
+     * 5. sortMergedData: urutkan hasil merge sesuai pilihan sort user
+     */
     this.listSubscription = merge(
       this.sort.sortChange,
       this.paginator.page,
@@ -207,66 +262,60 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.weekly_start_dateControl.valueChanges.pipe(debounceTime(300)),
       this.weekly_end_dateControl.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
+      this.well_stringFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_grossFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_netFilter.valueChanges.pipe(debounceTime(300)),
       this.ds_efficiencyFilter.valueChanges.pipe(debounceTime(300)),
       this.wcFilter.valueChanges.pipe(debounceTime(300)),
       this.gasFilter.valueChanges.pipe(debounceTime(300)),
-
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
-      
       switchMap(() => {
+        // Jika salah satu tanggal belum dipilih, kembalikan data kosong
         if (!this.start_dateControl.value || !this.end_dateControl.value ||
             !this.weekly_start_dateControl.value || !this.weekly_end_dateControl.value) {
-          return observableOf({
-            items: [],
-            total_count: 0
-          });
+          return observableOf({ items: [], total_count: 0 });
         }
 
         this.isLoadingResults = true;
-        
-        // Fetch all pages for Week 2 (regular dates - 'today') data
-        const week2Observable = this.fetchAllPages(
+
+        // ── Request Week 2 (periode baru, "today") ──
+        const week2Observable = this.exampleDatabase!.getRepoIssues(
           this.sort.active,
           this.sort.direction,
+          this.paginator.pageIndex,    // page
+          this.paginator.pageSize,     // pagesize
           this.filterControl.value,
           this.getColumnFilter(),
           "weekly_average",
-          this.start_dateControl.value,
-          this.end_dateControl.value,
-          50
+          {},
+          this.start_dateControl.value,    // Week 2 start
+          this.end_dateControl.value       // Week 2 end
         );
 
-        // Fetch all pages for Week 1 (weekly dates - 'prev') data
-        const week1Observable = this.fetchAllPages(
+        // ── Request Week 1 (periode lama, "prev") ──
+        const week1Observable = this.exampleDatabase!.getRepoIssues(
           this.sort.active,
           this.sort.direction,
+          this.paginator.pageIndex,    // page
+          this.paginator.pageSize,     // pagesize
           this.filterControl.value,
           this.getColumnFilter(),
           "weekly_average",
-          this.weekly_start_dateControl.value,
-          this.weekly_end_dateControl.value,
-          50
+          {},
+          this.weekly_start_dateControl.value,   // Week 1 start
+          this.weekly_end_dateControl.value       // Week 1 end
         );
 
-        // Combine both requests
+        // ── Gabungkan kedua request, tunggu keduanya selesai ──
         return forkJoin([week1Observable, week2Observable]).pipe(
           map(([week1Data, week2Data]) => {
-            // Log raw data from both weeks
-            console.log("Week 1 (prev) raw API response count:",week1Data && week1Data.length ? week1Data.length : 0);
-            if (week1Data && week1Data.length > 0) {
-              console.log("Week 1 sample (first item):", week1Data[0]);
-            }
-            console.log("Week 2 (today) raw API response count:", week2Data && week2Data.length ? week2Data.length : 0);
-            if (week2Data && week2Data.length > 0) {
-              console.log("Week 2 sample (first item):", week2Data[0]);
-            }
-            
-            // Merge the data and calculate deltas
-            const mergedData = this.mergeWeeksData(week1Data || [], week2Data || []);
+            console.log("Week 1 (prev) raw API response count:", week1Data.items ? week1Data.items.length : 0);
+            console.log("Week 2 (today) raw API response count:", week2Data.items ? week2Data.items.length : 0);
+
+            // Merge data Week 1 dan Week 2, hitung delta di frontend
+            const mergedData = this.mergeWeeksData(week1Data.items || [], week2Data.items || []);
             return {
               items: mergedData,
               total_count: mergedData.length
@@ -286,20 +335,18 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         return observableOf([]);
       })
     ).subscribe(data => {
-      // Panggil function sortMergedData untuk mengurutkan data sesuai pilihan user (sort field & direction)
+      // Sort data yang sudah di-merge sesuai pilihan sort user
       this.data = this.sortMergedData(data);
-      console.log("Weekly Comparison Data (Week 1 vs Week 2): ", this.data);
+      console.log("Weekly Comparison Data (Week 1 vs Week 2):", this.data);
       this.dataSource = new MatTableDataSource<any>(this.data);
       this.selection.clear();
     });
-	
   }
 
-  // start_dateChange(evt) {
-  //   this.start_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
-  //   this.loadData();
-  // }
-
+  /**
+   * Format Date ke string tampilan "MMM dd, yyyy" (en-US).
+   * Dipakai oleh semua event date picker untuk mengupdate input display.
+   */
   formatDate(date: Date): string {
     if (!date) return '';
     return date.toLocaleDateString('en-US', {
@@ -309,40 +356,33 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Dipanggil saat user memilih tanggal awal Week 2 */
   start_dateChange(event: any) {
-  if (!event.value) return;
-
-  this.start_dateControl.setValue(event.value);
-  this.start_dateInput = this.formatDate(event.value);
+    if (!event.value) return;
+    this.start_dateControl.setValue(event.value);
+    this.start_dateInput = this.formatDate(event.value);
   }
 
+  /** Dipanggil saat user memilih tanggal akhir Week 2 */
   end_dateChange(event: any) {
     if (!event.value) return;
-
     this.end_dateControl.setValue(event.value);
     this.end_dateInput = this.formatDate(event.value);
-
-    // this.loadData();
   }
 
+  /** Dipanggil saat user memilih tanggal awal Week 1 */
   weekly_start_dateChange(event: any) {
     if (!event.value) return;
-
     this.weekly_start_dateControl.setValue(event.value);
     this.weekly_start_dateInput = this.formatDate(event.value);
   }
 
+  /** Dipanggil saat user memilih tanggal akhir Week 1 */
   weekly_end_dateChange(event: any) {
     if (!event.value) return;
-
     this.weekly_end_dateControl.setValue(event.value);
     this.weekly_end_dateInput = this.formatDate(event.value);
   }
-
-  // end_dateChange(evt) {
-  //   this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
-  //   this.loadData();
-  // }
 
   
   ngOnDestroy() {
@@ -410,14 +450,27 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * getColumnValues – Mengambil daftar nilai unik untuk dropdown xfilter.
+   *
+   * Dipanggil saat user mengetik/menghapus di search box dalam dropdown xfilter.
+   * Mengirim request ke API dengan mode = nama kolom (misal "well", "well_string"),
+   * lalu hasilnya diumpan balik ke xfilterService agar dropdown menampilkan pilihan terbaru.
+   *
+   * @param param - object dari xfilterService.filter, berisi { column, filter, selected, clear }
+   */
   getColumnValues(param: any) {
     var column = param["column"];
     var filter = param["filter"];
-    var selected = param["selected"]
+    var selected = param["selected"];
     var clear = param["clear"];
     var columnfilter = this.getColumnFilter();
+
+    // Tambahkan nilai ketikan user sebagai filter sementara
     if (filter) columnfilter[column] = [filter];
+    // Jika ada pilihan aktif, konversi ke regex exact match (^nilai$)
     if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
+    // Jika clear, hapus filter kolom ini dari object
     if (clear) delete columnfilter[column];
 
     return this.exampleDatabase!.getRepoIssues(
@@ -427,232 +480,199 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.paginator.pageSize,
       this.filterControl.value,
       columnfilter,
-      column,
+      column,   // mode = nama kolom → backend akan return Distinct values
       {},
       this.start_dateControl.value,
       this.end_dateControl.value
-    ).pipe(map((res) => {
-      return res;
-    })).subscribe(res => {
+    ).pipe(map((res) => res)).subscribe(res => {
+      // Kirim hasil ke xfilterService agar dropdown diperbarui
       this.xfilterService.updateItems({ column: column, items: res.items });
-    }, () => {
-
-    });
+    }, () => {});
   }
 
-  // Function untuk mengurutkan (sort) merged data berdasarkan pilihan user
+  /**
+   * sortMergedData – Mengurutkan array data hasil merge berdasarkan pilihan sort user.
+   *
+   * Dipanggil setelah mergeWeeksData() selesai, sebelum data dimasukkan ke dataSource.
+   * Menggunakan nilai sort.active (nama field) dan sort.direction (asc/desc) dari MatSort.
+   *
+   * Aturan pengurutan:
+   * - Nilai null selalu ditempatkan di paling akhir (baik asc maupun desc)
+   * - String dibandingkan secara case-insensitive (diubah ke UPPERCASE)
+   * - Angka dan tanggal dibandingkan langsung
+   */
   private sortMergedData(data: any[]): any[] {
-    // Jika data kosong atau null, langsung return tanpa diurutkan
     if (!data || data.length === 0) return data;
-    
-    // Ambil nama field yang dipilih untuk sorting, jika tidak ada default ke 'well'
+
     const sortField = this.sort && this.sort.active ? this.sort.active : 'well';
-    // Cek apakah sorting ascending (true) atau descending (false)
     const isAsc = this.sort && this.sort.direction === 'asc';
-    
-    // Lakukan array.sort() dengan custom comparator function
+
     return data.sort((a, b) => {
-      // Ambil nilai dari field yang akan diurutkan untuk item a dan b
       let aVal = a[sortField];
       let bVal = b[sortField];
-      
-      // Jika kedua nilai null/undefined, dianggap sama (tidak perlu diurutkan)
+
+      // Null selalu di akhir
       if (aVal == null && bVal == null) return 0;
-      // Jika hanya nilai a yang null, taruh di akhir (asc: 1, desc: -1)
       if (aVal == null) return isAsc ? 1 : -1;
-      // Jika hanya nilai b yang null, taruh di akhir (asc: -1, desc: 1)
       if (bVal == null) return isAsc ? -1 : 1;
-      
-      // Jika keduanya adalah string, ubah ke UPPERCASE agar case-insensitive
+
+      // String: case-insensitive
       if (typeof aVal === 'string' && typeof bVal === 'string') {
         aVal = aVal.toUpperCase();
         bVal = bVal.toUpperCase();
       }
-      
-      // Bandingkan nilai a dengan nilai b
-      if (aVal < bVal) {
-        // Jika a lebih kecil dari b: return -1 untuk asc, return 1 untuk desc
-        return isAsc ? -1 : 1;
-      } else if (aVal > bVal) {
-        // Jika a lebih besar dari b: return 1 untuk asc, return -1 untuk desc
-        return isAsc ? 1 : -1;
-      }
-      // Jika nilai sama, return 0 (tidak perlu diubah urutan)
+
+      if (aVal < bVal) return isAsc ? -1 : 1;
+      if (aVal > bVal) return isAsc ? 1 : -1;
       return 0;
     });
   }
 
-  // Function untuk fetch semua pages dan mengumpulkan semua data
-  private fetchAllPages(sort: string, order: string, filter: string, columnfilter: object, mode: string, startDate: Date, endDate: Date, pageSize: number = 50): Observable<any[]> {
-    return this.exampleDatabase!.getRepoIssues(
-      sort,
-      order,
-      0, // Start with page 0
-      pageSize,
-      filter,
-      columnfilter,
-      mode,
-      {},
-      startDate,
-      endDate
-    ).pipe(
-      switchMap((firstPageResponse) => {
-        const allItems = [...(firstPageResponse.items || [])];
-        const totalCount = firstPageResponse.total_count || 0;
-        const totalPages = Math.ceil(totalCount / pageSize);
-
-        console.log(`Fetching all pages for mode '${mode}': totalCount=${totalCount}, pageSize=${pageSize}, totalPages=${totalPages}`);
-
-        // Jika hanya 1 page atau kurang, langsung return
-        if (totalPages <= 1) {
-          console.log(`Only 1 page, returning ${allItems.length} items`);
-          return observableOf(allItems);
-        }
-
-        // Buat array of Observable untuk fetch halaman 1 sampai totalPages-1
-        const pageRequests = [];
-        for (let page = 1; page < totalPages; page++) {
-          const pageObs = this.exampleDatabase!.getRepoIssues(
-            sort,
-            order,
-            page,
-            pageSize,
-            filter,
-            columnfilter,
-            mode,
-            {},
-            startDate,
-            endDate
-          ).pipe(
-            map((response) => response.items || []),
-            catchError(() => observableOf([]))
-          );
-          pageRequests.push(pageObs);
-        }
-
-        // Jika tidak ada halaman tambahan, return langsung
-        if (pageRequests.length === 0) {
-          return observableOf(allItems);
-        }
-
-        // Fetch semua halaman secara parallel dan gabungkan hasilnya
-        return forkJoin(pageRequests).pipe(
-          map((allPages) => {
-            for (const pageItems of allPages) {
-              allItems.push(...pageItems);
-            }
-            console.log(`Mode '${mode}': Fetched total ${allItems.length} items from ${totalPages} pages`);
-            return allItems;
-          })
-        );
-      })
-    );
-  }
-
+  /**
+   * mergeWeeksData – Menggabungkan data Week 1 (prev) dan Week 2 (today) menjadi satu baris per well+well_string.
+   *
+   * [PERUBAHAN UTAMA] Sebelumnya key Map hanya menggunakan `item.well`,
+   * sehingga well yang memiliki 2 well_string berbeda (misal SBT-38B/LS dan SBT-38B/SS)
+   * akan saling menimpa → hanya 1 baris yang muncul di tabel.
+   *
+   * Sekarang key Map menggunakan composite key "well||well_string",
+   * sehingga SBT-38B/LS dan SBT-38B/SS menjadi 2 entri terpisah dan keduanya muncul.
+   *
+   * Alur:
+   * 1. Buat Map week1Map dan week2Map dengan key = "well||well_string"
+   * 2. Gabungkan semua key unik dari kedua Map
+   * 3. Untuk setiap key: ambil data week1 dan week2 (default {} jika tidak ada)
+   * 4. Hitung delta = week2 - week1 untuk setiap field numerik
+   *
+   * @param week1Items - array item dari API Week 1 (periode lama)
+   * @param week2Items - array item dari API Week 2 (periode baru)
+   * @returns array baris merged yang siap ditampilkan di tabel
+   */
   private mergeWeeksData(week1Items: any[], week2Items: any[]): any[] {
-    // Create a map for week1 data by well
+    /**
+     * Fungsi pembuat composite key.
+     * Contoh: well="SBT-38B", well_string="LS" → key="SBT-38B||LS"
+     * Pemisah "||" dipilih karena tidak mungkin ada di nama well/well_string.
+     *
+     * [FIX] Sebelumnya: Map.set(item.well, item) → SBT-38B/LS ditimpa SBT-38B/SS
+     * Sekarang: Map.set("SBT-38B||LS") dan Map.set("SBT-38B||SS") → keduanya tersimpan
+     */
+    const makeKey = (item: any) => `${item.well || ''}||${item.well_string || ''}`;
+
+    // Bangun Map untuk Week 1 dengan composite key
     const week1Map = new Map();
     week1Items.forEach(item => {
-      week1Map.set(item.well, item);
+      week1Map.set(makeKey(item), item);
     });
 
-    // Create a map for week2 data by well
+    // Bangun Map untuk Week 2 dengan composite key
     const week2Map = new Map();
     week2Items.forEach(item => {
-      week2Map.set(item.well, item);
+      week2Map.set(makeKey(item), item);
     });
 
     console.log("=== mergeWeeksData DEBUG ===");
     console.log("Week 1 Map size:", week1Map.size);
     console.log("Week 2 Map size:", week2Map.size);
-    
-    // Log first item from each week for comparison
-    if (week1Map.size > 0) {
-      const firstWell = Array.from(week1Map.keys())[0];
-      const w1First = week1Map.get(firstWell);
-      const w2First = week2Map.get(firstWell);
-      console.log(`Comparing well '${firstWell}':`);
-      console.log("  Week 1:", w1First);
-      console.log("  Week 2:", w2First);
-      if (w1First && w2First) {
-        console.log(`  fig_curr_gross: W1=${w1First.fig_curr_gross}, W2=${w2First.fig_curr_gross}, Delta should be=${(w2First.fig_curr_gross || 0) - (w1First.fig_curr_gross || 0)}`);
-      }
-    }
 
-    // Get all unique wells
-    const allWells = new Set([...week1Map.keys(), ...week2Map.keys()]);
+    // Kumpulkan semua key unik dari kedua Map
+    // (mencakup well yang hanya ada di Week 1, hanya di Week 2, atau di keduanya)
+    const allKeys = new Set([...week1Map.keys(), ...week2Map.keys()]);
 
-    // Merge and calculate deltas
-    const mergedData = Array.from(allWells).map(well => {
-      const week1 = week1Map.get(well) || {};
-      const week2 = week2Map.get(well) || {};
+    // Buat baris hasil merge untuk setiap key
+    const mergedData = Array.from(allKeys).map(key => {
+      // Ambil data dari masing-masing Map; jika tidak ada, gunakan object kosong {}
+      const week1 = week1Map.get(key) || {};
+      const week2 = week2Map.get(key) || {};
 
-      const merged = {
-        well: well,
-        // Week 1 (prev) data
-        fig_curr_gross_prev: week1.fig_curr_gross || 0,
-        fig_curr_net_prev: week1.fig_curr_net || 0,
-        wc_prev: week1.wc || 0,
-        gas_prev: week1.gas || 0,
-        ds_efficiency_prev: week1.ds_efficiency || 0,
-        sm_prev: week1.sm || 0,
+      /**
+       * Referensi identitas (well, well_string, location):
+       * Utamakan data Week 2 (periode baru), fallback ke Week 1 jika Week 2 kosong.
+       * Ini memastikan kolom identitas tetap terisi meski salah satu minggu tidak punya data.
+       */
+      const ref = Object.keys(week2).length > 0 ? week2 : week1;
 
-        // Week 2 (today) data
-        fig_curr_gross_today: week2.fig_curr_gross || 0,
-        fig_curr_net_today: week2.fig_curr_net || 0,
-        wc_today: week2.wc || 0,
-        gas_today: week2.gas || 0,
-        ds_efficiency_today: week2.ds_efficiency || 0,
-        sm_today: week2.sm || 0,
-        
-        // Calculate deltas (week2 - week1)
-        delta_fig_curr_gross: (week2.fig_curr_gross || 0) - (week1.fig_curr_gross || 0),
-        delta_fig_curr_net: (week2.fig_curr_net || 0) - (week1.fig_curr_net || 0),
-        delta_wc: (week2.wc || 0) - (week1.wc || 0),
-        delta_gas: (week2.gas || 0) - (week1.gas || 0),
-        delta_ds_efficiency: (week2.ds_efficiency || 0) - (week1.ds_efficiency || 0),
-        delta_sm: (week2.sm || 0) - (week1.sm || 0),
-        // Include other fields from original data
-        ...week1,
-        ...week2
+      return {
+        // ─── Identitas baris ───────────────────────────────────────────────────
+        well: ref.well,
+        well_string: ref.well_string,
+        location: ref.location,
+
+        // ─── Data Week 1 (kolom "_prev") ──────────────────────────────────────
+        // Gunakan 0 jika data tidak ada (well hanya ada di Week 2)
+        fig_curr_gross_prev:  week1.fig_curr_gross  || 0,
+        fig_curr_net_prev:    week1.fig_curr_net    || 0,
+        wc_prev:              week1.wc              || 0,
+        gas_prev:             week1.gas             || 0,
+        ds_efficiency_prev:   week1.ds_efficiency   || 0,
+        sm_prev:              week1.sm              || 0,
+
+        // ─── Data Week 2 (kolom "_today") ─────────────────────────────────────
+        // Gunakan 0 jika data tidak ada (well hanya ada di Week 1)
+        fig_curr_gross_today: week2.fig_curr_gross  || 0,
+        fig_curr_net_today:   week2.fig_curr_net    || 0,
+        wc_today:             week2.wc              || 0,
+        gas_today:            week2.gas             || 0,
+        ds_efficiency_today:  week2.ds_efficiency   || 0,
+        sm_today:             week2.sm              || 0,
+
+        // ─── Delta (Week 2 - Week 1, kolom "delta_") ──────────────────────────
+        // Positif = naik, negatif = turun
+        delta_fig_curr_gross: (week2.fig_curr_gross  || 0) - (week1.fig_curr_gross  || 0),
+        delta_fig_curr_net:   (week2.fig_curr_net    || 0) - (week1.fig_curr_net    || 0),
+        delta_wc:             (week2.wc              || 0) - (week1.wc              || 0),
+        delta_gas:            (week2.gas             || 0) - (week1.gas             || 0),
+        delta_ds_efficiency:  (week2.ds_efficiency   || 0) - (week1.ds_efficiency   || 0),
+        delta_sm:             (week2.sm              || 0) - (week1.sm              || 0),
       };
-      
-      // Log first merged item for verification
-      if (well === Array.from(allWells)[0]) {
-        console.log(`First merged item (${well}):`, merged);
-      }
-      
-      return merged;
     });
 
     console.log("Final merged data count:", mergedData.length);
     return mergedData;
   }
 
+  /**
+   * getColumnFilter – Membangun object columnfilter yang akan dikirim ke backend.
+   *
+   * Setiap property xSelected berisi array nilai yang dipilih user dari dropdown xfilter.
+   * Object ini di-serialize ke JSON dan dikirim sebagai query param "columnfilter".
+   *
+   * [PERUBAHAN] Ditambahkan well_string_xSelected agar filter well_string
+   * bisa dikirim ke backend (DailyController.GetDailyDelta → filter regex well_string).
+   */
   getColumnFilter() {
     var columnfilter = {};
-    if (this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
-    if (this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"] = this.fig_curr_gross_xSelected;
-    if (this.fig_curr_net_xSelected.length) columnfilter["fig_curr_net"] = this.fig_curr_net_xSelected;
-    if (this.gas_xSelected.length) columnfilter["gas"] = this.gas_xSelected;
-    if (this.sm_xSelected.length) columnfilter["sm"] = this.sm_xSelected;
-    if (this.wor_xSelected.length) columnfilter["wor"] = this.wor_xSelected;
-    if (this.ds_efficiency_xSelected.length) columnfilter["ds_efficiency"] = this.ds_efficiency_xSelected;
-	
-    //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
-    if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
-    //if(this.group) columnfilter['group'] = this.group;
-    //if(this.status) columnfilter['status'] = this.status;
+
+    // Filter identitas
+    if (this.date_xSelected.length)         columnfilter["date"]         = this.date_xSelected;
+    if (this.well_xSelected.length)         columnfilter["well"]         = this.well_xSelected;
+    if (this.well_string_xSelected.length)  columnfilter["well_string"]  = this.well_string_xSelected;  // [BARU]
+
+    // Filter field numerik
+    if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"]  = this.fig_curr_gross_xSelected;
+    if (this.fig_curr_net_xSelected.length)   columnfilter["fig_curr_net"]    = this.fig_curr_net_xSelected;
+    if (this.gas_xSelected.length)            columnfilter["gas"]             = this.gas_xSelected;
+    if (this.sm_xSelected.length)             columnfilter["sm"]              = this.sm_xSelected;
+    if (this.wor_xSelected.length)            columnfilter["wor"]             = this.wor_xSelected;
+    if (this.ds_efficiency_xSelected.length)  columnfilter["ds_efficiency"]   = this.ds_efficiency_xSelected;
+
+    // Filter dari parameter route (end_submitDate), dikirim jika ada
+    if (this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;
+
     return columnfilter;
-	
   }
 
+  /**
+   * getDeltaClass – Menentukan CSS class untuk warna delta di tabel.
+   * - Positif (naik)  → 'delta-up'   (biasanya hijau)
+   * - Negatif (turun) → 'delta-down' (biasanya merah)
+   * - Nol             → 'delta-flat' (biasanya abu-abu)
+   */
   getDeltaClass(value: number): string {
-  if (value > 0) return 'delta-up';
-  if (value < 0) return 'delta-down';
-  return 'delta-flat';
-}
+    if (value > 0) return 'delta-up';
+    if (value < 0) return 'delta-down';
+    return 'delta-flat';
+  }
 
   
 
@@ -745,6 +765,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     const week1Start = this.weekly_start_dateControl.value;
     const week1End = this.weekly_end_dateControl.value;
 
+    // Validasi: semua 4 tanggal harus tersedia
     if (!week2Start || !week2End || !week1Start || !week1End) {
       console.warn('All dates are required (Week 1 and Week 2)');
       return;
@@ -752,7 +773,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
     this.isLoadingResults = true;
 
-    // Fetch Week 1 data
+    // Request data Week 1 (periode lama)
     const week1$ = this.http.get<any>('/api/pe/daily/delta', {
       params: {
         startDate: new Date(week1Start).toISOString(),
@@ -765,7 +786,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Fetch Week 2 data
+    // Request data Week 2 (periode baru)
     const week2$ = this.http.get<any>('/api/pe/daily/delta', {
       params: {
         startDate: new Date(week2Start).toISOString(),
@@ -780,8 +801,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
     forkJoin([week1$, week2$]).subscribe({
       next: ([week1Res, week2Res]) => {
+        // Gabungkan data kedua minggu, hitung delta, lalu sort
         const mergedData = this.mergeWeeksData(week1Res.items || [], week2Res.items || []);
-        // Lakukan sorting pada merged data sesuai pilihan user (sort field & direction)
         const sortedData = this.sortMergedData(mergedData);
         this.dataSource.data = sortedData;
         this.isLoadingResults = false;
@@ -818,23 +839,47 @@ export class MatTableApi {
   ) { }
 }
 
-/** An example database that the data source uses to retrieve data for the table. */
+/**
+ * ExampleHttpDao – Data Access Object untuk request ke API /api/pe/daily/delta.
+ *
+ * Semua request HTTP ke endpoint delta dilakukan melalui class ini.
+ * Digunakan oleh PeDailyAggregateListComponent via this.exampleDatabase.getRepoIssues(...)
+ */
 export class ExampleHttpDao {
   constructor(private http: HttpClient) { }
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}, startDate: Date, endDate: Date): Observable<any> {
-
+  /**
+   * getRepoIssues – Mengirim GET request ke /api/pe/daily/delta.
+   *
+   * @param sort        - nama field untuk sorting (misal "well", "fig_curr_gross")
+   * @param order       - arah sorting: "asc" atau "desc"
+   * @param page        - nomor halaman (0-based) untuk paginasi
+   * @param pagesize    - jumlah item per halaman
+   * @param filter      - filter teks bebas
+   * @param columnfilter - object filter per kolom (dari getColumnFilter()), di-serialize ke JSON
+   * @param mode        - mode API: "weekly_average", "delta", "well", "well_string", dll.
+   * @param httpOption  - opsi tambahan HTTP (misal responseType: 'arraybuffer' untuk export Excel)
+   * @param startDate   - tanggal awal rentang data
+   * @param endDate     - tanggal akhir rentang data
+   */
+  getRepoIssues(
+    sort: string, order: string, page: number, pagesize: number = 50,
+    filter: string, columnfilter: object, mode: string = "",
+    httpOption: object = {}, startDate: Date, endDate: Date
+  ): Observable<any> {
     var params = {};
-    if (sort != null) params["sort"] = sort;
-    if (order != null) params["order"] = order;
-    if (page != null) params["page"] = page.toString();
+    if (sort != null)     params["sort"]     = sort;
+    if (order != null)    params["order"]    = order;
+    if (page != null)     params["page"]     = page.toString();
     if (pagesize != null) params["pagesize"] = pagesize.toString();
-    if (filter != null) params["filter"] = filter;
+    if (filter != null)   params["filter"]   = filter;
+    // Hanya sertakan columnfilter jika ada isinya
     if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
-    if (mode != null) params["mode"] = mode;
+    if (mode != null)     params["mode"]     = mode;
 
-    params["startDate"] =  startDate.toISOString();
-    params["endDate"] =  endDate.toISOString();
+    // Tanggal dikirim dalam format ISO 8601 (UTC) agar backend bisa parse dengan benar
+    params["startDate"] = startDate.toISOString();
+    params["endDate"]   = endDate.toISOString();
 
     httpOption["params"] = params;
 

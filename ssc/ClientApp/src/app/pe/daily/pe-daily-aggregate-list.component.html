@@ -84,6 +84,15 @@
 		  </th>
 		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
 		</ng-container> 
+		<ng-container matColumnDef="well_string" sticky>
+		  <th mat-header-cell *matHeaderCellDef rowspan="2">
+			<div fxLayout="row" fxLayoutAlign="start center">
+			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well String</span>
+			  <app-xfilter title="Well String" column="well_string" [selected]="well_string_xSelected"></app-xfilter>
+			</div>
+		  </th>
+		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well_string}}</td>
+		</ng-container>
     <ng-container matColumnDef="week1">
           <th mat-header-cell *matHeaderCellDef colspan="6">Week 1: {{ weekly_start_dateInput ? (weekly_start_dateInput) : "Week 1" }} - {{ weekly_end_dateInput ? (weekly_end_dateInput) : "" }}</th>
     </ng-container>
