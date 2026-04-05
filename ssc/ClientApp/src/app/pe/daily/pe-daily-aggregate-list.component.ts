@@ -228,49 +228,45 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
         this.isLoadingResults = true;
         
-        // Fetch Week 2 (regular dates - 'today') data
-        const week2Observable = this.exampleDatabase!.getRepoIssues(
+        // Fetch all pages for Week 2 (regular dates - 'today') data
+        const week2Observable = this.fetchAllPages(
           this.sort.active,
           this.sort.direction,
-          this.paginator.pageIndex,
-          this.paginator.pageSize,
           this.filterControl.value,
           this.getColumnFilter(),
           "weekly_average",
-          {},
           this.start_dateControl.value,
-          this.end_dateControl.value
+          this.end_dateControl.value,
+          50
         );
 
-        // Fetch Week 1 (weekly dates - 'prev') data
-        const week1Observable = this.exampleDatabase!.getRepoIssues(
+        // Fetch all pages for Week 1 (weekly dates - 'prev') data
+        const week1Observable = this.fetchAllPages(
           this.sort.active,
           this.sort.direction,
-          this.paginator.pageIndex,
-          this.paginator.pageSize,
           this.filterControl.value,
           this.getColumnFilter(),
           "weekly_average",
-          {},
           this.weekly_start_dateControl.value,
-          this.weekly_end_dateControl.value
+          this.weekly_end_dateControl.value,
+          50
         );
 
         // Combine both requests
         return forkJoin([week1Observable, week2Observable]).pipe(
           map(([week1Data, week2Data]) => {
             // Log raw data from both weeks
-            console.log("Week 1 (prev) raw API response count:",week1Data.items && week1Data.items.length ? week1Data.items.length : 0);
-            if (week1Data.items && week1Data.items.length > 0) {
-              console.log("Week 1 sample (first item):", week1Data.items[0]);
+            console.log("Week 1 (prev) raw API response count:",week1Data && week1Data.length ? week1Data.length : 0);
+            if (week1Data && week1Data.length > 0) {
+              console.log("Week 1 sample (first item):", week1Data[0]);
             }
-            console.log("Week 2 (today) raw API response count:", week2Data.items && week2Data.items.length ? week2Data.items.length : 0);
-            if (week2Data.items && week2Data.items.length > 0) {
-              console.log("Week 2 sample (first item):", week2Data.items[0]);
+            console.log("Week 2 (today) raw API response count:", week2Data && week2Data.length ? week2Data.length : 0);
+            if (week2Data && week2Data.length > 0) {
+              console.log("Week 2 sample (first item):", week2Data[0]);
             }
             
             // Merge the data and calculate deltas
-            const mergedData = this.mergeWeeksData(week1Data.items || [], week2Data.items || []);
+            const mergedData = this.mergeWeeksData(week1Data || [], week2Data || []);
             return {
               items: mergedData,
               total_count: mergedData.length
@@ -486,6 +482,73 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Function untuk fetch semua pages dan mengumpulkan semua data
+  private fetchAllPages(sort: string, order: string, filter: string, columnfilter: object, mode: string, startDate: Date, endDate: Date, pageSize: number = 50): Observable<any[]> {
+    return this.exampleDatabase!.getRepoIssues(
+      sort,
+      order,
+      0, // Start with page 0
+      pageSize,
+      filter,
+      columnfilter,
+      mode,
+      {},
+      startDate,
+      endDate
+    ).pipe(
+      switchMap((firstPageResponse) => {
+        const allItems = [...(firstPageResponse.items || [])];
+        const totalCount = firstPageResponse.total_count || 0;
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        console.log(`Fetching all pages for mode '${mode}': totalCount=${totalCount}, pageSize=${pageSize}, totalPages=${totalPages}`);
+
+        // Jika hanya 1 page atau kurang, langsung return
+        if (totalPages <= 1) {
+          console.log(`Only 1 page, returning ${allItems.length} items`);
+          return observableOf(allItems);
+        }
+
+        // Buat array of Observable untuk fetch halaman 1 sampai totalPages-1
+        const pageRequests = [];
+        for (let page = 1; page < totalPages; page++) {
+          const pageObs = this.exampleDatabase!.getRepoIssues(
+            sort,
+            order,
+            page,
+            pageSize,
+            filter,
+            columnfilter,
+            mode,
+            {},
+            startDate,
+            endDate
+          ).pipe(
+            map((response) => response.items || []),
+            catchError(() => observableOf([]))
+          );
+          pageRequests.push(pageObs);
+        }
+
+        // Jika tidak ada halaman tambahan, return langsung
+        if (pageRequests.length === 0) {
+          return observableOf(allItems);
+        }
+
+        // Fetch semua halaman secara parallel dan gabungkan hasilnya
+        return forkJoin(pageRequests).pipe(
+          map((allPages) => {
+            for (const pageItems of allPages) {
+              allItems.push(...pageItems);
+            }
+            console.log(`Mode '${mode}': Fetched total ${allItems.length} items from ${totalPages} pages`);
+            return allItems;
+          })
+        );
+      })
+    );
+  }
+
   private mergeWeeksData(week1Items: any[], week2Items: any[]): any[] {
     // Create a map for week1 data by well
     const week1Map = new Map();
@@ -533,6 +596,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         gas_prev: week1.gas || 0,
         ds_efficiency_prev: week1.ds_efficiency || 0,
         sm_prev: week1.sm || 0,
+
         // Week 2 (today) data
         fig_curr_gross_today: week2.fig_curr_gross || 0,
         fig_curr_net_today: week2.fig_curr_net || 0,
@@ -540,6 +604,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         gas_today: week2.gas || 0,
         ds_efficiency_today: week2.ds_efficiency || 0,
         sm_today: week2.sm || 0,
+        
         // Calculate deltas (week2 - week1)
         delta_fig_curr_gross: (week2.fig_curr_gross || 0) - (week1.fig_curr_gross || 0),
         delta_fig_curr_net: (week2.fig_curr_net || 0) - (week1.fig_curr_net || 0),
@@ -694,7 +759,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         endDate: new Date(week1End).toISOString(),
         mode: 'weekly_average',
         page: '0',
-        pagesize: '50',
+        pagesize: '200',
         sort: 'well',
         order: 'asc'
       }
@@ -707,7 +772,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         endDate: new Date(week2End).toISOString(),
         mode: 'weekly_average',
         page: '0',
-        pagesize: '50',
+        pagesize: '200',
         sort: 'well',
         order: 'asc'
       }

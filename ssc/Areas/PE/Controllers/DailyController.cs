@@ -1857,7 +1857,7 @@ namespace ssc.Areas.PE.Controllers
                 "ST-163","ST-164","ST-168","ST-169","ST-170","ST-171","ST-173","ST-174","ST-176","ST-179","ST-181","ST-182","ST-183","ST-184",
                 "ST-185","ST-187","ST-188","ST-189","ST-190","ST-191","ST-192","ST-193","ST-194","ST-195","ST-196","ST-197","ST-198","ST-199",
                 "ST-200","ST-201","ST-202","ST-203","ST-204","ST-205","ST-206","ST-207","ST-208","ST-209","ST-210","ST-211","ST-212","ST-213",
-                "ST-214","ST-215","ST-216","ST-217","ST-218","ST-219","ST-220","ST-221","ST-222",
+                "ST-214","ST-215","ST-216","ST-217","ST-218","ST-219","ST-220","ST-221","ST-222","ST-223", "ST-224",
                 "TPH-01","UKM-01","UKM-03","UKM-04"
             };
             xfilter = xfilter & Builders<Daily>.Filter.In(d => d.well, allowedWells);
