@@ -1949,7 +1949,7 @@ namespace ssc.Areas.PE.Controllers
             else
             {
                 // Delta mode: compare yesterday vs today
-                // GroupBy well + well_string agar SBT-38B/LS dan SBT-38B/SS muncul sebagai baris terpisah
+                // GroupBy well + well_string 
                 result = rawData
                     .Where(x => x.date.HasValue)
                     .GroupBy(x => new { x.well, x.well_string })
@@ -1957,13 +1957,13 @@ namespace ssc.Areas.PE.Controllers
                     {
                         var ordered = g.OrderByDescending(x => x.date).ToList();
 
-                        // Ambil data today (endDate) — pilih yg fig_curr_gross tertinggi jika duplikat
+                        // Ambil data today (endDate) — pilih yg fig_curr_gross tertinggi 
                         var today = ordered
                             .Where(x => x.date.Value.Date == todayDate)
                             .OrderByDescending(x => x.fig_curr_gross)
                             .FirstOrDefault();
 
-                        // Ambil data yesterday (startDate) — pilih yg fig_curr_gross tertinggi jika duplikat
+                        // Ambil data yesterday (startDate) — pilih yg fig_curr_gross tertinggi 
                         var yesterday = ordered
                             .Where(x => x.date.Value.Date == yesterdayDate)
                             .OrderByDescending(x => x.fig_curr_gross)
@@ -1977,32 +1977,32 @@ namespace ssc.Areas.PE.Controllers
 
                         return new
                         {
-                            well        = reference.well,
+                            well = reference.well,
                             well_string = reference.well_string,
-                            location    = reference.location,
+                            location = reference.location,
 
                             fig_curr_gross_today = today?.fig_curr_gross,
-                            fig_curr_gross_prev  = yesterday?.fig_curr_gross,
+                            fig_curr_gross_prev = yesterday?.fig_curr_gross,
                             delta_fig_curr_gross = (today?.fig_curr_gross ?? 0) - (yesterday?.fig_curr_gross ?? 0),
 
                             fig_curr_net_today = today?.fig_curr_net,
-                            fig_curr_net_prev  = yesterday?.fig_curr_net,
+                            fig_curr_net_prev = yesterday?.fig_curr_net,
                             delta_fig_curr_net = (today?.fig_curr_net ?? 0) - (yesterday?.fig_curr_net ?? 0),
 
                             wc_today = today?.wc,
-                            wc_prev  = yesterday?.wc,
+                            wc_prev = yesterday?.wc,
                             delta_wc = (today?.wc ?? 0) - (yesterday?.wc ?? 0),
 
                             gas_today = today?.gas,
-                            gas_prev  = yesterday?.gas,
+                            gas_prev = yesterday?.gas,
                             delta_gas = (today?.gas ?? 0) - (yesterday?.gas ?? 0),
 
                             sm_today = today?.sm,
-                            sm_prev  = yesterday?.sm,
+                            sm_prev = yesterday?.sm,
                             delta_sm = (today?.sm ?? 0) - (yesterday?.sm ?? 0),
 
                             ds_efficiency_today = today?.ds_efficiency,
-                            ds_efficiency_prev  = yesterday?.ds_efficiency,
+                            ds_efficiency_prev = yesterday?.ds_efficiency,
                             delta_ds_efficiency = (today?.ds_efficiency ?? 0) - (yesterday?.ds_efficiency ?? 0)
                         };
                     })

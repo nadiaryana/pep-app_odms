@@ -1,14 +1,3 @@
-/**
- * pe-daily-aggregate-list.component.ts
- *
- * Komponen untuk menampilkan perbandingan data produksi harian antara 2 periode (Week 1 vs Week 2).
- * - User memilih 2 rentang tanggal: Week 1 (periode lama) dan Week 2 (periode baru)
- * - Data diambil dari API /api/pe/daily/delta dengan mode "weekly_average"
- * - Data dari kedua minggu digabung (merge) lalu dihitung delta-nya di frontend
- * - Grouping dilakukan berdasarkan kombinasi well + well_string agar well dengan 2 string
- *   (misal SBT-38B/LS dan SBT-38B/SS) muncul sebagai 2 baris terpisah
- */
-
 import { HttpClient, HttpParams, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild, Inject, OnDestroy } from '@angular/core';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA, MatDatepicker } from '@angular/material';
@@ -85,7 +74,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ];
 
   // ─── Date Picker: Week 2 (periode baru = "today") ───────────────────────────
-  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
+  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 2 */
   start_dateControl = new FormControl(new Date());
   start_dateInput = this.start_dateControl.value
@@ -96,13 +85,13 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       })
     : "";
 
-  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
+  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
   /** Tanggal akhir Week 2 */
   end_dateControl = new FormControl(new Date());
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
   // ─── Date Picker: Week 1 (periode lama = "prev") ────────────────────────────
-  @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any>;
+  @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 1 (default 7 hari yang lalu) */
   weekly_start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 7)));
   weekly_start_dateInput = this.weekly_start_dateControl.value
@@ -113,13 +102,13 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       })
     : "";
 
-  @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any>;
+  @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any> = null!;
   /** Tanggal akhir Week 1 */
   weekly_end_dateControl = new FormControl(new Date());
   weekly_end_dateInput = this.weekly_end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
   // ─── State tabel ────────────────────────────────────────────────────────────
-  exampleDatabase: ExampleHttpDao | null;
+  exampleDatabase: ExampleHttpDao | null = null;
   data: any[] = [];
   dataSource = new MatTableDataSource<any>(this.data);
   /** Model seleksi checkbox (multi-select) */
@@ -132,13 +121,13 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   submitting = false;
 
   /** Parameter dari route (opsional, untuk filter awal dari halaman lain) */
-  start_submitDate: Number;
-  end_submitDate: Number;
-  group: string;
-  status: string;
+  start_submitDate: Number = 0;
+  end_submitDate: Number = 0;
+  group: string = '';
+  status: string = '';
 
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator = null!;
+  @ViewChild(MatSort, { static: true }) sort: MatSort = null!;
   /** Filter teks bebas (search box umum) */
   filterControl = new FormControl('');
 
@@ -173,9 +162,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ds_efficiency_xSelected = [];
 
   // ─── Subscription RxJS (dibersihkan di ngOnDestroy) ─────────────────────────
-  filterSubscription: Subscription;
-  selectedSubscription: Subscription;
-  listSubscription: Subscription;
+  filterSubscription: Subscription = null!;
+  selectedSubscription: Subscription = null!;
+  listSubscription: Subscription = null!;
   
   constructor(
     private http: HttpClient,
@@ -211,8 +200,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     if (p_end_submitDate != null && p_end_submitDate.length > 0) {
       this.end_submitDate = Number(p_end_submitDate);
     }
-    this.group = this.route.snapshot.paramMap.get('group');
-    this.status = this.route.snapshot.paramMap.get('status');
+    this.group = (this.route.snapshot.paramMap.get('group') as string) || '';
+    this.status = (this.route.snapshot.paramMap.get('status') as string) || '';
 
     this.exampleDatabase = new ExampleHttpDao(this.http);
 
@@ -236,15 +225,10 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
      * Ini yang nantinya diambil oleh getColumnFilter() untuk dikirim ke backend.
      */
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
-      this[res["column"] + "_xSelected"] = res["selected"];
+      (this as any)[res["column"] + "_xSelected"] = res["selected"];
     });
 
     /**
-     * Subscription utama: memuat ulang data setiap kali ada perubahan pada:
-     * - sort / paginator
-     * - date picker (Week 1 atau Week 2)
-     * - filter teks / column filter
-     * - pilihan xfilter (selected)
      *
      * Alur:
      * 1. Panggil API Week 2 (start_dateControl ~ end_dateControl) → mode: weekly_average
@@ -272,7 +256,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     ).pipe(
       startWith({}),
       switchMap(() => {
-        // Jika salah satu tanggal belum dipilih, kembalikan data kosong
         if (!this.start_dateControl.value || !this.end_dateControl.value ||
             !this.weekly_start_dateControl.value || !this.weekly_end_dateControl.value) {
           return observableOf({ items: [], total_count: 0 });
@@ -284,28 +267,28 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         const week2Observable = this.exampleDatabase!.getRepoIssues(
           this.sort.active,
           this.sort.direction,
-          this.paginator.pageIndex,    // page
-          this.paginator.pageSize,     // pagesize
+          0,       
+          9999,    // pagesize 
           this.filterControl.value,
           this.getColumnFilter(),
           "weekly_average",
           {},
-          this.start_dateControl.value,    // Week 2 start
-          this.end_dateControl.value       // Week 2 end
+          this.start_dateControl.value,    
+          this.end_dateControl.value       
         );
 
         // ── Request Week 1 (periode lama, "prev") ──
         const week1Observable = this.exampleDatabase!.getRepoIssues(
           this.sort.active,
           this.sort.direction,
-          this.paginator.pageIndex,    // page
-          this.paginator.pageSize,     // pagesize
+          0,       
+          9999,    
           this.filterControl.value,
           this.getColumnFilter(),
           "weekly_average",
           {},
-          this.weekly_start_dateControl.value,   // Week 1 start
-          this.weekly_end_dateControl.value       // Week 1 end
+          this.weekly_start_dateControl.value,   
+          this.weekly_end_dateControl.value       
         );
 
         // ── Gabungkan kedua request, tunggu keduanya selesai ──
@@ -335,18 +318,17 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         return observableOf([]);
       })
     ).subscribe(data => {
-      // Sort data yang sudah di-merge sesuai pilihan sort user
       this.data = this.sortMergedData(data);
       console.log("Weekly Comparison Data (Week 1 vs Week 2):", this.data);
+
       this.dataSource = new MatTableDataSource<any>(this.data);
+      // Hubungkan paginator ke dataSource agar Material Table bisa memotong data per halaman
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
       this.selection.clear();
     });
   }
 
-  /**
-   * Format Date ke string tampilan "MMM dd, yyyy" (en-US).
-   * Dipakai oleh semua event date picker untuk mengupdate input display.
-   */
   formatDate(date: Date): string {
     if (!date) return '';
     return date.toLocaleDateString('en-US', {
@@ -356,35 +338,30 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Dipanggil saat user memilih tanggal awal Week 2 */
   start_dateChange(event: any) {
     if (!event.value) return;
     this.start_dateControl.setValue(event.value);
     this.start_dateInput = this.formatDate(event.value);
   }
 
-  /** Dipanggil saat user memilih tanggal akhir Week 2 */
   end_dateChange(event: any) {
     if (!event.value) return;
     this.end_dateControl.setValue(event.value);
     this.end_dateInput = this.formatDate(event.value);
   }
 
-  /** Dipanggil saat user memilih tanggal awal Week 1 */
   weekly_start_dateChange(event: any) {
     if (!event.value) return;
     this.weekly_start_dateControl.setValue(event.value);
     this.weekly_start_dateInput = this.formatDate(event.value);
   }
 
-  /** Dipanggil saat user memilih tanggal akhir Week 1 */
   weekly_end_dateChange(event: any) {
     if (!event.value) return;
     this.weekly_end_dateControl.setValue(event.value);
     this.weekly_end_dateInput = this.formatDate(event.value);
   }
 
-  
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
     this.selectedSubscription.unsubscribe();
@@ -428,8 +405,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         ),
       };
     })).subscribe(res => {
-      if (window.navigator.msSaveOrOpenBlob) {
-        window.navigator.msSaveBlob(res.data, res.filename);
+      if ((window.navigator as any).msSaveOrOpenBlob) {
+        (window.navigator as any).msSaveBlob(res.data, res.filename);
       } else {
         const link = window.URL.createObjectURL(res.data);
         const a = document.createElement('a');
@@ -451,12 +428,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * getColumnValues – Mengambil daftar nilai unik untuk dropdown xfilter.
-   *
-   * Dipanggil saat user mengetik/menghapus di search box dalam dropdown xfilter.
-   * Mengirim request ke API dengan mode = nama kolom (misal "well", "well_string"),
-   * lalu hasilnya diumpan balik ke xfilterService agar dropdown menampilkan pilihan terbaru.
-   *
    * @param param - object dari xfilterService.filter, berisi { column, filter, selected, clear }
    */
   getColumnValues(param: any) {
@@ -464,13 +435,11 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     var filter = param["filter"];
     var selected = param["selected"];
     var clear = param["clear"];
-    var columnfilter = this.getColumnFilter();
+    var columnfilter = this.getColumnFilter() as any;
 
-    // Tambahkan nilai ketikan user sebagai filter sementara
     if (filter) columnfilter[column] = [filter];
     // Jika ada pilihan aktif, konversi ke regex exact match (^nilai$)
-    if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
-    // Jika clear, hapus filter kolom ini dari object
+    if (selected && selected.length > 0) columnfilter[column] = selected.map((s: any) => "^" + s + "$");
     if (clear) delete columnfilter[column];
 
     return this.exampleDatabase!.getRepoIssues(
@@ -480,7 +449,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.paginator.pageSize,
       this.filterControl.value,
       columnfilter,
-      column,   // mode = nama kolom → backend akan return Distinct values
+      column,   
       {},
       this.start_dateControl.value,
       this.end_dateControl.value
@@ -490,17 +459,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     }, () => {});
   }
 
-  /**
-   * sortMergedData – Mengurutkan array data hasil merge berdasarkan pilihan sort user.
-   *
-   * Dipanggil setelah mergeWeeksData() selesai, sebelum data dimasukkan ke dataSource.
-   * Menggunakan nilai sort.active (nama field) dan sort.direction (asc/desc) dari MatSort.
-   *
-   * Aturan pengurutan:
-   * - Nilai null selalu ditempatkan di paling akhir (baik asc maupun desc)
-   * - String dibandingkan secara case-insensitive (diubah ke UPPERCASE)
-   * - Angka dan tanggal dibandingkan langsung
-   */
   private sortMergedData(data: any[]): any[] {
     if (!data || data.length === 0) return data;
 
@@ -529,43 +487,22 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * mergeWeeksData – Menggabungkan data Week 1 (prev) dan Week 2 (today) menjadi satu baris per well+well_string.
-   *
-   * [PERUBAHAN UTAMA] Sebelumnya key Map hanya menggunakan `item.well`,
-   * sehingga well yang memiliki 2 well_string berbeda (misal SBT-38B/LS dan SBT-38B/SS)
-   * akan saling menimpa → hanya 1 baris yang muncul di tabel.
-   *
-   * Sekarang key Map menggunakan composite key "well||well_string",
-   * sehingga SBT-38B/LS dan SBT-38B/SS menjadi 2 entri terpisah dan keduanya muncul.
-   *
-   * Alur:
-   * 1. Buat Map week1Map dan week2Map dengan key = "well||well_string"
-   * 2. Gabungkan semua key unik dari kedua Map
-   * 3. Untuk setiap key: ambil data week1 dan week2 (default {} jika tidak ada)
-   * 4. Hitung delta = week2 - week1 untuk setiap field numerik
    *
    * @param week1Items - array item dari API Week 1 (periode lama)
    * @param week2Items - array item dari API Week 2 (periode baru)
    * @returns array baris merged yang siap ditampilkan di tabel
    */
+
   private mergeWeeksData(week1Items: any[], week2Items: any[]): any[] {
-    /**
-     * Fungsi pembuat composite key.
-     * Contoh: well="SBT-38B", well_string="LS" → key="SBT-38B||LS"
-     * Pemisah "||" dipilih karena tidak mungkin ada di nama well/well_string.
-     *
-     * [FIX] Sebelumnya: Map.set(item.well, item) → SBT-38B/LS ditimpa SBT-38B/SS
-     * Sekarang: Map.set("SBT-38B||LS") dan Map.set("SBT-38B||SS") → keduanya tersimpan
-     */
     const makeKey = (item: any) => `${item.well || ''}||${item.well_string || ''}`;
 
-    // Bangun Map untuk Week 1 dengan composite key
+    // Bangun Map untuk Week 1 
     const week1Map = new Map();
     week1Items.forEach(item => {
       week1Map.set(makeKey(item), item);
     });
 
-    // Bangun Map untuk Week 2 dengan composite key
+    // Bangun Map untuk Week 2
     const week2Map = new Map();
     week2Items.forEach(item => {
       week2Map.set(makeKey(item), item);
@@ -576,30 +513,25 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     console.log("Week 2 Map size:", week2Map.size);
 
     // Kumpulkan semua key unik dari kedua Map
-    // (mencakup well yang hanya ada di Week 1, hanya di Week 2, atau di keduanya)
     const allKeys = new Set([...week1Map.keys(), ...week2Map.keys()]);
 
-    // Buat baris hasil merge untuk setiap key
     const mergedData = Array.from(allKeys).map(key => {
       // Ambil data dari masing-masing Map; jika tidak ada, gunakan object kosong {}
       const week1 = week1Map.get(key) || {};
       const week2 = week2Map.get(key) || {};
 
       /**
-       * Referensi identitas (well, well_string, location):
        * Utamakan data Week 2 (periode baru), fallback ke Week 1 jika Week 2 kosong.
        * Ini memastikan kolom identitas tetap terisi meski salah satu minggu tidak punya data.
        */
       const ref = Object.keys(week2).length > 0 ? week2 : week1;
 
       return {
-        // ─── Identitas baris ───────────────────────────────────────────────────
         well: ref.well,
         well_string: ref.well_string,
         location: ref.location,
 
-        // ─── Data Week 1 (kolom "_prev") ──────────────────────────────────────
-        // Gunakan 0 jika data tidak ada (well hanya ada di Week 2)
+        //data week 1
         fig_curr_gross_prev:  week1.fig_curr_gross  || 0,
         fig_curr_net_prev:    week1.fig_curr_net    || 0,
         wc_prev:              week1.wc              || 0,
@@ -607,8 +539,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         ds_efficiency_prev:   week1.ds_efficiency   || 0,
         sm_prev:              week1.sm              || 0,
 
-        // ─── Data Week 2 (kolom "_today") ─────────────────────────────────────
-        // Gunakan 0 jika data tidak ada (well hanya ada di Week 1)
+        //data week 2
         fig_curr_gross_today: week2.fig_curr_gross  || 0,
         fig_curr_net_today:   week2.fig_curr_net    || 0,
         wc_today:             week2.wc              || 0,
@@ -616,8 +547,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         ds_efficiency_today:  week2.ds_efficiency   || 0,
         sm_today:             week2.sm              || 0,
 
-        // ─── Delta (Week 2 - Week 1, kolom "delta_") ──────────────────────────
-        // Positif = naik, negatif = turun
+        //delta 
         delta_fig_curr_gross: (week2.fig_curr_gross  || 0) - (week1.fig_curr_gross  || 0),
         delta_fig_curr_net:   (week2.fig_curr_net    || 0) - (week1.fig_curr_net    || 0),
         delta_wc:             (week2.wc              || 0) - (week1.wc              || 0),
@@ -631,22 +561,13 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     return mergedData;
   }
 
-  /**
-   * getColumnFilter – Membangun object columnfilter yang akan dikirim ke backend.
-   *
-   * Setiap property xSelected berisi array nilai yang dipilih user dari dropdown xfilter.
-   * Object ini di-serialize ke JSON dan dikirim sebagai query param "columnfilter".
-   *
-   * [PERUBAHAN] Ditambahkan well_string_xSelected agar filter well_string
-   * bisa dikirim ke backend (DailyController.GetDailyDelta → filter regex well_string).
-   */
   getColumnFilter() {
-    var columnfilter = {};
+    var columnfilter: any = {};
 
     // Filter identitas
     if (this.date_xSelected.length)         columnfilter["date"]         = this.date_xSelected;
     if (this.well_xSelected.length)         columnfilter["well"]         = this.well_xSelected;
-    if (this.well_string_xSelected.length)  columnfilter["well_string"]  = this.well_string_xSelected;  // [BARU]
+    if (this.well_string_xSelected.length)  columnfilter["well_string"]  = this.well_string_xSelected;  
 
     // Filter field numerik
     if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"]  = this.fig_curr_gross_xSelected;
@@ -662,12 +583,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     return columnfilter;
   }
 
-  /**
-   * getDeltaClass – Menentukan CSS class untuk warna delta di tabel.
-   * - Positif (naik)  → 'delta-up'   (biasanya hijau)
-   * - Negatif (turun) → 'delta-down' (biasanya merah)
-   * - Nol             → 'delta-flat' (biasanya abu-abu)
-   */
   getDeltaClass(value: number): string {
     if (value > 0) return 'delta-up';
     if (value < 0) return 'delta-down';
@@ -676,27 +591,23 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   
 
-  formatInterval(arr) {
-    return arr.map(a => a.join("-")).join(", ");
+  formatInterval(arr: any[]) {
+    return arr.map((a: any) => a.join("-")).join(", ");
   }
 
   
-
-  /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
     const numRows = this.dataSource.data.length;
     return numSelected === numRows;
   }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
     this.isAllSelected() ?
       this.selection.clear() :
       this.dataSource.data.forEach(row => this.selection.select(row));
   }
 
-  /** The label for the checkbox on the passed row */
   checkboxLabel(row?: any): string {
     if (!row) {
       return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
@@ -735,29 +646,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  // loadData() {
-  //   if (!this.start_dateControl.value || !this.end_dateControl.value) {
-  //   return;
-  //   }
-  //   this.isLoadingResults = true;
-
-  //   this.http.get<any>('/api/pe/daily/delta', {
-  //     params: {
-  //       mode: 'delta',
-  //       page: '0',
-  //       pagesize: '50',
-  //       // date: new Date(this.end_dateInput).toISOString(),
-  //       startDate: this.start_dateControl.value.toISOString(),
-  //       endDate: this.end_dateControl.value.toISOString(),
-  //       columnfilter: JSON.stringify(this.getColumnFilter())
-  //     }
-  //   }).subscribe(res => {
-  //     this.dataSource.data = res.items;
-  //     this.resultsLength = res.total_count;
-  //     this.isLoadingResults = false;
-  //   });
-  // }
 
   loadData(): void {
     const week2Start = this.start_dateControl.value;
@@ -823,12 +711,6 @@ export interface editR {
   total_count: number;
 }
 
-/*export interface PeDaily {
-  PE_TICKET_ID: number;
-  ASSET_ID: number;
-  ASSET_NAME: string;
-}*/
-
 export class MatTableApi {
   constructor(
     public sort: string,
@@ -839,35 +721,15 @@ export class MatTableApi {
   ) { }
 }
 
-/**
- * ExampleHttpDao – Data Access Object untuk request ke API /api/pe/daily/delta.
- *
- * Semua request HTTP ke endpoint delta dilakukan melalui class ini.
- * Digunakan oleh PeDailyAggregateListComponent via this.exampleDatabase.getRepoIssues(...)
- */
 export class ExampleHttpDao {
   constructor(private http: HttpClient) { }
 
-  /**
-   * getRepoIssues – Mengirim GET request ke /api/pe/daily/delta.
-   *
-   * @param sort        - nama field untuk sorting (misal "well", "fig_curr_gross")
-   * @param order       - arah sorting: "asc" atau "desc"
-   * @param page        - nomor halaman (0-based) untuk paginasi
-   * @param pagesize    - jumlah item per halaman
-   * @param filter      - filter teks bebas
-   * @param columnfilter - object filter per kolom (dari getColumnFilter()), di-serialize ke JSON
-   * @param mode        - mode API: "weekly_average", "delta", "well", "well_string", dll.
-   * @param httpOption  - opsi tambahan HTTP (misal responseType: 'arraybuffer' untuk export Excel)
-   * @param startDate   - tanggal awal rentang data
-   * @param endDate     - tanggal akhir rentang data
-   */
   getRepoIssues(
     sort: string, order: string, page: number, pagesize: number = 50,
     filter: string, columnfilter: object, mode: string = "",
     httpOption: object = {}, startDate: Date, endDate: Date
   ): Observable<any> {
-    var params = {};
+    var params: any = {};
     if (sort != null)     params["sort"]     = sort;
     if (order != null)    params["order"]    = order;
     if (page != null)     params["page"]     = page.toString();
@@ -881,7 +743,7 @@ export class ExampleHttpDao {
     params["startDate"] = startDate.toISOString();
     params["endDate"]   = endDate.toISOString();
 
-    httpOption["params"] = params;
+    (httpOption as any)["params"] = params;
 
     console.log('API Request - Endpoint: /api/pe/daily/delta, Params:', params);
 

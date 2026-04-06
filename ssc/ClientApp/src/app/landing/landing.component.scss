@@ -60,8 +60,8 @@ body {
       to bottom,
       transparent 0%,        /* atas: sama sekali tidak ada gelap */
       transparent 40%,       /* sampai 40% dari atas tetap bersih */
-      rgba(0, 0, 0, 0.50) 65%,  /* mulai gelap di tengah-bawah */
-      rgba(0, 0, 0, 0.80) 100%  /* paling bawah: gelap 80% */
+      rgba(0, 0, 0, 0.30) 65%,  /* mulai gelap di tengah-bawah */
+      rgba(0, 0, 0, 0.60) 80%  /* paling bawah: gelap 80% */
     );
   }
 }
