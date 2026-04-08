@@ -1,4 +1,4 @@
-import { Component, Input, HostListener, ViewChild } from '@angular/core';
+import { Component, Input, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatStepper } from '@angular/material/stepper';
@@ -29,9 +29,9 @@ export class PeMapAddComponent {
 	isSaving = false;
 	modified_count = 0;
 	created_count = 0;
-	progressPercent: number;
+	progressPercent: number | null = null; 
 	fileName: string;
-	@ViewChild('fileInput', {static: true}) fileInput;
+	@ViewChild('fileInput', {static: true}) fileInput!: ElementRef;;
 	@ViewChild('stepper', {static: true}) private stepper: MatStepper;
 
 	tmp_id: string;
@@ -96,7 +96,7 @@ export class PeMapAddComponent {
 		return this.dialogService.confirm('Discard changes?');
 	}
 
-	handleFile(event) {
+	handleFile(event : any) {
 		this.progressPercent = null;
 		this.fileName = event.target.files[0].name;
 		const reader = new FileReader();
@@ -116,7 +116,7 @@ export class PeMapAddComponent {
 			observe: 'events'
 		})
 		.subscribe(event => {
-			if (event.type === HttpEventType.UploadProgress) {
+			if (event.type === HttpEventType.UploadProgress && event.total) {
 				this.progressPercent = Math.round((event.loaded / event.total) * 100);
 			} else if (event.type === HttpEventType.Response) {
 				this.isUploading = false;

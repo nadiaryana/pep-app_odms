@@ -28,7 +28,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
    * Urutan: identitas well → data Week 1 (prev) → data Week 2 (today) → selisih (delta)
    */
   displayedColumns: string[] = [
-    'select', 'well', 'well_string',
+    'well', 'well_string',
 
     // === DATA WEEK 1 (periode lama / "prev") ===
     'fig_curr_gross_prev',
@@ -60,7 +60,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
    * Digunakan bersama headerColumns2 untuk multi-row header di HTML template.
    */
   headerColumns1: string[] = [
-    "select", "well", "well_string",
+    "well", "well_string",
     'week1', "week2", "delta"
   ];
 

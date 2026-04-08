@@ -47,7 +47,7 @@
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
     <table mat-table [dataSource]="dataSource" class="pe-table"
            matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
-      <ng-container matColumnDef="select" >
+      <!-- <ng-container matColumnDef="select" >
         <th mat-header-cell *matHeaderCellDef rowspan="2">
           <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
                         [checked]="selection.hasValue() && isAllSelected()"
@@ -64,7 +64,7 @@
                         [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
           </mat-checkbox>
         </td>
-      </ng-container>
+      </ng-container> -->
 
       <!-- <ng-container matColumnDef="date" >
 		  <th mat-header-cell *matHeaderCellDef rowspan="2">

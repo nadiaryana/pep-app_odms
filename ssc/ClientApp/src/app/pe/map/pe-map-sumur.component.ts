@@ -16,6 +16,8 @@ import { MatDialog, MatSnackBar, MatPaginator, MatTableDataSource } from '@angul
 import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
 import { xFilterService } from 'src/app/xfilter/xfilter.component';
 import { CommonService } from 'src/app/common.service';
+import { merge, of as observableOf, Subscription } from 'rxjs';
+import { startWith, switchMap, catchError, map } from 'rxjs/operators';
 
 
 export interface Sumur {
@@ -41,6 +43,11 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   
+  wellName_xSelected = [];
+  filterSubscription: Subscription;
+  selectedSubscription: Subscription;
+  listSubscription: Subscription;
+  
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
@@ -64,6 +71,50 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.fixLeafletDefaultIcon();
     this.loadSumurFromAPI();
+    
+    this.filterSubscription = this.xfilterService.filter.subscribe(res => {
+      if(res) this.getColumnValues(res);
+    })
+    this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
+      // @ts-ignore
+      this[res["column"] + "_xSelected"] = res["selected"];
+    })
+    
+    this.listSubscription = merge(
+      this.paginator.page, 
+      this.xfilterService.selected,
+    ).pipe(
+      startWith({}),
+      switchMap(() => {
+        var columnfilter = this.getColumnFilter();
+        return observableOf(this.applyFilters(columnfilter));
+      }),
+      map(data => {
+        this.dataSource.data = data;
+        return data;
+      }),
+      catchError(() => {
+        return observableOf([]);
+      })
+    ).subscribe();
+  }
+
+  ngOnDestroy(): void {
+    if (this.filterSubscription) this.filterSubscription.unsubscribe();
+    if (this.selectedSubscription) this.selectedSubscription.unsubscribe();
+    if (this.listSubscription) this.listSubscription.unsubscribe();
+    if (this.map) {
+      this.markers = [];
+      this.selectedMarker = null;
+      if (this.map) {
+        this.map.remove();
+        this.map = null;
+      }
+    }
+  }
+
+  passPermission(path:String) {
+    return this.pePermissionService.passPermission(path);
   }
 
   ngAfterViewInit(): void {
@@ -78,10 +129,6 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }, 300);
     }, 0);
-  }
-
-  passPermission(path:String) {
-    return this.pePermissionService.passPermission(path);
   }
 
   // Load data sumur dari API backend
@@ -127,17 +174,6 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  ngOnDestroy(): void {
-    if (this.map) {
-      this.markers = [];
-      this.selectedMarker = null;
-
-      if (this.map) {
-      this.map.remove();
-      this.map = null;
-    }}
-  }
-
   // MAP INITIALIZATION
   private fixLeafletDefaultIcon(): void {
     delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -171,9 +207,13 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       attributionControl: true,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
+    // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    //   maxZoom: 19,
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri',
+      maxZoom: 18,
     }).addTo(this.map);
   }
 
@@ -223,7 +263,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       this.highlightMarker(marker);
     });
 
-    this.markerMap.set(sumur.wellName, marker); // instead of this.markers.push(marker)
+    this.markerMap.set(sumur.wellName, marker); 
     });
   }
 
@@ -243,9 +283,9 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       `,
       className: '',
 
-      // Ukuran icon: [width, height] = 24x24px jika selected, 18x18px jika default
+      // Ukuran icon: [width, height] 
       iconSize: isSelected ? [24, 24] : [18, 18],
-      // Anchor point (titik pusat dari icon): [12, 12] jika selected, [9, 9] jika default
+      // Anchor point (titik pusat dari icon)
       iconAnchor: isSelected ? [12, 12] : [9, 9],
       // Offset popup: muncul 12px ke atas dari center icon
       popupAnchor: [0, -12],
@@ -262,6 +302,37 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedMarker = marker;
   }
 
+  // Filter methods
+  getColumnValues(column: string) {
+    this.http.get<any>(`/api/pe/map/${column}`, {
+      params: {
+        page: '0',
+        pagesize: '10000'
+      }
+    }).subscribe(res => {
+      this.xfilterService.updateItems({column: column, items: res.items});
+    });
+  }
+
+  getColumnFilter() {
+    var columnfilter: any = {};
+    if(this.wellName_xSelected.length) columnfilter["wellName"] = this.wellName_xSelected;
+    return columnfilter;
+  }
+
+  applyFilters(columnfilter: any): Sumur[] {
+    let filtered = this.sumurList;
+    
+    // Apply xFilter selections
+    if(columnfilter["wellName"] && columnfilter["wellName"].length > 0) {
+      filtered = filtered.filter(sumur => 
+        columnfilter["wellName"].includes(sumur.wellName)
+      );
+    }
+    
+    return filtered;
+  }
+
   // Mengonversi format DMS (Degrees, Minutes, Seconds) menjadi Decimal Degrees
   dmsToDecimal(dms: string): number {
     // Regular expression untuk mengekstrak komponen dari format DMS
@@ -271,7 +342,6 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     // Trim whitespace dari input dan match dengan regex pattern di atas
     const match = dms.trim().match(regex);
 
-    // Validasi: jika format input tidak sesuai dengan pattern DMS
     if (!match) {
       console.warn(`[MapSumur] Format DMS tidak dikenali: ${dms}`);
       return 0;
@@ -286,8 +356,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     // Rumus konversi DMS ke Decimal
     let decimal = deg + min / 60 + sec / 3600;
 
-    // Jika arah adalah South (S) atau West (W), buat nilai menjadi negatif
-    // Karena South = negatif latitude, West = negatif longitude
+    // South = negatif latitude, West = negatif longitude
     if (direction === 'S' || direction === 'W') {
       decimal *= -1;
     }
