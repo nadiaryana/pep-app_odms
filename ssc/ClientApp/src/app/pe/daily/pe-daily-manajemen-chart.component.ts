@@ -215,6 +215,16 @@ export class PeDailyManajemenChartComponent {
       this.refresh_Production();
     })
   }
+
+  // Method untuk convert metric code ke label
+  getMetricLabel(metric: string): string {
+    const metricMap = {
+      'opr': 'Operation',
+      'sot': 'SOT',
+      'fig': 'Figure'
+    };
+    return metricMap[metric] || metric.toUpperCase();
+  }
   
   getColumnValues(param: any) {
 
@@ -475,7 +485,7 @@ refresh_Production() {
       /** UPDATE TITLE */
 
       this.manajemen_chart_options.title.text =
-        'Oil Production - ' + metric.toUpperCase();
+        'Oil Production - ' + this.getMetricLabel(metric);
 
       this.manajemen_chart_options.subtitle.text =
         `( ${start_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}` +

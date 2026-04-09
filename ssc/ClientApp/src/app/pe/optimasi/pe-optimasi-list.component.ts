@@ -26,9 +26,9 @@ import { PeDaily } from '../daily/pe-daily';
 })
 export class PeOptimasiListComponent implements OnInit {
 
-  displayedColumns: string[] = ['select','well', 'avg_sm', 'avg_ds_efficiency'];
+  displayedColumns: string[] = ['well', 'avg_sm', 'avg_ds_efficiency'];
 
-  headerColumns1: string[] = ["select","well", "avg_sm", "avg_ds_efficiency"];
+  headerColumns1: string[] = ["well", "avg_sm", "avg_ds_efficiency"];
 
 
     @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;

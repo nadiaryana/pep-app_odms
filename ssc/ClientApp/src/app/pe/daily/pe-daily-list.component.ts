@@ -357,8 +357,10 @@ export class PeDailyListComponent implements OnInit {
     var columnfilter = this.getColumnFilter();
     if(filter) columnfilter[column] = [filter];
     if(selected && selected.length > 0) columnfilter[column] = selected.map(s => "^"+s+"$");
-    if(clear) delete columnfilter[column];
-
+    if(clear) {
+      delete columnfilter[column];
+      this[column + "_xSelected"] = []; 
+    }
     return this.exampleDatabase!.getRepoIssues(
       this.sort.active, 
       this.sort.direction, 
@@ -415,7 +417,7 @@ export class PeDailyListComponent implements OnInit {
     if(this.ds_efficiency_xSelected.length) columnfilter["ds_efficiency"] = this.ds_efficiency_xSelected;
     if(this.ds_whp_xSelected.length) columnfilter["ds_whp"] = this.ds_whp_xSelected;
     if(this.ds_casing_xSelected.length) columnfilter["ds_casing"] = this.ds_casing_xSelected;
-    if(this.ds_bean_xSelected.length) columnfilter["ds_separator"] = this.ds_separator_xSelected;
+    if(this.ds_separator_xSelected.length) columnfilter["ds_separator"] = this.ds_separator_xSelected;
     if(this.ds_kd_xSelected.length) columnfilter["ds_kd"] = this.ds_kd_xSelected;
     if(this.ds_tgl_pengujian_xSelected.length) columnfilter["ds_tgl_pengujian"] = this.ds_tgl_pengujian_xSelected;
     if(this.ds_pump_displace_xSelected.length) columnfilter["ds_pump_displace"] = this.ds_pump_displace_xSelected;
@@ -527,9 +529,28 @@ export class ExampleHttpDao {
     if(Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
     if(mode != null) params["mode"] = mode;
 
+    // Jika query string terlalu panjang, gunakan POST
+    const queryString = new URLSearchParams(params as any).toString();
+    if(queryString.length > 2000) {
+      return this.sendAsPost(sort, order, page, pagesize, filter, columnfilter, mode, httpOption);
+    }
+
     httpOption["params"] = params;
 	// console.log('Isi data daily: '+httpOption["params"]);
     return this.http.get<PeDailyApi>('/api/pe/daily', httpOption);
+  }
+
+  private sendAsPost(sort: string, order: string, page: number, pagesize: number, filter: string, columnfilter: object, mode: string, httpOption: object): Observable<PeDailyApi> {
+    const body = {
+      sort: sort,
+      order: order,
+      page: page,
+      pagesize: pagesize,
+      filter: filter,
+      columnfilter: columnfilter,
+      mode: mode
+    };
+    return this.http.post<PeDailyApi>('/api/pe/daily', body, httpOption);
   }
 }
 

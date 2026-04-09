@@ -384,6 +384,17 @@ namespace ssc.Areas.PE.Controllers
         }
 
         [Authorize("PeDaily Read")]
+        [HttpPost]
+        public ActionResult Post(String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", [FromBody] dynamic body = null, string mode = "")
+        {
+            String columnfilter = "";
+            if(body != null && body.columnfilter != null) {
+                columnfilter = JsonConvert.SerializeObject(body.columnfilter);
+            }
+            return Get(sort, order, page, pagesize, filter, columnfilter, mode);
+        }
+
+        [Authorize("PeDaily Read")]
         [HttpGet("GetAreaChart")]
         public ActionResult GetAreaChart(string type, DateTime? date, DateTime? end_date, string[] well)
         {
