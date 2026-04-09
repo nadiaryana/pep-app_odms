@@ -1,4 +1,4 @@
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" [hidden]="isCapturing">
 	<mat-form-field class="filter" floatLabel="never">
 		<mat-label>Start Date</mat-label>
 		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
@@ -16,6 +16,11 @@
   <button mat-button color="primary" (click)="refreshChart()" [disabled]="isLoading">
     <mat-icon>refresh</mat-icon> Refresh
   </button>
+  <button mat-button color="accent" (click)="screenshotChart()" [disabled]="isLoading || isCapturing || chartData.length === 0">
+    <mat-icon *ngIf="!isCapturing">photo_camera</mat-icon>
+    <mat-spinner *ngIf="isCapturing" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+    {{ isCapturing ? 'Capturing...' : 'Screenshot' }}
+  </button>
   <button mat-button [routerLink]="['/pe/barchart/list']">
     <mat-icon>list</mat-icon> Back to List
   </button>
@@ -29,7 +34,7 @@
   </div>
 
   <!-- Rig Legend -->
-  <div class="rig-legend" *ngIf="jobLegend.length > 0">
+  <div class="rig-legend" *ngIf="jobLegend.length > 0" [hidden]="isCapturing">
     <span class="legend-title">Job: </span>
     <span *ngFor="let job of jobLegend" class="legend-item">
       <span class="legend-color" [style.background-color]="job.color"></span>
@@ -46,9 +51,6 @@
   <div *ngIf="!isLoading && chartData.length === 0" class="no-data">
     <mat-icon>info</mat-icon>
     <p>No data available for this date.</p>
-    <!-- <button mat-raised-button color="primary" [routerLink]="['/pe/barchart/add']">
-      <mat-icon>add</mat-icon> Add Data
-    </button> -->
   </div>
 
 </div>

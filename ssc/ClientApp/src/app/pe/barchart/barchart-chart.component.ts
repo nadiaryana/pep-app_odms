@@ -4,20 +4,16 @@ import { TitleService } from '../../navigation/title/title.service';
 import * as Highcharts from 'highcharts';
 import { FormControl } from '@angular/forms';
 import { MatDatepicker } from '@angular/material';
-import { style } from '@angular/animations';
 import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
-import { max } from 'rxjs/operators';
+import html2canvas from 'html2canvas';
 
-// ============================================
-// Import Highcharts Gantt module
-// Gantt chart adalah jenis chart untuk menampilkan 
-// timeline/jadwal dengan bar horizontal
-// ============================================
+// Highcharts Gantt: modul terpisah dari Highcharts core,
+// digunakan untuk membuat Gantt chart (timeline horizontal)
 declare var require: any;
-const HighchartsGantt = require('highcharts/highcharts-gantt');
-const HighchartsExporting = require('highcharts/modules/exporting');
+const HighchartsGantt      = require('highcharts/highcharts-gantt');
+const HighchartsExporting  = require('highcharts/modules/exporting');
 
-// Inisialisasi modul exporting untuk fitur export chart
+// Aktifkan modul exporting (download PNG/PDF/SVG via context menu)
 if (typeof HighchartsExporting === 'function') {
   HighchartsExporting(HighchartsGantt);
 }
@@ -29,67 +25,40 @@ if (typeof HighchartsExporting === 'function') {
 })
 export class BarchartChartComponent implements OnInit, AfterViewInit {
 
-  // Reference ke element HTML untuk render chart
+  // ── ViewChild references ──────────────────────────────────────────────────
   @ViewChild('ganttChart', { static: true }) ganttChartEl: ElementRef;
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
+  @ViewChild('end_datePicker',   { static: true }) end_datePicker:   MatDatepicker<any>;
+
+  // ── Date picker controls ──────────────────────────────────────────────────
   start_dateControl = new FormControl();
-  start_dateInput = this.start_dateControl.value
-    ? this.start_dateControl.value.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-        day: "numeric",
-      })
-    : "";  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
-  end_dateControl = new FormControl();
-  end_dateInput = this.end_dateControl.value
-    ? this.end_dateControl.value.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-        day: "numeric",
-      })
-    : "";
-  
-  // Flag untuk menampilkan loading spinner
-  isLoading: boolean = false;
-  
-  // Array untuk menyimpan data dari API
-  chartData: any[] = [];
-  
-  // Instance Highcharts chart
-  chart: any;
+  start_dateInput   = '';
+  end_dateControl   = new FormControl();
+  end_dateInput     = '';
 
-  // Array untuk menyimpan data legend rig
-  jobLegend: any[] = [];
+  // ── State flags ───────────────────────────────────────────────────────────
+  isLoading:    boolean = false;  // menampilkan spinner saat fetch data
+  isCapturing:  boolean = false;  // menyembunyikan UI saat proses screenshot
 
+  // ── Data ──────────────────────────────────────────────────────────────────
+  chartData: any[] = [];   // data dari API
+  chart:     any;          // instance Highcharts Gantt
+  jobLegend: any[] = [];   // list job untuk custom legend di HTML
 
-  colors = [
-    '#7cb5ec', // Biru muda
-    '#434348', // Abu-abu gelap
-    '#90ed7d', // Hijau muda
-    '#f7a35c', // Orange
-    '#8085e9', // Ungu
-    '#f15c80', // Pink
-    '#e4d354', // Kuning
-    '#2b908f', // Teal
-    '#f45b5b', // Merah
-    '#91e8e1'  // Cyan
-  ];
-
+  // ── Warna per job (key = lowercase) ──────────────────────────────────────
   jobColors: { [key: string]: string } = {
-    'workover': '#00B050',
-    'reparasi': '#76933C',
-    'well services': '#ffff00',
-    'fracturing': '#00b0f0',
-    'stimulasi': '#1C4D8D',
-    'reaktivasi': '#f7a35c',
-
-    'eor': '#C4BD97',
-    'optimasi': '#92D050',
-    'injeksi': '#366092',
-
-    'hoist repair': '#FF0000',
-    'hoist idle': '#B1A0C7',
-    'hoist mobilization': '#E4DFEC',
+    'workover':          '#00B050',
+    'reparasi':          '#76933C',
+    'well services':     '#ffff00',
+    'fracturing':        '#00b0f0',
+    'stimulasi':         '#1C4D8D',
+    'reaktivasi':        '#f7a35c',
+    'eor':               '#C4BD97',
+    'optimasi':          '#92D050',
+    'injeksi':           '#366092',
+    'hoist repair':      '#FF0000',
+    'hoist idle':        '#B1A0C7',
+    'hoist mobilization':'#E4DFEC',
     'komplesi lanjutan': '#C0504D',
   };
 
@@ -255,8 +224,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       
       // Konfigurasi chart container
       chart: {
-        // Tinggi chart fixed berdasarkan jumlah categories (rig)
-        // Gunakan cellHeight dinamis yang sudah dihitung
+        // chart.height = jumlah kategori × tinggi baris + overhead untuk header/axis
         height: Math.max(400, categories.length * cellHeight + 300),
         // Full width - ikut container
         width: null,
@@ -333,7 +301,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         },
       ],
       
-      // Konfigurasi sumbu Y (kategori well)
+      // Konfigurasi sumbu Y (kategori rig)
       yAxis: {
         top: 180,
         type: 'category',
@@ -346,7 +314,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             },
             categories: categories
           }],
-          cellHeight: cellHeight  // Gunakan cellHeight dinamis
+          // cellHeight global — berdasarkan rig dengan remarks terpanjang
+          cellHeight: cellHeight
         },
       },
       
@@ -403,19 +372,20 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Well',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 35,             // Ukuran bar well yang lebih besar
-              pointPlacement: -0.4,      // Lebih ke atas agar pas dengan border atas
+              // well bar tipis di bagian atas cell
+              pointWidth: 35,
+              pointPlacement: -0.35,
               borderRadius: 4,
-              minPointLength: 10,         // Minimum panjang bar agar terlihat
+              minPointLength: 10,
 
               dataLabels: {
                 enabled: true,
                 align: 'center',
-                verticalAlign: 'top',     // Align top untuk well name
-                y: 8,                      // Posisi label tepat di atas bar
+                verticalAlign: 'middle',
+                y: 0,
                 format: '{point.name}',
                 style: {
-                  fontSize: '15px',        // Besarkan font well name
+                  fontSize: '15px',
                   fontWeight: 'bold',
                   textOutline: 'none',
                 },
@@ -445,32 +415,32 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               name: 'Remarks',
               pointPadding: 0,
               groupPadding: 0,
-              pointWidth: 30,             // Bar remarks sedikit lebih besar
-              pointPlacement: -0.18,       // Posisi bar lebih dekat ke well bar
+              // remarks bar lebih besar, di bagian bawah cell
+              pointWidth: 30,
+              pointPlacement: 0.05,
               borderRadius: 0,
               minPointLength: 10,
               dataLabels: {
-                verticalAlign: 'top',
-                y: -14,
+                verticalAlign: 'middle',
+                y: 0,
                 enabled: true,
                 useHTML: true,
                 inside: false,
                 allowOverlap: true,
                 alignTo: 'plotEdges',
-              
 
                 formatter: function () {
                     const point: any = this.point;
                     const text = point.name || '';
 
+                    // Escape HTML characters untuk keamanan
                     const safe = String(text)
                       .replace(/&/g, '&amp;')
                       .replace(/</g, '&lt;')
                       .replace(/>/g, '&gt;')
                       .replace(/"/g, '&quot;');
 
-
-
+                    // Estimasi lebar bar dalam pixel
                     const dayMs = 24 * 3600 * 1000;
                     const estimatedDayPx = 30;
                     const widthPx =
@@ -478,56 +448,46 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       ? point.shapeArgs.width
                       : (point.end && point.start ? Math.max(0, (point.end - point.start) / dayMs * estimatedDayPx) : 0);
 
+                    // Jika bar terlalu sempit, sembunyikan label
                     if (widthPx < 40) {
                       return '';
                     }
 
+                    // Untuk bar sempit: tampilkan full text wrap
                     if (widthPx < 100) {
-                      const short = text.length > 30 ? text.substr(0, 30) + '…' : text;
                       return `
-                        <div title="${safe}"
-                             style="
-                               width: ${Math.max(30, Math.floor(widthPx))}px;
-                               max-height: 100px;
-                               white-space: nowrap;
-                               overflow: hidden;
-                               text-overflow: ellipsis;
-                               font-size: 14px;
-                               color: #333;
-                               text-align: center;
-                             ">
-                          ${short}
-                        </div>
-                      `;
+                        <div title="${safe}" style="
+                          width: ${Math.max(30, Math.floor(widthPx - 12))}px;
+                          overflow: visible;
+                          white-space: normal;
+                          word-break: break-word;
+                          font-size: 13px;
+                          color: #333;
+                          text-align: center;
+                          padding: 0 6px;
+                          box-sizing: border-box;">
+                          ${safe.replace(/\n/g, '<br>')}
+                        </div>`;
                     }
 
-                    const maxLines = 50;  // Tingkatkan maksimal baris untuk remarks panjang
-                    const remarks = safe.replace(/\n/g, '<br>');
-                    let textAlign = 'center';
-                    if (text.length > 200) {
-                      textAlign = 'left';
-                    }
+                    // Untuk bar cukup lebar: tampilkan full multi-line tanpa clamp
+                    const remarks   = safe.replace(/\n/g, '<br>');
+                    const textAlign = text.length > 150 ? 'left' : 'center';
                     return `
-                      <div title="${safe}"
-                      style="
-                        width: ${Math.max(80, Math.floor(widthPx))}px;
-                        max-height: 810px;
+                      <div title="${safe}" style="
+                        width: ${Math.max(80, Math.floor(widthPx - 16))}px;
+                        overflow: visible;
                         font-size: 13px;
                         line-height: 16px;
                         color: #333;
                         text-align: ${textAlign};
-                        display: -webkit-box;
-                        -webkit-line-clamp: ${maxLines};
-                        -webkit-box-orient: vertical;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
                         white-space: normal;
-                        margin: 0;
-                        padding: 0;
-                      ">
-                      ${remarks}
-                      </div>
-                    `;
+                        word-break: break-word;
+                        padding: 0 8px;
+                        box-sizing: border-box;
+                        margin: 0;">
+                        ${remarks}
+                      </div>`;
                 }
               },
 
@@ -643,312 +603,174 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
   getJobColor(job: string): string {
     if (!job) return '#bfbfbf';
-
-    const key = job.trim().toLowerCase();
-    return this.jobColors[key] || '#bfbfbf';
+    return this.jobColors[job.trim().toLowerCase()] || '#bfbfbf';
   }
 
-  private estimateLines(text: string): number {
-    if (!text) return 1;
-    const charsPerLine = 35; // estimasi lebar teks
-    return Math.ceil(text.length / charsPerLine);
+  // ── Screenshot ────────────────────────────────────────────────────────────
+  // Capture seluruh area chart (termasuk bagian yang di-scroll) ke PNG.
+  // Highcharts Gantt memakai .highcharts-scrolling dengan overflow:hidden
+  // sehingga html2canvas perlu "onclone" untuk meng-expand semua container
+  // di dokumen tiruan sebelum di-render — tanpa mengubah live DOM.
+  screenshotChart() {
+    const chartEl = this.ganttChartEl.nativeElement as HTMLElement;
+
+    // Tampilkan loading di tombol, sembunyikan toolbar & legend via [hidden]="isCapturing"
+    this.isCapturing = true;
+
+    // Tunggu 300ms agar Angular selesai meng-apply [hidden] ke DOM
+    setTimeout(() => {
+
+      // Ambil lebar penuh dari scrollable area Highcharts
+      // (lebih lebar dari container karena ada scroll horizontal)
+      const scrollingEl = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
+      const fullWidth   = scrollingEl ? scrollingEl.scrollWidth : chartEl.scrollWidth;
+      const fullHeight  = chartEl.scrollHeight;
+
+      html2canvas(chartEl, {
+        backgroundColor: '#ffffff',
+        useCORS:     true,
+        allowTaint:  true,
+        scale:       2,           // 2x resolusi untuk tampilan lebih tajam
+        width:       fullWidth,
+        height:      fullHeight,
+        windowWidth: fullWidth,
+        windowHeight:fullHeight,
+        scrollX:     0,
+        scrollY:     -window.scrollY,
+
+        // onclone: di sinilah kita expand container Highcharts di dokumen tiruan
+        // supaya html2canvas merender seluruh lebar chart, bukan hanya area visible
+        onclone: (_doc: Document, clonedEl: HTMLElement) => {
+          const expand = (el: HTMLElement | SVGElement | null, isSvg = false) => {
+            if (!el) return;
+            (el as HTMLElement).style.overflow = 'visible';
+            (el as HTMLElement).style.width    = fullWidth + 'px';
+            (el as HTMLElement).style.minWidth = fullWidth + 'px';
+            (el as HTMLElement).style.maxWidth = 'none';
+            // SVG root butuh attribute 'width' tersendiri (bukan hanya CSS)
+            if (isSvg) (el as SVGElement).setAttribute('width', String(fullWidth));
+          };
+
+          expand(clonedEl.querySelector('.highcharts-scrolling'));
+          expand(clonedEl.querySelector('.highcharts-scrolling-parent'));
+          expand(clonedEl.querySelector('.highcharts-container'));
+          expand(clonedEl.querySelector('.highcharts-root'), true);   // SVG
+          expand(clonedEl);  // wrapper paling luar
+        }
+
+      }).then((canvas: HTMLCanvasElement) => {
+        // Unduh hasilnya sebagai PNG dengan nama berdasarkan tanggal hari ini
+        const link      = document.createElement('a');
+        link.download   = `barchart-gantt-${new Date().toISOString().slice(0, 10)}.png`;
+        link.href       = canvas.toDataURL('image/png');
+        link.click();
+
+      }).catch((err: any) => {
+        console.error('Screenshot error:', err);
+
+      }).finally(() => {
+        // Kembalikan UI ke normal setelah selesai (berhasil maupun gagal)
+        this.isCapturing = false;
+      });
+
+    }, 300);
   }
 
-//   private reformatDataGantt() {
+  // ── Reformat data untuk Highcharts Gantt ─────────────────────────────────
+  private reformatDataGantt() {
 
-//   const wellSeries: any[] = [];
-//   const remarkSeries: any[] = [];
-//   const categories: string[] = [];
+    const wellSeries:    any[]   = [];
+    const remarkSeries:  any[]   = [];
+    const categories:    string[] = [];
+    const rigLevels:     { [rig: string]: any[] } = {};
+    const grouped:       { [rig: string]: any[] } = {};
 
-//   const rigMap = new Map<string, number>();
-//   let rigIndex = 0;
-//   const rigLevels: { [rig: string]: any[] } = {};
-//   const rigBaseIndex: { [rig: string]: number } = {};
+    // Konstanta layout baris
+    const BASE_HEIGHT    = 50;   // tinggi minimum baris (px)
+    const LINE_HEIGHT    = 14;   // tinggi per baris teks remarks (px)
+    const CHARS_PER_LINE = 35;   // estimasi karakter per baris (font 13px)
 
-//   let globalIndex = 0;
-
-  // 🔹 GROUP DATA PER RIG
-//   const grouped: { [rig: string]: any[] } = {};
-
-//   const maxLinesPerRig: { [rig: string]: number } = {};
-//   const rigTasks: { [rig: string]: any[] } = {};
-
-//   this.chartData.forEach((d) => {
-
-//     if (!d.rig) return;
-
-    // === GROUP BY RIG ===
-//     if (!rigMap.has(d.rig)) {
-//       rigMap.set(d.rig, rigIndex);
-//       categories[rigIndex] = d.rig;
-//       rigIndex++;
-//     }
-
-    // ⬇️ HITUNG JUMLAH BARIS REMARKS
-//     const lines = this.estimateLines(d.remarks);
-
-//     if (!maxLinesPerRig[d.rig] || maxLinesPerRig[d.rig] < lines) {
-//       maxLinesPerRig[d.rig] = lines;
-//     }
-
-
-//     const y = rigMap.get(d.rig);
-
-    // === TANGGAL FIX - Ambil tanggal lokal dari UTC ===
-//     const rawStart = new Date(d.plan_start);
-//     const rawEnd   = new Date(d.plan_end);
-
-    // Ambil tanggal tanpa timezone offset
-//     const start = Date.UTC(
-//       rawStart.getUTCFullYear(),
-//       rawStart.getUTCMonth(),
-//       rawStart.getUTCDate(),
-//       0, 0, 0, 0
-//     );
-
-    // End date: tanggal sebenarnya (untuk display di tooltip)
-//     const endActual = Date.UTC(
-//       rawEnd.getUTCFullYear(),
-//       rawEnd.getUTCMonth(),
-//       rawEnd.getUTCDate(),
-//       0, 0, 0, 0
-//     );
-
-    // End date untuk bar: tambah 1 hari agar bar mencakup sampai akhir end date
-//     const endForBar = endActual + (24 * 60 * 60 * 1000);
-//     const jobColor = this.getJobColor(d.job);
-
-    // === WELL BAR ===
-//     wellSeries.push({
-//       name: d.well,
-//       start,
-//       end: endForBar,  // Bar sampai akhir end date
-//       y,
-//       color: jobColor,
-//       custom: {
-//         label: d.well,
-//         rig: d.rig,
-//         job: d.job,
-//         remarks: d.remarks,
-//         actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
-//       }
-//     });
-
-    // === REMARK BAR ===
-//     remarkSeries.push({
-//       name: d.remarks,
-//       start,
-//       end: endForBar,  // Bar sampai akhir end date
-//       y,
-//       color: '#FFFFFF',
-//       custom: {
-//         label: d.remarks,
-//         well: d.well,
-//         rig: d.rig,
-//         job: d.job,
-//         actualEnd: endActual  // Simpan end date sebenarnya untuk tooltip
-//       }
-//     });
-//   });
-
-
-  // 🔹 PROSES PER RIG
-//   Object.keys(grouped).forEach(rig => {
-
-//     const jobs = grouped[rig];
-
-//     rigLevels[rig] = [];
-
-    // sort by start date
-//     jobs.sort((a, b) =>
-//       new Date(a.plan_start).getTime() -
-//       new Date(b.plan_start).getTime()
-//     );
-
-    // assign level (anti overlap)
-//     jobs.forEach(job => {
-
-//       const rawStart = new Date(job.plan_start);
-//       const rawEnd   = new Date(job.plan_end);
-
-//       const start = Date.UTC(
-//         rawStart.getUTCFullYear(),
-//         rawStart.getUTCMonth(),
-//         rawStart.getUTCDate()
-//       );
-
-//       const endActual = Date.UTC(
-//         rawEnd.getUTCFullYear(),
-//         rawEnd.getUTCMonth(),
-//         rawEnd.getUTCDate()
-//       );
-
-//       const endForBar = endActual + 24 * 3600 * 1000;
-
-//       let level = 0;
-
-//       while (true) {
-//         const overlap = rigLevels[rig].find(t =>
-//           t.level === level &&
-//           !(endForBar <= t.start || start >= t.end)
-//         );
-
-//         if (!overlap) break;
-//         level++;
-//       }
-
-//       rigLevels[rig].push({ start, end: endForBar, level });
-
-      // 🔹 SET y REAL (BUKAN DECIMAL)
-//       const y = globalIndex + level;
-
-//       wellSeries.push({
-//         name: job.well,
-//         start,
-//         end: endForBar,
-//         y,
-//         color: this.getJobColor(job.job),
-//         custom: {
-//           label: job.well,
-//           rig: job.rig,
-//           job: job.job,
-//           remarks: job.remarks,
-//           actualEnd: endActual
-//         }
-//       });
-
-//       remarkSeries.push({
-//         name: job.remarks,
-//         start,
-//         end: endForBar,
-//         y,
-//         color: '#FFFFFF',
-//         custom: {
-//           label: job.remarks,
-//           well: job.well,
-//           rig: job.rig,
-//           job: job.job,
-//           actualEnd: endActual
-//         }
-//       });
-//     });
-    // 🔹 BUAT CATEGORY SEBANYAK LEVEL
-//     const maxLevel = Math.max(...rigLevels[rig].map(x => x.level), 0);
-
-//     for (let i = 0; i <= maxLevel; i++) {
-//       categories.push(i === 0 ? rig : '');
-//     }
-
-//     globalIndex += maxLevel + 1;
-//   });
-
-//   const baseHeight = 100;   // tinggi minimum baris (dinaikkan)
-//   const lineHeight = 20;  // tinggi per baris teks (dinaikkan untuk jarak lebih lapang)
-//   // const cellHeight = 90;
-
-//   const maxLines = Math.max(...Object.values(maxLinesPerRig));
-//   const dynamicCellHeight = baseHeight + (maxLines * lineHeight);
-
-//   return {
-//     wellSeries,
-//     remarkSeries,
-//     categories,
-//     cellHeight: dynamicCellHeight   // ⬅️ kirim ke luar
-//   };
-
-
-//   return { wellSeries, remarkSeries, categories };
-// }
-
-private reformatDataGantt() {
-
-  const wellSeries: any[] = [];
-  const remarkSeries: any[] = [];
-  const categories: string[] = [];
-
-  const rigMap = new Map<string, number>();
-  const rigLevels: { [rig: string]: any[] } = {};
-  const maxLinesPerRig: { [rig: string]: number } = {};
-
-  // Actually populate grouped
-  const grouped: { [rig: string]: any[] } = {};
-
-  this.chartData.forEach((d) => {
-    if (!d.rig) return;
-    if (!grouped[d.rig]) grouped[d.rig] = [];
-    grouped[d.rig].push(d);
-
-    // Track max remark lines per rig
-    const lines = this.estimateLines(d.remarks);
-    if (!maxLinesPerRig[d.rig] || maxLinesPerRig[d.rig] < lines) {
-      maxLinesPerRig[d.rig] = lines;
-    }
-  });
-
-  let globalIndex = 0;
-
-  // Single loop with overlap detection
-  Object.keys(grouped).forEach(rig => {
-    const jobs = grouped[rig];
-    rigLevels[rig] = [];
-
-    // Sort by start date
-    jobs.sort((a, b) =>
-      new Date(a.plan_start).getTime() - new Date(b.plan_start).getTime()
-    );
-
-    jobs.forEach(job => {
-      const rawStart = new Date(job.plan_start);
-      const rawEnd   = new Date(job.plan_end);
-
-      const start = Date.UTC(rawStart.getUTCFullYear(), rawStart.getUTCMonth(), rawStart.getUTCDate());
-      const endActual = Date.UTC(rawEnd.getUTCFullYear(), rawEnd.getUTCMonth(), rawEnd.getUTCDate());
-      const endForBar = endActual + 24 * 3600 * 1000;
-
-      //Overlap detection: find a free level
-      let level = 0;
-      while (true) {
-        const overlap = rigLevels[rig].find(t =>
-          t.level === level && !(endForBar <= t.start || start >= t.end)
-        );
-        if (!overlap) break;
-        level++;
-      }
-      rigLevels[rig].push({ start, end: endForBar, level });
-
-      const y = globalIndex + level;
-      const jobColor = this.getJobColor(job.job);
-
-      wellSeries.push({
-        name: job.well,
-        start, end: endForBar, y,
-        color: jobColor,
-        custom: { label: job.well, rig: job.rig, job: job.job, remarks: job.remarks, actualEnd: endActual }
-      });
-
-      remarkSeries.push({
-        name: job.remarks,
-        start, end: endForBar, y,
-        color: '#FFFFFF',
-        custom: { label: job.remarks, well: job.well, rig: job.rig, job: job.job, actualEnd: endActual }
-      });
+    // Kelompokkan data per nama rig
+    this.chartData.forEach(d => {
+      if (!d.rig) return;
+      if (!grouped[d.rig]) grouped[d.rig] = [];
+      grouped[d.rig].push(d);
     });
 
-    // Build categories for this rig's levels
-    const maxLevel = Math.max(...rigLevels[rig].map(x => x.level), 0);
-    for (let i = 0; i <= maxLevel; i++) {
-      categories.push(i === 0 ? rig : '');
-    }
-    globalIndex += maxLevel + 1;
-  });
+    // Hitung baris remarks terpanjang per rig untuk menentukan tinggi baris global.
+    // Setiap newline dihitung sebagai baris baru, lalu setiap segmen di-wrap
+    // berdasarkan estimasi lebar karakter (CHARS_PER_LINE).
+    const maxLinesPerRig: { [rig: string]: number } = {};
+    Object.keys(grouped).forEach(rig => {
+      let maxL = 1;
+      grouped[rig].forEach(job => {
+        const lines = (job.remarks || '').split('\n').reduce((sum: number, seg: string) =>
+          sum + Math.max(1, Math.ceil(seg.length / CHARS_PER_LINE)), 0) || 1;
+        if (lines > maxL) maxL = lines;
+      });
+      maxLinesPerRig[rig] = maxL;
+    });
 
-  const baseHeight = 100;
-  const lineHeight = 20;
-  const maxLines = Object.values(maxLinesPerRig).length > 0
-    ? Math.max(...Object.values(maxLinesPerRig))
-    : 1;
-  const dynamicCellHeight = baseHeight + (maxLines * lineHeight);
+    // cellHeight global — satu nilai untuk semua baris agar grid konsisten
+    const globalMaxLines = Math.max(...Object.values(maxLinesPerRig), 1);
+    const cellHeight     = BASE_HEIGHT + (globalMaxLines * LINE_HEIGHT);
 
-  return { wellSeries, remarkSeries, categories, cellHeight: dynamicCellHeight };
-}
+    // Assign y-index per rig dengan overlap detection.
+    // Jika ada 2 job dalam rig yang waktunya bertabrakan, job kedua
+    // diletakkan di "level" lebih tinggi (sub-baris baru di rig yang sama).
+    let globalIndex = 0;
+
+    Object.keys(grouped).forEach(rig => {
+      rigLevels[rig] = [];
+
+      // Sort by start date agar overlap detection deterministik
+      const jobs = [...grouped[rig]].sort((a, b) =>
+        new Date(a.plan_start).getTime() - new Date(b.plan_start).getTime()
+      );
+
+      jobs.forEach(job => {
+        // Konversi string tanggal ke UTC midnight agar tidak bergeser karena timezone
+        const rawStart  = new Date(job.plan_start);
+        const rawEnd    = new Date(job.plan_end);
+        const start     = Date.UTC(rawStart.getUTCFullYear(), rawStart.getUTCMonth(), rawStart.getUTCDate());
+        const endActual = Date.UTC(rawEnd.getUTCFullYear(),   rawEnd.getUTCMonth(),   rawEnd.getUTCDate());
+        const endForBar = endActual + 24 * 3600 * 1000; // +1 hari: bar mencakup seluruh hari terakhir
+
+        // Cari level terendah yang tidak overlap dengan job lain di rig ini
+        let level = 0;
+        while (rigLevels[rig].find(t => t.level === level && !(endForBar <= t.start || start >= t.end))) {
+          level++;
+        }
+        rigLevels[rig].push({ start, end: endForBar, level });
+
+        const y        = globalIndex + level;  // posisi vertikal di chart
+        const jobColor = this.getJobColor(job.job);
+
+        // Well bar — ditampilkan di atas, label = nama sumur
+        wellSeries.push({
+          name: job.well,
+          start, end: endForBar, y,
+          color: jobColor,
+          custom: { label: job.well, rig: job.rig, job: job.job, remarks: job.remarks, actualEnd: endActual }
+        });
+
+        // Remarks bar — ditampilkan di bawah well bar, warna putih (background)
+        remarkSeries.push({
+          name: job.remarks,
+          start, end: endForBar, y,
+          color: '#FFFFFF',
+          custom: { label: job.remarks, well: job.well, rig: job.rig, job: job.job, actualEnd: endActual }
+        });
+      });
+
+      // Category: nama rig di slot pertama, string kosong untuk sub-baris overlap
+      const maxLevel = Math.max(...rigLevels[rig].map(x => x.level), 0);
+      for (let i = 0; i <= maxLevel; i++) {
+        categories.push(i === 0 ? rig : '');
+      }
+      globalIndex += maxLevel + 1;
+    });
+
+    return { wellSeries, remarkSeries, categories, cellHeight };
+  }
 }
