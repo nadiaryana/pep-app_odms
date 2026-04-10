@@ -25,27 +25,26 @@ if (typeof HighchartsExporting === 'function') {
 })
 export class BarchartChartComponent implements OnInit, AfterViewInit {
 
-  // ── ViewChild references ──────────────────────────────────────────────────
   @ViewChild('ganttChart', { static: true }) ganttChartEl: ElementRef;
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
   @ViewChild('end_datePicker',   { static: true }) end_datePicker:   MatDatepicker<any>;
 
-  // ── Date picker controls ──────────────────────────────────────────────────
+
   start_dateControl = new FormControl();
   start_dateInput   = '';
   end_dateControl   = new FormControl();
   end_dateInput     = '';
 
-  // ── State flags ───────────────────────────────────────────────────────────
-  isLoading:    boolean = false;  // menampilkan spinner saat fetch data
+
+  isLoading:    boolean = false;  
   isCapturing:  boolean = false;  // menyembunyikan UI saat proses screenshot
 
-  // ── Data ──────────────────────────────────────────────────────────────────
-  chartData: any[] = [];   // data dari API
-  chart:     any;          // instance Highcharts Gantt
-  jobLegend: any[] = [];   // list job untuk custom legend di HTML
 
-  // ── Warna per job (key = lowercase) ──────────────────────────────────────
+  chartData: any[] = [];   
+  chart:     any;          // instance Highcharts Gantt
+  jobLegend: any[] = [];  
+
+
   jobColors: { [key: string]: string } = {
     'workover':          '#00B050',
     'reparasi':          '#76933C',
@@ -70,7 +69,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     private snackbarService: SnackbarService,
   ) { }
   
-  // run pertama kali
   ngOnInit() {
     this.titleService.titleSource.next({
       title: "Barchart",
@@ -117,41 +115,33 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
   }
 
-  // dipanggil setelah view selesai di-render
+
   ngAfterViewInit() {
     this.loadData();
   }
   
-  // ngambil data dari backend API
+
   loadData() {
-    // Cek apakah kedua tanggal sudah dipilih
     if (!this.start_dateControl.value || !this.end_dateControl.value) {
       return;
     }
 
-    // Tampilkan loading spinner
     this.isLoading = true;
 
     let params = new HttpParams();
-    // send parameter date range dalam format ISO agar bisa di-parse oleh .NET DateTime
     params = params.append('start_date', this.start_dateControl.value.toISOString());
     params = params.append('end_date', this.end_dateControl.value.toISOString());
 
-    // mode chart untuk get data Gantt Chart dengan filter date range
     params = params.append('mode', 'chart');
 
-    // Request ke API
     this.http.get<any>('/api/pe/barchart', {
       params: params
     }).subscribe(
       (res) => {
-        // Simpan data dari response (response format: { data: [...] })
         this.chartData = res.data || [];
-        
-        // Render chart dengan data yang didapat
+
         this.renderGanttChart();
         
-        // Sembunyikan loading spinner
         this.isLoading = false;
       },
       (error) => {
@@ -161,7 +151,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     );
   }
 
-  // fungsi format tanggal ke string lokal "DD MMM YYYY"
   formatDateLocal(timestamp: number): string {
     if (!timestamp) return '-';
     
@@ -174,28 +163,22 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     return date.toLocaleDateString('id-ID', options);
   }
 
-  // fungsi render Gantt Chart dengan Highcharts Gantt
+
   renderGanttChart() {
-    // Destroy chart lama jika ada
     if (this.chart) {
       this.chart.destroy();
       this.chart = null;
     }
 
-    // Jika tidak ada data, clear legend dan return
     if (!this.chartData || this.chartData.length === 0) {
       this.jobLegend = [];
       return;
     }
     const { wellSeries, remarkSeries, categories, cellHeight } = this.reformatDataGantt();
 
-    // 1. mapping warna untuk setiap Job sudah ada di jobColors property
-    // Tidak perlu mapping ulang karena sudah didefinisikan di class property
-
-    // 2. Simpan reference ke component untuk digunakan di tooltip
     const self = this;
 
-    // 3. Hitung lebar chart berdasarkan range tanggal
+    // Hitung lebar chart berdasarkan range tanggal
     const allDates = [...wellSeries.map(d => d.start), ...wellSeries.map(d => d.end)];
     const minDate = Math.min(...allDates);
     const maxDate = Math.max(...allDates);
@@ -205,7 +188,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     const minWidthPerDay = 30;
     const scrollableWidth = Math.max(1200, daysDiff * minWidthPerDay);
 
-    //Gunakan tanggal filter user
     const filterStartDate = this.start_dateControl.value ? Date.UTC(
       this.start_dateControl.value.getFullYear(),
       this.start_dateControl.value.getMonth(),
@@ -219,14 +201,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     ) + (24 * 60 * 60 * 1000) : maxDate;
 
 
-    // 4. Buat dan render chart dengan Highcharts Gantt
     this.chart = HighchartsGantt.ganttChart(this.ganttChartEl.nativeElement, {
-      
-      // Konfigurasi chart container
+
       chart: {
         // chart.height = jumlah kategori × tinggi baris + overhead untuk header/axis
         height: Math.max(400, categories.length * cellHeight + 300),
-        // Full width - ikut container
         width: null,
         scrollablePlotArea: {
           minWidth: scrollableWidth,
@@ -238,8 +217,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         spacingTop: 0,
         // marginTop: 90
       },
-      
-      // Judul chart
       title: {
         text: 'BARCHART RIG SANGATTA FIELD',
         style: {
@@ -247,10 +224,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           fontWeight: 'bold'
         }
       },
-      
-      // Konfigurasi sumbu X (timeline horizontal)
       xAxis: [
-        { // tanggal perhari
+        {
           type: 'datetime',
           top: 150,
           min: filterStartDate,
@@ -279,12 +254,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           //   width: 2
           // }
         },
-        { // label format bulan & tahun
+        {
           type: 'datetime',
           linkedTo: 0,
           top: 145,
 
-          tickInterval: 30 * 24 * 3600 * 1000, // kira-kira per bulan
+          tickInterval: 30 * 24 * 3600 * 1000, 
           labels: {
             style: {
               fontSize: '13px',
@@ -300,8 +275,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           }
         },
       ],
-      
-      // Konfigurasi sumbu Y (kategori rig)
       yAxis: {
         top: 180,
         type: 'category',
@@ -314,14 +287,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             },
             categories: categories
           }],
-          // cellHeight global — berdasarkan rig dengan remarks terpanjang
           cellHeight: cellHeight
         },
       },
-      
-      // Konfigurasi tooltip (muncul saat hover)
       tooltip: {
-        useHTML: true,  // Gunakan HTML untuk formatting
+        useHTML: true, 
         style: {
           pointerEvents: 'auto'
         },
@@ -329,14 +299,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           const p: any = this.point;
           const custom = p.custom || {};
           
-          // Convert newline ( n) ke <br> untuk HTML
           const remarks = custom.remarks ? custom.remarks.replace(/\n/g, '<br>') : '';
           const label = custom.label ? custom.label.replace(/\n/g, '<br>') : '';
           
-          // End date untuk display (gunakan actualEnd yang disimpan)
           const displayEnd = custom.actualEnd || (p.end - (24 * 60 * 60 * 1000));
           
-          // Jika ini bar Well
+          //well
           if (this.series.name === 'Well') {
             return `
               <div style="padding: 8px; min-width: 300px;">
@@ -353,7 +321,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             `;
           }
           
-          // Jika ini bar Remarks
+          // Remarks
           return `
             <div style="padding: 8px; min-width: 300px;">
               <b style="font-size: 13px; color: #333;">${custom.well || 'Remarks'}</b><br>
@@ -367,12 +335,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       },
 
           series: [
-            /* === WELL BAR (ATAS) === */
+           //bar well
             {
               name: 'Well',
               pointPadding: 0,
               groupPadding: 0,
-              // well bar tipis di bagian atas cell
               pointWidth: 35,
               pointPlacement: -0.35,
               borderRadius: 4,
@@ -410,12 +377,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               data: wellSeries
             },
 
-            /* === REMARKS BAR (BAWAH) === */
+            //remarks bar
             {
               name: 'Remarks',
               pointPadding: 0,
               groupPadding: 0,
-              // remarks bar lebih besar, di bagian bawah cell
               pointWidth: 30,
               pointPlacement: 0.05,
               borderRadius: 0,
@@ -433,7 +399,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                     const point: any = this.point;
                     const text = point.name || '';
 
-                    // Escape HTML characters untuk keamanan
                     const safe = String(text)
                       .replace(/&/g, '&amp;')
                       .replace(/</g, '&lt;')
@@ -448,12 +413,11 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                       ? point.shapeArgs.width
                       : (point.end && point.start ? Math.max(0, (point.end - point.start) / dayMs * estimatedDayPx) : 0);
 
-                    // Jika bar terlalu sempit, sembunyikan label
                     if (widthPx < 40) {
                       return '';
                     }
 
-                    // Untuk bar sempit: tampilkan full text wrap
+                    // tampilkan full text wrap
                     if (widthPx < 100) {
                       return `
                         <div title="${safe}" style="
@@ -470,7 +434,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
                         </div>`;
                     }
 
-                    // Untuk bar cukup lebar: tampilkan full multi-line tanpa clamp
+                    // tampilkan full multi-line tanpa clamp
                     const remarks   = safe.replace(/\n/g, '<br>');
                     const textAlign = text.length > 150 ? 'left' : 'center';
                     return `
@@ -494,13 +458,9 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
               data: remarkSeries
             }
           ],
-            
-      // Konfigurasi legend (keterangan)
       legend: {
-        enabled: false  // Kita gunakan custom legend di HTML
+        enabled: false  
       },
-      
-      // Navigator untuk scroll horizontal
       navigator: {
         enabled: false,
         series: {
@@ -512,14 +472,10 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           categories: []
         }
       },
-
-      // Scrollbar horizontal
       scrollbar: {
         enabled: false
       },
-
-      
-      // Range selector 
+ 
       rangeSelector: {
         enabled: true,
         floating: true,
@@ -543,29 +499,23 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           text: 'All'
         }]
       },
-      
-      // Sembunyikan credit Highcharts
       credits: {
         enabled: false
       },
-      
-      // Konfigurasi fitur export
       exporting: {
         enabled: true,
         buttons: {
           contextButton: {
             menuItems: [
-              'downloadPNG',   // Export ke PNG
-              'downloadJPEG',  // Export ke JPEG
-              'downloadPDF',   // Export ke PDF
-              'downloadSVG'    // Export ke SVG
+              'downloadPNG',   
+              'downloadJPEG',  
+              'downloadPDF',   
+              'downloadSVG'    
             ]
           }
         }
       }
     });
-
-    // 7. Buat custom legend untuk job
     this.createJobLegend();
   }
 
@@ -585,10 +535,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 }
 
 
-  // fungsi membuat custom legend job
   createJobLegend() {
-    // Konversi object ke array untuk di-loop di template
-    // Build legend based on jobs (not rigs) and use jobColors to set colors per job
     const jobs = Array.from(new Set(this.chartData.map(item => (item.job || 'Unknown').toString().trim().toLowerCase())));
     this.jobLegend = jobs.map(jobKey => ({
       name: jobKey,
@@ -596,7 +543,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     }));
   }
 
-  // fungsi untuk refresh chart (dipanggil dari tombol Refresh)
   refreshChart() {
     this.loadData();
   }
@@ -606,40 +552,45 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     return this.jobColors[job.trim().toLowerCase()] || '#bfbfbf';
   }
 
-  // ── Screenshot ────────────────────────────────────────────────────────────
-  // Capture seluruh area chart (termasuk bagian yang di-scroll) ke PNG.
-  // Highcharts Gantt memakai .highcharts-scrolling dengan overflow:hidden
-  // sehingga html2canvas perlu "onclone" untuk meng-expand semua container
-  // di dokumen tiruan sebelum di-render — tanpa mengubah live DOM.
   screenshotChart() {
     const chartEl = this.ganttChartEl.nativeElement as HTMLElement;
 
-    // Tampilkan loading di tombol, sembunyikan toolbar & legend via [hidden]="isCapturing"
     this.isCapturing = true;
 
-    // Tunggu 300ms agar Angular selesai meng-apply [hidden] ke DOM
     setTimeout(() => {
-
-      // Ambil lebar penuh dari scrollable area Highcharts
-      // (lebih lebar dari container karena ada scroll horizontal)
       const scrollingEl = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
       const fullWidth   = scrollingEl ? scrollingEl.scrollWidth : chartEl.scrollWidth;
       const fullHeight  = chartEl.scrollHeight;
+
+      const axes = chartEl.querySelectorAll('.highcharts-axis.highcharts-xaxis');
+      const monthAxis = axes && axes.length > 1 ? axes[1] as HTMLElement : null;
+      
+      let headerTop = 120;
+
+      if (monthAxis) {
+        const rectParent = chartEl.getBoundingClientRect();
+        const rectAxis   = axes[1].getBoundingClientRect();
+
+        headerTop = rectAxis.top - rectParent.top;
+      }
+
 
       html2canvas(chartEl, {
         backgroundColor: '#ffffff',
         useCORS:     true,
         allowTaint:  true,
-        scale:       2,           // 2x resolusi untuk tampilan lebih tajam
+        scale:       2,           
         width:       fullWidth,
-        height:      fullHeight,
+        height:      fullHeight - headerTop,
+        x: 0,
+        y: headerTop,
         windowWidth: fullWidth,
         windowHeight:fullHeight,
         scrollX:     0,
         scrollY:     -window.scrollY,
 
-        // onclone: di sinilah kita expand container Highcharts di dokumen tiruan
-        // supaya html2canvas merender seluruh lebar chart, bukan hanya area visible
+        // onclone: expand container Highcharts di dokumen tiruan
+        // html2canvas merender seluruh lebar chart
         onclone: (_doc: Document, clonedEl: HTMLElement) => {
           const expand = (el: HTMLElement | SVGElement | null, isSvg = false) => {
             if (!el) return;
@@ -647,19 +598,17 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             (el as HTMLElement).style.width    = fullWidth + 'px';
             (el as HTMLElement).style.minWidth = fullWidth + 'px';
             (el as HTMLElement).style.maxWidth = 'none';
-            // SVG root butuh attribute 'width' tersendiri (bukan hanya CSS)
             if (isSvg) (el as SVGElement).setAttribute('width', String(fullWidth));
           };
 
           expand(clonedEl.querySelector('.highcharts-scrolling'));
           expand(clonedEl.querySelector('.highcharts-scrolling-parent'));
           expand(clonedEl.querySelector('.highcharts-container'));
-          expand(clonedEl.querySelector('.highcharts-root'), true);   // SVG
-          expand(clonedEl);  // wrapper paling luar
+          expand(clonedEl.querySelector('.highcharts-root'), true);   
+          expand(clonedEl);  
         }
 
       }).then((canvas: HTMLCanvasElement) => {
-        // Unduh hasilnya sebagai PNG dengan nama berdasarkan tanggal hari ini
         const link      = document.createElement('a');
         link.download   = `barchart-gantt-${new Date().toISOString().slice(0, 10)}.png`;
         link.href       = canvas.toDataURL('image/png');
@@ -669,14 +618,12 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         console.error('Screenshot error:', err);
 
       }).finally(() => {
-        // Kembalikan UI ke normal setelah selesai (berhasil maupun gagal)
         this.isCapturing = false;
       });
 
     }, 300);
   }
 
-  // ── Reformat data untuk Highcharts Gantt ─────────────────────────────────
   private reformatDataGantt() {
 
     const wellSeries:    any[]   = [];
@@ -685,10 +632,10 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     const rigLevels:     { [rig: string]: any[] } = {};
     const grouped:       { [rig: string]: any[] } = {};
 
-    // Konstanta layout baris
-    const BASE_HEIGHT    = 50;   // tinggi minimum baris (px)
-    const LINE_HEIGHT    = 14;   // tinggi per baris teks remarks (px)
-    const CHARS_PER_LINE = 35;   // estimasi karakter per baris (font 13px)
+
+    const BASE_HEIGHT    = 50;   
+    const LINE_HEIGHT    = 14;   
+    const CHARS_PER_LINE = 35;   
 
     // Kelompokkan data per nama rig
     this.chartData.forEach(d => {
@@ -697,9 +644,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       grouped[d.rig].push(d);
     });
 
-    // Hitung baris remarks terpanjang per rig untuk menentukan tinggi baris global.
-    // Setiap newline dihitung sebagai baris baru, lalu setiap segmen di-wrap
-    // berdasarkan estimasi lebar karakter (CHARS_PER_LINE).
+
     const maxLinesPerRig: { [rig: string]: number } = {};
     Object.keys(grouped).forEach(rig => {
       let maxL = 1;
@@ -711,42 +656,37 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       maxLinesPerRig[rig] = maxL;
     });
 
-    // cellHeight global — satu nilai untuk semua baris agar grid konsisten
     const globalMaxLines = Math.max(...Object.values(maxLinesPerRig), 1);
     const cellHeight     = BASE_HEIGHT + (globalMaxLines * LINE_HEIGHT);
 
-    // Assign y-index per rig dengan overlap detection.
-    // Jika ada 2 job dalam rig yang waktunya bertabrakan, job kedua
-    // diletakkan di "level" lebih tinggi (sub-baris baru di rig yang sama).
     let globalIndex = 0;
 
     Object.keys(grouped).forEach(rig => {
       rigLevels[rig] = [];
 
-      // Sort by start date agar overlap detection deterministik
       const jobs = [...grouped[rig]].sort((a, b) =>
         new Date(a.plan_start).getTime() - new Date(b.plan_start).getTime()
       );
 
       jobs.forEach(job => {
-        // Konversi string tanggal ke UTC midnight agar tidak bergeser karena timezone
+
         const rawStart  = new Date(job.plan_start);
         const rawEnd    = new Date(job.plan_end);
         const start     = Date.UTC(rawStart.getUTCFullYear(), rawStart.getUTCMonth(), rawStart.getUTCDate());
         const endActual = Date.UTC(rawEnd.getUTCFullYear(),   rawEnd.getUTCMonth(),   rawEnd.getUTCDate());
-        const endForBar = endActual + 24 * 3600 * 1000; // +1 hari: bar mencakup seluruh hari terakhir
+        const endForBar = endActual + 24 * 3600 * 1000; 
 
-        // Cari level terendah yang tidak overlap dengan job lain di rig ini
+
         let level = 0;
         while (rigLevels[rig].find(t => t.level === level && !(endForBar <= t.start || start >= t.end))) {
           level++;
         }
         rigLevels[rig].push({ start, end: endForBar, level });
 
-        const y        = globalIndex + level;  // posisi vertikal di chart
+        const y        = globalIndex + level;  //posisi vertikal
         const jobColor = this.getJobColor(job.job);
 
-        // Well bar — ditampilkan di atas, label = nama sumur
+        // Well bar 
         wellSeries.push({
           name: job.well,
           start, end: endForBar, y,
@@ -754,7 +694,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           custom: { label: job.well, rig: job.rig, job: job.job, remarks: job.remarks, actualEnd: endActual }
         });
 
-        // Remarks bar — ditampilkan di bawah well bar, warna putih (background)
+        // Remarks bar 
         remarkSeries.push({
           name: job.remarks,
           start, end: endForBar, y,
@@ -763,7 +703,6 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         });
       });
 
-      // Category: nama rig di slot pertama, string kosong untuk sub-baris overlap
       const maxLevel = Math.max(...rigLevels[rig].map(x => x.level), 0);
       for (let i = 0; i <= maxLevel; i++) {
         categories.push(i === 0 ? rig : '');

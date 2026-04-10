@@ -388,7 +388,8 @@ namespace ssc.Areas.PE.Controllers
         public ActionResult Post(String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", [FromBody] dynamic body = null, string mode = "")
         {
             String columnfilter = "";
-            if(body != null && body.columnfilter != null) {
+            if (body != null && body.columnfilter != null)
+            {
                 columnfilter = JsonConvert.SerializeObject(body.columnfilter);
             }
             return Get(sort, order, page, pagesize, filter, columnfilter, mode);
@@ -452,9 +453,9 @@ namespace ssc.Areas.PE.Controllers
                         spm = s.ds_spm,
                         wc = s.wc,
                         kd = s.ds_kd,
-                        thp = s.thp_potensi,
+                        // thp = s.ds_whp,
                         sm = s.sm,
-                        whp = s.ds_whp,
+                        thp = s.ds_whp,
                         size = s.ds_size,
                         efficiency = s.ds_efficiency
 

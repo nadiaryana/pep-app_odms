@@ -366,12 +366,12 @@ export class PeDailyChartComponent {
       this.refresh_Daily();
     })
 
-    this.start_dateControl2.valueChanges.subscribe(r => {
-      this.refresh_Quadrant();
-    })
-    this.end_dateControl2.valueChanges.subscribe(r => {
-      this.refresh_Quadrant();
-    })
+    // this.start_dateControl2.valueChanges.subscribe(r => {
+    //   this.refresh_Quadrant();
+    // })
+    // this.end_dateControl2.valueChanges.subscribe(r => {
+    //   this.refresh_Quadrant();
+    // })
   }
 
   getColumnValues(param: any) {
@@ -427,7 +427,7 @@ export class PeDailyChartComponent {
 	  let n = res["data"].map(d => d["net"]);
 	  let q = res["data"].map(d => d["gas"]);
 	  let w = res["data"].map(d => d["wc"]);
-	  let t = res["data"].map(d => d["thp"]);
+	  let t = res["data"].map(d => d["ds_whp"]);
 	  let sm = res["data"].map(d => d["sm"]);
 	  let sl = res["data"].map(d => d["ds_sl"]);
 	  let spm = res["data"].map(d => d["ds_spm"]);
@@ -628,7 +628,7 @@ export class PeDailyChartComponent {
 					dt_net[y] = [tg[y], n1[y]];
 					dt_qgass[y] = [tg[y], q1[y]/dt_well];
 					dt_wc[y] = [tg[y], 100*(1-(n1[y]/g1[y]))];
-					dt_thp[y] = [tg[y], t1[y]/dt_well];
+					dt_thp[y] = [tg[y], t1[y]];
 					dt_sm[y] = [tg[y], sm1[y]/dt_well];
 					dt_sl[y] = [tg[y], sl1[y]/dt_well];
 					dt_spm[y] = [tg[y], spm1[y]/dt_well];
@@ -737,23 +737,23 @@ export class PeDailyChartComponent {
     this.end_dateInput2 = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
   }
 
-  refresh_Quadrant() {
-    // Implementasi logika untuk menyegarkan grafik kuadran
-    let annotationList = [];
-    let params = new HttpParams();
-    params = params.append("type", "quadrant_chart")
-      .append("date", this.start_dateControl2.value.toISOString())
-      .append("end_date", this.end_dateControl2.value.toISOString());
-    // for (const w of this.well_xSelected) {
-    //   params = params.append("well", w);
-    //   console.log("Well Parameter: "+w);
-    // }
+  // refresh_Quadrant() {
+  //   // Implementasi logika untuk menyegarkan grafik kuadran
+  //   let annotationList = [];
+  //   let params = new HttpParams();
+  //   params = params.append("type", "quadrant_chart")
+  //     .append("date", this.start_dateControl2.value.toISOString())
+  //     .append("end_date", this.end_dateControl2.value.toISOString());
+  //   // for (const w of this.well_xSelected) {
+  //   //   params = params.append("well", w);
+  //   //   console.log("Well Parameter: "+w);
+  //   // }
 
-    this.http.get('/api/pe/daily/GetChart', { params: params }).subscribe(res => {
-      console.log("Quadrant Chart Data: ", res);
-    });
+  //   this.http.get('/api/pe/daily/GetChart', { params: params }).subscribe(res => {
+  //     console.log("Quadrant Chart Data: ", res);
+  //   });
 
-  }
+  // }
 
 }
 
