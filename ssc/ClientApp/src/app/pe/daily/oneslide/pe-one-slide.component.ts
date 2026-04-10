@@ -742,7 +742,7 @@ export class OneSlideComponent implements OnInit {
 
     this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
 
-    const q_design = pi * (ps - pwf2);
+    const q_design = qmax * (1 - 0.2 * (pwf2 / ps) - 0.8 * (Math.pow(pwf2 / ps, 2)));
     this.q_design.setValue(q_design.toFixed(2));
 
     console.log(`Operating Design:

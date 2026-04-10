@@ -724,11 +724,11 @@ export class IprComponent implements OnInit {
     this.prod_reservoir.setValue(prod_reservoir);
 
 
-    // OPERATING DESIGN (GUARD)
-    const sm2_raw = this.sm2.value;
+    // operating
+    const sm2_raw = this.sm2.value;     //form control
     const kd2_raw = this.ds_kd2.value;
 
-    // 🔒 STOP jika belum diisi
+    // STOP jika belum diisi
     if (
       sm2_raw === null || sm2_raw === "" ||
       kd2_raw === null || kd2_raw === ""
@@ -746,12 +746,13 @@ export class IprComponent implements OnInit {
       return;
     }
 
-    // HITUNG OPERATING DESIGN
-    const pwf2 = (0.433 * wcAvg / 100 + 0.346 * (1 - wcAvg / 100)) * (bottomRaw - (sm2 + ds_kd2)) * 3.281;
+    //perhitungan operating point
+    const dfl2 = ds_kd2 - sm2
+    const pwf2 = ((0.433 * wcAvg/100) + (0.346 * (1 - wcAvg/100))) * (bottomRaw - dfl2) * 3.281;
 
     this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
 
-    const q_design = pi * (ps - pwf2);
+    const q_design = qmax * (1 - 0.2 * (pwf2 / ps) - 0.8 * (Math.pow(pwf2 / ps, 2)));
     this.q_design.setValue(q_design.toFixed(2));
 
     console.log(`Operating Design:
