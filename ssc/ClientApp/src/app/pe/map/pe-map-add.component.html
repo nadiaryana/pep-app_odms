@@ -70,6 +70,16 @@
 						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.lng?.value}" [matTooltip]="row._error.lng?.message" matTooltipPosition="after">{{row.lng || row._error.lng?.value || '-'}}</td>
 					</ng-container>
 
+					<ng-container matColumnDef="status">
+						<th mat-header-cell *matHeaderCellDef>Status</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.status?.value}" [matTooltip]="row._error.status?.message" matTooltipPosition="after">{{row.status || row._error.status?.value || '-'}}</td>
+					</ng-container>
+					
+					<ng-container matColumnDef="station">
+						<th mat-header-cell *matHeaderCellDef>Notes</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.station?.value}" [matTooltip]="row._error.station?.message" matTooltipPosition="after">{{row.station || row._error.station?.value || '-'}}</td>
+					</ng-container>
+
 				    <ng-container matColumnDef="Actions">
 				      <th mat-header-cell *matHeaderCellDef>Action</th>   
 				      <td mat-cell *matCellDef="let row"> 

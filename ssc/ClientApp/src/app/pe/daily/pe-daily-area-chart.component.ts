@@ -171,7 +171,7 @@ export class PeDailyAreaChartComponent implements OnInit {
       yAxis: 1,
       dashStyle: 'shortdot',
       data: [],
-      color: '#f7a35c',
+      color: '#5C3E94',
       zIndex: 4,
       tooltip: {
         valueSuffix: ' m',

@@ -39,7 +39,9 @@ namespace ssc.Areas.PE.Controllers
                 // .Include(t => t.date)
                 .Include(t => t.wellName)
                 .Include(t => t.lat)
-                .Include(t => t.lng);
+                .Include(t => t.lng)
+                .Include(t => t.status)
+                .Include(t => t.station);
         }
 
         [Authorize("PeMap Read")]
@@ -58,7 +60,9 @@ namespace ssc.Areas.PE.Controllers
                     // Builders<Map>.Filter.Regex(t => t.date, new BsonRegularExpression(filter, "i")) |
                     Builders<Map>.Filter.Regex(t => t.wellName, new BsonRegularExpression(filter, "i")) |
                     Builders<Map>.Filter.Regex(t => t.lat, new BsonRegularExpression(filter, "i")) |
-                    Builders<Map>.Filter.Regex(t => t.lng, new BsonRegularExpression(filter, "i"));
+                    Builders<Map>.Filter.Regex(t => t.lng, new BsonRegularExpression(filter, "i")) |
+                    Builders<Map>.Filter.Regex(t => t.status, new BsonRegularExpression(filter, "i")) |
+                    Builders<Map>.Filter.Regex(t => t.station, new BsonRegularExpression(filter, "i"));
             }
 
             if (!String.IsNullOrWhiteSpace(columnfilter))
@@ -70,6 +74,8 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.wellName?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Map>.Filter.Or(colfilter.wellName.ToList().Where(c => !(c is JObject)).Select(c => Builders<Map>.Filter.Regex(t => t.wellName, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.lat?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Map>.Filter.Or(colfilter.lat.ToList().Where(c => !(c is JObject)).Select(c => Builders<Map>.Filter.Regex(t => t.lat, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.lng?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Map>.Filter.Or(colfilter.lng.ToList().Where(c => !(c is JObject)).Select(c => Builders<Map>.Filter.Regex(t => t.lng, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.status?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Map>.Filter.Or(colfilter.status.ToList().Where(c => !(c is JObject)).Select(c => Builders<Map>.Filter.Regex(t => t.status, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.station?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Map>.Filter.Or(colfilter.station.ToList().Where(c => !(c is JObject)).Select(c => Builders<Map>.Filter.Regex(t => t.station, new BsonRegularExpression((string)c, "i"))));
 
                 foreach (string log in DailyCommon._logical)
                 {
@@ -77,6 +83,8 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.wellName?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wellName.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$wellName\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.lat?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.lat.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$lat\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.lng?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.lng.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$lng\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.status?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.status.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$status\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.station?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.station.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$station\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                 }
 
                 xfilter = xfilter & xcolfilter;
@@ -91,6 +99,8 @@ namespace ssc.Areas.PE.Controllers
                 case "wellName": _items = (order == "asc") ? _items.SortBy(t => t.wellName) : _items.SortByDescending(t => t.wellName); break;
                 case "lat": _items = (order == "asc") ? _items.SortBy(t => t.lat) : _items.SortByDescending(t => t.lat); break;
                 case "lng": _items = (order == "asc") ? _items.SortBy(t => t.lng) : _items.SortByDescending(t => t.lng); break;
+                case "status": _items = (order == "asc") ? _items.SortBy(t => t.status) : _items.SortByDescending(t => t.status); break;
+                case "station": _items = (order == "asc") ? _items.SortBy(t => t.station) : _items.SortByDescending(t => t.station); break;
             }
 
             switch (mode)
@@ -164,10 +174,12 @@ namespace ssc.Areas.PE.Controllers
             ws.Cells[1, 1].Value = "Nama Sumur";
             ws.Cells[1, 2].Value = "Latitude";
             ws.Cells[1, 3].Value = "Longitude";
+            ws.Cells[1, 4].Value = "Status";
+            ws.Cells[1, 5].Value = "Station";
 
-            ws.Cells[1, 1, 1, 3].Style.Font.Bold = true;
-            ws.Cells[1, 1, 1, 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            ws.Cells[1, 1, 1, 3].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 1, 1, 5].Style.Font.Bold = true;
+            ws.Cells[1, 1, 1, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 1, 5].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
             for (int i = 0; i < items.Count(); i++)
             {
@@ -175,6 +187,8 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[2 + i, 1].Value = t.wellName;
                 ws.Cells[2 + i, 2].Value = t.lat;
                 ws.Cells[2 + i, 3].Value = t.lng;
+                ws.Cells[2 + i, 4].Value = t.status;
+                ws.Cells[2 + i, 5].Value = t.station;
             }
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
@@ -215,8 +229,10 @@ namespace ssc.Areas.PE.Controllers
                 var c1 = ws.Cells[r, 1].Value; // wellName
                 var c2 = ws.Cells[r, 2].Value; // lat
                 var c3 = ws.Cells[r, 3].Value; // lng
+                var c4 = ws.Cells[r, 4].Value; // status
+                var c5 = ws.Cells[r, 5].Value; // station
 
-                if (c1 == null && c2 == null && c3 == null) continue;
+                if (c1 == null && c2 == null && c3 == null && c4 == null && c5 == null) continue;
 
                 Map _row = new Map();
                 MapError _row_error = new MapError();
@@ -246,6 +262,16 @@ namespace ssc.Areas.PE.Controllers
                 if (!string.IsNullOrWhiteSpace(lngStr))
                 {
                     _row.lng = lngStr;
+                }
+                var statusStr = c4?.ToString().Trim();
+                if (!string.IsNullOrWhiteSpace(statusStr))
+                {
+                    _row.status = statusStr;
+                }
+                var stationStr = c5?.ToString().Trim();
+                if (!string.IsNullOrWhiteSpace(stationStr))
+                {
+                    _row.station = stationStr;
                 }
 
                 if (error_count > last_error_count)
@@ -346,6 +372,8 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.wellName, item.wellName)
                         .Set(t => t.lat, item.lat)
                         .Set(t => t.lng, item.lng)
+                        .Set(t => t.status, item.status)
+                        .Set(t => t.station, item.station)
                         .Set(t => t.updated_by, currentUser)
                         .Set(t => t.updated_date, now)
                         .SetOnInsert(t => t.created_by, currentUser)

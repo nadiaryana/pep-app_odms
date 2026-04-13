@@ -1,5 +1,3 @@
-// pe-map-sumur.component.ts
-
 import {
   Component,
   OnInit,
@@ -24,6 +22,8 @@ export interface Sumur {
   wellName: string;
   lat: string;
   lng: string;
+  status: string;
+  station: string;
 }
 
 @Component({
@@ -36,7 +36,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   map: L.Map | null = null;
   isLoading = true;
 
-  displayedColumns: string[] = ['wellName', 'lat', 'lng', 'actions'];
+  displayedColumns: string[] = ['wellName', 'lat', 'lng', 'status','station','actions'];
 
   sumurList: Sumur[] = [];
   dataSource = new MatTableDataSource<Sumur>();
@@ -44,9 +44,22 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   
   wellName_xSelected = [];
+  status_xSelected = [];
   filterSubscription: Subscription;
   selectedSubscription: Subscription;
   listSubscription: Subscription;
+
+  
+  statusColors: { [key: string]: string } = {
+    'produksi':          '#00B050',
+    'off produksi':      '#92D050',
+    'mati':              '#FF0000',
+    'injeksi':           '#366092',
+    'suspended':         '#ffff00',
+    'kering':            '#25310e',
+    'abandoned':         '#000000',
+
+  };
   
   constructor(
     private titleService: TitleService,
@@ -73,7 +86,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadSumurFromAPI();
     
     this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if(res) this.getColumnValues(res);
+      if(res) this.getColumnValues(res.column);
     })
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
       // @ts-ignore
@@ -106,6 +119,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.map) {
       this.markers = [];
       this.selectedMarker = null;
+      this.markerStatusMap.clear();
       if (this.map) {
         this.map.remove();
         this.map = null;
@@ -120,7 +134,6 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.initMap();
-      // loadMarkers akan dipanggil setelah loadSumurFromAPI selesai load data dari API
 
       setTimeout(() => {
         if (this.map) {
@@ -148,7 +161,9 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
             return {
               wellName: item.wellName || '',
               lat: item.lat || '',
-              lng: item.lng || ''
+              lng: item.lng || '',
+              status: item.status || '',
+              station: item.station || '',
             };
           });
           console.log('[MapSumur] Loaded', this.sumurList.length, 'sumur from API');
@@ -217,9 +232,10 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     }).addTo(this.map);
   }
 
-  private markers: L.Marker[] = []; // simpan semua marker
-  private markerMap = new Map<string, L.Marker>(); // key = wellName
-  private selectedMarker: L.Marker | null = null; // marker yang dipilih
+  private markers: L.Marker[] = [];
+  private markerMap = new Map<string, L.Marker>(); 
+  private markerStatusMap = new Map<L.Marker, string>(); 
+  private selectedMarker: L.Marker | null = null; 
 
   private loadMarkers(): void {
     if (!this.map) return;
@@ -255,29 +271,34 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         .addTo(this.map!)
         .bindPopup(`
           <b>${sumur.wellName}</b>
-          Lat: ${lat.toFixed(6)}<br>
-          Lng: ${lng.toFixed(6)}
+          Status: <span style="color: ${this.getStatusColor(sumur.status)}">${sumur.status}</span>
+
         `);
       
         marker.on('click', () => {
       this.highlightMarker(marker);
     });
 
-    this.markerMap.set(sumur.wellName, marker); 
+    this.markerMap.set(sumur.wellName, marker);
+    this.markerStatusMap.set(marker, sumur.status);
+    this.markers.push(marker);
     });
   }
 
-  private createIcon(type: 'default' | 'selected'): L.DivIcon {
+  private createIcon(type: 'default' | 'selected', status?: string): L.DivIcon {
     const isSelected = type === 'selected';
+    const statusColor = isSelected && status ? this.getStatusColor(status) : '#1976d2';
+    // const borderColor = isSelected && status ? this.getDarkerColor(statusColor) : '#0d47a1';
+    
     return L.divIcon({
       html: `
         <div style="
-          background-color: ${isSelected ? '#e53935' : '#1976d2'};
+          background-color: ${isSelected ? statusColor : '#1976d2'};
           width: ${isSelected ? '24px' : '18px'};
           height: ${isSelected ? '24px' : '18px'};
           border-radius: 50%;
-          border: 2.5px solid ${isSelected ? '#b71c1c' : '#0d47a1'};
-          box-shadow: ${isSelected ? '0 0 0 4px rgba(229,57,53,0.3)' : '0 2px 6px rgba(0,0,0,0.3)'};
+          border: 2.5px solid ${isSelected ? statusColor : '#0d47a1'};
+          box-shadow: ${isSelected ? `0 0 0 4px ${statusColor}33` : '0 2px 6px rgba(0,0,0,0.3)'};
           transition: all 0.2s ease;
         "></div>
       `,
@@ -293,31 +314,58 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private highlightMarker(marker: L.Marker): void {
+    const status = this.markerStatusMap.get(marker);
+    
     // Reset marker sebelumnya ke default
     if (this.selectedMarker && this.selectedMarker !== marker) {
       this.selectedMarker.setIcon(this.createIcon('default'));
     }
-    // Set marker baru ke selected
-    marker.setIcon(this.createIcon('selected'));
+    // Set marker baru ke selected dengan status color
+    marker.setIcon(this.createIcon('selected', status));
     this.selectedMarker = marker;
   }
 
   // Filter methods
-  getColumnValues(column: string) {
-    this.http.get<any>(`/api/pe/map/${column}`, {
-      params: {
-        page: '0',
-        pagesize: '10000'
-      }
-    }).subscribe(res => {
-      this.xfilterService.updateItems({column: column, items: res.items});
+  getColumnValues(param: any) {
+    const column = param;
+    
+    if (!this.sumurList || this.sumurList.length === 0) {
+      console.log("[MapSumur] Data belum siap");
+      return;
+    }
+
+    // Ambil filter existing dari state
+    let columnfilter: any = this.getColumnFilter();
+    delete columnfilter[column];
+
+    // Terapkan filter yang ada
+    let filteredData = this.applyFilters(columnfilter);
+
+    // Ekstrak unique values untuk kolom
+    let items = [...new Set(
+      filteredData
+        .map(x => (x as any)[column])
+        .filter(v => v !== null && v !== undefined && v !== '')
+    )];
+
+    // Update xfilterService dengan items
+    this.xfilterService.updateItems({
+      column: column,
+      items: items
     });
   }
+
 
   getColumnFilter() {
     var columnfilter: any = {};
     if(this.wellName_xSelected.length) columnfilter["wellName"] = this.wellName_xSelected;
+    if(this.status_xSelected.length) columnfilter["status"] = this.status_xSelected;
     return columnfilter;
+  }
+
+  getStatusColor(status: string): string {
+    if (!status) return '#bfbfbf';
+    return this.statusColors[status.trim().toLowerCase()] || '#bfbfbf';
   }
 
   applyFilters(columnfilter: any): Sumur[] {
@@ -327,6 +375,11 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     if(columnfilter["wellName"] && columnfilter["wellName"].length > 0) {
       filtered = filtered.filter(sumur => 
         columnfilter["wellName"].includes(sumur.wellName)
+      );
+    }
+    if(columnfilter["status"] && columnfilter["status"].length > 0) {
+      filtered = filtered.filter(sumur => 
+        columnfilter["status"].includes(sumur.status)
       );
     }
     
@@ -370,6 +423,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const lat = this.dmsToDecimal(sumur.lat);
     const lng = this.dmsToDecimal(sumur.lng);
+    const status = this.getStatusColor(sumur.status);
 
     // Cari marker yang sesuai dengan nama sumur yang dipilih
     const marker = this.markerMap.get(sumur.wellName);

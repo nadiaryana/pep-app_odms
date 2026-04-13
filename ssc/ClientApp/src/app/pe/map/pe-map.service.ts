@@ -6,10 +6,6 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Sumur } from './pe-map-sumur.component';
 
-// =============================================
-// INTERFACE RESPONSE API
-// =============================================
-
 export interface SumurApiResponse {
   data: SumurApiItem[];
   total: number;
@@ -21,6 +17,8 @@ export interface SumurApiItem {
   nama_sumur: string;
   latitude_dms: string;
   longitude_dms: string;
+  status: string;
+  station: string;
   keterangan?: string;
 }
 
@@ -62,6 +60,8 @@ export class PeMapSumurService {
       wellName: item.nama_sumur,
       lat: item.latitude_dms,
       lng: item.longitude_dms,
+      status: item.status,
+      station: item.station,
     }));
   }
 }

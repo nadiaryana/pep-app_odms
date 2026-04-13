@@ -42,7 +42,7 @@ export class PeMapAddComponent {
 
 	data: PeMap[] = [];
 	data_error_count: number = 0;
-	displayedColumns: string[] = ["info", "wellName", "lat", "lng", "Actions"];
+	displayedColumns: string[] = ["info", "wellName", "lat", "lng", 'status','station',"Actions"];
 
 	constructor(
 		private formBuilder: FormBuilder,
