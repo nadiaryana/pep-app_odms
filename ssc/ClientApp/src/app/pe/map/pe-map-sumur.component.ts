@@ -104,6 +104,8 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       }),
       map(data => {
         this.dataSource.data = data;
+        // Update marker visibility based on filtered data
+        this.updateMarkersVisibility(data);
         return data;
       }),
       catchError(() => {
@@ -349,10 +351,12 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     )];
 
     // Update xfilterService dengan items
-    this.xfilterService.updateItems({
-      column: column,
-      items: items
-    });
+    setTimeout(() => {
+      this.xfilterService.updateItems({
+        column: column,
+        items: items
+      });
+    }, 0);
   }
 
 
@@ -421,6 +425,12 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   flyToSumur(sumur: Sumur): void {
     if (!this.map) return;
 
+    if (!sumur.lat || !sumur.lng) {
+      // alert
+      alert("Koordinat tidak valid");
+      return;
+    }
+
     const lat = this.dmsToDecimal(sumur.lat);
     const lng = this.dmsToDecimal(sumur.lng);
     const status = this.getStatusColor(sumur.status);
@@ -435,6 +445,25 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     this.map.flyTo([lat, lng], 16, {      //16 = level zoom
       animate: true,
       duration: 1.2,                      //animasi bergerak ke lokasi
+    });
+  }
+
+  private updateMarkersVisibility(filteredSumur: Sumur[]): void {
+    if (!this.map) return;
+
+    // ambil nama sumur yang difilter
+    const filteredNames = new Set(filteredSumur.map(s => s.wellName));
+    
+    this.markerMap.forEach((marker, wellName) => {
+      if (filteredNames.has(wellName)) {
+        if (!this.map!.hasLayer(marker)) {
+          marker.addTo(this.map!); // kalau ada ditambah
+        }
+      } else {
+        if (this.map!.hasLayer(marker)) {
+          marker.removeFrom(this.map!); // kalau gaada dihapus
+        }
+      }
     });
   }
 }
