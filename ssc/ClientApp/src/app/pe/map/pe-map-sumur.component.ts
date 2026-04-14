@@ -24,6 +24,15 @@ export interface Sumur {
   lng: string;
   status: string;
   station: string;
+  stationLat?: string;  // Latitude station dari table station
+  stationLng?: string;  // Longitude station dari table station
+}
+
+export interface StationNode {
+  name: string;
+  lat: number;   // Decimal degree
+  lng: number;   // Decimal degree
+  wells: Sumur[];  // List of sumur yang terhubung ke station ini
 }
 
 @Component({
@@ -35,8 +44,18 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
 
   map: L.Map | null = null;
   isLoading = true;
+  showFlowlines = true;
 
   displayedColumns: string[] = ['wellName', 'lat', 'lng', 'status','station','actions'];
+
+  stationCoordinates: { [key: string]: { lat: number; lng: number } } = {
+    'GS-1': { lat: 0.458472, lng: 117.508200 },  
+    'GS-2': { lat: 0.481794, lng: 117.505936 },
+    'GS-3': { lat: 0.441436, lng: 117.506447 },
+    'GS-4': { lat: 0.466297, lng: 117.517033 },
+    'GS-5': { lat: 0.447578, lng: 117.517725 },
+    'GS-6': { lat: 0.433383, lng: 117.517831 },
+  };
 
   sumurList: Sumur[] = [];
   dataSource = new MatTableDataSource<Sumur>();
@@ -60,6 +79,10 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     'abandoned':         '#000000',
 
   };
+
+  private svgOverlay: SVGElement | null = null;
+  private flowlinePaths: SVGPathElement[] = [];
+  private stationMarkers: L.Marker[] = [];
   
   constructor(
     private titleService: TitleService,
@@ -106,6 +129,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dataSource.data = data;
         // Update marker visibility based on filtered data
         this.updateMarkersVisibility(data);
+        this.redrawFlowlines(data);
         return data;
       }),
       catchError(() => {
@@ -146,6 +170,22 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 0);
   }
 
+  // ─── Toggle flowline dari template ─────────────────────────────────────
+  toggleFlowlines(): void {
+    this.showFlowlines = !this.showFlowlines;
+    if (this.svgOverlay) {
+      this.svgOverlay.style.display = this.showFlowlines ? '' : 'none';
+    }
+    // Station marker juga disembunyikan/ditampilkan bersama flowline
+    this.stationMarkers.forEach(m => {
+      if (this.showFlowlines) {
+        if (!this.map!.hasLayer(m)) m.addTo(this.map!);
+      } else {
+        if (this.map!.hasLayer(m)) m.removeFrom(this.map!);
+      }
+    });
+  }
+
   // Load data sumur dari API backend
   private loadSumurFromAPI(): void {
     this.http.get<any>('/api/pe/map', {
@@ -166,6 +206,8 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
               lng: item.lng || '',
               status: item.status || '',
               station: item.station || '',
+              stationLat: item.stationLat || '',
+              stationLng: item.stationLng || '',
             };
           });
           console.log('[MapSumur] Loaded', this.sumurList.length, 'sumur from API');
@@ -181,6 +223,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
           // Reload markers setelah data berhasil diloading
           if (this.map) {
             this.loadMarkers();
+            this.redrawFlowlines(this.sumurList); 
           }
         }
       },
@@ -191,7 +234,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  // MAP INITIALIZATION
+  
   private fixLeafletDefaultIcon(): void {
     delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -232,6 +275,18 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       attribution: 'Tiles &copy; Esri',
       maxZoom: 18,
     }).addTo(this.map);
+
+    const svgLayer = L.svg().addTo(this.map);
+    this.svgOverlay = (svgLayer as any)._container as SVGElement;
+    this.svgOverlay.style.pointerEvents = 'none';
+    this.svgOverlay.style.overflow = 'visible';
+
+    // this.injectFlowlineAnimation();
+
+    // Gambar ulang path setiap kali peta digeser / di-zoom
+    this.map.on('moveend zoomend viewreset', () => {
+      this.redrawFlowlines(this.dataSource.data);
+    });
   }
 
   private markers: L.Marker[] = [];
@@ -328,6 +383,256 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedMarker = marker;
   }
 
+  // private injectFlowlineAnimation(): void {
+  //   if (document.getElementById('flowline-style')) return; // sudah ada
+  //   const style = document.createElement('style');
+  //   style.id = 'flowline-style';
+  //   style.textContent = `
+  //     @keyframes flowDash {
+  //       to { stroke-dashoffset: -24; }
+  //     }
+  //     .flowline-path {
+  //       animation: flowDash 0.9s linear infinite;
+  //     }
+  //   `;
+  //   document.head.appendChild(style);
+  // }
+
+  private buildStationNodes(sumurData: Sumur[]): StationNode[] {
+    const stationMap = new Map<string, StationNode>();
+
+    sumurData.forEach(sumur => {
+      // Abaikan sumur tanpa nama station
+      if (!sumur.station) return;
+
+      // Ambil koordinat station dari mapping
+      const stationCoord = this.stationCoordinates[sumur.station];
+      if (!stationCoord) {
+        console.warn(`[MapSumur] Station '${sumur.station}' tidak ada di stationCoordinates mapping`);
+        return;
+      }
+
+      if (!stationMap.has(sumur.station)) {
+        stationMap.set(sumur.station, {
+          name: sumur.station,
+          lat: stationCoord.lat,
+          lng: stationCoord.lng,
+          wells: [],
+        });
+      }
+      stationMap.get(sumur.station)!.wells.push(sumur);
+    });
+
+    return Array.from(stationMap.values());
+  }
+
+  // private createGradient(
+  //   svgNS: string,
+  //   id: string,
+  //   fromPt: L.Point,
+  //   toPt: L.Point
+  // ): SVGLinearGradientElement {
+  //   const grad = document.createElementNS(svgNS, 'linearGradient') as SVGLinearGradientElement;
+  //   grad.setAttribute('id', id);
+  //   grad.setAttribute('gradientUnits', 'userSpaceOnUse');
+  //   grad.setAttribute('x1', String(fromPt.x));
+  //   grad.setAttribute('y1', String(fromPt.y));
+  //   grad.setAttribute('x2', String(toPt.x));
+  //   grad.setAttribute('y2', String(toPt.y));
+
+  //   const stop1 = document.createElementNS(svgNS, 'stop') as SVGStopElement;
+  //   stop1.setAttribute('offset', '0%');
+  //   stop1.setAttribute('stop-color', '#6ab1f7'); 
+  //   stop1.setAttribute('stop-opacity', '0.9');
+
+  //   const stop2 = document.createElementNS(svgNS, 'stop') as SVGStopElement;
+  //   stop2.setAttribute('offset', '100%');
+  //   stop2.setAttribute('stop-color', '#f4a169'); 
+  //   stop2.setAttribute('stop-opacity', '1');
+
+  //   grad.appendChild(stop1);
+  //   grad.appendChild(stop2);
+  //   return grad;
+  // }
+
+  // menghitung titik kontrol bezier untuk flowing bisa melengkung
+  private bezierControl(from: L.Point, to: L.Point): { cx: number; cy: number } {
+    return {
+      cx: (from.x + to.x) / 2 - (to.y - from.y) * 0.18,
+      cy: (from.y + to.y) / 2 + (to.x - from.x) * 0.18,
+    };
+  }
+
+  private clearFlowlines(): void {
+    this.flowlinePaths = [];
+
+    if (this.svgOverlay) {
+      while (this.svgOverlay.firstChild) {
+        this.svgOverlay.removeChild(this.svgOverlay.firstChild);
+      }
+    }
+
+    // Hapus marker station dari peta
+    this.stationMarkers.forEach(m => {
+      if (this.map && this.map.hasLayer(m)) m.removeFrom(this.map);
+    });
+    this.stationMarkers = [];
+  }
+
+  // private redrawFlowlines(sumurData: Sumur[]): void {
+  //   if (!this.map || !this.svgOverlay) return;
+
+  //   this.clearFlowlines();
+
+  //   if (!this.showFlowlines) return;
+
+  //   const svgNS = 'http://www.w3.org/2000/svg';
+  //   const stations = this.buildStationNodes(sumurData);
+
+  //   // Satu <defs> untuk menampung semua gradient
+  //   // const defs = document.createElementNS(svgNS, 'defs');
+  //   // this.svgOverlay.appendChild(defs);
+
+  //   let pathIndex = 0;
+
+  //   stations.forEach(station => {
+
+  //     const stIcon = L.divIcon({
+  //       html: `
+  //         <div style="
+  //           width: 20px; height: 20px;
+  //           background: #6f4428;
+  //           border: 1px solid #fff;
+  //           border-radius: 4px;
+  //           box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  //           display: flex; align-items: center; justify-content: center;
+  //         ">
+  //           <svg width="10" height="10" viewBox="0 0 10 10">
+  //             <rect x="1" y="4" width="8" height="5" fill="white"/>
+  //             <polygon points="5,0 0,5 10,5" fill="white"/>
+  //           </svg>
+  //         </div>`,
+  //       iconSize: [20, 20],
+  //       iconAnchor: [10, 10],
+  //       className: '',
+  //     });
+
+  //     const stMarker = L.marker([station.lat, station.lng], { icon: stIcon, zIndexOffset: 500 })
+  //       .addTo(this.map!)
+  //       .bindPopup(`
+  //         <b>${station.name}</b><br>
+  //         Jumlah sumur terhubung: ${station.wells.length}
+  //       `);
+  //     this.stationMarkers.push(stMarker);
+
+  //     //flowline dari station ke sumur
+  //     station.wells.forEach((sumur, wIdx) => {
+  //       if (!sumur.lat || !sumur.lng) return;
+
+  //       const fromLatLng = L.latLng(
+  //         this.dmsToDecimal(sumur.lat),
+  //         this.dmsToDecimal(sumur.lng)
+  //       );
+  //       const toLatLng = L.latLng(station.lat, station.lng);
+
+  //       // Konversi ke koordinat piksel layer (bukan piksel layar)
+  //       const fromPt = this.map!.latLngToLayerPoint(fromLatLng);
+  //       const toPt   = this.map!.latLngToLayerPoint(toLatLng);
+
+  //       // Gradient unik per garis
+  //       // const gradId = `fl-grad-${pathIndex}`;
+  //       // const gradient = this.createGradient(svgNS, gradId, fromPt, toPt);
+  //       // defs.appendChild(gradient);
+
+  //       // Bezier quadratic path
+  //       const { cx, cy } = this.bezierControl(fromPt, toPt);
+  //       const path = document.createElementNS(svgNS, 'path') as SVGPathElement;
+  //       path.setAttribute('d', `M${fromPt.x},${fromPt.y} Q${cx},${cy} ${toPt.x},${toPt.y}`);
+  //       path.setAttribute('stroke', `#F7C85C`);
+  //       path.setAttribute('stroke-width', '2.5');
+  //       path.setAttribute('fill', 'none');
+  //       path.setAttribute('stroke-dasharray', '8 6');
+  //       path.setAttribute('stroke-linecap', 'round');
+  //       path.setAttribute('opacity', '0.85');
+  //       // Delay animasi sedikit berbeda tiap garis agar tidak semua bergerak serentak
+  //       path.style.animationDelay = `${(pathIndex % 12) * 0.075}s`;
+  //       path.classList.add('flowline-path');
+
+  //       this.svgOverlay!.appendChild(path);
+  //       this.flowlinePaths.push(path);
+  //       pathIndex++;
+  //     });
+  //   });
+  // }
+
+  private flowlinePolylines: L.Polyline[] = [];
+
+  private redrawFlowlines(sumurData: Sumur[]): void {
+      if (!this.map) return;
+
+      // Hapus garis lama
+      this.flowlinePolylines.forEach(line => this.map!.removeLayer(line));
+      this.flowlinePolylines = [];
+
+      this.stationMarkers.forEach(m => this.map!.removeLayer(m));
+      this.stationMarkers = [];
+
+      if (!this.showFlowlines) return;
+
+      const stations = this.buildStationNodes(sumurData);
+
+      stations.forEach(station => {
+
+        const stIcon = L.divIcon({
+          html: `
+            <div style="
+              width: 20px; height: 20px;
+              background: #6f4428;
+              border: 1px solid #fff;
+              border-radius: 4px;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+              display: flex; align-items: center; justify-content: center;
+            ">
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <rect x="1" y="4" width="8" height="5" fill="white"/>
+                <polygon points="5,0 0,5 10,5" fill="white"/>
+              </svg>
+            </div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+          className: '',
+        });
+
+        const stMarker = L.marker([station.lat, station.lng], { icon: stIcon, zIndexOffset: 500 })
+          .addTo(this.map!)
+          .bindPopup(`
+            <b>${station.name}</b><br>
+            Jumlah sumur terhubung: ${station.wells.length}
+          `);
+
+        this.stationMarkers.push(stMarker);
+
+        station.wells.forEach(sumur => {
+          if (!sumur.lat || !sumur.lng) return;
+
+          const fromLatLng = L.latLng(
+            this.dmsToDecimal(sumur.lat),
+            this.dmsToDecimal(sumur.lng)
+          );
+
+          const toLatLng = L.latLng(station.lat, station.lng);
+
+          const line = L.polyline([fromLatLng, toLatLng], {
+            color: '#F7C85C',
+            weight: 2.5,
+            opacity: 0.85,
+            dashArray: '8 6'
+          }).addTo(this.map!);
+
+          this.flowlinePolylines.push(line);
+        });
+      });
+  }
   // Filter methods
   getColumnValues(param: any) {
     const column = param;
