@@ -109,7 +109,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadSumurFromAPI();
     
     this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if(res) this.getColumnValues(res.column);
+      if(res && res.column) this.getColumnValues(res);
     })
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
       // @ts-ignore
@@ -635,28 +635,33 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   // Filter methods
   getColumnValues(param: any) {
-    const column = param;
-    
-    if (!this.sumurList || this.sumurList.length === 0) {
-      console.log("[MapSumur] Data belum siap");
-      return;
+    const column = param["column"];
+    const filter = param["filter"];
+    const clear  = param["clear"];
+
+    if (!column || !this.sumurList || this.sumurList.length === 0) return;
+
+    if (clear) {
+      this[column + "_xSelected"] = [];
     }
 
-    // Ambil filter existing dari state
+    // Ambil filter existing dari state, tanpa kolom yang sedang di-query
     let columnfilter: any = this.getColumnFilter();
     delete columnfilter[column];
 
     // Terapkan filter yang ada
     let filteredData = this.applyFilters(columnfilter);
 
-    // Ekstrak unique values untuk kolom
+    // Ekstrak unique values untuk kolom, terapkan text filter jika ada
     let items = [...new Set(
       filteredData
         .map(x => (x as any)[column])
         .filter(v => v !== null && v !== undefined && v !== '')
+        .filter(v => !filter || String(v).toLowerCase().includes(filter.toLowerCase()))
     )];
 
-    // Update xfilterService dengan items
+    // setTimeout agar dialog sempat subscribe ke xfilterService.update (EventEmitter)
+    // sebelum updateItems emit — karena getColumnValues bersifat synchronous
     setTimeout(() => {
       this.xfilterService.updateItems({
         column: column,
