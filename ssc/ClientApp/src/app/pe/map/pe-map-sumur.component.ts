@@ -251,15 +251,15 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       const lat = this.dmsToDecimal(sumur.lat);
       const lng = this.dmsToDecimal(sumur.lng);
 
-      // Semua marker seragam — biru
+      const statusColor = this.getStatusColor(sumur.status);
       const icon = L.divIcon({
         html: `
           <div style="
-            background-color: #1976d2;
+            background-color: ${statusColor};
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            border: 2.5px solid #0d47a1;
+            border: 2.5px solid ${statusColor};
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
           "></div>
         `,
@@ -274,6 +274,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         .bindPopup(`
           <b>${sumur.wellName}</b>
           Status: <span style="color: ${this.getStatusColor(sumur.status)}">${sumur.status}</span>
+          <br> Station: ${sumur.station}
 
         `);
       
