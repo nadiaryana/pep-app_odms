@@ -1,4 +1,4 @@
-export class PeBhp {
+export class PePumpingUnit {
 	constructor(
 		public _id: string,
 		public machine_id: number,
@@ -9,8 +9,8 @@ export class PeBhp {
 	) {}
 }
 
-export class PeBhpError {
+export class PePumpingUnitError {
 	constructor(
-		public pe_bhp_id: number = 0,
+		public pe_pumping_unit_id: number = 0,
 	) {}
 }

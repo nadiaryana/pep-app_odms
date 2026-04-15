@@ -13,7 +13,7 @@ namespace ssc.Areas.PE.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string _id { get; set; }
         // public DateTime? date { get; set; }
-        public decimal? nomor { get; set; }
+        public string nomor { get; set; }
         public string well { get; set; }
         public string status { get; set; }
         public string primemover { get; set; }
@@ -24,7 +24,7 @@ namespace ssc.Areas.PE.Models
         public DateTime? created_date { get; set; }
         public string updated_by { get; set; }
         public DateTime? updated_date { get; set; }
-        public BhpError _error { get; set; }
+        public PumpingUnitError _error { get; set; }
     }
 
     public class PumpingUnitError
@@ -62,6 +62,6 @@ namespace ssc.Areas.PE.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string _id { get; set; }
         public int error_count { get; set; }
-        public Bhp[] items { get; set; }
+        public PumpingUnit[] items { get; set; }
     }
 }

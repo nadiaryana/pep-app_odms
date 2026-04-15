@@ -8,8 +8,8 @@ import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
 
-import { PeBhpService} from './pe-pumping-unit.service';
-import { PeBhp}    from './pe-pumping-unit';
+import { PePumpingUnitService} from './pe-pumping-unit.service';
+import { PePumpingUnit}    from './pe-pumping-unit';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
@@ -26,7 +26,7 @@ export class PeBhpListComponent implements OnInit {
 
   displayedColumns: string[] = ["select", "date","well","compl_layer","layer_name","perfo_interval","meas_type","meas_depth","pmax","tmax", "noted"];
   exampleDatabase: ExampleHttpDao | null;
-  data: PeBhp[] = [];
+  data: PePumpingUnit[] = [];
 
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
@@ -77,7 +77,7 @@ export class PeBhpListComponent implements OnInit {
     private router: Router,
     public dialog: MatDialog,
     //public snackBar: MatSnackBar,
-    private pe_bhpService: PeBhpService,
+    private pe_pumpingService: PePumpingUnitService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
     private titleService: TitleService,
@@ -89,11 +89,11 @@ export class PeBhpListComponent implements OnInit {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "BHP",
+      title: "Pumping Unit",
       icon: "sensors",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
-        {label: 'BHP', routerLink: ''}
+        {label: 'Pumping Unit', routerLink: ''}
       ]}
     );
 
@@ -314,7 +314,7 @@ export class PeBhpListComponent implements OnInit {
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-    const dialogRef = this.dialog.open(PeBhpDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PePumpingUnitDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
     });
@@ -323,7 +323,7 @@ export class PeBhpListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/bhp', {
+        this.http.delete<any>('/api/pe/pumping', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -345,8 +345,8 @@ export class PeBhpListComponent implements OnInit {
 
 }
 
-export interface PeBhpApi {
-  items: PeBhp[];
+export interface PePumpingUnitApi {
+  items: PePumpingUnit[];
   total_count: number;
 }
 
@@ -370,7 +370,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) {}
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeBhpApi> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PePumpingUnitApi> {
 
     var params = {};
     if(sort!=null) params["sort"] = sort;
@@ -383,19 +383,19 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<PeBhpApi>('/api/pe/bhp', httpOption);
+    return this.http.get<PePumpingUnitApi>('/api/pe/pump', httpOption);
   }
 }
 
 @Component({
-  selector: 'app-bhp-delete-dialog',
+  selector: 'app-pumping-unit-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
-  styleUrls: ['./pe-bhp.scss']
+  styleUrls: ['./pe-pumping-unit.scss']
 })
-export class PeBhpDeleteDialogComponent {
+export class PePumpingUnitDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeBhpDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PePumpingUnitDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) {}
 
   onNoClick(): void {

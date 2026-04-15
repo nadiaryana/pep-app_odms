@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PeBhpAddComponent} from './pe-bhp-add.component';
+import { PeBhpAddComponent} from './pe-pumping-unit-add.component';
 
 describe('PeBhpAddComponent', () => {
   let component: PeBhpAddComponent;

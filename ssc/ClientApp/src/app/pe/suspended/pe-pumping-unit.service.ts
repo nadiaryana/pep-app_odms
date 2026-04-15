@@ -4,14 +4,14 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router, RouterStateSnapshot, ActivatedRoute } from '@angular/router';
 
-import { PeBhp } from './pe-pumping-unit';
+import { PePumpingUnit } from './pe-pumping-unit';
 //import { Sensor } from './sensor';
 
 @Injectable({
   providedIn: 'root'
 })
 
-export class PeBhpService {
+export class PePumpingUnitService {
   
   constructor(
 	private http: HttpClient,
@@ -19,31 +19,31 @@ export class PeBhpService {
 	
   }
 
-    add(_pe_bhp: PeBhp) {
-		return this.http.post<any>('Pe/Bhp/Add', _pe_bhp)
+    add(_pe_bhp: PePumpingUnit) {
+		return this.http.post<any>('Pe/PumpingUnit/Add', _pe_bhp)
 		.pipe(map(res => {
 			return res;
 		}));
     }
 	
-	deletePeBhp(_pe_bhp: PeBhp) {
-		return this.http.post<any>('Pe/Bhp/Delete', _pe_bhp)
+	deletePePumpingUnit(_pe_bhp: PePumpingUnit) {
+		return this.http.post<any>('Pe/PumpingUnit/Delete', _pe_bhp)
 		.pipe(map(res => {
 			return res;
 		}));
 	}
 	
-	editPeBhp(_pe_bhp: PeBhp) {
-		return this.http.post<any>('Pe/Bhp/Edit', _pe_bhp)
+	editPePumpingUnit(_pe_bhp: PePumpingUnit) {
+		return this.http.post<any>('Pe/PumpingUnit/Edit', _pe_bhp)
 		.pipe(map(res => {
 			return res;
 		}));
 	}
 	
-	getOne(_pe_bhp: PeBhp) : Observable<PeBhp> {
-		return this.http.post<any>('Pe/Bhp/Get', _pe_bhp)
+	getOne(_pe_bhp: PePumpingUnit) : Observable<PePumpingUnit> {
+		return this.http.post<any>('Pe/PumpingUnit/Get', _pe_bhp)
 		.pipe(map(res => { 
-			return new PeBhp(res.PE_TICKET_ID, res.MACHINE_ID, res.PRESENCE_LOCATION_ID, res.DEVICE_ROLE);
+			return new PePumpingUnit(res.PE_TICKET_ID, res.MACHINE_ID, res.PRESENCE_LOCATION_ID, res.DEVICE_ROLE);
 		})); 
 	}
 }

@@ -77,6 +77,9 @@ import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component
 import { MapSumurComponent } from './map/pe-map-sumur.component';
 import { PeMapAddComponent } from './map/pe-map-add.component';
 import { PeMapComponent } from './map/pe-map.component';
+import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
+import { PePumpingUnitListComponent } from './suspended/pe-pumping-unit-list.component';
+import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -160,6 +163,11 @@ const peRoutes: Routes = [
       { path: '', redirectTo: '', pathMatch:"full"},
     ]},
 
+     { path: 'pump', component: PePumpingUnitComponent, children:[
+      { path: 'list', component: PePumpingUnitListComponent, canActivate: [PePermissionGuard]},
+      { path: 'add', component: PePumpingUnitAddComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full"},
+    ]},
 
   ]},
 ]; 

@@ -146,10 +146,12 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
       this.markers = [];
       this.selectedMarker = null;
       this.markerStatusMap.clear();
-      if (this.map) {
-        this.map.remove();
-        this.map = null;
-      }
+      this.flowlinePolylines.forEach(l => l.remove());
+      this.flowlinePolylines = [];
+      this.stationMarkers.forEach(m => m.remove())
+      this.stationMarkers = [];
+      this.map.remove();
+      this.map = null;
     }
   }
 
@@ -170,7 +172,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 0);
   }
 
-  // ─── Toggle flowline dari template ─────────────────────────────────────
+  
   toggleFlowlines(): void {
     this.showFlowlines = !this.showFlowlines;
     if (this.svgOverlay) {
@@ -221,10 +223,10 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
           }, 0);
           
           // Reload markers setelah data berhasil diloading
-          if (this.map) {
-            this.loadMarkers();
-            this.redrawFlowlines(this.sumurList); 
-          }
+          // if (this.map) {
+          //   this.loadMarkers();
+          //   this.redrawFlowlines(this.sumurList); 
+          // }
         }
       },
       (error) => {
@@ -398,6 +400,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   //   document.head.appendChild(style);
   // }
 
+  //grup sumur sesuai stationnya
   private buildStationNodes(sumurData: Sumur[]): StationNode[] {
     const stationMap = new Map<string, StationNode>();
 
@@ -759,22 +762,70 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private updateMarkersVisibility(filteredSumur: Sumur[]): void {
-    if (!this.map) return;
+ private updateMarkersVisibility(filteredSumur: Sumur[]): void {
+  if (!this.map) return;
 
-    // ambil nama sumur yang difilter
-    const filteredNames = new Set(filteredSumur.map(s => s.wellName));
-    
-    this.markerMap.forEach((marker, wellName) => {
-      if (filteredNames.has(wellName)) {
-        if (!this.map!.hasLayer(marker)) {
-          marker.addTo(this.map!); // kalau ada ditambah
-        }
-      } else {
-        if (this.map!.hasLayer(marker)) {
-          marker.removeFrom(this.map!); // kalau gaada dihapus
-        }
-      }
+  const hasActiveFilter =
+    this.wellName_xSelected.length > 0 ||
+    this.status_xSelected.length > 0;
+
+  if (!hasActiveFilter) {
+    // Tidak ada filter aktif — hapus semua marker dari peta
+    this.markerMap.forEach((marker) => {
+      if (this.map!.hasLayer(marker)) marker.removeFrom(this.map!);
     });
+    return;
   }
+
+  // Ada filter aktif — tampilkan hanya sumur yang lolos filter
+  const filteredNames = new Set(filteredSumur.map(s => s.wellName));
+
+  filteredSumur.forEach(sumur => {
+    if (!sumur.lat || !sumur.lng) return;
+
+    // Buat marker baru jika belum pernah dibuat sebelumnya 
+    if (!this.markerMap.has(sumur.wellName)) {
+      const lat         = this.dmsToDecimal(sumur.lat);
+      const lng         = this.dmsToDecimal(sumur.lng);
+      const statusColor = this.getStatusColor(sumur.status);
+
+      const icon = L.divIcon({
+        html: `<div style="
+          background-color: ${statusColor};
+          width: 18px; height: 18px;
+          border-radius: 50%;
+          border: 2.5px solid ${statusColor};
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        "></div>`,
+        className: '',
+        iconSize:    [18, 18],
+        iconAnchor:  [9, 9],
+        popupAnchor: [0, -12],
+      });
+
+      const marker = L.marker([lat, lng], { icon })
+        .bindPopup(`
+          <b>${sumur.wellName}</b><br>
+          Status: <span style="color:${statusColor}">${sumur.status}</span><br>
+          Station: ${sumur.station}
+        `);
+
+      marker.on('click', () => this.highlightMarker(marker));
+      this.markerMap.set(sumur.wellName, marker);
+      this.markerStatusMap.set(marker, sumur.status);
+      this.markers.push(marker);
+    }
+
+    // Tambahkan ke peta jika belum ada
+    const m = this.markerMap.get(sumur.wellName)!;
+    if (!this.map!.hasLayer(m)) m.addTo(this.map!);
+  });
+
+  // Sembunyikan marker yg bukan fitered
+  this.markerMap.forEach((marker, wellName) => {
+    if (!filteredNames.has(wellName) && this.map!.hasLayer(marker)) {
+      marker.removeFrom(this.map!);
+    }
+  });
+}
 }

@@ -7,23 +7,23 @@ import { Observable, of } from 'rxjs';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 
 //import { Sensor }    from './sensor';
-import { PeBhp}    from './pe-pumping-unit';
+import { PePumpingUnit}    from './pe-pumping-unit';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
 
 @Component({
-	selector: 'app-bhp-add',
-	templateUrl: './pe-bhp-add.component.html',
-	styleUrls: ['./pe-bhp.scss']
+	selector: 'app-pumping-add',
+	templateUrl: './pe-pumping-unit-add.component.html',
+	styleUrls: ['./pe-pumping-unit.scss']
 })
 
-export class PeBhpAddComponent {
+export class PePumpingUnitAddComponent {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
-	bhpForm: FormGroup;
+	pumpingForm: FormGroup;
 	
 	isUploading = false;
 	isLoading = false;
@@ -41,7 +41,7 @@ export class PeBhpAddComponent {
   	data_mode = "all";
   	resultsLength = 0;
 
-	data: PeBhp[] = [];
+	data: PePumpingUnit[] = [];
 	data_error_count: number = 0;
 	displayedColumns: string[] = ["info", "date","well","compl_layer","layer_name","perfo_interval","meas_type","meas_depth","pmax","tmax", "noted","Actions"];
 
@@ -58,24 +58,24 @@ export class PeBhpAddComponent {
 		this.loading = true;
 		//this.snackBar.dismiss();
 		this.snackbarService.status.next(new SnackbarApi(false));
-		this.bhpForm.disable();
+		this.pumpingForm.disable();
 	}
 
-	get f() { return this.bhpForm.controls; }
+	get f() { return this.pumpingForm.controls; }
 
 	ngOnInit() { 
 
 		this.titleService.titleSource.next({
-          title: "Add BHP",
+          title: "Add Pumping Unit",
           icon:"add",
 	      breadcrumbs: [
 	        {label: 'Petroleum Engineering', routerLink: ''}, 
-	        {label: 'BHP', routerLink: 'pe/bhp'},
+	        {label: 'PU', routerLink: 'pe/pump'},
 	        {label: 'Add', routerLink: ''}, 
 	      ]}
 	    );
 
-		this.bhpForm = this.formBuilder.group({
+		this.pumpingForm = this.formBuilder.group({
 			//sensor_id: ['', Validators.required],
 			location_id: [''],
 			is_anchor: [''],
@@ -85,12 +85,12 @@ export class PeBhpAddComponent {
 		//this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 	};
 
-	listBhp() {
-		this.router.navigate(['pe', 'bhp', 'list']);
+	listPumpingUnit() {
+		this.router.navigate(['pe', 'pump', 'list']);
 	}
 
 	canDeactivate(): Observable<boolean> | boolean {
-		if (this.bhpForm.pristine) {
+		if (this.pumpingForm.pristine) {
 			return true;
 		}
 		return this.dialogService.confirm('Discard changes?');
@@ -111,7 +111,7 @@ export class PeBhpAddComponent {
 		const fd = new FormData();
 		this.isUploading = true;
 		fd.append('files', this.fileInput.nativeElement.files[0]);
-		this.http.post('/api/pe/bhp/UploadFiles', fd, {
+		this.http.post('/api/pe/pump/UploadFiles', fd, {
 			reportProgress: true,
 			observe: 'events'
 		})
@@ -142,7 +142,7 @@ export class PeBhpAddComponent {
 			}
 		}
 		
-		this.http.get<any>('/api/pe/bhp/Tmp', httpOption).subscribe(res => {
+		this.http.get<any>('/api/pe/pump/Tmp', httpOption).subscribe(res => {
 			this.isLoading = false;
 			this.data = res['items'];
 			this.data_error_count = res['error_count'];
@@ -157,7 +157,7 @@ export class PeBhpAddComponent {
 
 	saveData() {
 		this.isSaving = true;
-		this.http.get<any>('/api/pe/bhp/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+		this.http.get<any>('/api/pe/pump/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
 			this.isSaving = false;
 			this.modified_count = res["modified_count"];
 			this.created_count = res["created_count"];
@@ -193,7 +193,7 @@ export class PeBhpAddComponent {
 
 	@HostListener('window:beforeunload', ['$event'])
 	unloadNotification($event: any) {
-		return this.bhpForm.pristine;
+		return this.pumpingForm.pristine;
 	}
 
 }

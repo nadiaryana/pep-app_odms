@@ -85,7 +85,7 @@ namespace ssc.Areas.PE.Controllers
                 foreach (string log in DailyCommon._logical)
                 {
                     // if (colfilter.date?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
-                    if (colfilter.nomor?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.nomor.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$nomor\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.nomor?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.nomor.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$nomor\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.well?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.well.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$well\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.status?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.status.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$status\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.primemover?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.primemover.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$primemover\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
@@ -244,221 +244,84 @@ namespace ssc.Areas.PE.Controllers
             List<PumpingUnit> items = new List<PumpingUnit>();
             int error_count = 0;
 
-            for (var r = 2; r <= rowCount; r++)
+            for (var r = 6; r <= rowCount; r++)
             {
-                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
+                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                 {
                     PumpingUnit _row = new PumpingUnit();
                     PumpingUnitError _row_error = new PumpingUnitError();
                     int last_error_count = error_count;
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                     {
-                        try
-                        {
-                            if (ws.Cells[r, 1].Value.GetType() == DateTime.Now.GetType())
-                            {
-                                _row.date = (DateTime?)ws.Cells[r, 1].Value;
-                            }
-                            else
-                            {
-                                _row.date = DateTime.FromOADate(double.Parse(ws.Cells[r, 1].Value?.ToString().Trim()));
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _row_error.date = new ErrorItem { value = ws.Cells[r, 1].Value?.ToString(), message = e.Message };
-                            error_count++;
-                        }
+                        _row.nomor = ws.Cells[r, 3].Value?.ToString().Trim();
                     }
                     else
                     {
-                        _row_error.date = new ErrorItem { value = "(Blank)", message = "Blank date is not allowed" };
+                        _row_error.nomor = new ErrorItem { value = "(Blank)", message = "Blank nomor is not allowed" };
                         error_count++;
                     }
 
-                    var arrayMappings = new[]
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString()))
                     {
-                        new
-                        {
-                            key = "layer_name",
-                            col = 4,
-                            required = false,
-                            errorMsg = "Blank zone is not allowed",
-                            parse = new Func<string, object>(val => val.Split(",").Select(z => z.Trim()).ToArray())
-                        },
-                        new
-                        {
-                            key = "perfo_interval",
-                            col = 5,
-                            required = false,
-                            errorMsg = "Blank interval is not allowed",
-                            parse = new Func<string, object>(val => val.Split(",").Select(i => i.Trim().Split("-").Select(j => decimal.Parse(j.Trim())).ToArray()).ToArray())
-                        }
-                    };
-
-                    foreach (var mapping in arrayMappings)
+                        _row.well = ws.Cells[r, 4].Value?.ToString().Trim();
+                    }
+                    else
                     {
-                        var rawValue = ws.Cells[r, mapping.col].Value;
-                        var strValue = rawValue?.ToString().Trim();
-
-                        var prop = typeof(PumpingUnit).GetProperty(mapping.key);
-                        var errorProp = typeof(PumpingUnitError).GetProperty(mapping.key);
-
-                        if (!string.IsNullOrWhiteSpace(strValue))
-                        {
-                            try
-                            {
-                                var parsedValue = mapping.parse(strValue);
-                                prop?.SetValue(_row, parsedValue);
-                            }
-                            catch (Exception e)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
-                                error_count++;
-                            }
-                        }
-                        else
-                        {
-                            if (mapping.required)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
-                                error_count++;
-                            }
-                            prop?.SetValue(_row, null);
-                        }
+                        _row_error.well = new ErrorItem { value = "(Blank)", message = "Blank well is not allowed" };
+                        error_count++;
                     }
 
-                    var stringMappings = new[]
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 5].Value?.ToString()))
                     {
-                        new { key = "well", col = 2, required = true, errorMsg = "Blank Well String name is not allowed" },
-                        new { key = "compl_layer", col = 3, required = false, errorMsg = "" },
-                        new { key = "meas_type", col = 6, required = false, errorMsg = "" },
-                        new { key = "noted", col = 10, required = false, errorMsg = "" },
-                        new { key = "meas_depth", col = 7, required = false, errorMsg = "" },
-                    };
-
-                    foreach (var mapping in stringMappings)
+                        _row.status = ws.Cells[r, 5].Value?.ToString().Trim();
+                    }
+                    else
                     {
-                        var rawValue = ws.Cells[r, mapping.col].Value;
-                        var strValue = rawValue?.ToString().Trim();
-
-                        var prop = typeof(PumpingUnit).GetProperty(mapping.key);
-                        var errorProp = typeof(PumpingUnitError).GetProperty(mapping.key);
-
-                        if (!string.IsNullOrWhiteSpace(strValue))
-                        {
-                            prop?.SetValue(_row, strValue);
-                        }
-                        else
-                        {
-                            if (mapping.required)
-                            {
-                                errorProp?.SetValue(_row_error, new ErrorItem { value = "(Blank)", message = mapping.errorMsg });
-                                error_count++;
-                            }
-                            prop?.SetValue(_row, null);
-                        }
+                        _row_error.status = new ErrorItem { value = "(Blank)", message = "Blank status is not allowed" };
+                        error_count++;
                     }
 
-                    // decimal mappings
-                    // Column indexes based on the provided Excel structure
-                    var mappings = new[]
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 6].Value?.ToString()))
                     {
-
-                        new { key = "pmax", col = 8 },
-                        new { key = "tmax", col = 9 },
-                    };
-
-                    foreach (var mapping in mappings)
+                        _row.primemover = ws.Cells[r, 6].Value?.ToString().Trim();
+                    }
+                    else
                     {
-                        var rawValue = ws.Cells[r, mapping.col].Value;
+                        _row_error.primemover = new ErrorItem { value = "(Blank)", message = "Blank primemover is not allowed" };
+                        error_count++;
+                    }
 
-                        // If empty → null
-                        if (rawValue == null)
-                        {
-                            typeof(PumpingUnit).GetProperty(mapping.key)?.SetValue(_row, null);
-                            continue;
-                        }
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 7].Value?.ToString()))
+                    {
+                        _row.merk = ws.Cells[r, 7].Value?.ToString().Trim();
+                    }
+                    else
+                    {
+                        _row_error.merk = new ErrorItem { value = "(Blank)", message = "Blank merk is not allowed" };
+                        error_count++;
+                    }
 
-                        string strValue = rawValue.ToString().Trim();
-                        decimal num;
-                        bool parsed = false;
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 8].Value?.ToString()))
+                    {
+                        _row.tipe = ws.Cells[r, 8].Value?.ToString().Trim();
+                    }
+                    else
+                    {
+                        _row_error.tipe = new ErrorItem { value = "(Blank)", message = "Blank tipe is not allowed" };
+                        error_count++;
+                    }
 
-                        // Excel stores most numbers as double
-                        if (rawValue is double dbl)
-                        {
-                            num = Convert.ToDecimal(dbl);
-                            parsed = true;
-                        }
-                        else if (rawValue is int itg)
-                        {
-                            num = Convert.ToDecimal(itg);
-                            parsed = true;
-                        }
-                        else
-                        {
-                            // Last fallback: parse string
-                            parsed = decimal.TryParse(strValue, out num);
-                        }
-
-                        if (parsed)
-                        {
-                            typeof(PumpingUnit).GetProperty(mapping.key)?.SetValue(_row, num);
-                        }
-                        else
-                        {
-                            typeof(PumpingUnit).GetProperty(mapping.key)?.SetValue(_row, null);
-
-                            typeof(PumpingUnitError).GetProperty(mapping.key)?.SetValue(
-                                _row_error,
-                                new ErrorItem
-                                {
-                                    value = strValue,
-                                    message = "Invalid number"
-                                }
-                            );
-
-                            error_count++;
-                        }
-                        // var rawValue = ws.Cells[r, mapping.col].Value;
-                        // var strValue = rawValue?.ToString().Trim();
-
-                        // if (!string.IsNullOrEmpty(strValue))
-                        // {
-                        //     string valueToParse = strValue;
-
-                        //     if (decimal.TryParse(valueToParse, out decimal num))
-                        //     {
-                        //         var prop = typeof(PumpingUnit).GetProperty(mapping.key);
-                        //         if (prop != null)
-                        //             prop.SetValue(_row, num);
-                        //     }
-                        //     else
-                        //     {
-                        //         var prop = typeof(PumpingUnit).GetProperty(mapping.key);
-                        //         if (prop != null)
-                        //             prop.SetValue(_row, null);
-
-                        //         var errorProp = typeof(PumpingUnitError).GetProperty(mapping.key);
-                        //         if (errorProp != null)
-                        //             errorProp.SetValue(_row_error, new ErrorItem { value = strValue, message = "Invalid number" });
-
-                        //         error_count++;
-                        //     }
-                        // }
-                        // else
-                        // {
-                        //     var prop = typeof(PumpingUnit).GetProperty(mapping.key);
-                        //     if (prop != null)
-                        //         prop.SetValue(_row, null);
-                        // }
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 9].Value?.ToString()))
+                    {
+                        _row.noted = ws.Cells[r, 9].Value?.ToString().Trim();
                     }
 
 
-                    if (_row_error.date == null && _row_error.well == null)
+
+                    if (_row_error.well == null && _row_error.well == null)
                     {
-                        if (_pumping.Find(t => t.date == _row.date && t.well == _row.well).CountDocuments() > 0)
+                        if (_pumping.Find(t => t.well == _row.well).CountDocuments() > 0)
                         {
                             _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
                         }
@@ -491,7 +354,7 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PePumpingUnit Add")]
         [HttpGet("Tmp")]
-        public ActionResult GetTmp(string _id, String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
+        public ActionResult GetTmp(string _id, String sort = "well", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
         {
             PumpingUnitTmp _tmp = _pumping_tmp.Find(t => t._id == _id).FirstOrDefault();
             List<PumpingUnit> _tmpitems = _tmp.items.ToList();
@@ -543,7 +406,7 @@ namespace ssc.Areas.PE.Controllers
 
                 List<PumpingUnit> items = _tmp.items.ToList();
 
-                DateTime? min_date = items.Select(m => m.date).Min();
+                // DateTime? min_date = items.Select(m => m.date).Min();
                 string[] wells = items.Select(m => m.well).ToArray();
 
                 long modified_count = 0;
@@ -553,15 +416,13 @@ namespace ssc.Areas.PE.Controllers
                 {
                     item._error = null;
 
-                    var update = Builders<PumpingUnit>.Update.Set(t => t.date, item.date)
+                    var update = Builders<PumpingUnit>.Update
+                        .Set(t => t.nomor, item.nomor)
                         .Set(t => t.well, item.well)
-                        .Set(t => t.compl_layer, item.compl_layer)
-                        .Set(t => t.layer_name, item.layer_name)
-                        .Set(t => t.perfo_interval, item.perfo_interval)
-                        .Set(t => t.meas_type, item.meas_type)
-                        .Set(t => t.meas_depth, item.meas_depth)
-                        .Set(t => t.pmax, item.pmax)
-                        .Set(t => t.tmax, item.tmax)
+                        .Set(t => t.status, item.status)
+                        .Set(t => t.primemover, item.primemover)
+                        .Set(t => t.merk, item.merk)
+                        .Set(t => t.tipe, item.tipe)
                         .Set(t => t.noted, item.noted)
                         .Set(t => t.updated_by, User.Identity.Name)
                         .Set(t => t.updated_date, DateTime.Now)
@@ -569,7 +430,7 @@ namespace ssc.Areas.PE.Controllers
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
                     UpdateResult res = _pumping.UpdateOne(
-                        // Builders<PumpingUnit>.Filter.Eq(t => t.date, item.date) & Builders<PumpingUnit>.Filter.Eq(t => t.well, item.well),
+                        Builders<PumpingUnit>.Filter.Eq(t => t.well, item.well),
                         update, new UpdateOptions() { IsUpsert = true });
 
                     modified_count += res.ModifiedCount;

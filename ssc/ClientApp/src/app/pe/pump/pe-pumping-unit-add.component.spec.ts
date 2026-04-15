@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PeBhpAddComponent} from './pe-bhp-add.component';
+import { PePumpingUnitAddComponent} from './pe-pumping-unit-add.component';
 
-describe('PeBhpAddComponent', () => {
-  let component: PeBhpAddComponent;
-  let fixture: ComponentFixture<PeBhpAddComponent>;
+describe('PePumpingUnitAddComponent', () => {
+  let component: PePumpingUnitAddComponent;
+  let fixture: ComponentFixture<PePumpingUnitAddComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PeBhpAddComponent ]
+      declarations: [ PePumpingUnitAddComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PeBhpAddComponent);
+    fixture = TestBed.createComponent(PePumpingUnitAddComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
