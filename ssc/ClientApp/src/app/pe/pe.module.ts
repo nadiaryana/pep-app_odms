@@ -277,7 +277,7 @@ export class PeModule {
           
         ]),
         new PanelItem("Map", "pe/map", "map", this.pePermission.passPermission("pe/map")),
-        new PanelItem("Pumping Unit", "pe/pumping-unit", "precision_manufacturing", this.pePermission.passPermission("pe/pumping-unit")),
+        new PanelItem("Pumping Unit", "pe/pump", "precision_manufacturing", this.pePermission.passPermission("pe/pumping-unit")),
       
         ]));
     });
