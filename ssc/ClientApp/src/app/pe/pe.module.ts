@@ -83,7 +83,7 @@ import { PeDailyOptimasiDeleteDialogComponent, PeOptimasiListComponent } from '.
 import { PeOptimasiAddComponent } from './optimasi/pe-optimasi-add.component';
 import { PeOptimasiChartComponent } from './optimasi/pe-optimasi-chart.component';
 import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
-import { MatSliderModule } from '@angular/material';
+import { MatButtonToggleModule, MatCheckboxModule, MatSliderModule } from '@angular/material';
 import { PeLaporanLabDeleteDialogComponent, PeLaporanLabListComponent } from './laporan/pe-laporan-lab-list.component';
 import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component';
 import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
@@ -92,6 +92,9 @@ import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
 import { MapSumurComponent } from './map/pe-map-sumur.component';
 import { PeMapAddComponent } from './map/pe-map-add.component';
 import { PeMapComponent } from './map/pe-map.component';
+import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
+import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
+import { PePumpingUnitDeleteDialogComponent, PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -176,6 +179,12 @@ import { PeMapComponent } from './map/pe-map.component';
   PeMapComponent,
   MapSumurComponent,
   PeMapAddComponent,
+
+  PePumpingUnitComponent,
+  PePumpingUnitAddComponent,
+  PePumpingUnitListComponent,
+  PePumpingUnitDeleteDialogComponent,
+
   // PeGrafikComponent,
   ],
   imports: [
@@ -187,6 +196,8 @@ import { PeMapComponent } from './map/pe-map.component';
   MaterialModule,
   FlexLayoutModule,
   //MatFileUploadModule,
+  MatButtonToggleModule,
+  MatCheckboxModule,
   ChartModule,
   MatSliderModule,
   MatGridListModule,
@@ -216,6 +227,7 @@ import { PeMapComponent } from './map/pe-map.component';
   BarchartDeleteDialogComponent,
   PeLabDeleteDialogComponent,
   PeLaporanLabDeleteDialogComponent,
+  PePumpingUnitDeleteDialogComponent,
   
   // PeSumurDeleteDialogComponent,
   // PeDailyZoneChartDeleteDialogComponent,

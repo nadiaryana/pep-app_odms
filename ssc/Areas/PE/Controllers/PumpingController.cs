@@ -43,6 +43,13 @@ namespace ssc.Areas.PE.Controllers
                 .Include(t => t.primemover)
                 .Include(t => t.merk)
                 .Include(t => t.tipe)
+                .Include(t => t.min_ch)
+                .Include(t => t.med_ch)
+                .Include(t => t.max_ch)
+                .Include(t => t.min_sl)
+                .Include(t => t.med_sl)
+                .Include(t => t.max_sl)
+                .Include(t => t.used_sl)
                 .Include(t => t.noted);
         }
 
@@ -65,6 +72,13 @@ namespace ssc.Areas.PE.Controllers
                     Builders<PumpingUnit>.Filter.Regex(t => t.primemover, new BsonRegularExpression(filter, "i")) |
                     Builders<PumpingUnit>.Filter.Regex(t => t.merk, new BsonRegularExpression(filter, "i")) |
                     Builders<PumpingUnit>.Filter.Regex(t => t.tipe, new BsonRegularExpression(filter, "i")) |
+                    Builders<PumpingUnit>.Filter.Regex(t => t.min_ch, new BsonRegularExpression(filter, "i")) |
+                    Builders<PumpingUnit>.Filter.Regex(t => t.med_ch, new BsonRegularExpression(filter, "i")) |
+                    Builders<PumpingUnit>.Filter.Regex(t => t.max_ch, new BsonRegularExpression(filter, "i")) |
+                    Builders<PumpingUnit>.Filter.Regex(t => t.min_sl, new BsonRegularExpression(filter, "i")) |
+                    Builders<PumpingUnit>.Filter.Regex(t => t.med_sl, new BsonRegularExpression(filter, "i")) |
+                    Builders<PumpingUnit>.Filter.Regex(t => t.max_sl, new BsonRegularExpression(filter, "i")) |
+                    Builders<PumpingUnit>.Filter.Regex(t => t.used_sl, new BsonRegularExpression(filter, "i")) |
                     Builders<PumpingUnit>.Filter.Regex(t => t.noted, new BsonRegularExpression(filter, "i"));
             }
 
@@ -80,6 +94,14 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.primemover?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.primemover.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Regex(t => t.primemover, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.merk?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.merk.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Regex(t => t.merk, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.tipe?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.tipe.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Regex(t => t.tipe, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.min_ch?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.min_ch.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Regex(t => t.min_ch, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.med_ch?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.med_ch.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Regex(t => t.med_ch, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.max_ch?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.max_ch.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Regex(t => t.max_ch, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.min_sl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.min_sl.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Eq(t => t.min_sl, Convert.ToDecimal(c))));
+                if (colfilter.med_sl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.med_sl.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Eq(t => t.med_sl, Convert.ToDecimal(c))));
+                if (colfilter.max_sl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.max_sl.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Eq(t => t.max_sl, Convert.ToDecimal(c))));
+                if (colfilter.used_sl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.used_sl.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Eq(t => t.used_sl, Convert.ToDecimal(c))));
+
                 // if (colfilter.perfo_interval?.ToList().Count(c => !(c is JObject)) > 0) { xcolfilter = xcolfilter & Builders<PumpingUnit>.Filter.Or(colfilter.perfo_interval.ToList().Where(c => !(c is JObject)).Select(c => Builders<PumpingUnit>.Filter.Regex(t => t.perfo_interval, new BsonRegularExpression(Regex.Escape((string)c), "i")))); }
 
                 foreach (string log in DailyCommon._logical)
@@ -91,6 +113,13 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.primemover?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.primemover.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$primemover\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.merk?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.merk.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$merk\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.tipe?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.tipe.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$tipe\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.min_ch?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.min_ch.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$min_ch\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.med_ch?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.med_ch.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$med_ch\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.max_ch?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.max_ch.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$max_ch\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.min_sl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.min_sl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$min_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.med_sl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.med_sl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$med_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.max_sl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.max_sl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$max_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.used_sl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.used_sl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$used_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.noted?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.noted.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$noted\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                 }
 
@@ -108,6 +137,13 @@ namespace ssc.Areas.PE.Controllers
                 case "primemover": _items = (order == "asc") ? _items.SortBy(t => t.primemover) : _items.SortByDescending(t => t.primemover); break;
                 case "merk": _items = (order == "asc") ? _items.SortBy(t => t.merk) : _items.SortByDescending(t => t.merk); break;
                 case "tipe": _items = (order == "asc") ? _items.SortBy(t => t.tipe) : _items.SortByDescending(t => t.tipe); break;
+                case "min_ch": _items = (order == "asc") ? _items.SortBy(t => t.min_ch) : _items.SortByDescending(t => t.min_ch); break;
+                case "med_ch": _items = (order == "asc") ? _items.SortBy(t => t.med_ch) : _items.SortByDescending(t => t.med_ch); break;
+                case "max_ch": _items = (order == "asc") ? _items.SortBy(t => t.max_ch) : _items.SortByDescending(t => t.max_ch); break;
+                case "min_sl": _items = (order == "asc") ? _items.SortBy(t => t.min_sl) : _items.SortByDescending(t => t.min_sl); break;
+                case "med_sl": _items = (order == "asc") ? _items.SortBy(t => t.med_sl) : _items.SortByDescending(t => t.med_sl); break;
+                case "max_sl": _items = (order == "asc") ? _items.SortBy(t => t.max_sl) : _items.SortByDescending(t => t.max_sl); break;
+                case "used_sl": _items = (order == "asc") ? _items.SortBy(t => t.used_sl) : _items.SortByDescending(t => t.used_sl); break;
                 case "noted": _items = (order == "asc") ? _items.SortBy(t => t.noted) : _items.SortByDescending(t => t.noted); break;
             }
 
@@ -185,6 +221,15 @@ namespace ssc.Areas.PE.Controllers
             ws.Cells[1, 4].Value = "Primemover";
             ws.Cells[1, 5].Value = "Merk Pumping Unit";
             ws.Cells[1, 6].Value = "Tipe Pump";
+
+            ws.Cells[1, 7].Value = "Crankhole";
+            ws.Cells[1, 7, 1, 8].Merge = true;
+            ws.Cells[2, 7].Value = "min";
+            // ws.Cells[2, 5].Value = "Cor. Dynamic";
+            // ws.Cells[3, 5].Value = "meter";
+            ws.Cells[2, 8].Value = "Static";
+
+
             ws.Cells[1, 7].Value = "Remarks";
 
 

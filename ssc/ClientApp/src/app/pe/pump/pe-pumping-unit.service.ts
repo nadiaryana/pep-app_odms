@@ -46,4 +46,9 @@ export class PePumpingUnitService {
 			return new PePumpingUnit(res.PE_TICKET_ID, res.MACHINE_ID, res.PRESENCE_LOCATION_ID, res.DEVICE_ROLE);
 		})); 
 	}
+	updatePePumpingUnit(id: string, payload: Partial<PePumpingUnit>) {
+		// Encode ID to handle special characters like #
+		const encodedId = encodeURIComponent(id);
+		return this.http.patch(`/api/pe/pump/${encodedId}`, payload);
+	}
 }

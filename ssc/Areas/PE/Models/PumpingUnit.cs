@@ -19,6 +19,15 @@ namespace ssc.Areas.PE.Models
         public string primemover { get; set; }
         public string merk { get; set; }
         public string tipe { get; set; }
+        public string min_ch { get; set; }
+        public string med_ch { get; set; }
+        public string max_ch { get; set; }
+
+        public decimal? min_sl { get; set; }
+        public decimal? med_sl { get; set; }
+        public decimal? max_sl { get; set; }
+        public decimal? used_sl { get; set; }
+
         public string noted { get; set; }
         public string created_by { get; set; }
         public DateTime? created_date { get; set; }
@@ -38,6 +47,13 @@ namespace ssc.Areas.PE.Models
         public ErrorItem primemover { get; set; }
         public ErrorItem merk { get; set; }
         public ErrorItem tipe { get; set; }
+        public ErrorItem min_ch { get; set; }
+        public ErrorItem med_ch { get; set; }
+        public ErrorItem max_ch { get; set; }
+        public ErrorItem min_sl { get; set; }
+        public ErrorItem med_sl { get; set; }
+        public ErrorItem max_sl { get; set; }
+        public ErrorItem used_sl { get; set; }
         public ErrorItem noted { get; set; }
     }
 
@@ -53,6 +69,13 @@ namespace ssc.Areas.PE.Models
         public Object[] primemover { get; set; }
         public Object[] merk { get; set; }
         public Object[] tipe { get; set; }
+        public Object[] min_ch { get; set; }
+        public Object[] med_ch { get; set; }
+        public Object[] max_ch { get; set; }
+        public Object[] min_sl { get; set; }
+        public Object[] med_sl { get; set; }
+        public Object[] max_sl { get; set; }
+        public Object[] used_sl { get; set; }
         public Object[] noted { get; set; }
     }
 

@@ -78,8 +78,8 @@ import { MapSumurComponent } from './map/pe-map-sumur.component';
 import { PeMapAddComponent } from './map/pe-map-add.component';
 import { PeMapComponent } from './map/pe-map.component';
 import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
-import { PePumpingUnitListComponent } from './suspended/pe-pumping-unit-list.component';
 import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
+import { PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [

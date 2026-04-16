@@ -1,11 +1,24 @@
-<!-- pe-map-sumur.component.html -->
+
+
 <div class="map-wrapper">
 
-  <!-- Header -->
   <div class="map-header">
     <div class="map-header__title">
       <mat-icon>map</mat-icon>
       <span>Peta Sumur</span>
+    </div>
+    <div class="container-top-bar" style="display: flex; gap: 16px;" >
+      <mat-checkbox [(ngModel)]="showWell" (change)="updateMapVisibility()" >
+        Well
+      </mat-checkbox>
+
+      <mat-checkbox [(ngModel)]="showFlowline" (change)="updateMapVisibility()">
+        Flowline
+      </mat-checkbox>
+
+      <mat-checkbox [(ngModel)]="showStation" (change)="updateMapVisibility()">
+        Station
+      </mat-checkbox>
     </div>
     <div class="map-header__legend">
       <span class="legend-item legend-item--total">
@@ -14,11 +27,9 @@
     </div>
   </div>
 
-  <!-- Map Container -->
   <div class="map-container">
     <div id="map"></div>
 
-    <!-- Loading overlay -->
     <div class="map-loading" *ngIf="isLoading">
       <mat-spinner diameter="40"></mat-spinner>
       <span>Memuat peta...</span>

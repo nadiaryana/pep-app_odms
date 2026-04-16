@@ -17,20 +17,26 @@ import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
 
+type PePumpingUnitRow = PePumpingUnit & {
+  isEdit?: boolean;
+  _backup?: Partial<PePumpingUnit>;
+};
+
 @Component({
   selector: 'pe-pumping-unit-list',
   templateUrl: './pe-pumping-unit-list.component.html',
   styleUrls: ['./pe-pumping-unit.scss']
 })
-export class PeBhpListComponent implements OnInit {
+export class PePumpingUnitListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "date","well","compl_layer","layer_name","perfo_interval","meas_type","meas_depth","pmax","tmax", "noted"];
+  displayedColumns: string[] = ["select", "nomor","well", "status", "primemover", "merk", "tipe", "min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl","noted","action"];
+  headerColumns1: string[] = ["select", "nomor","well","status","primemover", "merk", "tipe","cranckhole","panjang_sl","noted"];
+  headerColumns2: string[] = ["min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl"];
   exampleDatabase: ExampleHttpDao | null;
   data: PePumpingUnit[] = [];
 
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
-  isEditing:boolean = false;
 
   resultsLength = 0;
   isLoadingResults = true;
@@ -46,26 +52,34 @@ export class PeBhpListComponent implements OnInit {
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   filterControl = new FormControl('');
 
-  dateFilter = new FormControl('');
+  nomorFilter = new FormControl('');
   wellFilter = new FormControl('');
-  compl_layerFilter = new FormControl('');
-  layer_nameFilter = new FormControl('');
-  perfo_intervalFilter = new FormControl('');
-  meas_typeFilter = new FormControl('');
-  meas_depthFilter = new FormControl('');
-  pmaxFilter = new FormControl('');
-  tmaxFilter = new FormControl('');
+  statusFilter = new FormControl('');
+  primemoverFilter = new FormControl('');
+  merkFilter = new FormControl('');
+  tipeFilter = new FormControl('');
+  min_chFilter = new FormControl('');
+  med_chFilter = new FormControl('');
+  max_chFilter = new FormControl('');
+  min_slFilter = new FormControl('');
+  med_slFilter = new FormControl('');
+  max_slFilter = new FormControl('');
+  used_slFilter = new FormControl('');
   notedFilter = new FormControl('');
 
-  date_xSelected = [];
+  nomor_xSelected = [];
   well_xSelected = [];
-  compl_layer_xSelected = [];
-  layer_name_xSelected = [];
-  perfo_interval_xSelected = [];
-  meas_type_xSelected = [];
-  meas_depth_xSelected = [];
-  pmax_xSelected = [];
-  tmax_xSelected = [];
+  status_xSelected = [];
+  primemover_xSelected = [];
+  merk_xSelected = [];
+  tipe_xSelected = [];
+  min_ch_xSelected = [];
+  med_ch_xSelected = [];
+  max_ch_xSelected = [];
+  min_sl_xSelected = [];
+  med_sl_xSelected = [];
+  max_sl_xSelected = [];
+  used_sl_xSelected = [];
   noted_xSelected = [];
 
   filterSubscription:Subscription;
@@ -76,21 +90,22 @@ export class PeBhpListComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     public dialog: MatDialog,
-    //public snackBar: MatSnackBar,
-    private pe_pumpingService: PePumpingUnitService,
+    public snackBar: MatSnackBar,
+    private pe_bhpService: PePumpingUnitService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
     private titleService: TitleService,
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
+    private service: PePumpingUnitService,
     ) {}
 
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Pumping Unit",
-      icon: "sensors",
+      title: "Pumping Unit Asset",
+      icon: "summarize",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
         {label: 'Pumping Unit', routerLink: ''}
@@ -128,15 +143,19 @@ export class PeBhpListComponent implements OnInit {
       this.sort.sortChange, 
       this.paginator.page, 
       this.filterControl.valueChanges.pipe(debounceTime(300)),
-      this.dateFilter.valueChanges.pipe(debounceTime(300)),
+      this.nomorFilter.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.compl_layerFilter.valueChanges.pipe(debounceTime(300)),
-      this.layer_nameFilter.valueChanges.pipe(debounceTime(300)),
-      this.perfo_intervalFilter.valueChanges.pipe(debounceTime(300)),
-      this.meas_typeFilter.valueChanges.pipe(debounceTime(300)),
-      this.meas_depthFilter.valueChanges.pipe(debounceTime(300)),
-      this.pmaxFilter.valueChanges.pipe(debounceTime(300)),
-      this.tmaxFilter.valueChanges.pipe(debounceTime(300)),
+      this.primemoverFilter.valueChanges.pipe(debounceTime(300)),
+      this.statusFilter.valueChanges.pipe(debounceTime(300)),
+      this.merkFilter.valueChanges.pipe(debounceTime(300)),
+      this.tipeFilter.valueChanges.pipe(debounceTime(300)),
+      this.min_chFilter.valueChanges.pipe(debounceTime(300)),
+      this.med_chFilter.valueChanges.pipe(debounceTime(300)),
+      this.max_chFilter.valueChanges.pipe(debounceTime(300)),
+      this.min_slFilter.valueChanges.pipe(debounceTime(300)),
+      this.med_slFilter.valueChanges.pipe(debounceTime(300)),
+      this.max_slFilter.valueChanges.pipe(debounceTime(300)),
+      this.used_slFilter.valueChanges.pipe(debounceTime(300)),
       this.notedFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
@@ -167,13 +186,160 @@ export class PeBhpListComponent implements OnInit {
         this.isRateLimitReached = true;
         return observableOf([]);
       })
-      ).subscribe(data => {
-        this.data = data;
-        this.dataSource = new MatTableDataSource<any>(this.data);
+      ).subscribe((data: PePumpingUnit[]) => {
+        this.data = data.map(d => ({
+          ...d,
+          isEdit: false   
+        }));
+
+        // this.dataSource = new MatTableDataSource<any>(this.data);
+        this.dataSource.data = data.map(item => ({
+          ...item,
+          isEdit: false
+        }));
         this.selection.clear();
       });
-
   }
+
+  edit(row: PePumpingUnitRow) {
+    row._backup = { ...row };
+    row.isEdit = true;
+  }
+
+  save(row: PePumpingUnitRow) {
+    this.hitungSemuaStok(row);
+
+    const payload: Partial<PePumpingUnit> = { ...row };
+    // Simpan backup 
+    const backupData = { ...row._backup };
+
+    // buang properti frontend
+    delete (payload as any).isEdit;
+    delete (payload as any)._backup;
+
+    this.service.updatePePumpingUnit(row._id, payload).subscribe({
+      next: (res) => {
+        // Update row state
+        row.isEdit = false;
+        delete row._backup;
+
+        // Update dataSource
+        const idx = this.dataSource.data.findIndex(
+          d => d._id === row._id
+        );
+        if (idx !== -1) {
+          this.dataSource.data[idx] = {
+            ...this.dataSource.data[idx],
+            ...payload,
+            isEdit: false
+          };
+          this.dataSource.data = [...this.dataSource.data];
+        }
+
+        // Show success notification with undo option (5 seconds)
+        const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', {
+          duration: 5000
+        });
+
+        snackBarRef.onAction().subscribe(() => {
+          // User clicked UNDO - revert to backup
+          this.undoUpdate(row._id, backupData);
+        });
+      },
+      error: (error) => {
+        // rollback kalau gagal
+        this.cancel(row);
+        this.snackBar.open(error.message ? error.message : 'Gagal mengupdate data', 'Tutup', {
+          duration: 5000
+        });
+      }
+    });
+  }
+
+  undoUpdate(id: string, backupData: any) {
+    const payload = { ...backupData };
+    delete payload.isEdit;
+    delete payload._backup;
+
+    this.service.updatePePumpingUnit(id, payload).subscribe({
+      next: (res) => {
+        // Update this.data array
+        const dataIdx = this.data.findIndex(d => d._id === id);
+        if (dataIdx !== -1) {
+          // Update the object in place and create new reference
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup') {
+              (this.data[dataIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.data[dataIdx] as any).isEdit = false;
+          delete (this.data[dataIdx] as any)._backup;
+        }
+
+        // Update dataSource.data array
+        const dsIdx = this.dataSource.data.findIndex(d => d._id === id);
+        if (dsIdx !== -1) {
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup') {
+              (this.dataSource.data[dsIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.dataSource.data[dsIdx] as any).isEdit = false;
+          delete (this.dataSource.data[dsIdx] as any)._backup;
+        }
+        
+        // Force Angular to detect changes by creating new array reference
+        this.data = [...this.data];
+        this.dataSource.data = [...this.data];
+        
+        this.snackBar.open('Perubahan dibatalkan', 'Tutup', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snackBar.open('Gagal membatalkan perubahan', 'Tutup', { duration: 5000 });
+      }
+    });
+  }
+
+  toNumber(val: any): number {
+    if (val === null || val === undefined || val === '') {
+      return 0;
+    }
+    return Number(val);
+  }
+
+  hitungStokAwal(row: any) {
+    const baru = this.toNumber(row.baru);
+    const lama = this.toNumber(row.lama);
+    const rusak = this.toNumber(row.rusak);
+    
+
+    row.stok_awal = baru + lama + rusak;
+  }
+
+  hitungStokAkhir(row: any) {
+    const stokAwal = this.toNumber(row.stok_awal);
+    const barangMasuk = this.toNumber(row.barang_masuk);
+    const barangKeluar = this.toNumber(row.barang_keluar);
+    
+    row.stok_akhir = stokAwal + barangMasuk - barangKeluar;
+  }
+
+  hitungSemuaStok(row: any) {
+    this.hitungStokAwal(row);
+    this.hitungStokAkhir(row);
+  }
+
+  onValueChange(row: any) {
+    this.hitungSemuaStok(row);
+  }
+
+
+  cancel(row: PePumpingUnitRow) {
+    Object.assign(row, row._backup);
+    row.isEdit = false;
+  }
+
+  
 
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
@@ -267,15 +433,19 @@ export class PeBhpListComponent implements OnInit {
 
   getColumnFilter() {
     var columnfilter = {};
-    if(this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
+    if(this.nomor_xSelected.length) columnfilter["nomor"] = this.nomor_xSelected;
     if(this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if(this.compl_layer_xSelected.length) columnfilter["compl_layer"] = this.compl_layer_xSelected;
-    if(this.layer_name_xSelected.length) columnfilter["layer_name"] = this.layer_name_xSelected;
-    if(this.perfo_interval_xSelected.length) columnfilter["perfo_interval"] = this.perfo_interval_xSelected;
-    if(this.meas_type_xSelected.length) columnfilter["meas_type"] = this.meas_type_xSelected;
-    if(this.meas_depth_xSelected.length) columnfilter["meas_depth"] = this.meas_depth_xSelected;
-    if(this.pmax_xSelected.length) columnfilter["pmax"] = this.pmax_xSelected;
-    if(this.tmax_xSelected.length) columnfilter["tmax"] = this.tmax_xSelected;
+    if(this.primemover_xSelected.length) columnfilter["primemover"] = this.primemover_xSelected;
+    if(this.status_xSelected.length) columnfilter["status"] = this.status_xSelected;
+    if(this.merk_xSelected.length) columnfilter["merk"] = this.merk_xSelected;
+    if(this.tipe_xSelected.length) columnfilter["tipe"] = this.tipe_xSelected;
+    if(this.min_ch_xSelected.length) columnfilter["min_ch"] = this.min_ch_xSelected;
+    if(this.med_ch_xSelected.length) columnfilter["med_ch"] = this.med_ch_xSelected;
+    if(this.max_ch_xSelected.length) columnfilter["max_ch"] = this.max_ch_xSelected;
+    if(this.min_sl_xSelected.length) columnfilter["min_sl"] = this.min_sl_xSelected;
+    if(this.med_sl_xSelected.length) columnfilter["med_sl"] = this.med_sl_xSelected;
+    if(this.max_sl_xSelected.length) columnfilter["max_sl"] = this.max_sl_xSelected;
+    if(this.used_sl_xSelected.length) columnfilter["used_sl"] = this.used_sl_xSelected;
     if(this.noted_xSelected.length) columnfilter["noted"] = this.noted_xSelected;
 
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
@@ -323,7 +493,7 @@ export class PeBhpListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/pumping', {
+        this.http.delete<any>('/api/pe/pump', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -341,8 +511,7 @@ export class PeBhpListComponent implements OnInit {
         })
       }
     });
-}
-
+  }
 }
 
 export interface PePumpingUnitApi {
