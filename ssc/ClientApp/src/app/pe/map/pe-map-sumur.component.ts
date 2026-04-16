@@ -931,7 +931,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private updateMapVisibility(): void {
+  updateMapVisibility(): void {
     if (!this.map) return;
 
     //well marker
