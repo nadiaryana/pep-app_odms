@@ -412,7 +412,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 				// console.log("Apa aja : "+well[y]);
 			// }
 			
-			
+			var i = 0
 			if (well[y] == undefined){
 				console.log("gaada nilai nya: "+well[y]+" - "+g[y]);
 				// well[y] = 'SBJ-155';
@@ -463,7 +463,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 			console.log("Nilai nya: "+well[y]+" - "+g1[y]);
 		}
 	  
-		var i = 0
+		
 		for (var x = 0; x < dt_grs.length; x++){
 			if (dt_grs[x] != undefined){
 				dt_date[i] = tg[x];

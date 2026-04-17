@@ -51,68 +51,17 @@ export class PeDailyChanPlotListComponent implements OnInit {
 
   dateFilter = new FormControl('');
   wellFilter = new FormControl('');
-  zoneFilter = new FormControl('');
-  intervalFilter = new FormControl('');
-  test_dateFilter = new FormControl('');
-  test_durationFilter = new FormControl('');
-  last_prod_hoursFilter = new FormControl('');
   fig_curr_grossFilter = new FormControl('');
   fig_curr_netFilter = new FormControl('');
   last_prod_wcFilter = new FormControl('');
-  art_lift_sizeFilter = new FormControl('');
-  art_lift_typeFilter = new FormControl('');
-  art_lift_slFilter = new FormControl('');
-  art_lift_spmFilter = new FormControl('');
-  art_lift_freqFilter = new FormControl('');
-  art_lift_loadFilter = new FormControl('');
-  art_lift_bean_sizeFilter = new FormControl('');
-  art_lift_efficiencyFilter = new FormControl('');
-  chpFilter = new FormControl('');
-  pflFilter = new FormControl('');
-  psepFilter = new FormControl('');
-  pump_intakeFilter = new FormControl('');
-  topFilter = new FormControl('');
-  midFilter = new FormControl('');
-  bottomFilter = new FormControl('');
+  gasFilter = new FormControl('');
   wor = new FormControl('');
 
   date_xSelected = [];
   well_xSelected = [];
-  zone_xSelected = [];
-  interval_xSelected = [];
-  test_date_xSelected = [];
-  test_duration_xSelected = [];
-  last_prod_hours_xSelected = [];
   fig_curr_gross_xSelected = [];
   fig_curr_net_xSelected = [];
-  last_prod_wc_xSelected = [];
   gas_xSelected = [];
-  art_lift_size_xSelected = [];
-  art_lift_type_xSelected = [];
-  art_lift_sl_xSelected = [];
-  art_lift_spm_xSelected = [];
-  art_lift_freq_xSelected = [];
-  art_lift_load_xSelected = [];
-  art_lift_bean_size_xSelected = [];
-  art_lift_efficiency_xSelected = [];
-  thp_xSelected = [];
-  chp_xSelected = [];
-  pfl_xSelected = [];
-  psep_xSelected = [];
-  pump_intake_xSelected = [];
-  top_xSelected = [];
-  mid_xSelected = [];
-  bottom_xSelected = [];
-  pump_capacity_xSelected = [];
-  pump_efficiency_xSelected = [];
-  sonolog_date_xSelected = [];
-  sonolog_dfl_xSelected = [];
-  sonolog_sfl_xSelected = [];
-  sm_xSelected = [];
-  ps_xSelected = [];
-  pwf_xSelected = [];
-  qmax_xSelected = [];
-  well_efficiency_xSelected = [];
   wor_xSelected = [];
 
   filterSubscription: Subscription;
@@ -177,29 +126,9 @@ export class PeDailyChanPlotListComponent implements OnInit {
       this.filterControl.valueChanges.pipe(debounceTime(300)),
       this.dateFilter.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.zoneFilter.valueChanges.pipe(debounceTime(300)),
-      this.intervalFilter.valueChanges.pipe(debounceTime(300)),
-      this.test_dateFilter.valueChanges.pipe(debounceTime(300)),
-      this.test_durationFilter.valueChanges.pipe(debounceTime(300)),
-      this.last_prod_hoursFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_grossFilter.valueChanges.pipe(debounceTime(300)),
       this.fig_curr_netFilter.valueChanges.pipe(debounceTime(300)),
-      this.last_prod_wcFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_sizeFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_typeFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_slFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_spmFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_freqFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_loadFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_bean_sizeFilter.valueChanges.pipe(debounceTime(300)),
-      this.art_lift_efficiencyFilter.valueChanges.pipe(debounceTime(300)),
-      this.chpFilter.valueChanges.pipe(debounceTime(300)),
-      this.pflFilter.valueChanges.pipe(debounceTime(300)),
-      this.psepFilter.valueChanges.pipe(debounceTime(300)),
-      this.pump_intakeFilter.valueChanges.pipe(debounceTime(300)),
-      this.topFilter.valueChanges.pipe(debounceTime(300)),
-      this.midFilter.valueChanges.pipe(debounceTime(300)),
-      this.bottomFilter.valueChanges.pipe(debounceTime(300)),
+      this.gasFilter.valueChanges.pipe(debounceTime(300)),
       this.wor.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
@@ -333,41 +262,9 @@ export class PeDailyChanPlotListComponent implements OnInit {
     var columnfilter = {};
     if (this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
     if (this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if (this.zone_xSelected.length) columnfilter["zone"] = this.zone_xSelected;//.map(s => "^"+s+"$");
-    if (this.interval_xSelected.length) columnfilter["interval"] = this.interval_xSelected;
-    if (this.test_date_xSelected.length) columnfilter["test_date"] = this.test_date_xSelected;
-    if (this.test_duration_xSelected.length) columnfilter["test_duration"] = this.test_duration_xSelected;
-    if (this.last_prod_hours_xSelected.length) columnfilter["last_prod_hours"] = this.last_prod_hours_xSelected;
     if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"] = this.fig_curr_gross_xSelected;
     if (this.fig_curr_net_xSelected.length) columnfilter["fig_curr_net"] = this.fig_curr_net_xSelected;
-    if (this.last_prod_wc_xSelected.length) columnfilter["last_prod_wc"] = this.last_prod_wc_xSelected;
     if (this.gas_xSelected.length) columnfilter["gas"] = this.gas_xSelected;
-    if (this.art_lift_size_xSelected.length) columnfilter["art_lift_size"] = this.art_lift_size_xSelected;//.map(s => "^"+s+"$");
-    if (this.art_lift_type_xSelected.length) columnfilter["art_lift_type"] = this.art_lift_type_xSelected;//.map(s => "^"+s+"$");
-    if (this.art_lift_sl_xSelected.length) columnfilter["art_lift_sl"] = this.art_lift_sl_xSelected;
-    if (this.art_lift_spm_xSelected.length) columnfilter["art_lift_spm"] = this.art_lift_spm_xSelected;
-    if (this.art_lift_freq_xSelected.length) columnfilter["art_lift_freq"] = this.art_lift_freq_xSelected;
-    if (this.art_lift_load_xSelected.length) columnfilter["art_lift_load"] = this.art_lift_load_xSelected;
-    if (this.art_lift_bean_size_xSelected.length) columnfilter["art_lift_bean_size"] = this.art_lift_bean_size_xSelected;
-    if (this.art_lift_efficiency_xSelected.length) columnfilter["art_lift_efficiency"] = this.art_lift_efficiency_xSelected;
-    if (this.thp_xSelected.length) columnfilter["thp"] = this.thp_xSelected;
-    if (this.chp_xSelected.length) columnfilter["chp"] = this.chp_xSelected;
-    if (this.pfl_xSelected.length) columnfilter["pfl"] = this.pfl_xSelected;
-    if (this.psep_xSelected.length) columnfilter["psep"] = this.psep_xSelected;
-    if (this.pump_intake_xSelected.length) columnfilter["pump_intake"] = this.pump_intake_xSelected;
-    if (this.top_xSelected.length) columnfilter["top"] = this.top_xSelected;
-    if (this.mid_xSelected.length) columnfilter["mid"] = this.mid_xSelected;
-    if (this.bottom_xSelected.length) columnfilter["bottom"] = this.bottom_xSelected;
-    if (this.pump_capacity_xSelected.length) columnfilter["pump_capacity"] = this.pump_capacity_xSelected;
-    if (this.pump_efficiency_xSelected.length) columnfilter["pump_efficiency"] = this.pump_efficiency_xSelected;
-    if (this.sonolog_date_xSelected.length) columnfilter["sonolog_date"] = this.sonolog_date_xSelected;
-    if (this.sonolog_dfl_xSelected.length) columnfilter["sonolog_dfl"] = this.sonolog_dfl_xSelected;
-    if (this.sonolog_sfl_xSelected.length) columnfilter["sonolog_sfl"] = this.sonolog_sfl_xSelected;
-    if (this.sm_xSelected.length) columnfilter["sm"] = this.sm_xSelected;
-    if (this.ps_xSelected.length) columnfilter["ps"] = this.ps_xSelected;
-    if (this.pwf_xSelected.length) columnfilter["pwf"] = this.pwf_xSelected;
-    if (this.qmax_xSelected.length) columnfilter["qmax"] = this.qmax_xSelected;
-    if (this.well_efficiency_xSelected.length) columnfilter["well_efficiency"] = this.well_efficiency_xSelected;
     if (this.wor_xSelected.length) columnfilter["wor"] = this.wor_xSelected;
 	
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();

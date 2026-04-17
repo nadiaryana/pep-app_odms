@@ -129,7 +129,7 @@ export class PeDailyChanPlotChartComponent {
         type: 'scatter',
         yAxis: 0,
         data: [],
-		id: "base_worr",
+		    id: "base_worr",
         color: '#e60000',
         tooltip: {
             valueSuffix: ' ',
@@ -306,9 +306,6 @@ export class PeDailyChanPlotChartComponent {
     this.http.get('/api/pe/data', {params: params}).subscribe(res => {
 	  
 	  var g = res["data"].map(d => d["date"])
-	  // let WOR = res["data"].map(d => d["wor"]);
-	  
-	  
       this.daily_chart_options["title"]["text"] = this.well_xSelected.join(",");
       this.daily_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " +formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
       this.daily_chart_options["series"][0]["data"] = res["data"].map(d => d["wor"]);

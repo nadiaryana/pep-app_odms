@@ -67,6 +67,28 @@ export class OneSlideComponent implements OnInit {
       })
     : "";
 
+  @ViewChild("start_date_iprPicker", { static: true })
+    start_date_iprPicker: MatDatepicker<any>;
+    start_date_iprControl = new FormControl("");
+    start_date_iprInput = this.start_date_iprControl.value
+      ? this.start_date_iprControl.value.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+          day: "numeric",
+        })
+      : "";
+  
+    @ViewChild("end_date_iprPicker", { static: true })
+    end_date_iprPicker: MatDatepicker<any>;
+    end_date_iprControl = new FormControl("");
+    end_date_iprInput = this.end_date_iprControl.value
+      ? this.end_date_iprControl.value.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+          day: "numeric",
+        })
+      : "";
+
   @ViewChild('daily_chart_el', { static: false })
   public daily_chart_el!: ElementRef;
 
@@ -345,6 +367,26 @@ export class OneSlideComponent implements OnInit {
     this.getDailyData();
   }
 
+  start_date_iprChange(evt) {
+    this.start_date_iprInput = evt.value.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+      day: "numeric",
+    });
+
+    this.getDailyData();
+  }
+
+  end_date_iprChange(evt) {
+    this.end_date_iprInput = evt.value.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+      day: "numeric",
+    });
+
+    this.getDailyData();
+  }
+
   onWellSelectionChange() {
     console.log(this.well_xSelected, "onWellSelectionChange");
 
@@ -356,8 +398,8 @@ export class OneSlideComponent implements OnInit {
 
     let params = new HttpParams()
       .set("well_date", this.well_dateControl.value.toISOString())
-      .set("date", this.start_dateControl.value.toISOString())
-      .set("end_date", this.end_dateControl.value.toISOString());
+      .set("date", this.start_date_iprControl.value.toISOString())
+      .set("end_date", this.end_date_iprControl.value.toISOString());
 
     for (const w of this.well_xSelected) {
       params = params.append("well", w);
@@ -385,7 +427,7 @@ export class OneSlideComponent implements OnInit {
   loadingGetDailyData: boolean = false;
 
   getDailyData() {
-    if (!this.start_dateInput || !this.end_dateInput) {
+    if (!this.start_dateInput || !this.end_dateInput ) {
       this.snackbarService.status.next(
         new SnackbarApi(true, "Please select start and end date.", "dismiss", {
           duration: 3000,
@@ -440,8 +482,8 @@ export class OneSlideComponent implements OnInit {
           // Hitung rata-rata per tanggal untuk gross, net, wc
           this.dailyAverages = this.calculateWellAverages(
             filteredData,
-            this.start_dateInput,
-            this.end_dateInput
+            this.start_date_iprInput,
+            this.end_date_iprInput,
           );
 
           const grossAvg =
@@ -635,7 +677,7 @@ export class OneSlideComponent implements OnInit {
 
   testData() {
 
-    if (!this.start_dateControl.value || !this.end_dateControl.value) {
+    if (!this.start_date_iprControl.value || !this.end_date_iprControl.value) {
       this.snackbarService.status.next(
         new SnackbarApi(true, "Please select a well date.", "dismiss", {
           duration: 3000,
