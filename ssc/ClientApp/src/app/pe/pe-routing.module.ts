@@ -80,6 +80,8 @@ import { PeMapComponent } from './map/pe-map.component';
 import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
 import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
 import { PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.component';
+import { PeSuspendedWellComponent } from './suspended-well/pe-suspended-well.component';
+import { PeSuspendedWellListComponent } from './suspended-well/pe-suspended-well-list.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -166,6 +168,11 @@ const peRoutes: Routes = [
      { path: 'pump', component: PePumpingUnitComponent, children:[
       { path: 'list', component: PePumpingUnitListComponent, canActivate: [PePermissionGuard]},
       { path: 'add', component: PePumpingUnitAddComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full"},
+    ]},
+
+    { path: 'suspended-well', component: PeSuspendedWellComponent, children:[
+      { path: 'list', component: PeSuspendedWellListComponent, canActivate: [PePermissionGuard]},
       { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
 

@@ -108,6 +108,9 @@ export class PePermissionService {
 	new Menu("pump/list", true,null, ["PePumpingUnit Read"]),
 	new Menu("pump/add", true,null, ["PePumpingUnit Add"]),
 
+	new Menu("suspended-well", true, null, ["PeSuspendedWell Read"]),
+	new Menu("suspended-well/list", true, null, ["PeSuspendedWell Read"]),
+	new Menu("suspended-well/add", true, null, ["PeSuspendedWell Add"]),
 
 	];
 	
