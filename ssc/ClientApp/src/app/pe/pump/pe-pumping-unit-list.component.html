@@ -20,7 +20,7 @@
     matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
 
     <ng-container matColumnDef="select">
-      <th mat-header-cell *matHeaderCellDef>
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
         <mat-checkbox (change)="$event ? masterToggle() : null"
           [checked]="selection.hasValue() && isAllSelected()"
           [indeterminate]="selection.hasValue() && !isAllSelected()"
@@ -37,20 +37,21 @@
         </mat-checkbox>
       </td>
     </ng-container>
+    
     <ng-container matColumnDef="nomor">
-            <th mat-header-cell *matHeaderCellDef>
+            <th mat-header-cell *matHeaderCellDef rowspan="2">
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">No</span>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">No. PU</span>
                 <app-xfilter title="Nomor" column="nomor" format="number" [selected]="nomor_xSelected"></app-xfilter>
               </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.nomor | number : '1.0-0') || '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{row.nomor  || '-'}}</td>
         </ng-container>
 
       <ng-container matColumnDef="well" sticky>
-        <th mat-header-cell *matHeaderCellDef>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
           <div fxLayout="row" fxLayoutAlign="start center">
-            <span mat-sort-header arrowPosition="before">Well</span>
+            <span mat-sort-header arrowPosition="before">Sumur Produksi</span>
             <app-xfilter title="Nama Sumur" column="well" [selected]="well_xSelected"></app-xfilter>
           </div>
       </th>
@@ -69,7 +70,7 @@
       </ng-container>
 
       <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
           <div fxLayout="row" fxLayoutAlign="start center">
             <span mat-sort-header arrowPosition="before">Status</span>
             <app-xfilter title="Status" column="status" [selected]="status_xSelected"></app-xfilter>
@@ -90,7 +91,7 @@
       </ng-container>
 
       <ng-container matColumnDef="primemover">
-        <th mat-header-cell *matHeaderCellDef>
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
           <div fxLayout="row" fxLayoutAlign="start center">
             <span mat-sort-header arrowPosition="before">Primemover</span>
             <app-xfilter title="Primemover" column="primemover" [selected]="primemover_xSelected"></app-xfilter>
@@ -111,9 +112,9 @@
       </ng-container>
 
       <ng-container matColumnDef="merk"  style="width:500px; min-width:500px; max-width:500px">
-        <th mat-header-cell *matHeaderCellDef class="col-kegunaan">
+        <th mat-header-cell *matHeaderCellDef class="col-kegunaan" rowspan="2">
           <div fxLayout="row" fxLayoutAlign="start center">
-            <span mat-sort-header arrowPosition="before">Merk</span>
+            <span mat-sort-header arrowPosition="before">Merk Pumping Unit</span>
             <app-xfilter title="Merk" column="merk" [selected]="merk_xSelected"></app-xfilter>
           </div>
       </th>
@@ -131,16 +132,16 @@
         </td>
       </ng-container>
 
-        <ng-container matColumnDef="tipe">
-            <th mat-header-cell *matHeaderCellDef>
+      <ng-container matColumnDef="tipe">
+            <th mat-header-cell *matHeaderCellDef rowspan="2">
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Tipe</span>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Tipe Pump</span>
                 <app-xfilter title="tipe" column="tipe" format="number" [selected]="tipe_xSelected"></app-xfilter>
               </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
              <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.tipe | number : '1.0-0') || '-'}}
+              {{row.tipe  || '-'}}
             </ng-container><ng-template #editNama>
               <input
                 matInput
@@ -153,20 +154,24 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="lama">
+      <ng-container matColumnDef="crankhole">
+        <th mat-header-cell *matHeaderCellDef colspan="3">Crankhole</th>
+      </ng-container>
+
+      <ng-container matColumnDef="min_ch">
             <th mat-header-cell *matHeaderCellDef>
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Lama</span>
-                <app-xfilter title="lama" column="lama" format="number" [selected]="lama_xSelected"></app-xfilter>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">min</span>
+                <app-xfilter title="min_ch" column="min_ch" format="number" [selected]="min_ch_xSelected"></app-xfilter>
               </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
              <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.lama | number : '1.0-0') || '-'}}
+              {{row.min_ch  || '-'}}
             </ng-container><ng-template #editNama>
               <input
                 matInput
-                [(ngModel)]="row.lama"
+                [(ngModel)]="row.min_ch"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
                 (ngModelChange)="onValueChange(row)"
@@ -175,41 +180,20 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="rusak">
+        <ng-container matColumnDef="med_ch">
             <th mat-header-cell *matHeaderCellDef>
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Rusak</span>
-                <app-xfilter title="rusak" column="rusak" format="number" [selected]="rusak_xSelected"></app-xfilter>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">med</span>
+                <app-xfilter title="med_ch" column="med_ch" format="number" [selected]="med_ch_xSelected"></app-xfilter>
               </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
              <ng-container *ngIf="!row.isEdit; else editNama">
-            {{(row.rusak | number : '1.0-0') || '-'}}
-          </ng-container><ng-template #editNama>
-            <input
-              matInput
-              [(ngModel)]="row.rusak"
-              (keydown.enter)="save(row)"
-              (keydown.escape)="cancel(row)"
-              (ngModelChange)="onValueChange(row)"
-              autofocus>
-          </ng-template></td>
-        </ng-container>
-
-        <ng-container matColumnDef="stok_awal">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Stok Awal</span>
-                <app-xfilter title="stok_awal" column="stok_awal" format="number" [selected]="stok_awal_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.stok_awal | number : '1.0-0') || '-'}}
+              {{row.med_ch || '-'}}
             </ng-container><ng-template #editNama>
               <input
                 matInput
-                [(ngModel)]="row.stok_awal"
+                [(ngModel)]="row.med_ch"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
                 (ngModelChange)="onValueChange(row)"
@@ -218,20 +202,20 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="barang_masuk">
+        <ng-container matColumnDef="max_ch">
             <th mat-header-cell *matHeaderCellDef>
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Barang Masuk</span>
-                <app-xfilter title="barang_masuk" column="barang_masuk" format="number" [selected]="barang_masuk_xSelected"></app-xfilter>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">max</span>
+                <app-xfilter title="max_ch" column="max_ch" format="number" [selected]="max_ch_xSelected"></app-xfilter>
               </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
              <ng-container *ngIf="!row.isEdit; else editNama">
-            {{(row.barang_masuk | number : '1.0-0') || '-'}}
+              {{row.max_ch  || '-'}}
             </ng-container><ng-template #editNama>
               <input
                 matInput
-                [(ngModel)]="row.barang_masuk"
+                [(ngModel)]="row.max_ch"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
                 (ngModelChange)="onValueChange(row)"
@@ -240,20 +224,24 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="barang_keluar">
+        <ng-container matColumnDef="panjang_sl">
+        <th mat-header-cell *matHeaderCellDef colspan="4">Panjang SL</th>
+      </ng-container>
+
+      <ng-container matColumnDef="min_sl">
             <th mat-header-cell *matHeaderCellDef>
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Barang Keluar</span>
-                <app-xfilter title="barang_keluar" column="barang_keluar" format="number" [selected]="barang_keluar_xSelected"></app-xfilter>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">min</span>
+                <app-xfilter title="min_sl" column="min_sl" format="number" [selected]="min_sl_xSelected"></app-xfilter>
               </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
              <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.barang_keluar | number : '1.0-0') || '-'}}
+              {{(row.min_sl | number : '1.0-0') || '-'}}
             </ng-container><ng-template #editNama>
               <input
                 matInput
-                [(ngModel)]="row.barang_keluar"
+                [(ngModel)]="row.min_sl"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
                 (ngModelChange)="onValueChange(row)"
@@ -262,20 +250,20 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="stok_akhir">
+        <ng-container matColumnDef="med_sl">
             <th mat-header-cell *matHeaderCellDef>
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Stok Akhir</span>
-                <app-xfilter title="stok_akhir" column="stok_akhir" format="number" [selected]="stok_akhir_xSelected"></app-xfilter>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">med</span>
+                <app-xfilter title="med_sl" column="med_sl" format="number" [selected]="med_sl_xSelected"></app-xfilter>
               </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
              <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.stok_akhir | number : '1.0-0') || '-'}}
+              {{(row.med_sl | number : '1.0-0') || '-'}}
             </ng-container><ng-template #editNama>
               <input
                 matInput
-                [(ngModel)]="row.stok_akhir"
+                [(ngModel)]="row.med_sl"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
                 (ngModelChange)="onValueChange(row)"
@@ -283,21 +271,66 @@
             </ng-template>
           </td>
         </ng-container>
+
+        <ng-container matColumnDef="max_sl">
+            <th mat-header-cell *matHeaderCellDef>
+              <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">max</span>
+                <app-xfilter title="max_sl" column="max_sl" format="number" [selected]="max_sl_xSelected"></app-xfilter>
+              </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
+             <ng-container *ngIf="!row.isEdit; else editNama">
+              {{(row.max_sl | number : '1.0-0') || '-'}}
+            </ng-container><ng-template #editNama>
+              <input
+                matInput
+                [(ngModel)]="row.max_sl"
+                (keydown.enter)="save(row)"
+                (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
+                autofocus>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="used_sl">
+            <th mat-header-cell *matHeaderCellDef>
+              <div fxLayout="row" fxLayoutAlign="start center">
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Used</span>
+                <app-xfilter title="Used" column="used" format="number" [selected]="used_sl_xSelected"></app-xfilter>
+              </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
+             <ng-container *ngIf="!row.isEdit; else editNama">
+              {{(row.used_sl | number : '1.0-0') || '-'}}
+            </ng-container><ng-template #editNama>
+              <input
+                matInput
+                [(ngModel)]="row.used_sl"
+                (keydown.enter)="save(row)"
+                (keydown.escape)="cancel(row)"
+                (ngModelChange)="onValueChange(row)"
+                autofocus>
+            </ng-template>
+          </td>
+        </ng-container>
+
         
-        <ng-container matColumnDef="keterangan">
-          <th mat-header-cell *matHeaderCellDef>
+        <ng-container matColumnDef="noted">
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Keterangan</span>
-              <app-xfilter title="Keterangan" column="keterangan" [selected]="keterangan_xSelected"></app-xfilter>
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Trouble/Remarks</span>
+              <app-xfilter title="noted" column="noted" [selected]="noted_xSelected"></app-xfilter>
             </div>
           </th>
           <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{row.keterangan || '-'}}
+              {{row.noted || '-'}}
             </ng-container><ng-template #editNama>
               <input
                 matInput
-                [(ngModel)]="row.keterangan"
+                [(ngModel)]="row.noted"
                 (keydown.enter)="save(row)"
                 (keydown.escape)="cancel(row)"
                 autofocus>
@@ -306,14 +339,14 @@
         </ng-container>
 
     <ng-container matColumnDef="action" stickyEnd>
-      <th mat-header-cell *matHeaderCellDef class="cell-center action-column">
+      <th mat-header-cell *matHeaderCellDef class="cell-center action-column" rowspan="2">
         Action
       </th>
       <td mat-cell *matCellDef="let row" class="cell-center action-column">
         <button
           mat-icon-button
           color="primary"
-          *ngIf="!row.isEdit && pePermissionService.passPermission('pe/lab/edit')"
+          *ngIf="!row.isEdit && pePermissionService.passPermission('pe/pump/edit')"
           (click)="edit(row)"
           matTooltip="Edit">
           <mat-icon>edit</mat-icon>
@@ -340,7 +373,9 @@
     </ng-container>
 
 
-   <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-header-row *matHeaderRowDef="headerColumns1"></tr>
+    <tr mat-header-row *matHeaderRowDef="headerColumns2"></tr>
+    <!-- <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr> -->
    <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)"></tr>
  </table>
 </div>

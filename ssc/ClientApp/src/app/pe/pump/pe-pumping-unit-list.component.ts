@@ -30,7 +30,7 @@ type PePumpingUnitRow = PePumpingUnit & {
 export class PePumpingUnitListComponent implements OnInit {
 
   displayedColumns: string[] = ["select", "nomor","well", "status", "primemover", "merk", "tipe", "min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl","noted","action"];
-  headerColumns1: string[] = ["select", "nomor","well","status","primemover", "merk", "tipe","cranckhole","panjang_sl","noted"];
+  headerColumns1: string[] = ["select", "nomor","well","status","primemover", "merk", "tipe","crankhole","panjang_sl","noted","action"];
   headerColumns2: string[] = ["min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl"];
   exampleDatabase: ExampleHttpDao | null;
   data: PePumpingUnit[] = [];
@@ -111,7 +111,7 @@ export class PePumpingUnitListComponent implements OnInit {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Pumping Unit Asset",
+      title: "Pumping Unit",
       icon: "summarize",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
@@ -500,7 +500,7 @@ export class PePumpingUnitListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/pump', {
+        this.http.delete<any>('/api/pe/PumpingUnit', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -559,7 +559,7 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<PePumpingUnitApi>('/api/pe/pump', httpOption);
+    return this.http.get<PePumpingUnitApi>('/api/pe/PumpingUnit', httpOption);
   }
 }
 

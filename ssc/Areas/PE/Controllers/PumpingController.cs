@@ -223,21 +223,28 @@ namespace ssc.Areas.PE.Controllers
             ws.Cells[1, 6].Value = "Tipe Pump";
 
             ws.Cells[1, 7].Value = "Crankhole";
-            ws.Cells[1, 7, 1, 8].Merge = true;
+            ws.Cells[1, 7, 1, 9].Merge = true;
             ws.Cells[2, 7].Value = "min";
-            // ws.Cells[2, 5].Value = "Cor. Dynamic";
-            // ws.Cells[3, 5].Value = "meter";
-            ws.Cells[2, 8].Value = "Static";
+            ws.Cells[2, 8].Value = "med";
+            ws.Cells[2, 9].Value = "max";
 
 
-            ws.Cells[1, 7].Value = "Remarks";
+            ws.Cells[1, 10].Value = "Panjang Sl";
+            ws.Cells[1, 10, 1, 13].Merge = true;
+            ws.Cells[2, 10].Value = "min";
+            ws.Cells[2, 11].Value = "med";
+            ws.Cells[2, 12].Value = "max";
+            ws.Cells[2, 13].Value = "used";
 
 
-            ws.Cells[1, 1, 1, 7].Style.Font.Bold = true;
-            ws.Cells[1, 1, 1, 7].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            ws.Cells[1, 1, 1, 7].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 14].Value = "Remarks";
 
-            for (int c = 1; c <= 7; c++)
+
+            ws.Cells[1, 1, 1, 14].Style.Font.Bold = true;
+            ws.Cells[1, 1, 1, 14].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 1, 14].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+
+            for (int c = 1; c <= 14; c++)
             {
                 //ws.Column(c).AutoFit();
             }
@@ -253,7 +260,14 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[2 + i, 4].Value = t.primemover;
                 ws.Cells[2 + i, 5].Value = t.merk;
                 ws.Cells[2 + i, 6].Value = t.tipe;
-                ws.Cells[2 + i, 7].Value = t.noted;
+                ws.Cells[2 + i, 7].Value = t.min_ch;
+                ws.Cells[2 + i, 8].Value = t.med_ch;
+                ws.Cells[2 + i, 9].Value = t.max_ch;
+                ws.Cells[2 + i, 10].Value = t.min_sl;
+                ws.Cells[2 + i, 11].Value = t.med_sl;
+                ws.Cells[2 + i, 12].Value = t.max_sl;
+                ws.Cells[2 + i, 13].Value = t.used_sl;
+                ws.Cells[2 + i, 14].Value = t.noted;
             }
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
@@ -291,7 +305,7 @@ namespace ssc.Areas.PE.Controllers
 
             for (var r = 6; r <= rowCount; r++)
             {
-                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
+                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString()))
                 {
                     PumpingUnit _row = new PumpingUnit();
                     PumpingUnitError _row_error = new PumpingUnitError();
@@ -303,8 +317,8 @@ namespace ssc.Areas.PE.Controllers
                     }
                     else
                     {
-                        _row_error.nomor = new ErrorItem { value = "(Blank)", message = "Blank nomor is not allowed" };
-                        error_count++;
+                        _row.nomor = null;
+
                     }
 
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 4].Value?.ToString()))
@@ -359,7 +373,92 @@ namespace ssc.Areas.PE.Controllers
 
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 9].Value?.ToString()))
                     {
-                        _row.noted = ws.Cells[r, 9].Value?.ToString().Trim();
+                        _row.min_ch = ws.Cells[r, 9].Value?.ToString().Trim();
+                    }
+                    else
+                    {
+                        _row_error.min_ch = null;
+
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 10].Value?.ToString()))
+                    {
+                        _row.med_ch = ws.Cells[r, 10].Value?.ToString().Trim();
+                    }
+                    else
+                    {
+                        _row_error.med_ch = null;
+
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 11].Value?.ToString()))
+                    {
+                        _row.max_ch = ws.Cells[r, 11].Value?.ToString().Trim();
+                    }
+                    else
+                    {
+                        _row_error.max_ch = null;
+
+                    }
+
+                    try
+                    {
+                        _row.min_sl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 12].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 12].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.min_sl = null;
+
+                    }
+
+                    try
+                    {
+                        _row.med_sl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 13].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 13].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.med_sl = null;
+                    }
+
+                    try
+                    {
+                        _row.max_sl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 14].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 14].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.max_sl = null;
+
+                    }
+
+                    try
+                    {
+                        _row.used_sl = (!String.IsNullOrWhiteSpace(ws.Cells[r, 15].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 15].Value?.ToString().Trim()) : (decimal?)null;
+                    }
+                    catch (Exception e)
+                    {
+                        _row_error.used_sl = null;
+                    }
+
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 16].Value?.ToString()))
+                    {
+                        try
+                        {
+                            _row.noted = ws.Cells[r, 16].Value?.ToString().Trim();
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.noted = new ErrorItem
+                            {
+                                value = ws.Cells[r, 16].Value?.ToString(),
+                                message = e.Message
+                            };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row.noted = null;
                     }
 
 
@@ -468,6 +567,13 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.primemover, item.primemover)
                         .Set(t => t.merk, item.merk)
                         .Set(t => t.tipe, item.tipe)
+                        .Set(t => t.min_ch, item.min_ch)
+                        .Set(t => t.med_ch, item.med_ch)
+                        .Set(t => t.max_ch, item.max_ch)
+                        .Set(t => t.min_sl, item.min_sl)
+                        .Set(t => t.med_sl, item.med_sl)
+                        .Set(t => t.max_sl, item.max_sl)
+                        .Set(t => t.used_sl, item.used_sl)
                         .Set(t => t.noted, item.noted)
                         .Set(t => t.updated_by, User.Identity.Name)
                         .Set(t => t.updated_date, DateTime.Now)
@@ -475,7 +581,10 @@ namespace ssc.Areas.PE.Controllers
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
                     UpdateResult res = _pumping.UpdateOne(
-                        Builders<PumpingUnit>.Filter.Eq(t => t.well, item.well),
+                        Builders<PumpingUnit>.Filter.Eq(t => t.well, item.well) &
+                        Builders<PumpingUnit>.Filter.Eq(t => t.status, item.status) &
+                        Builders<PumpingUnit>.Filter.Eq(t => t.merk, item.merk) &
+                        Builders<PumpingUnit>.Filter.Eq(t => t.med_ch, item.med_ch),
                         update, new UpdateOptions() { IsUpsert = true });
 
                     modified_count += res.ModifiedCount;
@@ -496,6 +605,45 @@ namespace ssc.Areas.PE.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        [Authorize("PePumpingUnit Add")]
+        [HttpPatch("{id}")]
+        public IActionResult Update(string id, [FromBody] PumpingUnit payload)
+        {
+            if (payload == null)
+                return BadRequest();
+
+            var update = Builders<PumpingUnit>.Update
+                .Set(t => t.nomor, payload.nomor)
+                .Set(t => t.well, payload.well)
+                .Set(t => t.status, payload.status)
+                .Set(t => t.primemover, payload.primemover)
+                .Set(t => t.merk, payload.merk)
+                .Set(t => t.tipe, payload.tipe)
+                .Set(t => t.min_ch, payload.min_ch)
+                .Set(t => t.med_ch, payload.med_ch)
+                .Set(t => t.max_ch, payload.max_ch)
+                .Set(t => t.min_sl, payload.min_sl)
+                .Set(t => t.med_sl, payload.med_sl)
+                .Set(t => t.max_sl, payload.max_sl)
+                .Set(t => t.used_sl, payload.used_sl)
+                .Set(t => t.noted, payload.noted)
+                .Set(t => t.updated_by, User.Identity.Name)
+                .Set(t => t.updated_date, DateTime.Now);
+
+            var result = _pumping.UpdateOne(
+                Builders<PumpingUnit>.Filter.Eq(t => t._id, id),
+                update
+            );
+
+            if (result.MatchedCount == 0)
+                return NotFound();
+
+            return Ok(new
+            {
+                modified_count = result.ModifiedCount
+            });
         }
 
         [Authorize("PePumpingUnit Delete")]
