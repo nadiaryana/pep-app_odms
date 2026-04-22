@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PePumpingUnitAddComponent} from './pe-pumping-unit-add.component';
+import { PeWellDatabaseAddComponent} from './pe-suspended-well-add.component';
 
-describe('PePumpingUnitAddComponent', () => {
-  let component: PePumpingUnitAddComponent;
-  let fixture: ComponentFixture<PePumpingUnitAddComponent>;
+describe('PeWellDatabaseAddComponent', () => {
+  let component: PeWellDatabaseAddComponent;
+  let fixture: ComponentFixture<PeWellDatabaseAddComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PePumpingUnitAddComponent ]
+      declarations: [ PeWellDatabaseAddComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PePumpingUnitAddComponent);
+    fixture = TestBed.createComponent(PeWellDatabaseAddComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -95,8 +95,9 @@ import { PeMapComponent } from './map/pe-map.component';
 import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
 import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
 import { PePumpingUnitDeleteDialogComponent, PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.component';
-import { PeSuspendedWellComponent } from './suspended-well/pe-suspended-well.component';
-import { PeSuspendedWellListComponent } from './suspended-well/pe-suspended-well-list.component';
+import { PeWellDatabaseComponent } from './suspended-well/pe-suspended-well.component';
+import { PeWellDatabaseDeleteDialogComponent, PeWellDatabaseListComponent } from './suspended-well/pe-suspended-well-list.component';
+import { PeWellDatabaseAddComponent } from './suspended-well/pe-suspended-well-add.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -187,8 +188,10 @@ import { PeSuspendedWellListComponent } from './suspended-well/pe-suspended-well
   PePumpingUnitListComponent,
   PePumpingUnitDeleteDialogComponent,
 
-  PeSuspendedWellComponent,
-  PeSuspendedWellListComponent,
+  PeWellDatabaseComponent,
+  PeWellDatabaseListComponent,
+  PeWellDatabaseAddComponent,
+  PeWellDatabaseDeleteDialogComponent,
 
   // PeGrafikComponent,
   ],
@@ -283,7 +286,7 @@ export class PeModule {
         ]),
         new PanelItem("Map", "pe/map", "map", this.pePermission.passPermission("pe/map")),
         new PanelItem("Pumping Unit", "pe/pump", "precision_manufacturing", this.pePermission.passPermission("pe/pumping-unit")),
-        new PanelItem("Suspended Well", "pe/suspended-well", "pause_circle", this.pePermission.passPermission("pe/suspended-well")),
+        new PanelItem("Well Database", "pe/suspended-well", "storage", this.pePermission.passPermission("pe/suspended-well")),
       
         ]));
     });

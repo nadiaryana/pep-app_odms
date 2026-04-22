@@ -1,4 +1,4 @@
-export class PeSuspendedWell {
+export class PeWellDatabase {
 	constructor(
 		public _id: string,
 		public machine_id: number,
@@ -9,7 +9,7 @@ export class PeSuspendedWell {
 	) {}
 }
 
-export class PeSuspendedWellError {
+export class PeWellDatabaseError {
 	constructor(
 		public pe_bhp_id: number = 0,
 	) {}

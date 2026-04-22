@@ -1,15 +1,11 @@
-<div style="padding: 24px;">
-  <h2>Suspended Well</h2>
-  <p>Content coming soon...</p>
-</div>
 <div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
   <!--mat-form-field>
     <input matInput placeholder="Filter" [formControl]="filterControl">
   </mat-form-field-->
-  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/pump/add']" *ngIf="pePermissionService.passPermission('pe/pump/add')"><mat-icon>add</mat-icon> Add/Edit</button>
-  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/pump/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
-  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
-  <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/bhp/bhp-chart']"><mat-icon>bar_chart</mat-icon>Chart</button> -->
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/sonolog/add']" *ngIf="pePermissionService.passPermission('pe/sonolog/add')"><mat-icon>add</mat-icon> Add/Edit</button>
+  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/sonolog/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
+  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon>  Export to Excel</button>
+  <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/sonolog/sonolog-chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
 </div>
 
 <div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
@@ -20,371 +16,192 @@
 
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
 
-    <table mat-table [dataSource]="dataSource" class="pe-table"
+    <table mat-table [dataSource]="data" class="pe-table"
     matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
 
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef rowspan="2">
-        <mat-checkbox (change)="$event ? masterToggle() : null"
+        <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
           [checked]="selection.hasValue() && isAllSelected()"
           [indeterminate]="selection.hasValue() && !isAllSelected()"
           [aria-label]="checkboxLabel()"
-          *ngIf="pePermissionService.passPermission('pe/pump/delete')">
+          [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
         </mat-checkbox>
       </th>
       <td mat-cell *matCellDef="let row">
         <mat-checkbox (click)="$event.stopPropagation()"
-          (change)="$event ? selection.toggle(row) : null"
+          (change)="($event && !isEditing) ? selection.toggle(row) : null"
           [checked]="selection.isSelected(row)"
           [aria-label]="checkboxLabel(row)"
-          *ngIf="pePermissionService.passPermission('pe/pump/delete')">
+          [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
         </mat-checkbox>
       </td>
     </ng-container>
     
-    <ng-container matColumnDef="nomor">
-            <th mat-header-cell *matHeaderCellDef rowspan="2">
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">No. PU</span>
-                <app-xfilter title="Nomor" column="nomor" format="number" [selected]="nomor_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{row.nomor  || '-'}}</td>
-        </ng-container>
-
-      <ng-container matColumnDef="well" sticky>
-        <th mat-header-cell *matHeaderCellDef rowspan="2">
-          <div fxLayout="row" fxLayoutAlign="start center">
-            <span mat-sort-header arrowPosition="before">Sumur Produksi</span>
-            <app-xfilter title="Nama Sumur" column="well" [selected]="well_xSelected"></app-xfilter>
-          </div>
+    
+    <ng-container matColumnDef="well">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
+          <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
+        </div>
       </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
-          <ng-container *ngIf="!row.isEdit; else editNama">
-            {{ row.well }}
-          </ng-container><ng-template #editNama>
-            <input
-              matInput
-              [(ngModel)]="row.well"
-              (keydown.enter)="save(row)"
-              (keydown.escape)="cancel(row)"
-              autofocus>
-          </ng-template>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef rowspan="2">
-          <div fxLayout="row" fxLayoutAlign="start center">
-            <span mat-sort-header arrowPosition="before">Status</span>
-            <app-xfilter title="Status" column="status" [selected]="status_xSelected"></app-xfilter>
-          </div>
-      </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
-          <ng-container *ngIf="!row.isEdit; else editNama">
-            {{ row.status }}
-          </ng-container><ng-template #editNama>
-            <input
-              matInput
-              [(ngModel)]="row.status"
-              (keydown.enter)="save(row)"
-              (keydown.escape)="cancel(row)"
-              autofocus>
-          </ng-template>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="primemover">
-        <th mat-header-cell *matHeaderCellDef rowspan="2">
-          <div fxLayout="row" fxLayoutAlign="start center">
-            <span mat-sort-header arrowPosition="before">Primemover</span>
-            <app-xfilter title="Primemover" column="primemover" [selected]="primemover_xSelected"></app-xfilter>
-          </div>
-      </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
-           <ng-container *ngIf="!row.isEdit; else editNama">
-            {{ row.primemover }}
-          </ng-container><ng-template #editNama>
-            <input
-              matInput
-              [(ngModel)]="row.primemover"
-              (keydown.enter)="save(row)"
-              (keydown.escape)="cancel(row)"
-              autofocus>
-          </ng-template>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="merk"  style="width:500px; min-width:500px; max-width:500px">
-        <th mat-header-cell *matHeaderCellDef class="col-kegunaan" rowspan="2">
-          <div fxLayout="row" fxLayoutAlign="start center">
-            <span mat-sort-header arrowPosition="before">Merk Pumping Unit</span>
-            <app-xfilter title="Merk" column="merk" [selected]="merk_xSelected"></app-xfilter>
-          </div>
-      </th>
-        <td mat-cell *matCellDef="let row" style="width:500px; min-width:500px; max-width:500px" class="col-merk" [class.clicked_row]="selection.isSelected(row)">
-           <ng-container *ngIf="!row.isEdit; else editNama">
-            {{ row.merk }}
-          </ng-container><ng-template #editNama>
-            <input
-              matInput
-              [(ngModel)]="row.merk"
-              (keydown.enter)="save(row)"
-              (keydown.escape)="cancel(row)"
-              autofocus>
-          </ng-template>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="tipe">
-            <th mat-header-cell *matHeaderCellDef rowspan="2">
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Tipe Pump</span>
-                <app-xfilter title="tipe" column="tipe" format="number" [selected]="tipe_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{row.tipe  || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.tipe"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-      <ng-container matColumnDef="crankhole">
-        <th mat-header-cell *matHeaderCellDef colspan="3">Crankhole</th>
-      </ng-container>
-
-      <ng-container matColumnDef="min_ch">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">min</span>
-                <app-xfilter title="min_ch" column="min_ch" format="number" [selected]="min_ch_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{row.min_ch  || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.min_ch"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="med_ch">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">med</span>
-                <app-xfilter title="med_ch" column="med_ch" format="number" [selected]="med_ch_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{row.med_ch || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.med_ch"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="max_ch">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">max</span>
-                <app-xfilter title="max_ch" column="max_ch" format="number" [selected]="max_ch_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{row.max_ch  || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.max_ch"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="panjang_sl">
-        <th mat-header-cell *matHeaderCellDef colspan="4">Panjang SL</th>
-      </ng-container>
-
-      <ng-container matColumnDef="min_sl">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">min</span>
-                <app-xfilter title="min_sl" column="min_sl" format="number" [selected]="min_sl_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.min_sl | number : '1.0-0') || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.min_sl"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="med_sl">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">med</span>
-                <app-xfilter title="med_sl" column="med_sl" format="number" [selected]="med_sl_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.med_sl | number : '1.0-0') || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.med_sl"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="max_sl">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">max</span>
-                <app-xfilter title="max_sl" column="max_sl" format="number" [selected]="max_sl_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.max_sl | number : '1.0-0') || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.max_sl"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="used_sl">
-            <th mat-header-cell *matHeaderCellDef>
-              <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Used</span>
-                <app-xfilter title="Used" column="used" format="number" [selected]="used_sl_xSelected"></app-xfilter>
-              </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">
-             <ng-container *ngIf="!row.isEdit; else editNama">
-              {{(row.used_sl | number : '1.0-0') || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.used_sl"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                (ngModelChange)="onValueChange(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-        
-        <ng-container matColumnDef="noted">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Trouble/Remarks</span>
-              <app-xfilter title="noted" column="noted" [selected]="noted_xSelected"></app-xfilter>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
-            <ng-container *ngIf="!row.isEdit; else editNama">
-              {{row.noted || '-'}}
-            </ng-container><ng-template #editNama>
-              <input
-                matInput
-                [(ngModel)]="row.noted"
-                (keydown.enter)="save(row)"
-                (keydown.escape)="cancel(row)"
-                autofocus>
-            </ng-template>
-          </td>
-        </ng-container>
-
-    <ng-container matColumnDef="action" stickyEnd>
-      <th mat-header-cell *matHeaderCellDef class="cell-center action-column" rowspan="2">
-        Action
-      </th>
-      <td mat-cell *matCellDef="let row" class="cell-center action-column">
-        <button
-          mat-icon-button
-          color="primary"
-          *ngIf="!row.isEdit && pePermissionService.passPermission('pe/pump/edit')"
-          (click)="edit(row)"
-          matTooltip="Edit">
-          <mat-icon>edit</mat-icon>
-        </button>
-
-        <ng-container *ngIf="row.isEdit">
-          <button
-            mat-icon-button
-            color="accent"
-            (click)="save(row)"
-            matTooltip="Save">
-            <mat-icon>check</mat-icon>
-          </button>
-
-          <button
-            mat-icon-button
-            color="warn"
-            (click)="cancel(row)"
-            matTooltip="Cancel">
-            <mat-icon>close</mat-icon>
-          </button>
-        </ng-container>
-      </td>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
     </ng-container>
 
+    <ng-container matColumnDef="accessed_layer">
+      <th mat-header-cell *matHeaderCellDef colspan="5">Accessed Layer</th>
+    </ng-container>
+    
+    <ng-container matColumnDef="last_comp_date" sticky>
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="last_comp_date" column="last_comp_date" format="last_comp_date" [selected]="last_comp_date_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.last_comp_date ? (row.last_comp_date | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="headerColumns1"></tr>
-    <tr mat-header-row *matHeaderRowDef="headerColumns2"></tr>
-    <!-- <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr> -->
-   <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)"></tr>
+   <ng-container matColumnDef="layer_acc">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Layer</span>
+          <app-xfilter title="layer_acc" column="layer_acc" [selected]="layer_acc_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.layer_acc? row.layer_acc.join(", ") : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="interval_acc">
+        <th mat-header-cell *matHeaderCellDef rowspan="2" class="w_interval">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Interval</span>
+            <app-xfilter title="interval_acc" column="interval_acc" [selected]="interval_acc_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.interval_acc? formatInterval(row.interval_acc) : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="top">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">top</span>
+          <app-xfilter title="top" column="top" format="number" [selected]="top_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.top | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+    <ng-container matColumnDef="bottom">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">bottom</span>
+          <app-xfilter title="bottom" column="bottom" format="number" [selected]="bottom_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.bottom | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="unaccessed_layer">
+      <th mat-header-cell *matHeaderCellDef colspan="4">Unaccessed Layer</th>
+    </ng-container>
+
+   <ng-container matColumnDef="layer_unacc">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Layer</span>
+          <app-xfilter title="layer_unacc" column="layer_unacc" [selected]="layer_unacc_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.layer_unacc? row.layer_unacc.join(", ") : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="interval_unacc">
+        <th mat-header-cell *matHeaderCellDef rowspan="2" class="w_interval">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Interval</span>
+            <app-xfilter title="interval_unacc" column="interval_unacc" [selected]="interval_unacc_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.interval_unacc? formatInterval(row.interval_unacc) : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="top_2">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">top</span>
+          <app-xfilter title="top_2" column="top_2" format="number" [selected]="top_2_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.top_2 | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+    <ng-container matColumnDef="bottom_2">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">bottom</span>
+          <app-xfilter title="bottom_2" column="bottom_2" format="number" [selected]="bottom_2_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.bottom_2 | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="hole_feature">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Hole Feature</span>
+          <app-xfilter title="hole_feature" column="hole_feature" [selected]="hole_feature_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.hole_feature}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="panjang_feature">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Panjang Feature</span>
+          <app-xfilter title="panjang_feature" column="panjang_feature" format="number" [selected]="panjang_feature_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.panjang_feature | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="rtl">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">RTL</span>
+          <app-xfilter title="rtl" column="rtl" [selected]="rtl_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.rtl}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="remarks">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remark</span>
+          <app-xfilter title="remarks" column="remarks" [selected]="remarks_xSelected"></app-xfilter>
+        </div>
+      </th>
+
+      <td mat-cell *matCellDef="let row" class="cell-left" [class.clicked_row]="selection.isSelected(row)">{{ row.remarks || '-' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="action" rowspan="2">
+      <th mat-header-cell *matHeaderCellDef>Action</th>   
+      <td mat-cell *matCellDef="let row"> 
+       <!--button mat-button *ngIf="passPermission('/pe/sonolog/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
+       <button mat-button *ngIf="passPermission('/pe/sonolog/delete')" (click)="deletePeSonolog(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
+     </td>
+   </ng-container>
+
+   <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
+   <tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>
+   <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
  </table>
 </div>
 
-<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+<mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]" showFirstLastButtons></mat-paginator>
 <router-outlet></router-outlet>
   <router-outlet name="overlay2"></router-outlet>
 </div>

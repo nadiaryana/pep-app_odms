@@ -8,8 +8,8 @@ import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
 
-import { PePumpingUnitService} from './pe-pumping-unit.service';
-import { PePumpingUnit}    from './pe-pumping-unit';
+import { PeWellDatabaseService} from './pe-suspended-well.service';
+import { PeWellDatabase}    from './pe-suspended-well';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
@@ -17,9 +17,9 @@ import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
 
-type PePumpingUnitRow = PePumpingUnit & {
+type PeWellDatabaseRow = PeWellDatabase & {
   isEdit?: boolean;
-  _backup?: Partial<PePumpingUnit>;
+  _backup?: Partial<PeWellDatabase>;
 };
 
 @Component({
@@ -27,16 +27,27 @@ type PePumpingUnitRow = PePumpingUnit & {
   templateUrl: './pe-suspended-well-list.component.html',
   styleUrls: ['./pe-suspended-well.scss']
 })
-export class PeSuspendedWellListComponent implements OnInit {
+export class PeWellDatabaseListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "nomor","well", "status", "primemover", "merk", "tipe", "min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl","noted","action"];
-  headerColumns1: string[] = ["select", "nomor","well","status","primemover", "merk", "tipe","crankhole","panjang_sl","noted","action"];
-  headerColumns2: string[] = ["min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl"];
+  displayedColumns: string[] = [
+    "select", "well","last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
+    "layer_unacc","interval_unacc","top_2","bottom_2","hole_feature","panjang_feature",
+    "rtl","remarks","action"
+  ];
+  headerColumns1: string[] = [
+    "select","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature",
+    "rtl","remarks","action"
+  ];
+  headerColumns2: string[] = [
+    "last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
+    "layer_unacc","interval_unacc","top_2","bottom_2"
+  ];
   exampleDatabase: ExampleHttpDao | null;
-  data: PePumpingUnit[] = [];
+  data: PeWellDatabase[] = [];
 
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
+  isEditing:boolean = false;
 
   resultsLength = 0;
   isLoadingResults = true;
@@ -52,42 +63,35 @@ export class PeSuspendedWellListComponent implements OnInit {
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   filterControl = new FormControl('');
 
-  nomorFilter = new FormControl('');
   wellFilter = new FormControl('');
-  statusFilter = new FormControl('');
-  primemoverFilter = new FormControl('');
-  merkFilter = new FormControl('');
-  tipeFilter = new FormControl('');
-  min_chFilter = new FormControl('');
-  med_chFilter = new FormControl('');
-  max_chFilter = new FormControl('');
-  min_slFilter = new FormControl('');
-  med_slFilter = new FormControl('');
-  max_slFilter = new FormControl('');
-  used_slFilter = new FormControl('');
-  notedFilter = new FormControl('');
+  last_comp_dateFilter = new FormControl('');
+  layer_accFilter = new FormControl('');
+  interval_accFilter = new FormControl('');
+  topFilter = new FormControl('');
+  bottomFilter = new FormControl('');
+  layer_unaccFilter = new FormControl('');
+  interval_unaccFilter = new FormControl('');
+  top_2Filter = new FormControl('');
+  bottom_2Filter = new FormControl('');
+  hole_featureFilter = new FormControl('');
+  panjang_featureFilter = new FormControl('');
+  rtlFilter = new FormControl('');
+  remarksFilter = new FormControl('');
 
-  nomor_xSelected = [];
   well_xSelected = [];
-  status_xSelected = [];
-  primemover_xSelected = [];
-  merk_xSelected = [];
-  tipe_xSelected = [];
-  min_ch_xSelected = [];
-  med_ch_xSelected = [];
-  max_ch_xSelected = [];
-  min_sl_xSelected = [];
-  med_sl_xSelected = [];
-  max_sl_xSelected = [];
-  used_sl_xSelected = [];
-  noted_xSelected = [];
-  lama_xSelected = [];
-  rusak_xSelected = [];
-  stok_awal_xSelected = [];
-  barang_masuk_xSelected = [];
-  barang_keluar_xSelected = [];
-  stok_akhir_xSelected = [];
-  keterangan_xSelected = [];
+  last_comp_date_xSelected = [];
+  layer_acc_xSelected = [];
+  interval_acc_xSelected = [];
+  top_xSelected = [];
+  bottom_xSelected = [];
+  layer_unacc_xSelected = [];
+  interval_unacc_xSelected = [];
+  top_2_xSelected = [];
+  bottom_2_xSelected = [];
+  hole_feature_xSelected = [];
+  panjang_feature_xSelected = [];
+  rtl_xSelected = [];
+  remarks_xSelected = [];
 
   filterSubscription:Subscription;
   selectedSubscription:Subscription;
@@ -98,24 +102,24 @@ export class PeSuspendedWellListComponent implements OnInit {
     private router: Router,
     public dialog: MatDialog,
     public snackBar: MatSnackBar,
-    private pe_bhpService: PePumpingUnitService,
+    private pe_suspendedService: PeWellDatabaseService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
     private titleService: TitleService,
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
-    private service: PePumpingUnitService,
+    private service: PeWellDatabaseService,
     ) {}
 
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Pumping Unit",
-      icon: "summarize",
+      title: "Well Database",
+      icon: "storage",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
-        {label: 'Pumping Unit', routerLink: ''}
+        {label: 'Well Database', routerLink: ''}
       ]}
     );
 
@@ -150,20 +154,20 @@ export class PeSuspendedWellListComponent implements OnInit {
       this.sort.sortChange, 
       this.paginator.page, 
       this.filterControl.valueChanges.pipe(debounceTime(300)),
-      this.nomorFilter.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.primemoverFilter.valueChanges.pipe(debounceTime(300)),
-      this.statusFilter.valueChanges.pipe(debounceTime(300)),
-      this.merkFilter.valueChanges.pipe(debounceTime(300)),
-      this.tipeFilter.valueChanges.pipe(debounceTime(300)),
-      this.min_chFilter.valueChanges.pipe(debounceTime(300)),
-      this.med_chFilter.valueChanges.pipe(debounceTime(300)),
-      this.max_chFilter.valueChanges.pipe(debounceTime(300)),
-      this.min_slFilter.valueChanges.pipe(debounceTime(300)),
-      this.med_slFilter.valueChanges.pipe(debounceTime(300)),
-      this.max_slFilter.valueChanges.pipe(debounceTime(300)),
-      this.used_slFilter.valueChanges.pipe(debounceTime(300)),
-      this.notedFilter.valueChanges.pipe(debounceTime(300)),
+      this.last_comp_dateFilter.valueChanges.pipe(debounceTime(300)),
+      this.layer_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.interval_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.topFilter.valueChanges.pipe(debounceTime(300)),
+      this.bottomFilter.valueChanges.pipe(debounceTime(300)),
+      this.layer_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.interval_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.top_2Filter.valueChanges.pipe(debounceTime(300)),
+      this.bottom_2Filter.valueChanges.pipe(debounceTime(300)),
+      this.hole_featureFilter.valueChanges.pipe(debounceTime(300)),
+      this.panjang_featureFilter.valueChanges.pipe(debounceTime(300)),
+      this.rtlFilter.valueChanges.pipe(debounceTime(300)),
+      this.remarksFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
@@ -193,7 +197,7 @@ export class PeSuspendedWellListComponent implements OnInit {
         this.isRateLimitReached = true;
         return observableOf([]);
       })
-      ).subscribe((data: PePumpingUnit[]) => {
+      ).subscribe((data: PeWellDatabase[]) => {
         this.data = data.map(d => ({
           ...d,
           isEdit: false   
@@ -208,15 +212,15 @@ export class PeSuspendedWellListComponent implements OnInit {
       });
   }
 
-  edit(row: PePumpingUnitRow) {
+  edit(row: PeWellDatabaseRow) {
     row._backup = { ...row };
     row.isEdit = true;
   }
 
-  save(row: PePumpingUnitRow) {
+  save(row: PeWellDatabaseRow) {
     this.hitungSemuaStok(row);
 
-    const payload: Partial<PePumpingUnit> = { ...row };
+    const payload: Partial<PeWellDatabase> = { ...row };
     // Simpan backup 
     const backupData = { ...row._backup };
 
@@ -224,7 +228,7 @@ export class PeSuspendedWellListComponent implements OnInit {
     delete (payload as any).isEdit;
     delete (payload as any)._backup;
 
-    this.service.updatePePumpingUnit(row._id, payload).subscribe({
+    this.service.updatePeWellDatabase(row._id, payload).subscribe({
       next: (res) => {
         // Update row state
         row.isEdit = false;
@@ -268,7 +272,7 @@ export class PeSuspendedWellListComponent implements OnInit {
     delete payload.isEdit;
     delete payload._backup;
 
-    this.service.updatePePumpingUnit(id, payload).subscribe({
+    this.service.updatePeWellDatabase(id, payload).subscribe({
       next: (res) => {
         // Update this.data array
         const dataIdx = this.data.findIndex(d => d._id === id);
@@ -341,7 +345,7 @@ export class PeSuspendedWellListComponent implements OnInit {
   }
 
 
-  cancel(row: PePumpingUnitRow) {
+  cancel(row: PeWellDatabaseRow) {
     Object.assign(row, row._backup);
     row.isEdit = false;
   }
@@ -440,20 +444,20 @@ export class PeSuspendedWellListComponent implements OnInit {
 
   getColumnFilter() {
     var columnfilter = {};
-    if(this.nomor_xSelected.length) columnfilter["nomor"] = this.nomor_xSelected;
     if(this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if(this.primemover_xSelected.length) columnfilter["primemover"] = this.primemover_xSelected;
-    if(this.status_xSelected.length) columnfilter["status"] = this.status_xSelected;
-    if(this.merk_xSelected.length) columnfilter["merk"] = this.merk_xSelected;
-    if(this.tipe_xSelected.length) columnfilter["tipe"] = this.tipe_xSelected;
-    if(this.min_ch_xSelected.length) columnfilter["min_ch"] = this.min_ch_xSelected;
-    if(this.med_ch_xSelected.length) columnfilter["med_ch"] = this.med_ch_xSelected;
-    if(this.max_ch_xSelected.length) columnfilter["max_ch"] = this.max_ch_xSelected;
-    if(this.min_sl_xSelected.length) columnfilter["min_sl"] = this.min_sl_xSelected;
-    if(this.med_sl_xSelected.length) columnfilter["med_sl"] = this.med_sl_xSelected;
-    if(this.max_sl_xSelected.length) columnfilter["max_sl"] = this.max_sl_xSelected;
-    if(this.used_sl_xSelected.length) columnfilter["used_sl"] = this.used_sl_xSelected;
-    if(this.noted_xSelected.length) columnfilter["noted"] = this.noted_xSelected;
+    if(this.last_comp_date_xSelected.length) columnfilter["last_comp_date"] = this.last_comp_date_xSelected;//.map(s => "^"+s+"$");
+    if(this.layer_acc_xSelected.length) columnfilter["layer_acc"] = this.layer_acc_xSelected;
+    if(this.interval_acc_xSelected.length) columnfilter["interval_acc"] = this.interval_acc_xSelected;
+    if(this.top_xSelected.length) columnfilter["top"] = this.top_xSelected;
+    if(this.bottom_xSelected.length) columnfilter["bottom"] = this.bottom_xSelected;
+    if(this.layer_unacc_xSelected.length) columnfilter["layer_unacc"] = this.layer_unacc_xSelected;
+    if(this.interval_unacc_xSelected.length) columnfilter["interval_unacc"] = this.interval_unacc_xSelected;
+    if(this.top_2_xSelected.length) columnfilter["top_2"] = this.top_2_xSelected;
+    if(this.bottom_2_xSelected.length) columnfilter["bottom_2"] = this.bottom_2_xSelected;
+    if(this.hole_feature_xSelected.length) columnfilter["hole_feature"] = this.hole_feature_xSelected;
+    if(this.panjang_feature_xSelected.length) columnfilter["panjang_feature"] = this.panjang_feature_xSelected;
+    if(this.rtl_xSelected.length) columnfilter["rtl"] = this.rtl_xSelected;
+    if(this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
 
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     //if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
@@ -491,7 +495,7 @@ export class PeSuspendedWellListComponent implements OnInit {
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-    const dialogRef = this.dialog.open(PePumpingUnitDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeWellDatabaseDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
     });
@@ -500,7 +504,7 @@ export class PeSuspendedWellListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/PumpingUnit', {
+        this.http.delete<any>('/api/pe/WellDatabase', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -521,8 +525,8 @@ export class PeSuspendedWellListComponent implements OnInit {
   }
 }
 
-export interface PePumpingUnitApi {
-  items: PePumpingUnit[];
+export interface PeWellDatabaseApi {
+  items: PeWellDatabase[];
   total_count: number;
 }
 
@@ -546,7 +550,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) {}
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PePumpingUnitApi> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeWellDatabaseApi> {
 
     var params = {};
     if(sort!=null) params["sort"] = sort;
@@ -559,19 +563,19 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<PePumpingUnitApi>('/api/pe/PumpingUnit', httpOption);
+    return this.http.get<PeWellDatabaseApi>('/api/pe/WellDatabase', httpOption);
   }
 }
 
 @Component({
-  selector: 'app-pumping-unit-delete-dialog',
+  selector: 'app-suspended-well-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
-  styleUrls: ['./pe-pumping-unit.scss']
+  styleUrls: ['./pe-suspended-well.scss']
 })
-export class PePumpingUnitDeleteDialogComponent {
+export class PeWellDatabaseDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PePumpingUnitDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeWellDatabaseDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) {}
 
   onNoClick(): void {

@@ -1,4 +1,4 @@
-export class SuspendedWell {
+export class WellDatabase {
 	constructor(
 		public id: string,
 		public type: string,

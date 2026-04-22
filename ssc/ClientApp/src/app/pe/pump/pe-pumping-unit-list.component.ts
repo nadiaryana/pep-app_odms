@@ -81,13 +81,7 @@ export class PePumpingUnitListComponent implements OnInit {
   max_sl_xSelected = [];
   used_sl_xSelected = [];
   noted_xSelected = [];
-  lama_xSelected = [];
-  rusak_xSelected = [];
-  stok_awal_xSelected = [];
-  barang_masuk_xSelected = [];
-  barang_keluar_xSelected = [];
-  stok_akhir_xSelected = [];
-  keterangan_xSelected = [];
+
 
   filterSubscription:Subscription;
   selectedSubscription:Subscription;

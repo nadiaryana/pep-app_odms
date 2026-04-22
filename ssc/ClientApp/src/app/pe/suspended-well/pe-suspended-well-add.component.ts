@@ -7,23 +7,23 @@ import { Observable, of } from 'rxjs';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 
 //import { Sensor }    from './sensor';
-import { PePumpingUnit}    from './pe-pumping-unit';
+import { PeWellDatabase}    from './pe-suspended-well';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
 
 @Component({
-	selector: 'app-pumping-add',
-	templateUrl: './pe-pumping-unit-add.component.html',
-	styleUrls: ['./pe-pumping-unit.scss']
+	selector: 'app-suspended-well-add',
+	templateUrl: './pe-suspended-well-add.component.html',
+	styleUrls: ['./pe-suspended-well.scss']
 })
 
-export class PePumpingUnitAddComponent {
+export class PeWellDatabaseAddComponent {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
-	pumpingForm: FormGroup;
+	suspendedForm: FormGroup;
 	
 	isUploading = false;
 	isLoading = false;
@@ -41,7 +41,7 @@ export class PePumpingUnitAddComponent {
   	data_mode = "all";
   	resultsLength = 0;
 
-	data: PePumpingUnit[] = [];
+	data: PeWellDatabase[] = [];
 	data_error_count: number = 0;
 	displayedColumns: string[] = ["info", "nomor","well", "status", "primemover", "merk", "tipe", "min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl","noted"];
 	headerColumns1: string[] = ["info", "nomor","well","status","primemover", "merk", "tipe","crankhole","panjang_sl","noted"];
@@ -60,10 +60,10 @@ export class PePumpingUnitAddComponent {
 		this.loading = true;
 		//this.snackBar.dismiss();
 		this.snackbarService.status.next(new SnackbarApi(false));
-		this.pumpingForm.disable();
+		this.suspendedForm.disable();
 	}
 
-	get f() { return this.pumpingForm.controls; }
+	get f() { return this.suspendedForm.controls; }
 
 	ngOnInit() { 
 
@@ -77,7 +77,7 @@ export class PePumpingUnitAddComponent {
 	      ]}
 	    );
 
-		this.pumpingForm = this.formBuilder.group({
+		this.suspendedForm = this.formBuilder.group({
 			//sensor_id: ['', Validators.required],
 			location_id: [''],
 			is_anchor: [''],
@@ -87,12 +87,12 @@ export class PePumpingUnitAddComponent {
 		//this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 	};
 
-	listPumpingUnit() {
+	listWellDatabase() {
 		this.router.navigate(['pe', 'pump', 'list']);
 	}
 
 	canDeactivate(): Observable<boolean> | boolean {
-		if (this.pumpingForm.pristine) {
+		if (this.suspendedForm.pristine) {
 			return true;
 		}
 		return this.dialogService.confirm('Discard changes?');
@@ -113,7 +113,7 @@ export class PePumpingUnitAddComponent {
 		const fd = new FormData();
 		this.isUploading = true;
 		fd.append('files', this.fileInput.nativeElement.files[0]);
-		this.http.post('/api/pe/PumpingUnit/UploadFiles', fd, {
+		this.http.post('/api/pe/WellDatabase/UploadFiles', fd, {
 			reportProgress: true,
 			observe: 'events'
 		})
@@ -144,7 +144,7 @@ export class PePumpingUnitAddComponent {
 			}
 		}
 		
-		this.http.get<any>('/api/pe/PumpingUnit/Tmp', httpOption).subscribe(res => {
+		this.http.get<any>('/api/pe/WellDatabase/Tmp', httpOption).subscribe(res => {
 			this.isLoading = false;
 			this.data = res['items'];
 			this.data_error_count = res['error_count'];
@@ -159,7 +159,7 @@ export class PePumpingUnitAddComponent {
 
 	saveData() {
 		this.isSaving = true;
-		this.http.get<any>('/api/pe/PumpingUnit/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+		this.http.get<any>('/api/pe/WellDatabase/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
 			this.isSaving = false;
 			this.modified_count = res["modified_count"];
 			this.created_count = res["created_count"];
@@ -195,7 +195,7 @@ export class PePumpingUnitAddComponent {
 
 	@HostListener('window:beforeunload', ['$event'])
 	unloadNotification($event: any) {
-		return this.pumpingForm.pristine;
+		return this.suspendedForm.pristine;
 	}
 
 }
