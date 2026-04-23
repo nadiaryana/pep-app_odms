@@ -174,10 +174,12 @@ export class xFilterDialogComponent {
       this.filterSubscription = this.xfilterService.update.subscribe(res => {
         // console.log("sampai sini kah 3" + res)
 			this.isLoadingResults = false;
-          if (res["column"] == this.data["column"]) {
-            this.list_items = res["items"];
+          if (res && res["column"] == this.data["column"]) {
+            this.list_items = res["items"] || [];
             //   console.log(this.list_items);
-				this.select_all.checked = (this.list.selectedOptions.selected.length == this.list.options.length);
+            if (this.list && this.list.options) {
+              this.select_all.checked = (this.list.selectedOptions.selected.length == this.list.options.length);
+            }
 				// console.log(this.data["column"] + ' '+ this.list.selectedOptions.selected.length + ' ' + this.list.options.length + ' ' + this.list_items.length);
 			}
 		})

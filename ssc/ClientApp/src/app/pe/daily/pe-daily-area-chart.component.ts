@@ -287,15 +287,22 @@ export class PeDailyAreaChartComponent implements OnInit {
       this.getColumnValues(res);
     })
     this.xfilterService.selected.subscribe(res => {
-      this[res["column"] + "_xSelected"] = res["selected"];
-      this.refresh_Daily();
+      const column = res["column"];
+      this[column + "_xSelected"] = res["selected"];
+      
+      // Jika well_string dipilih, reset well_xSelected
+      if (column === "well_string") {
+        this.well_xSelected = [];
+      }
+      
+      this.checkAndRefreshDaily();
     })
 
     this.start_dateControl.valueChanges.subscribe(r => {
-      this.refresh_Daily();
+      this.checkAndRefreshDaily();
     })
     this.end_dateControl.valueChanges.subscribe(r => {
-      this.refresh_Daily();
+      this.checkAndRefreshDaily();
     })
   }
   
@@ -304,13 +311,44 @@ export class PeDailyAreaChartComponent implements OnInit {
     var filter = param["filter"];
     var selected = param["selected"];
     var clear = param["clear"];
-    var columnfilter: any = {
-      well: this.well_xSelected.map(s => "^" + s + "$"),
-      well_string: this.well_string_xSelected.map(s => "^" + s + "$")
+    
+    // Build column filter berdasarkan column yang sedang di-filter
+    var columnfilter: any = {};
+    
+    // Helper function untuk convert selected values ke regex pattern
+    const toRegexPattern = (values: any[]) => {
+      return values.map(v => {
+        if (v === null || v === undefined || v === "") {
+          // Use special marker untuk null/undefined values
+          return "__NULL__";
+        }
+        return "^" + v + "$";
+      });
     };
+    
+    // Jika user filter column "well" → include well_string filter
+    if (column === "well") {
+      // Include well_string filter dengan handling null
+      columnfilter["well_string"] = toRegexPattern(this.well_string_xSelected);
+    } 
+    // Jika user filter column "well_string" → tidak ada additional filter
+    else if (column === "well_string") {
+      columnfilter = {};
+    }
+    // Untuk column lain → include well dan well_string yang sudah dipilih
+    else {
+      if (this.well_string_xSelected.length > 0) {
+        columnfilter["well_string"] = toRegexPattern(this.well_string_xSelected);
+        columnfilter["well"] = toRegexPattern(this.well_xSelected);
+      }
+    }
+    
+    // Apply filter/selected/clear untuk column yang sedang di-filter
     if (filter) columnfilter[column] = [filter];
-    if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
+    if (selected && selected.length > 0) columnfilter[column] = toRegexPattern(selected);
     if (clear) delete columnfilter[column];
+
+    console.log('getColumnValues - column:', column, 'filter:', columnfilter);
 
     return this.exampleDatabase!.getRepoIssues(
       column,
@@ -323,6 +361,7 @@ export class PeDailyAreaChartComponent implements OnInit {
     ).pipe(map((res) => {
       return res;
     })).subscribe(res => {
+      console.log('getColumnValues response:', res.items);
       this.xfilterService.updateItems({ column: column, items: res.items });
     }, () => {
 
@@ -337,17 +376,119 @@ export class PeDailyAreaChartComponent implements OnInit {
     this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
   }
 
+  onWellStringChange() {
+    console.log('well_string_xSelected changed:', this.well_string_xSelected);
+    
+    // Jika well_string dipilih, reset well_xSelected (jangan auto-fetch)
+    if (this.well_string_xSelected.length > 0) {
+      this.well_xSelected = []; // Reset well selection
+      // Jangan auto-fetch well list - biarkan user buka filter dialog
+    } else {
+      // Jika well_string dikosongkan, kosongkan juga well list
+      this.well_xSelected = [];
+    }
+    
+    this.checkAndRefreshDaily();
+  }
+
+  checkAndRefreshDaily() {
+    // Cek apakah semua field sudah terisi
+    const hasWellString = this.well_string_xSelected && this.well_string_xSelected.length > 0;
+    const hasWell = this.well_xSelected && this.well_xSelected.length > 0;
+    const hasDateRange = this.start_dateControl.value && this.end_dateControl.value;
+    
+    console.log('checkAndRefreshDaily:', { hasWellString, hasWell, hasDateRange });
+    
+    // Hanya fetch jika semua field terisi
+    if (hasWellString && hasWell && hasDateRange) {
+      this.refresh_Daily();
+    } else {
+      // Clear chart kalau belum semua field terisi
+      this.clearChart();
+    }
+  }
+
+  clearChart() {
+    this.daily_chart_options["xAxis"][0]["categories"] = [];
+    this.daily_chart_options["series"][0]["data"] = [];
+    this.daily_chart_options["series"][1]["data"] = [];
+    this.daily_chart_options["series"][2]["data"] = [];
+    this.daily_chart_options["series"][3]["data"] = [];
+    this.daily_chart_options["series"][4]["data"] = [];
+    this.daily_chart_options["series"][5]["data"] = [];
+    this.daily_chart_options["title"]["text"] = "Please select well string and well";
+    Highcharts.chart(this.daily_chart_el.nativeElement, this.daily_chart_options);
+  }
+
+  fetchWellListByWellString() {
+    // console.log('Fetching well list for:', this.well_string_xSelected);
+    
+    // Query 1: Well dengan well_string yang dipilih
+    const columnFilter1: any = {
+      well_string: this.well_string_xSelected.map(s => "^" + s + "$")
+    };
+
+    // Query 2: Well dengan well_string kosong/null
+    const columnFilter2: any = {
+      well_string: []  // Empty array = match null/kosong
+    };
+
+    // Execute both queries in parallel
+    const query1 = this.exampleDatabase!.getRepoIssues(
+      "well_string",
+      "asc",
+      0,
+      0,
+      "",
+      columnFilter1,
+      "well"
+    ).pipe(map((res) => res.items || []));
+
+    const query2 = this.exampleDatabase!.getRepoIssues(
+      "well_string",
+      "asc",
+      0,
+      0,
+      "",
+      columnFilter2,
+      "well"
+    ).pipe(map((res) => res.items || []));
+
+    forkJoin([query1, query2]).subscribe(
+      ([items1, items2]) => {
+        // Merge dan deduplicate results
+        const allItems = [...items1, ...items2];
+        const uniqueItems = Array.from(new Set(allItems.map(item => JSON.stringify(item))))
+          .map(item => JSON.parse(item));
+        
+        console.log('Available wells for selected well_string:', uniqueItems);
+        
+        // Delay emit to ensure dialog is subscribed first
+        setTimeout(() => {
+          this.xfilterService.updateItems({ column: "well", items: uniqueItems });
+        }, 0);
+      },
+      (error) => {
+        console.error('Error fetching well list:', error);
+      }
+    );
+  }
+
   refresh_Daily() {
     let params = new HttpParams();
     params = params.append("type", "well_performance_daily")
       .append("date", this.start_dateControl.value.toISOString())
       .append("end_date", this.end_dateControl.value.toISOString());
+    
+    // Append selected wells
     for (const w of this.well_xSelected) {
-      params = params.append("well", w);
-      console.log(w);
+      params = params.append("well", w || "");
+      console.log('Well:', w);
     }
+    
+    // Append selected well_strings (handle null)
     for (const ws of this.well_string_xSelected) {
-      params = params.append("well_string", ws);
+      params = params.append("well_string", ws || "");
     }
 
     this.http.get<any>('/api/pe/daily/GetAreaChart', { params: params }).subscribe(res => {
