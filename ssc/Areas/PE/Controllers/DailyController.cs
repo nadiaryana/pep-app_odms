@@ -766,13 +766,16 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeDaily Add")]
         [HttpPost("UploadFiles")]
-
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue)]
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
             if (files == null || files.Count == 0)
                 return BadRequest("No file uploaded");
 
-            var filePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + Path.GetExtension(files[0].FileName));
+            var tempDir = Path.Combine(Directory.GetCurrentDirectory(), "temp");
+            Directory.CreateDirectory(tempDir);
+            var filePath = Path.Combine(tempDir, Guid.NewGuid() + Path.GetExtension(files[0].FileName));
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -1608,6 +1611,8 @@ namespace ssc.Areas.PE.Controllers
                 }
 
                 List<Daily> items = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
+                List<Daily> modified_data = new List<Daily>();
+                List<Daily> created_data = new List<Daily>();
 
                 var figure = items.GroupBy(g => new
                 {
@@ -1708,6 +1713,16 @@ namespace ssc.Areas.PE.Controllers
                         Builders<Daily>.Filter.Eq(t => t.interval, item.interval),
                         update, new UpdateOptions() { IsUpsert = true });
 
+                    if (res.ModifiedCount > 0)
+                    {
+                        modified_data.Add(item);
+                    }
+                    else if (res.UpsertedId != null)
+                    {
+                        created_data.Add(item);
+                    }
+
+
                     modified_count += res.ModifiedCount;
                     created_count -= res.ModifiedCount;
                 }
@@ -1720,6 +1735,8 @@ namespace ssc.Areas.PE.Controllers
                     modified_count = modified_count,
                     created_count = created_count,
                     total_count = items.Count(),
+                    modified_data = modified_data,
+                    created_data = created_data,
                     figure = figure
                 });
             }

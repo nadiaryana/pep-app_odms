@@ -34,6 +34,8 @@ export class PeDailyAddComponent implements OnDestroy {
 	processingStatus = '';
 	modified_count = 0;
 	created_count = 0;
+	modifiedData: any[] = [];
+	createdData: any[] = [];
 	progressPercent: number;
 	fileName: string;
 	@ViewChild('fileInput', {static: true}) fileInput;
@@ -265,7 +267,11 @@ export class PeDailyAddComponent implements OnDestroy {
 		this.http.get<any>('/api/pe/daily/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
 			this.isSaving = false;
 			this.modified_count = res["modified_count"];
+			console.log(this.modified_count);
 			this.created_count = res["created_count"];
+			this.modifiedData = res["modified_data"];
+			console.log(this.modifiedData);
+			this.createdData = res["created_data"];
 			this.stepper.selected.completed = true;
 			this.stepper.next();
 			this.snackbarService.status.next(new SnackbarApi(true, res["total_count"] + " item(s) saved successfully.", 'dismiss'));

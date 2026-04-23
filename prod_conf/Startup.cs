@@ -21,6 +21,7 @@ using ssc.Models;
 using ssc.Areas.SSC.Models;
 using ssc.Areas.SSC.Services;
 using ssc.Areas.PE.Models;
+using ssc.Services;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.FileProviders;
@@ -65,6 +66,8 @@ namespace ssc
             });
 
             services.AddSingleton<TicketService>();
+            services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+            services.AddHostedService<QueuedHostedService>();
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
@@ -87,10 +90,10 @@ namespace ssc
                     ValidateIssuerSigningKey = true,
                     //Same Secret key will be used while creating the token
                     IssuerSigningKey = new SymmetricSecurityKey(SecretKey),
-                   ValidateIssuer = true,
-                  //Usually, this is your application base URL
-                   ValidIssuer = "https://localhost:1911/",
-                  ValidateAudience = true,
+                    ValidateIssuer = true,
+                    //Usually, this is your application base URL
+                    ValidIssuer = "https://localhost:1911/",
+                    ValidateAudience = true,
                     //Here, we are creating and using JWT within the same application.
                     //In this case, base URL is fine.
                     //If the JWT is created using a web service, then this would be the consumer URL.
@@ -98,7 +101,7 @@ namespace ssc
                     RequireExpirationTime = true,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
-                        };
+                };
             });
 
             System.Text.Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -132,47 +135,47 @@ namespace ssc
             });
             //Add JWToken Authentication service
             app.UseAuthentication();
-            
+
             app.UseCors(builder => builder.WithOrigins("*"));
 
 
-        app.UseStaticFiles();
-        app.UseStaticFiles(new StaticFileOptions()
-        {
-          FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Resources")),
-          RequestPath = new PathString("/Resources")
-        });
-
-
-      // Use For Development Only
-      app.UseMvc(routes =>
-        {
-              routes.MapRoute(
-                name: "default",
-                template: "{controller}/{action=Index}/{id?}");
-          }); //*/
-
-       app.UseDefaultFiles();
-    
-      app.UseSpa(spa =>
+            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions()
             {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
-
-                spa.Options.SourcePath = "ClientApp";
-
-                if (env.IsDevelopment())
-                {
-                    spa.UseAngularCliServer(npmScript: "start");
-                }
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Resources")),
+                RequestPath = new PathString("/Resources")
             });
 
 
-      app.Run(async (context) =>
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
-            });
+            // Use For Development Only
+            app.UseMvc(routes =>
+              {
+                  routes.MapRoute(
+              name: "default",
+              template: "{controller}/{action=Index}/{id?}");
+              }); //*/
+
+            app.UseDefaultFiles();
+
+            app.UseSpa(spa =>
+                  {
+                      // To learn more about options for serving an Angular SPA from ASP.NET Core,
+                      // see https://go.microsoft.com/fwlink/?linkid=864501
+
+                      spa.Options.SourcePath = "ClientApp";
+
+                      if (env.IsDevelopment())
+                      {
+                          spa.UseAngularCliServer(npmScript: "start");
+                      }
+                  });
+
+
+            app.Run(async (context) =>
+                  {
+                      context.Response.ContentType = "text/html";
+                      await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
+                  });
         }
     }
 }
