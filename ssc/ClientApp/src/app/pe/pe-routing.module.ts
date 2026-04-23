@@ -80,9 +80,9 @@ import { PeMapComponent } from './map/pe-map.component';
 import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
 import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
 import { PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.component';
-import { PeWellDatabaseComponent } from './suspended-well/pe-suspended-well.component';
-import { PeWellDatabaseListComponent } from './suspended-well/pe-suspended-well-list.component';
-import { PeWellDatabaseAddComponent } from './suspended-well/pe-suspended-well-add.component';
+import { PeWellDatabaseComponent } from './well-database/pe-well-database.component';
+import { PeWellDatabaseListComponent } from './well-database/pe-well-database-list.component';
+import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -172,7 +172,7 @@ const peRoutes: Routes = [
       { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
 
-    { path: 'suspended-well', component: PeWellDatabaseComponent, children:[
+    { path: 'well-database', component: PeWellDatabaseComponent, children:[
       { path: 'list', component: PeWellDatabaseListComponent, canActivate: [PePermissionGuard]},
       { path: 'add', component: PeWellDatabaseAddComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},

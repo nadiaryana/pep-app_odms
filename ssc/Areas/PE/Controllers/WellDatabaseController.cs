@@ -18,7 +18,7 @@ using System.IO;
 
 namespace ssc.Areas.PE.Controllers
 {
-    [Route("api/pe/[controller]")]
+    [Route("api/pe/well-database")]
     [ApiController]
     public class WellDatabaseController : ControllerBase
     {
@@ -302,15 +302,15 @@ namespace ssc.Areas.PE.Controllers
 
             for (var r = 5; r <= rowCount; r++)
             {
-                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
+                if (!string.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString()))
                 {
                     WellDatabase _row = new WellDatabase();
                     WellDatabaseError _row_error = new WellDatabaseError();
                     int last_error_count = error_count;
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString()))
                     {
-                        _row.well = ws.Cells[r, 3].Value?.ToString().Trim();
+                        _row.well = ws.Cells[r, 2].Value?.ToString().Trim();
                     }
                     else
                     {
@@ -318,29 +318,28 @@ namespace ssc.Areas.PE.Controllers
                         error_count++;
                     }
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 2].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
                     {
                         try
                         {
-                            if (ws.Cells[r, 2].Value.GetType() == DateTime.Now.GetType())
+                            if (ws.Cells[r, 3].Value.GetType() == DateTime.Now.GetType())
                             {
-                                _row.last_comp_date = (DateTime?)ws.Cells[r, 2].Value;
+                                _row.last_comp_date = (DateTime?)ws.Cells[r, 3].Value;
                             }
                             else
                             {
-                                _row.last_comp_date = DateTime.FromOADate(double.Parse(ws.Cells[r, 2].Value?.ToString().Trim()));
+                                _row.last_comp_date = DateTime.FromOADate(double.Parse(ws.Cells[r, 3].Value?.ToString().Trim()));
                             }
                         }
                         catch (Exception e)
                         {
-                            _row_error.last_comp_date = new ErrorItem { value = ws.Cells[r, 2].Value?.ToString(), message = e.Message };
+                            _row_error.last_comp_date = new ErrorItem { value = ws.Cells[r, 3].Value?.ToString(), message = e.Message };
                             error_count++;
                         }
                     }
                     else
                     {
-                        _row_error.last_comp_date = new ErrorItem { value = "(Blank)", message = "Blank date is not allowed" };
-                        error_count++;
+                        _row_error.last_comp_date = null;
                     }
 
                     var arrayMappings = new[]
@@ -348,7 +347,7 @@ namespace ssc.Areas.PE.Controllers
                         new
                         {
                             key = "layer_acc",
-                            col = 5,
+                            col = 4,
                             required = false,
                             errorMsg = "Blank zone is not allowed",
                             parse = new Func<string, object>(val => val.Split(",").Select(z => z.Trim()).ToArray())
@@ -356,7 +355,7 @@ namespace ssc.Areas.PE.Controllers
                         new
                         {
                             key = "interval_acc",
-                            col = 6,
+                            col = 5,
                             required = false,
                             errorMsg = "Blank interval is not allowed",
                             parse = new Func<string, object>(val => val.Split(",").Select(i => i.Trim().Split("-").Select(j => decimal.Parse(j.Trim())).ToArray()).ToArray())
@@ -365,7 +364,7 @@ namespace ssc.Areas.PE.Controllers
                         new
                         {
                             key = "layer_unacc",
-                            col = 7,
+                            col = 8,
                             required = false,
                             errorMsg = "Blank zone is not allowed",
                             parse = new Func<string, object>(val => val.Split(",").Select(z => z.Trim()).ToArray())
@@ -373,7 +372,7 @@ namespace ssc.Areas.PE.Controllers
                         new
                         {
                             key = "interval_unacc",
-                            col = 8,
+                            col = 9,
                             required = false,
                             errorMsg = "Blank interval is not allowed",
                             parse = new Func<string, object>(val => val.Split(",").Select(i => i.Trim().Split("-").Select(j => decimal.Parse(j.Trim())).ToArray()).ToArray())
@@ -385,8 +384,8 @@ namespace ssc.Areas.PE.Controllers
                         var rawValue = ws.Cells[r, mapping.col].Value;
                         var strValue = rawValue?.ToString().Trim();
 
-                        var prop = typeof(Daily).GetProperty(mapping.key);
-                        var errorProp = typeof(DailyError).GetProperty(mapping.key);
+                        var prop = typeof(WellDatabase).GetProperty(mapping.key);
+                        var errorProp = typeof(WellDatabaseError).GetProperty(mapping.key);
 
                         if (!string.IsNullOrWhiteSpace(strValue))
                         {
@@ -416,11 +415,11 @@ namespace ssc.Areas.PE.Controllers
                     // Column indexes based on the provided Excel structure
                     var mappings = new[]
                     {
-                        new { key = "top", col = 5 },
-                        new { key = "bottom", col = 6 },
-                        new { key = "top_2", col = 9 },
-                        new { key = "bottom_2", col = 10 },
-                        new { key = "panjang_feature", col = 12 },
+                        new { key = "top", col = 6 },
+                        new { key = "bottom", col = 7 },
+                        new { key = "top_2", col = 10 },
+                        new { key = "bottom_2", col = 11 },
+                        new { key = "panjang_feature", col = 13 },
                     };
 
                     foreach (var mapping in mappings)
@@ -446,17 +445,17 @@ namespace ssc.Areas.PE.Controllers
 
                             if (decimal.TryParse(valueToParse, out decimal num))
                             {
-                                var prop = typeof(Daily).GetProperty(mapping.key);
+                                var prop = typeof(WellDatabase).GetProperty(mapping.key);
                                 if (prop != null)
                                     prop.SetValue(_row, num);
                             }
                             else
                             {
-                                var prop = typeof(Daily).GetProperty(mapping.key);
+                                var prop = typeof(WellDatabase).GetProperty(mapping.key);
                                 if (prop != null)
                                     prop.SetValue(_row, null);
 
-                                var errorProp = typeof(DailyError).GetProperty(mapping.key);
+                                var errorProp = typeof(WellDatabaseError).GetProperty(mapping.key);
                                 if (errorProp != null)
                                     errorProp.SetValue(_row_error, new ErrorItem { value = strValue, message = "Invalid number" });
 
@@ -465,23 +464,32 @@ namespace ssc.Areas.PE.Controllers
                         }
                         else
                         {
-                            var prop = typeof(Daily).GetProperty(mapping.key);
+                            var prop = typeof(WellDatabase).GetProperty(mapping.key);
                             if (prop != null)
                                 prop.SetValue(_row, null);
                         }
                     }
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 11].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 12].Value?.ToString()))
+                    {
+                        _row.hole_feature = ws.Cells[r, 12].Value?.ToString().Trim();
+                    }
+                    else
+                    {
+                        _row_error.hole_feature = null;
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 14].Value?.ToString()))
                     {
                         try
                         {
-                            _row.rtl = ws.Cells[r, 11].Value?.ToString().Trim();
+                            _row.rtl = ws.Cells[r, 14].Value?.ToString().Trim();
                         }
                         catch (Exception e)
                         {
                             _row_error.rtl = new ErrorItem
                             {
-                                value = ws.Cells[r, 11].Value?.ToString(),
+                                value = ws.Cells[r, 14].Value?.ToString(),
                                 message = e.Message
                             };
                             error_count++;
@@ -492,39 +500,18 @@ namespace ssc.Areas.PE.Controllers
                         _row.rtl = null;
                     }
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 12].Value?.ToString()))
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 15].Value?.ToString()))
                     {
                         try
                         {
-                            _row.hole_feature = ws.Cells[r, 12].Value?.ToString().Trim();
-                        }
-                        catch (Exception e)
-                        {
-                            _row_error.hole_feature = new ErrorItem
-                            {
-                                value = ws.Cells[r, 12].Value?.ToString(),
-                                message = e.Message
-                            };
-                            error_count++;
-                        }
-                    }
-                    else
-                    {
-                        _row.hole_feature = null;
-                    }
-
-
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 13].Value?.ToString()))
-                    {
-                        try
-                        {
-                            _row.remarks = ws.Cells[r, 13].Value?.ToString().Trim();
+                            _row.remarks = ws.Cells[r, 15].Value?.ToString().Trim();
                         }
                         catch (Exception e)
                         {
                             _row_error.remarks = new ErrorItem
                             {
-                                value = ws.Cells[r, 13].Value?.ToString(),
+                                value = ws.Cells[r, 15].Value?.ToString(),
                                 message = e.Message
                             };
                             error_count++;
@@ -534,8 +521,6 @@ namespace ssc.Areas.PE.Controllers
                     {
                         _row.remarks = null;
                     }
-
-
 
                     if (_row_error.well == null && _row_error.well == null)
                     {

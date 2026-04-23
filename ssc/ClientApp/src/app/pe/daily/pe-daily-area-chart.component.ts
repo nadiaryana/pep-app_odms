@@ -258,6 +258,7 @@ export class PeDailyAreaChartComponent implements OnInit {
 
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
+  well_string_xSelected = [];
 
   isLoadingResults: boolean = false;
 
@@ -301,25 +302,28 @@ export class PeDailyAreaChartComponent implements OnInit {
   getColumnValues(param: any) {
     var column = param["column"];
     var filter = param["filter"];
-    var selected = param["selected"]
+    var selected = param["selected"];
     var clear = param["clear"];
-    var columnfilter = { well: this.well_xSelected.map(s => "^" + s + "$") };
+    var columnfilter: any = {
+      well: this.well_xSelected.map(s => "^" + s + "$"),
+      well_string: this.well_string_xSelected.map(s => "^" + s + "$")
+    };
     if (filter) columnfilter[column] = [filter];
     if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
     if (clear) delete columnfilter[column];
 
     return this.exampleDatabase!.getRepoIssues(
-      "well",
+      column,
       "asc",
       0,
       0,
       "",
       columnfilter,
-      "well"
+      column
     ).pipe(map((res) => {
       return res;
     })).subscribe(res => {
-      this.xfilterService.updateItems({ column: "well", items: res.items });
+      this.xfilterService.updateItems({ column: column, items: res.items });
     }, () => {
 
     });
@@ -342,6 +346,9 @@ export class PeDailyAreaChartComponent implements OnInit {
       params = params.append("well", w);
       console.log(w);
     }
+    for (const ws of this.well_string_xSelected) {
+      params = params.append("well_string", ws);
+    }
 
     this.http.get<any>('/api/pe/daily/GetAreaChart', { params: params }).subscribe(res => {
 	  
@@ -358,7 +365,8 @@ export class PeDailyAreaChartComponent implements OnInit {
 	  let grs = []
 	  let sm = res["data"].map(d => d["sm"]);
 	  let gas = res["data"].map(d => d["gas"]);
-	  let dt_well = this.well_xSelected.length;
+	  let uniqueWells = [...new Set(res["data"].map((d: any) => d["well"]) as string[])];
+	  let dt_well = this.well_xSelected.length > 0 ? this.well_xSelected.length : uniqueWells.length;
 	  
 	  let g1 = [];
 	  let n1 = [];
@@ -394,7 +402,9 @@ export class PeDailyAreaChartComponent implements OnInit {
 	  }
 	  
 	  
-      this.daily_chart_options["title"]["text"] = this.well_xSelected.join(",");
+      this.daily_chart_options["title"]["text"] = this.well_xSelected.length > 0
+        ? this.well_xSelected.join(",")
+        : this.well_string_xSelected.join(",");
       this.daily_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
       
 	  if (dt_well == 1){

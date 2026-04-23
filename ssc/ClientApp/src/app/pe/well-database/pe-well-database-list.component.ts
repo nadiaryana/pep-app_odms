@@ -8,8 +8,8 @@ import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
 
-import { PeWellDatabaseService} from './pe-suspended-well.service';
-import { PeWellDatabase}    from './pe-suspended-well';
+import { PeWellDatabaseService} from './pe-well-database.service';
+import { PeWellDatabase}    from './pe-well-database';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
@@ -23,20 +23,20 @@ type PeWellDatabaseRow = PeWellDatabase & {
 };
 
 @Component({
-  selector: 'pe-suspended-well-list',
-  templateUrl: './pe-suspended-well-list.component.html',
-  styleUrls: ['./pe-suspended-well.scss']
+  selector: 'pe-well-database-list',
+  templateUrl: './pe-well-database-list.component.html',
+  styleUrls: ['./pe-well-database.scss']
 })
 export class PeWellDatabaseListComponent implements OnInit {
 
   displayedColumns: string[] = [
     "select", "well","last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
     "layer_unacc","interval_unacc","top_2","bottom_2","hole_feature","panjang_feature",
-    "rtl","remarks","action"
+    "rtl","remarks"
   ];
   headerColumns1: string[] = [
     "select","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature",
-    "rtl","remarks","action"
+    "rtl","remarks"
   ];
   headerColumns2: string[] = [
     "last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
@@ -504,7 +504,7 @@ export class PeWellDatabaseListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/WellDatabase', {
+        this.http.delete<any>('/api/pe/well-database', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -563,14 +563,14 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<PeWellDatabaseApi>('/api/pe/WellDatabase', httpOption);
+    return this.http.get<PeWellDatabaseApi>('/api/pe/well-database', httpOption);
   }
 }
 
 @Component({
-  selector: 'app-suspended-well-delete-dialog',
+  selector: 'app-well-database-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
-  styleUrls: ['./pe-suspended-well.scss']
+  styleUrls: ['./pe-well-database.scss']
 })
 export class PeWellDatabaseDeleteDialogComponent {
 

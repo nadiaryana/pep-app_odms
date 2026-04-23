@@ -2,10 +2,10 @@
   <!--mat-form-field>
     <input matInput placeholder="Filter" [formControl]="filterControl">
   </mat-form-field-->
-  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/sonolog/add']" *ngIf="pePermissionService.passPermission('pe/sonolog/add')"><mat-icon>add</mat-icon> Add/Edit</button>
-  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/sonolog/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
-  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon>  Export to Excel</button>
-  <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/sonolog/sonolog-chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/well-database/add']" *ngIf="pePermissionService.passPermission('pe/well-database/add')"><mat-icon>add</mat-icon> Add/Edit</button>
+  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/well-database/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
+  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
+  <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/bhp/bhp-chart']"><mat-icon>bar_chart</mat-icon>Chart</button> -->
 </div>
 
 <div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
@@ -187,13 +187,13 @@
       <td mat-cell *matCellDef="let row" class="cell-left" [class.clicked_row]="selection.isSelected(row)">{{ row.remarks || '-' }}</td>
     </ng-container>
 
-    <ng-container matColumnDef="action" rowspan="2">
+    <!-- <ng-container matColumnDef="action" rowspan="2">
       <th mat-header-cell *matHeaderCellDef>Action</th>   
       <td mat-cell *matCellDef="let row"> 
-       <!--button mat-button *ngIf="passPermission('/pe/sonolog/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
+       <button mat-button *ngIf="passPermission('/pe/sonolog/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
        <button mat-button *ngIf="passPermission('/pe/sonolog/delete')" (click)="deletePeSonolog(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
-     </td>
-   </ng-container>
+     <!-- </td> -->
+   <!-- </ng-container> -->
 
    <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
    <tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>

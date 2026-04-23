@@ -110,9 +110,10 @@ export class PePermissionService {
 	new Menu("pump/edit", true, /[a-z]/i, ["PePumpingUnit Edit"]),
 	new Menu("pump/delete", true,null, ["PePumpingUnit Delete"]),
 
-	new Menu("suspended-well", true, null, ["PeSuspendedWell Read"]),
-	new Menu("suspended-well/list", true, null, ["PeSuspendedWell Read"]),
-	new Menu("suspended-well/add", true, null, ["PeSuspendedWell Add"]),
+	new Menu("well-database", true, null, ["PeWellDatabase Read"]),
+	new Menu("well-database/list", true, null, ["PeWellDatabase Read"]),
+	new Menu("well-database/add", true, null, ["PeWellDatabase Add"]),
+	new Menu("well-database/delete", true,null, ["PeWellDatabase Delete"]),
 
 	];
 	

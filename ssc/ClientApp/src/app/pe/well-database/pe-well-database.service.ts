@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router, RouterStateSnapshot, ActivatedRoute } from '@angular/router';
 
-import { PeWellDatabase } from './pe-suspended-well';
+import { PeWellDatabase } from './pe-well-database';
 
 @Injectable({
   providedIn: 'root'

@@ -7,16 +7,16 @@ import { Observable, of } from 'rxjs';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 
 //import { Sensor }    from './sensor';
-import { PeWellDatabase}    from './pe-suspended-well';
+import { PeWellDatabase}    from './pe-well-database';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
 
 @Component({
-	selector: 'app-suspended-well-add',
-	templateUrl: './pe-suspended-well-add.component.html',
-	styleUrls: ['./pe-suspended-well.scss']
+	selector: 'app-well-database-add',
+	templateUrl: './pe-well-database-add.component.html',
+	styleUrls: ['./pe-well-database.scss']
 })
 
 export class PeWellDatabaseAddComponent {
@@ -43,9 +43,19 @@ export class PeWellDatabaseAddComponent {
 
 	data: PeWellDatabase[] = [];
 	data_error_count: number = 0;
-	displayedColumns: string[] = ["info", "nomor","well", "status", "primemover", "merk", "tipe", "min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl","noted"];
-	headerColumns1: string[] = ["info", "nomor","well","status","primemover", "merk", "tipe","crankhole","panjang_sl","noted"];
-	headerColumns2: string[] = ["min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl"];
+	displayedColumns: string[] = [
+		"info", "well","last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
+		"layer_unacc","interval_unacc","top_2","bottom_2","hole_feature","panjang_feature",
+		"rtl","remarks"
+	];
+	headerColumns1: string[] = [
+		"info","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature",
+		"rtl","remarks"
+	];
+	headerColumns2: string[] = [
+		"last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
+		"layer_unacc","interval_unacc","top_2","bottom_2"
+	];
 
 	constructor(
 		private formBuilder: FormBuilder,
@@ -68,11 +78,11 @@ export class PeWellDatabaseAddComponent {
 	ngOnInit() { 
 
 		this.titleService.titleSource.next({
-          title: "Add Pumping Unit",
+          title: "Add Well Database",
           icon:"add",
 	      breadcrumbs: [
 	        {label: 'Petroleum Engineering', routerLink: ''}, 
-	        {label: 'PU', routerLink: 'pe/pump'},
+	        {label: 'Well Database', routerLink: 'pe/well-database'},
 	        {label: 'Add', routerLink: ''}, 
 	      ]}
 	    );
@@ -88,7 +98,7 @@ export class PeWellDatabaseAddComponent {
 	};
 
 	listWellDatabase() {
-		this.router.navigate(['pe', 'pump', 'list']);
+		this.router.navigate(['pe', 'well-database', 'list']);
 	}
 
 	canDeactivate(): Observable<boolean> | boolean {

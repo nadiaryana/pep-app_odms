@@ -397,15 +397,23 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeDaily Read")]
         [HttpGet("GetAreaChart")]
-        public ActionResult GetAreaChart(string type, DateTime? date, DateTime? end_date, string[] well)
+        public ActionResult GetAreaChart(string type, DateTime? date, DateTime? end_date, string[] well = null, string[] well_string = null)
         {
             switch (type)
             {
                 case "well_performance_daily":
-                    var daily_area = _daily.Find(
-                        r => well.Contains(r.well) &&
-                        r.date >= date && r.date <= end_date
-                    ).Project<Daily>(_fields_daily).ToList().OrderBy(t => t.date).Select(s => new
+                    var areaFilter = Builders<Daily>.Filter.Empty;
+                    if (well != null && well.Length > 0)
+                        areaFilter &= Builders<Daily>.Filter.In(r => r.well, well);
+                    if (well_string != null && well_string.Length > 0)
+                        areaFilter &= Builders<Daily>.Filter.In(r => r.well_string, well_string);
+                    if (date.HasValue)
+                        areaFilter &= Builders<Daily>.Filter.Gte(r => r.date, date);
+                    if (end_date.HasValue)
+                        areaFilter &= Builders<Daily>.Filter.Lte(r => r.date, end_date);
+
+                    var daily_area = _daily.Find(areaFilter)
+                    .Project<Daily>(_fields_daily).ToList().OrderBy(t => t.date).Select(s => new
                     {
                         date = TimeZoneInfo.ConvertTimeFromUtc(s.date.Value, TimeZoneInfo.Local),
                         well = s.well,
