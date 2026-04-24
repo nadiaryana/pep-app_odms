@@ -103,6 +103,7 @@ export class PePermissionService {
 	new Menu("map", true,null, ["PeMap Read"]),
 	new Menu("map/list", true,null, ["PeMap Read"]),
 	new Menu("map/add", true,null, ["PeMap Add"]),
+	new Menu("map/delete", true,null, ["PeMap Delete"]),
 	
 	new Menu("pump", true,null, ["PePumpingUnit Read"]),
 	new Menu("pump/list", true,null, ["PePumpingUnit Read"]),

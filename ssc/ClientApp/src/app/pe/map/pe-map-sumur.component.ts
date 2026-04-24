@@ -4,18 +4,20 @@ import {
   AfterViewInit,
   OnDestroy,
   ViewChild,
+  Inject,
 } from '@angular/core';
 import { TitleService } from 'src/app/navigation/title/title.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import * as L from 'leaflet';
 import { PePermissionService } from '../pe-permission.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatDialog, MatSnackBar, MatPaginator, MatTableDataSource } from '@angular/material';
+import { MatDialog, MatSnackBar, MatPaginator, MatTableDataSource, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
 import { xFilterService } from 'src/app/xfilter/xfilter.component';
 import { CommonService } from 'src/app/common.service';
 import { merge, of as observableOf, Subscription } from 'rxjs';
 import { startWith, switchMap, catchError, map } from 'rxjs/operators';
+import { SelectionModel } from '@angular/cdk/collections';
 
 
 export interface Sumur {
@@ -48,8 +50,10 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   showWell = false;
   showFlowline = false;
   showStation = false;
+  isLoadingResults = true;
+  selection = new SelectionModel<any>(true, []);
 
-  displayedColumns: string[] = ['wellName', 'lat', 'lng', 'status','station','actions'];
+  displayedColumns: string[] = ['select','wellName', 'lat', 'lng', 'status','station','actions'];
 
   stationCoordinates: { [key: string]: { lat: number; lng: number } } = {
     'GS-1': { lat: 0.458472, lng: 117.508200 },  
@@ -70,6 +74,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   filterSubscription: Subscription;
   selectedSubscription: Subscription;
   listSubscription: Subscription;
+  
 
   viewMode: 'well' | 'flowline' | 'station' = 'well';
 
@@ -961,6 +966,72 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.map!.hasLayer(marker)) this.map!.removeLayer(marker);
       }
     });
+  }
+
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
+
+  checkboxLabel(row?: any): string {
+    if (!row) {
+        return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+    }
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
+  }
+
+  deleteSelected() {
+      this.snackbarService.status.next(new SnackbarApi(false));
+  
+      const dialogRef = this.dialog.open(PeMapDeleteDialogComponent, {
+        width: '250px',
+        data: this.selection.selected.length
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+        if(result) {
+          this.isLoadingResults = true; 
+          this.snackbarService.status.next(new SnackbarApi(false));
+          this.http.delete<any>('/api/pe/sonolog', {
+            headers: new HttpHeaders({
+              'Content-Type': 'application/json'
+            }),
+            params: {
+              _ids: this.selection.selected.map<any>(s => s._id)
+            }
+          }).subscribe(res => {
+            this.isLoadingResults = false; 
+            this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
+            this.paginator._changePageSize(this.paginator.pageSize);
+          },
+          error => {
+            this.isLoadingResults = false; 
+            this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
+          })
+        }
+      });
+  }
+
+}
+
+@Component({
+  selector: 'app-map-delete-dialog',
+  template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
+  styleUrls: ['./pe-map.scss']
+})
+export class PeMapDeleteDialogComponent {
+
+  constructor(
+    public dialogRef: MatDialogRef<PeMapDeleteDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: number) {}
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
+  
+  onYesClick(): void {
+    this.dialogRef.close();
   }
 
 }

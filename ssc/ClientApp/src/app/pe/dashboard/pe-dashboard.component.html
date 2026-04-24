@@ -25,9 +25,14 @@
     </mat-card>
     <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_operation">
       <mat-card-title class="title_dasboard">Operation</mat-card-title>
-      <mat-card-content>
+      <mat-card-content class="card-content-relative">
         <div class="value">{{(valueOperation | number : '1.0-2') || '-'}} </div>
         <div class="uom"><b>BOPD</b></div>
+        <div class="diff-badge" *ngIf="valueOperationDiff !== null"
+          [ngClass]="valueOperationDiff > 0 ? 'diff-positive' : valueOperationDiff < 0 ? 'diff-negative' : 'diff-neutral'">
+          <mat-icon class="diff-icon">{{valueOperationDiff > 0 ? 'arrow_upward' : valueOperationDiff < 0 ? 'arrow_downward' : 'remove'}}</mat-icon>
+          {{valueOperationDiff > 0 ? '+' : ''}}{{valueOperationDiff | number:'1.0-2'}}
+        </div>
       </mat-card-content>
     </mat-card>
     <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_figure">
@@ -39,9 +44,14 @@
     </mat-card>
     <mat-card fxFlex="20%" class="gas_dasboard_card gas_dasboard_card_production">
       <mat-card-title class="title_dasboard">Gas Production</mat-card-title>
-      <mat-card-content>
+      <mat-card-content class="card-content-relative">
         <div class="value">{{(valueGas | number : '1.0-2') || '-'}}</div>
         <div class="uom"><b>MMSCFD</b></div>
+        <div class="diff-badge" *ngIf="valueGasDiff !== null"
+          [ngClass]="valueGasDiff > 0 ? 'diff-positive' : valueGasDiff < 0 ? 'diff-negative' : 'diff-neutral'">
+          <mat-icon class="diff-icon">{{valueGasDiff > 0 ? 'arrow_upward' : valueGasDiff < 0 ? 'arrow_downward' : 'remove'}}</mat-icon>
+          {{valueGasDiff > 0 ? '+' : ''}}{{valueGasDiff | number:'1.0-2'}}
+        </div>
       </mat-card-content>
     </mat-card>
     <mat-card fxFlex="20%" class="gas_dasboard_card gas_dasboard_card_sales">

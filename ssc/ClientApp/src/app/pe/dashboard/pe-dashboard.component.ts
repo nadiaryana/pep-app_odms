@@ -819,6 +819,8 @@ export class PeDashboardComponent   {
   valueFigure:number;
   valueGas: number;
   valueGasSales: number;
+  valueOperationDiff: number = null;
+  valueGasDiff: number = null;
 
   interval: number;
   dateDiff: number;
@@ -950,6 +952,9 @@ export class PeDashboardComponent   {
       var series_gas = [];
       var series_gas_sales = [];
 
+      let tempPrevOperation = 0;
+      let tempPrevGas = 0;
+
       res["items"].map(d => {
         console.log("this" + d);
         var xdt = new Date(d.date);
@@ -974,12 +979,18 @@ export class PeDashboardComponent   {
           this.valueGas = d.gas;
           this.valueGasSales = d.gas_sales;
           this.valueOperation = d.operation;
+          this.valueOperationDiff = tempPrevOperation !== 0 ? d.operation - tempPrevOperation : null;
+          this.valueGasDiff = tempPrevGas !== 0 ? d.gas - tempPrevGas : null;
         } else {
           this.valueSOT = 0;
           this.valueFigure = 0;
           this.valueGas = 0;
           this.valueGasSales = 0;
           this.valueOperation = 0;
+          this.valueOperationDiff = null;
+          this.valueGasDiff = null;
+          tempPrevOperation = d.operation || 0;
+          tempPrevGas = d.gas || 0;
         }
       });
 

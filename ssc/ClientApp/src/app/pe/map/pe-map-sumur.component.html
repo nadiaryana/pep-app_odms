@@ -40,11 +40,32 @@
   <div class="sumur-table-wrapper">
     <div class="table-header-with-actions">
       <h3 class="table-title">Daftar Sumur</h3>
+      <span class="spacer"></span>
       <button mat-button color="primary" [routerLink]="['/pe/map/add']" *ngIf="pePermissionService.passPermission('pe/map/add')"><mat-icon>add</mat-icon>Upload</button>
+      <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/map/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
     </div>
     
     <div class="table-container">
       <table mat-table [dataSource]="dataSource" class="sumur-table mat-elevation-z2">
+
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
+              [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()"
+              [aria-label]="checkboxLabel()"
+              [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox (click)="$event.stopPropagation()"
+              (change)="($event && !isEditing) ? selection.toggle(row) : null"
+              [checked]="selection.isSelected(row)"
+              [aria-label]="checkboxLabel(row)"
+              [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+            </mat-checkbox>
+          </td>
+        </ng-container>
 
         <ng-container matColumnDef="wellName">
           <th mat-header-cell *matHeaderCellDef>

@@ -89,7 +89,7 @@ import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component
 import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
 import { PeLaporanLabComponent } from './laporan/pe-laporan-lab.component';
 // import { PeMapSumurService } from './map/pe-map-sumur.service';
-import { MapSumurComponent } from './map/pe-map-sumur.component';
+import { MapSumurComponent, PeMapDeleteDialogComponent } from './map/pe-map-sumur.component';
 import { PeMapAddComponent } from './map/pe-map-add.component';
 import { PeMapComponent } from './map/pe-map.component';
 import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
@@ -182,6 +182,7 @@ import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add
   PeMapComponent,
   MapSumurComponent,
   PeMapAddComponent,
+  PeMapDeleteDialogComponent,
 
   PePumpingUnitComponent,
   PePumpingUnitAddComponent,
