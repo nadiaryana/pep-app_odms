@@ -52,6 +52,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   showStation = false;
   isLoadingResults = true;
   selection = new SelectionModel<any>(true, []);
+  isEditing:boolean = false;
 
   displayedColumns: string[] = ['select','wellName', 'lat', 'lng', 'status','station','actions'];
 
@@ -744,6 +745,12 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     
     return filtered;
+  }
+
+  masterToggle() {
+    this.isAllSelected() ?
+        this.selection.clear() :
+        this.dataSource.data.forEach(row => this.selection.select(row));
   }
 
   // Mengonversi format DMS (Degrees, Minutes, Seconds) menjadi Decimal Degrees
