@@ -18,7 +18,7 @@ using System.IO;
 
 namespace ssc.Areas.PE.Controllers
 {
-    [Route("api/pe/well-database")]
+    [Route("api/pe/[controller]")]
     [ApiController]
     public class WellDatabaseController : ControllerBase
     {

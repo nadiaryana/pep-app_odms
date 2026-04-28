@@ -547,7 +547,7 @@ export class PeWellDatabaseListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/well-database', {
+        this.http.delete<any>('/api/pe/WellDatabase', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -606,7 +606,7 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<PeWellDatabaseApi>('/api/pe/well-database', httpOption);
+    return this.http.get<PeWellDatabaseApi>('/api/pe/WellDatabase', httpOption);
   }
 }
 
