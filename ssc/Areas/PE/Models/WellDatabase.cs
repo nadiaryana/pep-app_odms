@@ -26,6 +26,16 @@ namespace ssc.Areas.PE.Models
         public decimal? bottom_2 { get; set; }
         public string hole_feature { get; set; }
         public decimal? panjang_feature { get; set; }
+        public DateTime? date_acc { get; set; }
+        public decimal? gross_acc { get; set; }
+        public decimal? net_acc { get; set; }
+        public decimal? wc_acc { get; set; }
+        public string remarks_acc { get; set; }
+        public DateTime? date_unacc { get; set; }
+        public decimal? gross_unacc { get; set; }
+        public decimal? net_unacc { get; set; }
+        public decimal? wc_unacc { get; set; }
+        public string remarks_unacc { get; set; }
         public string rtl { get; set; }
         public string remarks { get; set; }
         public string created_by { get; set; }
@@ -52,6 +62,16 @@ namespace ssc.Areas.PE.Models
         public ErrorItem bottom_2 { get; set; }
         public ErrorItem hole_feature { get; set; }
         public ErrorItem panjang_feature { get; set; }
+        public ErrorItem date_acc { get; set; }
+        public ErrorItem gross_acc { get; set; }
+        public ErrorItem net_acc { get; set; }
+        public ErrorItem wc_acc { get; set; }
+        public ErrorItem remarks_acc { get; set; }
+        public ErrorItem date_unacc { get; set; }
+        public ErrorItem gross_unacc { get; set; }
+        public ErrorItem net_unacc { get; set; }
+        public ErrorItem wc_unacc { get; set; }
+        public ErrorItem remarks_unacc { get; set; }
         public ErrorItem rtl { get; set; }
         public ErrorItem remarks { get; set; }
     }
@@ -74,6 +94,16 @@ namespace ssc.Areas.PE.Models
         public Object[] bottom_2 { get; set; }
         public Object[] hole_feature { get; set; }
         public Object[] panjang_feature { get; set; }
+        public Object[] date_acc { get; set; }
+        public Object[] gross_acc { get; set; }
+        public Object[] net_acc { get; set; }
+        public Object[] wc_acc { get; set; }
+        public Object[] remarks_acc { get; set; }
+        public Object[] date_unacc { get; set; }
+        public Object[] gross_unacc { get; set; }
+        public Object[] net_unacc { get; set; }
+        public Object[] wc_unacc { get; set; }
+        public Object[] remarks_unacc { get; set; }
         public Object[] rtl { get; set; }
         public Object[] remarks { get; set; }
     }

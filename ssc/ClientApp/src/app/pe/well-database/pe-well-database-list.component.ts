@@ -31,16 +31,19 @@ export class PeWellDatabaseListComponent implements OnInit {
 
   displayedColumns: string[] = [
     "select", "well","last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
-    "layer_unacc","interval_unacc","top_2","bottom_2","hole_feature","panjang_feature",
+    "layer_unacc","interval_unacc","top_2","bottom_2","hole_feature","panjang_feature", 
+    "date_acc", "gross_acc", "net_acc", "wc_acc", "remarks_acc", 
+    "date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc",
     "rtl","remarks"
   ];
   headerColumns1: string[] = [
-    "select","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature",
+    "select","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature", "acc_layer_perfo", "unacc_layer_perfo",
     "rtl","remarks"
   ];
   headerColumns2: string[] = [
     "last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
-    "layer_unacc","interval_unacc","top_2","bottom_2"
+    "layer_unacc","interval_unacc","top_2","bottom_2", "date_acc", "gross_acc", "net_acc", "wc_acc", "remarks_acc", 
+    "date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc",
   ];
   exampleDatabase: ExampleHttpDao | null;
   data: PeWellDatabase[] = [];
@@ -75,6 +78,16 @@ export class PeWellDatabaseListComponent implements OnInit {
   bottom_2Filter = new FormControl('');
   hole_featureFilter = new FormControl('');
   panjang_featureFilter = new FormControl('');
+  date_accFilter = new FormControl('');
+  gross_accFilter = new FormControl('');
+  net_accFilter = new FormControl('');
+  wc_accFilter = new FormControl('');
+  remarks_accFilter = new FormControl('');
+  date_unaccFilter = new FormControl('');
+  gross_unaccFilter = new FormControl('');
+  net_unaccFilter = new FormControl('');
+  wc_unaccFilter = new FormControl('');
+  remarks_unaccFilter = new FormControl('');
   rtlFilter = new FormControl('');
   remarksFilter = new FormControl('');
 
@@ -90,6 +103,16 @@ export class PeWellDatabaseListComponent implements OnInit {
   bottom_2_xSelected = [];
   hole_feature_xSelected = [];
   panjang_feature_xSelected = [];
+  date_acc_xSelected = [];
+  gross_acc_xSelected = [];
+  net_acc_xSelected = [];
+  wc_acc_xSelected = [];
+  remarks_acc_xSelected = [];
+  date_unacc_xSelected = [];
+  gross_unacc_xSelected = [];
+  net_unacc_xSelected = [];
+  wc_unacc_xSelected = [];
+  remarks_unacc_xSelected = [];
   rtl_xSelected = [];
   remarks_xSelected = [];
 
@@ -166,6 +189,16 @@ export class PeWellDatabaseListComponent implements OnInit {
       this.bottom_2Filter.valueChanges.pipe(debounceTime(300)),
       this.hole_featureFilter.valueChanges.pipe(debounceTime(300)),
       this.panjang_featureFilter.valueChanges.pipe(debounceTime(300)),
+      this.date_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.gross_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.net_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.wc_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.remarks_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.date_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.gross_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.net_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.wc_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.remarks_unaccFilter.valueChanges.pipe(debounceTime(300)),
       this.rtlFilter.valueChanges.pipe(debounceTime(300)),
       this.remarksFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
@@ -456,6 +489,16 @@ export class PeWellDatabaseListComponent implements OnInit {
     if(this.bottom_2_xSelected.length) columnfilter["bottom_2"] = this.bottom_2_xSelected;
     if(this.hole_feature_xSelected.length) columnfilter["hole_feature"] = this.hole_feature_xSelected;
     if(this.panjang_feature_xSelected.length) columnfilter["panjang_feature"] = this.panjang_feature_xSelected;
+    if(this.date_acc_xSelected.length) columnfilter["date_acc"] = this.date_acc_xSelected;
+    if(this.gross_acc_xSelected.length) columnfilter["gross_acc"] = this.gross_acc_xSelected;
+    if(this.net_acc_xSelected.length) columnfilter["net_acc"] = this.net_acc_xSelected;
+    if(this.wc_acc_xSelected.length) columnfilter["wc_acc"] = this.wc_acc_xSelected;
+    if(this.remarks_acc_xSelected.length) columnfilter["remarks_acc"] = this.remarks_acc_xSelected;
+    if(this.date_unacc_xSelected.length) columnfilter["date_unacc"] = this.date_unacc_xSelected;
+    if(this.gross_unacc_xSelected.length) columnfilter["gross_unacc"] = this.gross_unacc_xSelected;
+    if(this.net_unacc_xSelected.length) columnfilter["net_unacc"] = this.net_unacc_xSelected;
+    if(this.wc_unacc_xSelected.length) columnfilter["wc_unacc"] = this.wc_unacc_xSelected;
+    if(this.remarks_unacc_xSelected.length) columnfilter["remarks_unacc"] = this.remarks_unacc_xSelected;
     if(this.rtl_xSelected.length) columnfilter["rtl"] = this.rtl_xSelected;
     if(this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
 

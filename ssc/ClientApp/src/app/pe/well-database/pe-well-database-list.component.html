@@ -166,6 +166,114 @@
      <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.panjang_feature | number : '1.0-0') || '-'}}</td>
    </ng-container>
 
+   <ng-container matColumnDef="acc_layer_perfo">
+      <th mat-header-cell *matHeaderCellDef colspan="5">Accessed Layer Performance</th>
+    </ng-container>
+
+     <ng-container matColumnDef="date_acc" sticky>
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="date_acc" column="date_acc" format="last_comp_date" [selected]="date_acc_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date_acc ? (row.date_acc | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="gross_acc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+          <app-xfilter title="gross_acc" column="gross_acc" format="number" [selected]="gross_acc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.gross_acc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="net_acc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+          <app-xfilter title="net_acc" column="net_acc" format="number" [selected]="net_acc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.net_acc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="wc_acc">
+          <th mat-header-cell *matHeaderCellDef rowspan="3">
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
+              <app-xfilter title="WC_acc" column="wc_acc" format="number" [selected]="wc_acc_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_acc/100 | percent : '1.0-0') || '-'}}</td>
+        </ng-container>
+
+   <ng-container matColumnDef="remarks_acc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remark</span>
+          <app-xfilter title="remarks_acc" column="remarks_acc" [selected]="remarks_acc_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-left" [class.clicked_row]="selection.isSelected(row)">{{ row.remarks_acc || '-' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="unacc_layer_perfo">
+      <th mat-header-cell *matHeaderCellDef colspan="5">Unaccessed Layer Performance</th>
+    </ng-container>
+
+     <ng-container matColumnDef="date_unacc" sticky>
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="date_unacc" column="date_unacc" format="last_comp_date" [selected]="date_unacc_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date_unacc ? (row.date_unacc | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="gross_unacc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+          <app-xfilter title="gross_unacc" column="gross_unacc" format="number" [selected]="gross_unacc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.gross_unacc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="net_unacc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+          <app-xfilter title="net_unacc" column="net_unacc" format="number" [selected]="net_unacc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.net_unacc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="wc_unacc">
+          <th mat-header-cell *matHeaderCellDef rowspan="3">
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
+              <app-xfilter title="wc_unacc" column="wc_unacc" format="number" [selected]="wc_unacc_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_unacc/100 | percent : '1.0-0') || '-'}}</td>
+        </ng-container>
+
+   <ng-container matColumnDef="remarks_unacc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remark</span>
+          <app-xfilter title="remarks_unacc" column="remarks_unacc" [selected]="remarks_unacc_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-left" [class.clicked_row]="selection.isSelected(row)">{{ row.remarks_unacc || '-' }}</td>
+    </ng-container>
+
    <ng-container matColumnDef="rtl">
       <th mat-header-cell *matHeaderCellDef rowspan="2">
         <div fxLayout="row" fxLayoutAlign="start center">
@@ -183,7 +291,6 @@
           <app-xfilter title="remarks" column="remarks" [selected]="remarks_xSelected"></app-xfilter>
         </div>
       </th>
-
       <td mat-cell *matCellDef="let row" class="cell-left" [class.clicked_row]="selection.isSelected(row)">{{ row.remarks || '-' }}</td>
     </ng-container>
 

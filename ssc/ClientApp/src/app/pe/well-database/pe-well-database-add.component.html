@@ -122,6 +122,64 @@
 						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.panjang_feature?.value}" [matTooltip]="row._error.panjang_feature?.message" matTooltipPosition="after">{{(row.panjang_feature | number) || row._error.panjang_feature?.value || '-'}}</td>
 					</ng-container>
 
+					<ng-container matColumnDef="acc_layer_perfo">
+				      <th mat-header-cell *matHeaderCellDef colspan="5">Accessed Layer Performance</th>
+				    </ng-container>
+
+					<ng-container matColumnDef="date_acc">
+				      <th mat-header-cell *matHeaderCellDef>Date</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date_acc?.value}" [matTooltip]="row._error.date_acc?.message" matTooltipPosition="after">{{(row.date_acc | date: 'dd MMM y') || row._error.date_acc?.value || '-'}}</td>
+				    </ng-container>
+
+					<ng-container matColumnDef="gross_acc">
+						<th mat-header-cell *matHeaderCellDef>Gross</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.gross_acc?.value}" [matTooltip]="row._error.gross_acc?.message" matTooltipPosition="after">{{(row.gross_acc | number) || row._error.gross_acc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="net_acc">
+						<th mat-header-cell *matHeaderCellDef>Net</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.net_acc?.value}" [matTooltip]="row._error.net_acc?.message" matTooltipPosition="after">{{(row.net_acc | number) || row._error.net_acc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="wc_acc">
+						<th mat-header-cell *matHeaderCellDef>WC</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.wc_acc?.value}" [matTooltip]="row._error.wc_acc?.message" matTooltipPosition="after">{{(row.wc_acc/100 | percent) || row._error.wc_acc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="remarks_acc">
+						<th mat-header-cell *matHeaderCellDef>Remarks</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.remarks_acc?.value}" [matTooltip]="row._error.remarks_acc?.message" matTooltipPosition="after">{{row.remarks_acc || row._error.remarks_acc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="unacc_layer_perfo">
+				      <th mat-header-cell *matHeaderCellDef colspan="5">Unaccessed Layer Performance</th>
+				    </ng-container>
+
+					<ng-container matColumnDef="date_unacc">
+				      <th mat-header-cell *matHeaderCellDef>Date</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date_unacc?.value}" [matTooltip]="row._error.date_unacc?.message" matTooltipPosition="after">{{(row.date_unacc | date: 'dd MMM y') || row._error.date_unacc?.value || '-'}}</td>
+				    </ng-container>
+
+					<ng-container matColumnDef="gross_unacc">
+						<th mat-header-cell *matHeaderCellDef>Gross</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.gross_unacc?.value}" [matTooltip]="row._error.gross_unacc?.message" matTooltipPosition="after">{{(row.gross_unacc | number) || row._error.gross_unacc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="net_unacc">
+						<th mat-header-cell *matHeaderCellDef>Net</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.net_unacc?.value}" [matTooltip]="row._error.net_unacc?.message" matTooltipPosition="after">{{(row.net_unacc | number) || row._error.net_unacc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="wc_unacc">
+						<th mat-header-cell *matHeaderCellDef>WC</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.wc_unacc?.value}" [matTooltip]="row._error.wc_unacc?.message" matTooltipPosition="after">{{(row.wc_unacc/100 | percent) || row._error.wc_unacc?.value || '-'}}</td>
+					</ng-container>
+					
+					<ng-container matColumnDef="remarks_unacc">
+						<th mat-header-cell *matHeaderCellDef>Remarks</th>
+						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.remarks_unacc?.value}" [matTooltip]="row._error.remarks_unacc?.message" matTooltipPosition="after">{{row.remarks_unacc || row._error.remarks_unacc?.value || '-'}}</td>
+					</ng-container>
+
 					<ng-container matColumnDef="rtl">
 				      <th mat-header-cell *matHeaderCellDef rowspan="2">RTL</th>
 				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.rtl?.value}" [matTooltip]="row._error.rtl?.message" matTooltipPosition="after">{{row.rtl || row._error.rtl?.value || '-'}}</td>

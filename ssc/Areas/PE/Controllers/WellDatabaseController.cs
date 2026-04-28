@@ -49,6 +49,16 @@ namespace ssc.Areas.PE.Controllers
                 .Include(t => t.bottom_2)
                 .Include(t => t.hole_feature)
                 .Include(t => t.panjang_feature)
+                .Include(t => t.date_acc)
+                .Include(t => t.gross_acc)
+                .Include(t => t.net_acc)
+                .Include(t => t.wc_acc)
+                .Include(t => t.remarks_acc)
+                .Include(t => t.date_unacc)
+                .Include(t => t.gross_unacc)
+                .Include(t => t.net_unacc)
+                .Include(t => t.wc_unacc)
+                .Include(t => t.remarks_unacc)
                 .Include(t => t.rtl)
                 .Include(t => t.remarks);
         }
@@ -78,6 +88,17 @@ namespace ssc.Areas.PE.Controllers
                     Builders<WellDatabase>.Filter.Regex(t => t.bottom_2, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.hole_feature, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.panjang_feature, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.date_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.gross_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.net_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.wc_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.remarks_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.date_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.gross_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.net_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.wc_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.remarks_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.panjang_feature, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.rtl, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.remarks, new BsonRegularExpression(filter, "i"));
             }
@@ -100,6 +121,16 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.bottom_2?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.bottom_2.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.bottom_2, Convert.ToDecimal(c))));
                 if (colfilter.hole_feature?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.hole_feature.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.hole_feature, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.panjang_feature?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.panjang_feature.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.panjang_feature, Convert.ToDecimal(c))));
+                if (colfilter.date_acc?.ToList().Count(c => !(c is JObject)) > 0) { var tzOffset = TimeZoneInfo.Local.BaseUtcOffset.ToString(@"hh\:mm"); xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.date_acc.ToList().Select(c => (c is DateTime) ? Builders<WellDatabase>.Filter.Eq(t => t.date_acc, new BsonDateTime(((DateTime)c).ToUniversalTime())) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date_acc\",timezone:\"+0" + tzOffset + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}")); }
+                if (colfilter.gross_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.panjang_feature.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.gross_acc, Convert.ToDecimal(c))));
+                if (colfilter.net_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.panjang_feature.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.net_acc, Convert.ToDecimal(c))));
+                if (colfilter.wc_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.wc_acc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.wc_acc, Convert.ToDecimal(c))));
+                if (colfilter.remarks_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.remarks_acc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.remarks_acc, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.date_unacc?.ToList().Count(c => !(c is JObject)) > 0) { var tzOffset = TimeZoneInfo.Local.BaseUtcOffset.ToString(@"hh\:mm"); xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.date_unacc.ToList().Select(c => (c is DateTime) ? Builders<WellDatabase>.Filter.Eq(t => t.date_unacc, new BsonDateTime(((DateTime)c).ToUniversalTime())) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$last_comp_date\",timezone:\"+0" + tzOffset + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}")); }
+                if (colfilter.gross_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.gross_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.gross_unacc, Convert.ToDecimal(c))));
+                if (colfilter.net_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.net_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.net_unacc, Convert.ToDecimal(c))));
+                if (colfilter.wc_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.wc_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.wc_unacc, Convert.ToDecimal(c))));
+                if (colfilter.remarks_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.remarks_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.remarks_unacc, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.rtl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.rtl.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.rtl, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.remarks?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.remarks.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.remarks, new BsonRegularExpression((string)c, "i"))));
 
@@ -115,10 +146,20 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.bottom?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.top.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$bottom\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.layer_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.layer_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$in:[true,{{$map:{{input:\"$layer_unacc\",in:{{$regexMatch:{{input:{{$toString:\"$$this\"}},regex:\"{0}\",options:\"i\"}}}}}}}}]}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.interval_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.interval_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$in:[true,{{$map:{{input:{{$reduce:{{input:\"$interval_unacc\",initialValue:[],in:{{$concatArrays:[\"$$value\",\"$$this\"]}}}}}},in:{{$regexMatch:{{input:{{$toString:\"$$this\"}},regex:\"{0}\",options:\"i\"}}}}}}}}]}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.top_2?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.interval_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$max_ch\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.bottom_2?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.top_2.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$min_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.top_2?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.top_2.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$top_2\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.bottom_2?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.bottom_2.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$bottom_2\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.hole_feature?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.hole_feature.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$hole_feature\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.panjang_feature?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.hole_feature.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$max_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.panjang_feature?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.panjang_feature.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$panjang_feature\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.date_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date_acc\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
+                    if (colfilter.gross_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.gross_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$gross_acc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.net_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.net_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$net_acc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.wc_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wc_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$wc_acc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.remarks_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.remarks_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$remarks_acc\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.date_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date_unacc\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
+                    if (colfilter.gross_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.gross_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$gross_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.net_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.net_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$net_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.wc_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wc_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$wc_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.remarks_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.remarks_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$remarks_unacc\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.rtl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.panjang_feature.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$used_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.remarks?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.remarks.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$noted\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                 }
@@ -143,6 +184,16 @@ namespace ssc.Areas.PE.Controllers
                 case "bottom_2": _items = (order == "asc") ? _items.SortBy(t => t.bottom_2) : _items.SortByDescending(t => t.bottom_2); break;
                 case "hole_feature": _items = (order == "asc") ? _items.SortBy(t => t.hole_feature) : _items.SortByDescending(t => t.hole_feature); break;
                 case "panjang_feature": _items = (order == "asc") ? _items.SortBy(t => t.panjang_feature) : _items.SortByDescending(t => t.panjang_feature); break;
+                case "date_acc": _items = (order == "asc") ? _items.SortBy(t => t.date_acc) : _items.SortByDescending(t => t.date_acc); break;
+                case "gross_acc": _items = (order == "asc") ? _items.SortBy(t => t.gross_acc) : _items.SortByDescending(t => t.gross_acc); break;
+                case "net_acc": _items = (order == "asc") ? _items.SortBy(t => t.net_acc) : _items.SortByDescending(t => t.net_acc); break;
+                case "wc_acc": _items = (order == "asc") ? _items.SortBy(t => t.wc_acc) : _items.SortByDescending(t => t.wc_acc); break;
+                case "remarks_acc": _items = (order == "asc") ? _items.SortBy(t => t.remarks_acc) : _items.SortByDescending(t => t.remarks_acc); break;
+                case "date_unacc": _items = (order == "asc") ? _items.SortBy(t => t.date_unacc) : _items.SortByDescending(t => t.date_unacc); break;
+                case "gross_unacc": _items = (order == "asc") ? _items.SortBy(t => t.gross_unacc) : _items.SortByDescending(t => t.gross_unacc); break;
+                case "net_unacc": _items = (order == "asc") ? _items.SortBy(t => t.net_unacc) : _items.SortByDescending(t => t.net_unacc); break;
+                case "wc_unacc": _items = (order == "asc") ? _items.SortBy(t => t.wc_unacc) : _items.SortByDescending(t => t.wc_unacc); break;
+                case "remarks_unacc": _items = (order == "asc") ? _items.SortBy(t => t.remarks_unacc) : _items.SortByDescending(t => t.remarks_unacc); break;
                 case "rtl": _items = (order == "asc") ? _items.SortBy(t => t.rtl) : _items.SortByDescending(t => t.rtl); break;
                 case "remarks": _items = (order == "asc") ? _items.SortBy(t => t.remarks) : _items.SortByDescending(t => t.remarks); break;
             }
@@ -233,15 +284,32 @@ namespace ssc.Areas.PE.Controllers
 
             ws.Cells[1, 11].Value = "Hole Feature";
             ws.Cells[1, 12].Value = "Panjang Feature";
-            ws.Cells[1, 13].Value = "RTL";
-            ws.Cells[1, 14].Value = "Remarks";
+
+            ws.Cells[1, 13].Value = "Accessed Layer Perfomance";
+            ws.Cells[1, 13, 1, 17].Merge = true;
+            ws.Cells[2, 13].Value = "Date";
+            ws.Cells[2, 14].Value = "Gross";
+            ws.Cells[2, 15].Value = "Net";
+            ws.Cells[2, 16].Value = "WC";
+            ws.Cells[2, 17].Value = "Remarks";
+
+            ws.Cells[1, 18].Value = "Unacessed Layer Perfomance";
+            ws.Cells[1, 18, 1, 22].Merge = true;
+            ws.Cells[2, 18].Value = "Date";
+            ws.Cells[2, 19].Value = "Gross";
+            ws.Cells[2, 20].Value = "Net";
+            ws.Cells[2, 21].Value = "WC";
+            ws.Cells[2, 22].Value = "Remarks";
+
+            ws.Cells[1, 23].Value = "RTL";
+            ws.Cells[1, 24].Value = "Remarks";
 
 
-            ws.Cells[1, 1, 1, 14].Style.Font.Bold = true;
-            ws.Cells[1, 1, 1, 14].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            ws.Cells[1, 1, 1, 14].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+            ws.Cells[1, 1, 1, 24].Style.Font.Bold = true;
+            ws.Cells[1, 1, 1, 24].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 1, 24].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
-            for (int c = 1; c <= 14; c++)
+            for (int c = 1; c <= 24; c++)
             {
                 //ws.Column(c).AutoFit();
             }
@@ -263,8 +331,18 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[2 + i, 10].Value = t.bottom_2;
                 ws.Cells[2 + i, 11].Value = t.hole_feature;
                 ws.Cells[2 + i, 12].Value = t.panjang_feature;
-                ws.Cells[2 + i, 13].Value = t.rtl;
-                ws.Cells[2 + i, 14].Value = t.remarks;
+                ws.Cells[2 + i, 13].Value = t.date_acc;
+                ws.Cells[2 + i, 14].Value = t.gross_acc;
+                ws.Cells[2 + i, 15].Value = t.net_acc;
+                ws.Cells[2 + i, 16].Value = t.wc_acc;
+                ws.Cells[2 + i, 17].Value = t.remarks_acc;
+                ws.Cells[2 + i, 18].Value = t.date_unacc;
+                ws.Cells[2 + i, 19].Value = t.gross_unacc;
+                ws.Cells[2 + i, 20].Value = t.net_unacc;
+                ws.Cells[2 + i, 21].Value = t.wc_unacc;
+                ws.Cells[2 + i, 22].Value = t.remarks_unacc;
+                ws.Cells[2 + i, 23].Value = t.rtl;
+                ws.Cells[2 + i, 24].Value = t.remarks;
             }
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
@@ -420,6 +498,12 @@ namespace ssc.Areas.PE.Controllers
                         new { key = "top_2", col = 10 },
                         new { key = "bottom_2", col = 11 },
                         new { key = "panjang_feature", col = 13 },
+                        new { key = "gross_acc", col = 15 },
+                        new { key = "net_acc", col = 16 },
+                        new { key = "wc_acc", col = 17 },
+                        new { key = "gross_unacc", col = 20 },
+                        new { key = "net_unacc", col = 21 },
+                        new { key = "wc_unacc", col = 22 },
                     };
 
                     foreach (var mapping in mappings)
@@ -470,6 +554,7 @@ namespace ssc.Areas.PE.Controllers
                         }
                     }
 
+
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 12].Value?.ToString()))
                     {
                         _row.hole_feature = ws.Cells[r, 12].Value?.ToString().Trim();
@@ -483,13 +568,103 @@ namespace ssc.Areas.PE.Controllers
                     {
                         try
                         {
-                            _row.rtl = ws.Cells[r, 14].Value?.ToString().Trim();
+                            if (ws.Cells[r, 14].Value.GetType() == DateTime.Now.GetType())
+                            {
+                                _row.date_acc = (DateTime?)ws.Cells[r, 14].Value;
+                            }
+                            else
+                            {
+                                _row.date_acc = DateTime.FromOADate(double.Parse(ws.Cells[r, 14].Value?.ToString().Trim()));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.date_acc = new ErrorItem { value = ws.Cells[r, 14].Value?.ToString(), message = e.Message };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row_error.date_acc = null;
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 19].Value?.ToString()))
+                    {
+                        try
+                        {
+                            if (ws.Cells[r, 19].Value.GetType() == DateTime.Now.GetType())
+                            {
+                                _row.date_unacc = (DateTime?)ws.Cells[r, 19].Value;
+                            }
+                            else
+                            {
+                                _row.date_unacc = DateTime.FromOADate(double.Parse(ws.Cells[r, 19].Value?.ToString().Trim()));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.date_unacc = new ErrorItem { value = ws.Cells[r, 19].Value?.ToString(), message = e.Message };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row_error.date_unacc = null;
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 18].Value?.ToString()))
+                    {
+                        try
+                        {
+                            _row.remarks_acc = ws.Cells[r, 18].Value?.ToString().Trim();
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.remarks_acc = new ErrorItem
+                            {
+                                value = ws.Cells[r, 18].Value?.ToString(),
+                                message = e.Message
+                            };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row.remarks_acc = null;
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 23].Value?.ToString()))
+                    {
+                        try
+                        {
+                            _row.remarks_unacc = ws.Cells[r, 23].Value?.ToString().Trim();
+                        }
+                        catch (Exception e)
+                        {
+                            _row_error.remarks_unacc = new ErrorItem
+                            {
+                                value = ws.Cells[r, 23].Value?.ToString(),
+                                message = e.Message
+                            };
+                            error_count++;
+                        }
+                    }
+                    else
+                    {
+                        _row.remarks_unacc = null;
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 24].Value?.ToString()))
+                    {
+                        try
+                        {
+                            _row.rtl = ws.Cells[r, 24].Value?.ToString().Trim();
                         }
                         catch (Exception e)
                         {
                             _row_error.rtl = new ErrorItem
                             {
-                                value = ws.Cells[r, 14].Value?.ToString(),
+                                value = ws.Cells[r, 24].Value?.ToString(),
                                 message = e.Message
                             };
                             error_count++;
@@ -501,17 +676,17 @@ namespace ssc.Areas.PE.Controllers
                     }
 
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 15].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 25].Value?.ToString()))
                     {
                         try
                         {
-                            _row.remarks = ws.Cells[r, 15].Value?.ToString().Trim();
+                            _row.remarks = ws.Cells[r, 25].Value?.ToString().Trim();
                         }
                         catch (Exception e)
                         {
                             _row_error.remarks = new ErrorItem
                             {
-                                value = ws.Cells[r, 15].Value?.ToString(),
+                                value = ws.Cells[r, 25].Value?.ToString(),
                                 message = e.Message
                             };
                             error_count++;
@@ -632,6 +807,16 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.bottom_2, item.bottom_2)
                         .Set(t => t.hole_feature, item.hole_feature)
                         .Set(t => t.panjang_feature, item.panjang_feature)
+                        .Set(t => t.date_acc, item.date_acc)
+                        .Set(t => t.gross_acc, item.gross_acc)
+                        .Set(t => t.net_acc, item.net_acc)
+                        .Set(t => t.wc_acc, item.wc_acc)
+                        .Set(t => t.remarks_acc, item.remarks_acc)
+                        .Set(t => t.date_unacc, item.date_unacc)
+                        .Set(t => t.gross_unacc, item.gross_unacc)
+                        .Set(t => t.net_unacc, item.net_unacc)
+                        .Set(t => t.wc_unacc, item.wc_unacc)
+                        .Set(t => t.remarks_unacc, item.remarks_unacc)
                         .Set(t => t.rtl, item.rtl)
                         .Set(t => t.remarks, item.remarks)
                         .Set(t => t.updated_by, User.Identity.Name)
@@ -683,6 +868,16 @@ namespace ssc.Areas.PE.Controllers
                 .Set(t => t.bottom_2, payload.bottom_2)
                 .Set(t => t.hole_feature, payload.hole_feature)
                 .Set(t => t.panjang_feature, payload.panjang_feature)
+                .Set(t => t.date_acc, payload.date_acc)
+                .Set(t => t.gross_acc, payload.gross_acc)
+                .Set(t => t.net_acc, payload.net_acc)
+                .Set(t => t.wc_acc, payload.wc_acc)
+                .Set(t => t.remarks_acc, payload.remarks_acc)
+                .Set(t => t.date_unacc, payload.date_unacc)
+                .Set(t => t.gross_unacc, payload.gross_unacc)
+                .Set(t => t.net_unacc, payload.net_unacc)
+                .Set(t => t.wc_unacc, payload.wc_unacc)
+                .Set(t => t.remarks_unacc, payload.remarks_unacc)
                 .Set(t => t.rtl, payload.rtl)
                 .Set(t => t.remarks, payload.remarks)
                 .Set(t => t.updated_by, User.Identity.Name)
