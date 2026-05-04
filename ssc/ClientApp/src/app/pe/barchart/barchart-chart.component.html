@@ -42,6 +42,31 @@
     </span>
   </div>
 
+  <div class="gantt-fixed-header" *ngIf="!isLoading && chartData.length > 0">
+
+    <!-- Baris: Zoom kiri | Title tengah | From-To kanan -->
+    <div class="gantt-header-row">
+
+      <div class="gantt-zoom-group">
+        <span class="zoom-label">Zoom</span>
+        <button [class.active]="activeRange === '1m'" (click)="setRange('1m')">1m</button>
+        <button [class.active]="activeRange === '2m'" (click)="setRange('2m')">2m</button>
+        <button [class.active]="activeRange === '3m'" (click)="setRange('3m')">3m</button>
+        <button [class.active]="activeRange === 'all'" (click)="setRange('all')">All</button>
+      </div>
+
+      <!-- <div class="gantt-title">BARCHART RIG SANGATTA FIELD</div> -->
+
+      <div class="gantt-fromto">
+        <span class="fromto-label">From</span>
+        <span class="fromto-value">{{ start_dateInput || '-' }}</span>
+        <span class="fromto-label">To</span>
+        <span class="fromto-value">{{ end_dateInput || '-' }}</span>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Gantt Chart Container with horizontal scroll -->
   <div class="gantt-chart-wrapper" [hidden]="isLoading || chartData.length === 0">
     <div #ganttChart class="gantt-chart"></div>

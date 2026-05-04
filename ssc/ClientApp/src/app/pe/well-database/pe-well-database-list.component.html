@@ -16,7 +16,7 @@
 
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
 
-    <table mat-table [dataSource]="data" class="pe-table"
+    <table mat-table [dataSource]="dataSource" class="pe-table"
     matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
 
     <ng-container matColumnDef="select">
@@ -39,7 +39,7 @@
     </ng-container>
     
     
-    <ng-container matColumnDef="well">
+    <ng-container matColumnDef="well" sticky>
       <th mat-header-cell *matHeaderCellDef rowspan="2">
         <div fxLayout="row" fxLayoutAlign="start center">
           <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
@@ -53,7 +53,7 @@
       <th mat-header-cell *matHeaderCellDef colspan="5">Accessed Layer</th>
     </ng-container>
     
-    <ng-container matColumnDef="last_comp_date" sticky>
+    <ng-container matColumnDef="last_comp_date">
       <th mat-header-cell *matHeaderCellDef rowspan="2">
         <div fxLayout="row" fxLayoutAlign="start center">
           <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
@@ -170,7 +170,7 @@
       <th mat-header-cell *matHeaderCellDef colspan="5">Accessed Layer Performance</th>
     </ng-container>
 
-     <ng-container matColumnDef="date_acc" sticky>
+     <ng-container matColumnDef="date_acc">
       <th mat-header-cell *matHeaderCellDef>
         <div fxLayout="row" fxLayoutAlign="start center">
           <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
@@ -224,7 +224,7 @@
       <th mat-header-cell *matHeaderCellDef colspan="5">Unaccessed Layer Performance</th>
     </ng-container>
 
-     <ng-container matColumnDef="date_unacc" sticky>
+     <ng-container matColumnDef="date_unacc">
       <th mat-header-cell *matHeaderCellDef>
         <div fxLayout="row" fxLayoutAlign="start center">
           <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>

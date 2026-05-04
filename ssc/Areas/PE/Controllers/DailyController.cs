@@ -121,11 +121,11 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Daily>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
                 if (colfilter.nomor?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.nomor.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.nomor, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.location?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.location.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.location, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c => 
-                    ((string)c == "__NULL__") ? Builders<Daily>.Filter.Or(Builders<Daily>.Filter.Eq(t => t.well, null), Builders<Daily>.Filter.Eq(t => t.well, "")) 
+                if (colfilter.well?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.well.ToList().Where(c => !(c is JObject)).Select(c =>
+                    ((string)c == "__NULL__") ? Builders<Daily>.Filter.Or(Builders<Daily>.Filter.Eq(t => t.well, null), Builders<Daily>.Filter.Eq(t => t.well, ""))
                     : Builders<Daily>.Filter.Regex(t => t.well, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.well_string?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.well_string.ToList().Where(c => !(c is JObject)).Select(c => 
-                    ((string)c == "__NULL__") ? Builders<Daily>.Filter.Or(Builders<Daily>.Filter.Eq(t => t.well_string, null), Builders<Daily>.Filter.Eq(t => t.well_string, "")) 
+                if (colfilter.well_string?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.well_string.ToList().Where(c => !(c is JObject)).Select(c =>
+                    ((string)c == "__NULL__") ? Builders<Daily>.Filter.Or(Builders<Daily>.Filter.Eq(t => t.well_string, null), Builders<Daily>.Filter.Eq(t => t.well_string, ""))
                     : Builders<Daily>.Filter.Regex(t => t.well_string, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.zone?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.zone.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.zone, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.interval?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.interval.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Eq("interval", ((string)c).Split(",").Select(i => i.Split("-")).ToArray())));
@@ -1659,9 +1659,14 @@ namespace ssc.Areas.PE.Controllers
                 long modified_count = 0;
                 long created_count = items.Count();
                 Daily daily;
+                var bulkOps = new List<WriteModel<Daily>>();
                 foreach (Daily item in items)
                 {
                     item._error = null;
+
+                    var filter = Builders<Daily>.Filter.Eq(t => t.date, item.date) &
+                                Builders<Daily>.Filter.Eq(t => t.well, item.well) &
+                                Builders<Daily>.Filter.Eq(t => t.interval, item.interval);
                     // daily = DailyCommon.CalculateFields(item);
 
                     var update = Builders<Daily>.Update.Set(t => t.date, item.date)
@@ -1711,25 +1716,28 @@ namespace ssc.Areas.PE.Controllers
                         .SetOnInsert(t => t.created_by, User.Identity.Name)
                         .SetOnInsert(t => t.created_date, DateTime.Now);
 
-                    UpdateResult res = _daily.UpdateOne(
-                        Builders<Daily>.Filter.Eq(t => t.date, item.date) &
-                        Builders<Daily>.Filter.Eq(t => t.well, item.well) &
-                        Builders<Daily>.Filter.Eq(t => t.interval, item.interval),
-                        update, new UpdateOptions() { IsUpsert = true });
+                    // UpdateResult res = _daily.UpdateOne(
+                    //     Builders<Daily>.Filter.Eq(t => t.date, item.date) &
+                    //     Builders<Daily>.Filter.Eq(t => t.well, item.well) &
+                    //     Builders<Daily>.Filter.Eq(t => t.interval, item.interval),
+                    //     update, new UpdateOptions() { IsUpsert = true });
 
-                    if (res.ModifiedCount > 0)
-                    {
-                        modified_data.Add(item);
-                    }
-                    else if (res.UpsertedId != null)
-                    {
-                        created_data.Add(item);
-                    }
+                    // if (res.ModifiedCount > 0)
+                    // {
+                    //     modified_data.Add(item);
+                    // }
+                    // else if (res.UpsertedId != null)
+                    // {
+                    //     created_data.Add(item);
+                    // }
+
+                    bulkOps.Add(new UpdateOneModel<Daily>(filter, update) { IsUpsert = true });
 
 
-                    modified_count += res.ModifiedCount;
-                    created_count -= res.ModifiedCount;
                 }
+                BulkWriteResult bulkResult = _daily.BulkWrite(bulkOps);
+                modified_count = bulkResult.ModifiedCount;
+                created_count = bulkResult.Upserts.Count;
                 _daily_tmp.DeleteOne(d => d._id == _id);
 
                 //CalculateFigure();

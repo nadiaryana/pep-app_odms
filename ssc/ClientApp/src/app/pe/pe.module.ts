@@ -237,6 +237,7 @@ import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add
   PeLabDeleteDialogComponent,
   PeLaporanLabDeleteDialogComponent,
   PePumpingUnitDeleteDialogComponent,
+  PeWellDatabaseDeleteDialogComponent,
   
   // PeSumurDeleteDialogComponent,
   // PeDailyZoneChartDeleteDialogComponent,

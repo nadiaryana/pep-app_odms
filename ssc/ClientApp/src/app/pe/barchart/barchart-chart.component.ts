@@ -39,6 +39,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   isLoading:    boolean = false;  
   isCapturing:  boolean = false;  // menyembunyikan UI saat proses screenshot
 
+  activeRange: string = '1m';
+
 
   chartData: any[] = [];   
   chart:     any;          // instance Highcharts Gantt
@@ -477,7 +479,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       },
  
       rangeSelector: {
-        enabled: true,
+        enabled: false,
         floating: true,
         
         verticalAlign: 'top',
@@ -552,6 +554,56 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
     return this.jobColors[job.trim().toLowerCase()] || '#bfbfbf';
   }
 
+  setRange(range: string) {
+    this.activeRange = range;
+    if (!this.chart) return;
+
+    const endDate = this.end_dateControl.value
+      ? new Date(this.end_dateControl.value)
+      : new Date();
+
+    const startDate = this.start_dateControl.value
+      ? new Date(this.start_dateControl.value)
+      : new Date();
+
+    let zoomStart: number;
+    let zoomEnd: number;
+
+    switch (range) {
+      case '1m':
+        zoomEnd   = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        zoomStart = Date.UTC(endDate.getFullYear(), endDate.getMonth() - 1, endDate.getDate());
+        break;
+
+      case '2m':
+        zoomEnd   = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        zoomStart = Date.UTC(endDate.getFullYear(), endDate.getMonth() - 2, endDate.getDate());
+        break;
+
+      case '3m':
+        zoomEnd   = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        zoomStart = Date.UTC(endDate.getFullYear(), endDate.getMonth() - 3, endDate.getDate());
+        break;
+
+      case 'all':
+      default:
+        zoomStart = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        zoomEnd   = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()) 
+                    + (24 * 60 * 60 * 1000);
+        break;
+    }
+
+    // Clamp: jangan keluar dari filter range yang dipilih user
+    const filterStart = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const filterEnd   = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()) 
+                        + (24 * 60 * 60 * 1000);
+
+    zoomStart = Math.max(zoomStart, filterStart);
+    zoomEnd   = Math.min(zoomEnd, filterEnd);
+
+    this.chart.xAxis[0].setExtremes(zoomStart, zoomEnd, true, false);
+  }
+
   screenshotChart() {
     const chartEl = this.ganttChartEl.nativeElement as HTMLElement;
 
@@ -606,7 +658,16 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
           expand(clonedEl.querySelector('.highcharts-container'));
           expand(clonedEl.querySelector('.highcharts-root'), true);   
           expand(clonedEl);  
+
+          const axisTitles = clonedEl.querySelectorAll('.highcharts-axis-title');
+          axisTitles.forEach((el) => {
+            const svgEl = el as SVGTextElement;
+            const currentY = parseFloat(svgEl.getAttribute('y') || '0');
+            svgEl.setAttribute('y', String(currentY - headerTop));
+          });
+          
         }
+        
 
       }).then((canvas: HTMLCanvasElement) => {
         const link      = document.createElement('a');
