@@ -290,9 +290,9 @@ export class PeDailyAreaChartComponent implements OnInit {
       const column = res["column"];
       this[column + "_xSelected"] = res["selected"];
       
-      // Jika well_string dipilih, reset well_xSelected
-      if (column === "well_string") {
-        this.well_xSelected = [];
+      // Jika well dipilih, reset well_string_xSelected
+      if (column === "well") {
+        this.well_string_xSelected = [];
       }
       
       this.checkAndRefreshDaily();
@@ -326,20 +326,20 @@ export class PeDailyAreaChartComponent implements OnInit {
       });
     };
     
-    // Jika user filter column "well" → include well_string filter
-    if (column === "well") {
-      // Include well_string filter dengan handling null
-      columnfilter["well_string"] = toRegexPattern(this.well_string_xSelected);
+    // Jika user filter column "well_string" → include well filter
+    if (column === "well_string") {
+      // Include well filter dengan handling null
+      columnfilter["well"] = toRegexPattern(this.well_xSelected);
     } 
-    // Jika user filter column "well_string" → tidak ada additional filter
-    else if (column === "well_string") {
+    // Jika user filter column "well" → tidak ada additional filter
+    else if (column === "well") {
       columnfilter = {};
     }
     // Untuk column lain → include well dan well_string yang sudah dipilih
     else {
-      if (this.well_string_xSelected.length > 0) {
-        columnfilter["well_string"] = toRegexPattern(this.well_string_xSelected);
+      if (this.well_xSelected.length > 0) {
         columnfilter["well"] = toRegexPattern(this.well_xSelected);
+        columnfilter["well_string"] = toRegexPattern(this.well_string_xSelected);
       }
     }
     
@@ -376,16 +376,16 @@ export class PeDailyAreaChartComponent implements OnInit {
     this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
   }
 
-  onWellStringChange() {
-    console.log('well_string_xSelected changed:', this.well_string_xSelected);
+  onWellChange() {
+    console.log('well_xSelected changed:', this.well_xSelected);
     
-    // Jika well_string dipilih, reset well_xSelected (jangan auto-fetch)
-    if (this.well_string_xSelected.length > 0) {
-      this.well_xSelected = []; // Reset well selection
-      // Jangan auto-fetch well list - biarkan user buka filter dialog
+    // Jika well dipilih, reset well_string_xSelected 
+    if (this.well_xSelected.length > 0) {
+      this.well_string_xSelected = []; // Reset well string selection
+      // Jangan auto-fetch well string list - biarkan user buka filter dialog
     } else {
-      // Jika well_string dikosongkan, kosongkan juga well list
-      this.well_xSelected = [];
+      // Jika well dikosongkan, kosongkan juga well string list
+      this.well_string_xSelected = [];
     }
     
     this.checkAndRefreshDaily();
@@ -393,11 +393,11 @@ export class PeDailyAreaChartComponent implements OnInit {
 
   checkAndRefreshDaily() {
     // Cek apakah semua field sudah terisi
-    const hasWellString = this.well_string_xSelected && this.well_string_xSelected.length > 0;
     const hasWell = this.well_xSelected && this.well_xSelected.length > 0;
+    const hasWellString = this.well_string_xSelected && this.well_string_xSelected.length > 0;
     const hasDateRange = this.start_dateControl.value && this.end_dateControl.value;
     
-    console.log('checkAndRefreshDaily:', { hasWellString, hasWell, hasDateRange });
+    console.log('checkAndRefreshDaily:', { hasWell, hasWellString, hasDateRange });
     
     // Hanya fetch jika semua field terisi
     if (hasWellString && hasWell && hasDateRange) {
@@ -416,7 +416,7 @@ export class PeDailyAreaChartComponent implements OnInit {
     this.daily_chart_options["series"][3]["data"] = [];
     this.daily_chart_options["series"][4]["data"] = [];
     this.daily_chart_options["series"][5]["data"] = [];
-    this.daily_chart_options["title"]["text"] = "Please select well string and well";
+    this.daily_chart_options["title"]["text"] = "Please select well and well string";
     Highcharts.chart(this.daily_chart_el.nativeElement, this.daily_chart_options);
   }
 

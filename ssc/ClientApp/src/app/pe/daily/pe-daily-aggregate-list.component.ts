@@ -76,20 +76,23 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   // ─── Date Picker: Week 2 (periode baru = "today") ───────────────────────────
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 2 */
-  start_dateControl = new FormControl(new Date());
-  start_dateInput = this.start_dateControl.value
-    ? this.start_dateControl.value.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-        day: "numeric",
-      })
-    : "";
+  start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  // start_dateInput = this.start_dateControl.value
+  //   ? this.start_dateControl.value.toLocaleDateString("en-US", {
+  //       month: "short",
+  //       year: "numeric",
+  //       day: "numeric",
+  //     })
+  //   : "";
+  start_dateInput = "Today - 1";
 
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
   /** Tanggal akhir Week 2 */
-  end_dateControl = new FormControl(new Date());
-  end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  // end_dateInput = this.end_dateControl.value ? this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" }) :  "";
 
+  end_dateInput = "Today - 1";
+  
   // ─── Date Picker: Week 1 (periode lama = "prev") ────────────────────────────
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 1 (default 7 hari yang lalu) */

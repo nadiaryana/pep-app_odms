@@ -72,6 +72,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   
   wellName_xSelected = [];
   status_xSelected = [];
+  station_xSelected = [];
   filterSubscription: Subscription;
   selectedSubscription: Subscription;
   listSubscription: Subscription;
@@ -721,6 +722,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     var columnfilter: any = {};
     if(this.wellName_xSelected.length) columnfilter["wellName"] = this.wellName_xSelected;
     if(this.status_xSelected.length) columnfilter["status"] = this.status_xSelected;
+    if(this.station_xSelected.length) columnfilter["station"] = this.station_xSelected;
     return columnfilter;
   }
 
@@ -741,6 +743,11 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     if(columnfilter["status"] && columnfilter["status"].length > 0) {
       filtered = filtered.filter(sumur => 
         columnfilter["status"].includes(sumur.status)
+      );
+    }
+    if(columnfilter["station"] && columnfilter["station"].length > 0) {
+      filtered = filtered.filter(sumur => 
+        columnfilter["station"].includes(sumur.station)
       );
     }
     
@@ -848,7 +855,8 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const hasActiveFilter =
       this.wellName_xSelected.length > 0 ||
-      this.status_xSelected.length > 0;
+      this.status_xSelected.length > 0 ||
+      this.station_xSelected.length > 0 ;
 
     if (!this.showWell && !hasActiveFilter) {
       this.markerMap.forEach(marker => {
