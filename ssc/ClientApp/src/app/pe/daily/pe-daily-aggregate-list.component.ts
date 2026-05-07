@@ -84,14 +84,21 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   //       day: "numeric",
   //     })
   //   : "";
-  start_dateInput = "Today - 1";
+  start_dateInput = new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+    day: "numeric",
+  });
 
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
   /** Tanggal akhir Week 2 */
   end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
   // end_dateInput = this.end_dateControl.value ? this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" }) :  "";
-
-  end_dateInput = "Today - 1";
+  end_dateInput = new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+    day: "numeric",
+  });
   
   // ─── Date Picker: Week 1 (periode lama = "prev") ────────────────────────────
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
@@ -107,8 +114,13 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any> = null!;
   /** Tanggal akhir Week 1 */
-  weekly_end_dateControl = new FormControl(new Date());
-  weekly_end_dateInput = this.weekly_end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  weekly_end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 7)));
+  weekly_end_dateInput = this.weekly_start_dateControl.value 
+  ? this.weekly_end_dateControl.value.toLocaleDateString("en-US", { 
+    month: "short", 
+    year: "numeric", 
+    day: "numeric" }) 
+    : "";
 
   // ─── State tabel ────────────────────────────────────────────────────────────
   exampleDatabase: ExampleHttpDao | null = null;

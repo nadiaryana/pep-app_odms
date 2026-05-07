@@ -96,7 +96,7 @@ export class PeDailyAreaChartComponent implements OnInit {
     }, { // Secondary yAxis
       gridLineWidth: 0,
       title: {
-        text: 'SM (m), Gas (Mscfd)',
+        text: 'SM (m), Gas (Mscfd), WC (%)',
         style: {
           color: '#666666'
         }
