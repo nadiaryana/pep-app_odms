@@ -36,6 +36,15 @@ namespace ssc.Areas.PE.Models
         public decimal? net_unacc { get; set; }
         public decimal? wc_unacc { get; set; }
         public string remarks_unacc { get; set; }
+        public DateTime? date_acc_statik { get; set; }
+        public decimal? sfl_acc { get; set; }
+        public decimal? ps_acc { get; set; }
+        public DateTime? date_acc_dynamic { get; set; }
+        public decimal? dfl_acc { get; set; }
+        public decimal? pwf_acc { get; set; }
+        public decimal? pi { get; set; }
+        public decimal? ipr { get; set; }
+
         public string rtl { get; set; }
         public string remarks { get; set; }
         public string created_by { get; set; }
@@ -104,6 +113,7 @@ namespace ssc.Areas.PE.Models
         public Object[] net_unacc { get; set; }
         public Object[] wc_unacc { get; set; }
         public Object[] remarks_unacc { get; set; }
+
         public Object[] rtl { get; set; }
         public Object[] remarks { get; set; }
     }
