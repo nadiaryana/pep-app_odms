@@ -2524,78 +2524,78 @@ namespace ssc.Areas.PE.Controllers
         }
 
 
-        [Authorize("PeDaily Read")]
-        [HttpGet("buildfigure")]
-        public ActionResult GetFigure()
-        {
+        // [Authorize("PeDaily Read")]
+        // [HttpGet("buildfigure")]
+        // public ActionResult GetFigure()
+        // {
 
 
-            var _items = _daily.Find(new BsonDocument(), new FindOptions() { Collation = new Collation("en_US", numericOrdering: true) });
+        //     var _items = _daily.Find(new BsonDocument(), new FindOptions() { Collation = new Collation("en_US", numericOrdering: true) });
 
 
-            var total_count = _items.CountDocuments();
+        //     var total_count = _items.CountDocuments();
 
-            List<Daily> items = _items
-            .Project<Daily>(_fields_daily).ToList();
-            // Sementara , kalau sudah hapus.
-            var figure = items.GroupBy(g => new
-            {
-                date = g.date
-            }).Select(s => new
-            {
-                date = s.Key.date,
-                figure = s.Sum(p => p.fig_curr_net)
-            }).ToList();
-            foreach (var item in figure)
-            {
-                var update = Builders<Production>.Update
-              .Set(t => t.figure, item.figure)
-              .Set(t => t.date, item.date);
-                UpdateResult result = _production.UpdateOne(
-                    Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
-                    update, new UpdateOptions() { IsUpsert = true });
+        //     List<Daily> items = _items
+        //     .Project<Daily>(_fields_daily).ToList();
+        //     // Sementara , kalau sudah hapus.
+        //     var figure = items.GroupBy(g => new
+        //     {
+        //         date = g.date
+        //     }).Select(s => new
+        //     {
+        //         date = s.Key.date,
+        //         figure = s.Sum(p => p.fig_curr_net)
+        //     }).ToList();
+        //     foreach (var item in figure)
+        //     {
+        //         var update = Builders<Production>.Update
+        //       .Set(t => t.figure, item.figure)
+        //       .Set(t => t.date, item.date);
+        //         UpdateResult result = _production.UpdateOne(
+        //             Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
+        //             update, new UpdateOptions() { IsUpsert = true });
 
-            }
+        //     }
 
-            return new JsonResult(new
-            {
-                total_count = total_count,
-                incomplete_result = false,
-                items = figure,
-            })
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
-        }
+        //     return new JsonResult(new
+        //     {
+        //         total_count = total_count,
+        //         incomplete_result = false,
+        //         items = figure,
+        //     })
+        //     {
+        //         StatusCode = StatusCodes.Status200OK
+        //     };
+        // }
 
 
-        public void CalculateFigure()
-        {
-            var _items = _daily.Find(new BsonDocument(), new FindOptions() { Collation = new Collation("en_US", numericOrdering: true) });
-            var total_count = _items.CountDocuments();
+        // public void CalculateFigure()
+        // {
+        //     var _items = _daily.Find(new BsonDocument(), new FindOptions() { Collation = new Collation("en_US", numericOrdering: true) });
+        //     var total_count = _items.CountDocuments();
 
-            List<Daily> items = _items
-                    .Project<Daily>(_fields_daily).ToList();
-            // Sementara , kalau sudah hapus.
-            var figure = items.GroupBy(g => new
-            {
-                date = g.date
-            }).Select(s => new
-            {
-                date = s.Key.date,
-                figure = s.Sum(p => p.fig_curr_net)
-            }).ToList();
-            foreach (var item in figure)
-            {
-                var update = Builders<Production>.Update
-              .Set(t => t.figure, item.figure)
-              .Set(t => t.date, item.date);
-                UpdateResult result = _production.UpdateOne(
-                    Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
-                    update, new UpdateOptions() { IsUpsert = true });
+        //     List<Daily> items = _items
+        //             .Project<Daily>(_fields_daily).ToList();
+        //     // Sementara , kalau sudah hapus.
+        //     var figure = items.GroupBy(g => new
+        //     {
+        //         date = g.date
+        //     }).Select(s => new
+        //     {
+        //         date = s.Key.date,
+        //         figure = s.Sum(p => p.fig_curr_net)
+        //     }).ToList();
+        //     foreach (var item in figure)
+        //     {
+        //         var update = Builders<Production>.Update
+        //       .Set(t => t.figure, item.figure)
+        //       .Set(t => t.date, item.date);
+        //         UpdateResult result = _production.UpdateOne(
+        //             Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
+        //             update, new UpdateOptions() { IsUpsert = true });
 
-            }
-        }
+        //     }
+        // }
 
     }
 }

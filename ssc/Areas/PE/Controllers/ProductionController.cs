@@ -653,7 +653,6 @@ namespace ssc.Areas.PE.Controllers
             .Set(t => t.wpnb_oil, item.wpnb_oil)
             .Set(t => t.rkap_gas, item.rkap_gas)
             .Set(t => t.wpnb_gas, item.wpnb_gas)
-            .Set(t => t.figure, item.figure)
             .Set(t => t.updated_by, User.Identity.Name)
             .Set(t => t.updated_date, DateTime.Now)
             .SetOnInsert(t => t.created_by, User.Identity.Name)

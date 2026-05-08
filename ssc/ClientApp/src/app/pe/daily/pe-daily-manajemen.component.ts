@@ -305,7 +305,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) { }
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 10, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<any> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<any> {
     var params = {};
     sort != null? params["sort"] = sort : params["sort"] = 'date';
     if (order != null) params["order"] = order;
