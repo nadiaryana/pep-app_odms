@@ -76,7 +76,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   // ─── Date Picker: Week 2 (periode baru = "today") ───────────────────────────
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 2 */
-  start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
   // start_dateInput = this.start_dateControl.value
   //   ? this.start_dateControl.value.toLocaleDateString("en-US", {
   //       month: "short",
@@ -92,7 +92,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
   /** Tanggal akhir Week 2 */
-  end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
   // end_dateInput = this.end_dateControl.value ? this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" }) :  "";
   end_dateInput = new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString("en-US", {
     month: "short",
@@ -103,7 +103,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   // ─── Date Picker: Week 1 (periode lama = "prev") ────────────────────────────
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 1 (default 7 hari yang lalu) */
-  weekly_start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 7)));
+  weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
   weekly_start_dateInput = this.weekly_start_dateControl.value
     ? this.weekly_start_dateControl.value.toLocaleDateString("en-US", {
         month: "short",
@@ -114,7 +114,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any> = null!;
   /** Tanggal akhir Week 1 */
-  weekly_end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 7)));
+  weekly_end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
   weekly_end_dateInput = this.weekly_start_dateControl.value 
   ? this.weekly_end_dateControl.value.toLocaleDateString("en-US", { 
     month: "short", 
@@ -278,6 +278,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
         this.isLoadingResults = true;
 
+        console.log("start_dateControl value", this.start_dateControl.value);
+        console.log("end_dateControl value", this.end_dateControl.value);
         // ── Request Week 2 (periode baru, "today") ──
         const week2Observable = this.exampleDatabase!.getRepoIssues(
           this.sort.active,
@@ -355,26 +357,30 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   start_dateChange(event: any) {
     if (!event.value) return;
-    this.start_dateControl.setValue(event.value);
-    this.start_dateInput = this.formatDate(event.value);
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.start_dateControl.setValue(d);
+    this.start_dateInput = this.formatDate(d);
   }
 
   end_dateChange(event: any) {
     if (!event.value) return;
-    this.end_dateControl.setValue(event.value);
-    this.end_dateInput = this.formatDate(event.value);
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.end_dateControl.setValue(d);
+    this.end_dateInput = this.formatDate(d);
   }
 
   weekly_start_dateChange(event: any) {
     if (!event.value) return;
-    this.weekly_start_dateControl.setValue(event.value);
-    this.weekly_start_dateInput = this.formatDate(event.value);
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.weekly_start_dateControl.setValue(d);
+    this.weekly_start_dateInput = this.formatDate(d);
   }
 
   weekly_end_dateChange(event: any) {
     if (!event.value) return;
-    this.weekly_end_dateControl.setValue(event.value);
-    this.weekly_end_dateInput = this.formatDate(event.value);
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.weekly_end_dateControl.setValue(d);
+    this.weekly_end_dateInput = this.formatDate(d);
   }
 
   ngOnDestroy() {

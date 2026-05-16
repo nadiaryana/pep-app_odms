@@ -717,8 +717,8 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[5 + i, 3].Value = t.location;
                 ws.Cells[5 + i, 4].Value = t.well;
                 ws.Cells[5 + i, 5].Value = t.well_string;
-                ws.Cells[5 + i, 6].Value = String.Join(", ", t.zone);
-                ws.Cells[5 + i, 7].Value = String.Join(", ", t.interval.Select(d => String.Join(" - ", d)).ToArray());
+                ws.Cells[5 + i, 6].Value = t.zone != null ? String.Join(", ", t.zone) : null;
+                ws.Cells[5 + i, 7].Value = t.interval != null ? String.Join(", ", t.interval.Select(d => String.Join(" - ", d)).ToArray()) : null;
                 // ws.Cells[4 + i, 8].Style.Numberformat.Format = "d-MMM-yy";
                 // ws.Cells[4 + i, 5].Value = t.test_date.HasValue ? t.test_date.Value.ToLocalTime().ToOADate() : (double?)null;
                 // ws.Cells[4 + i, 6].Value = t.test_duration;
@@ -756,7 +756,7 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[5 + i, 39].Value = t.sm;
                 ws.Cells[5 + i, 40].Style.Numberformat.Format = "d-MMM-yy";
                 ws.Cells[5 + i, 40].Value = t.ds_tgl_pengujian.HasValue ? t.ds_tgl_pengujian.Value.ToLocalTime().ToOADate() : (double?)null;
-                ws.Cells[5 + i, 42].Value = t.noted;
+                ws.Cells[5 + i, 41].Value = t.noted;
             }
 
             ws.Cells[5, 6, 5 + items.Count(), 28].Style.Numberformat.Format = "#,###";
@@ -1966,11 +1966,16 @@ namespace ssc.Areas.PE.Controllers
                     .GroupBy(x => new { x.well, x.well_string })
                     .Select(g =>
                     {
+                        var latestDate = g.Where(x => x.date.HasValue)
+                            .OrderByDescending(x => x.date)
+                            .FirstOrDefault()?.date;
+
                         return new
                         {
                             well = g.Key.well,
                             well_string = g.Key.well_string,
                             location = g.FirstOrDefault()?.location,
+                            latest_date = latestDate,
 
                             fig_curr_gross = g.Where(x => x.fig_curr_gross.HasValue).Any()
                                 ? g.Where(x => x.fig_curr_gross.HasValue).Average(x => x.fig_curr_gross)
