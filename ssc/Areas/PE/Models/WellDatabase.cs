@@ -36,15 +36,22 @@ namespace ssc.Areas.PE.Models
         public decimal? net_unacc { get; set; }
         public decimal? wc_unacc { get; set; }
         public string remarks_unacc { get; set; }
-        public DateTime? date_acc_statik { get; set; }
+        public DateTime? date_acc_static { get; set; }
         public decimal? sfl_acc { get; set; }
         public decimal? ps_acc { get; set; }
         public DateTime? date_acc_dynamic { get; set; }
         public decimal? dfl_acc { get; set; }
         public decimal? pwf_acc { get; set; }
-        public decimal? pi { get; set; }
-        public decimal? ipr { get; set; }
-
+        public decimal? acc_pi { get; set; }
+        public decimal? acc_ipr { get; set; }
+        public DateTime? date_unacc_static { get; set; }
+        public decimal? sfl_unacc { get; set; }
+        public decimal? ps_unacc { get; set; }
+        public DateTime? date_unacc_dynamic { get; set; }
+        public decimal? dfl_unacc { get; set; }
+        public decimal? pwf_unacc { get; set; }
+        public decimal? unacc_pi { get; set; }
+        public decimal? unacc_ipr { get; set; }
         public string rtl { get; set; }
         public string remarks { get; set; }
         public string created_by { get; set; }
@@ -58,7 +65,6 @@ namespace ssc.Areas.PE.Models
     {
         public ErrorItem _row { get; set; }
         // public ErrorItem date { get; set; }
-
         public ErrorItem well { get; set; }
         public ErrorItem last_comp_date { get; set; }
         public ErrorItem layer_acc { get; set; }
@@ -81,6 +87,22 @@ namespace ssc.Areas.PE.Models
         public ErrorItem net_unacc { get; set; }
         public ErrorItem wc_unacc { get; set; }
         public ErrorItem remarks_unacc { get; set; }
+        public ErrorItem date_acc_static { get; set; }
+        public ErrorItem sfl_acc { get; set; }
+        public ErrorItem ps_acc { get; set; }
+        public ErrorItem date_acc_dynamic { get; set; }
+        public ErrorItem dfl_acc { get; set; }
+        public ErrorItem pwf_acc { get; set; }
+        public ErrorItem acc_pi { get; set; }
+        public ErrorItem acc_ipr { get; set; }
+        public ErrorItem date_unacc_static { get; set; }
+        public ErrorItem sfl_unacc { get; set; }
+        public ErrorItem ps_unacc { get; set; }
+        public ErrorItem date_unacc_dynamic { get; set; }
+        public ErrorItem dfl_unacc { get; set; }
+        public ErrorItem pwf_unacc { get; set; }
+        public ErrorItem unacc_pi { get; set; }
+        public ErrorItem unacc_ipr { get; set; }
         public ErrorItem rtl { get; set; }
         public ErrorItem remarks { get; set; }
     }
@@ -113,7 +135,22 @@ namespace ssc.Areas.PE.Models
         public Object[] net_unacc { get; set; }
         public Object[] wc_unacc { get; set; }
         public Object[] remarks_unacc { get; set; }
-
+        public Object[] date_acc_static { get; set; }
+        public Object[] sfl_acc { get; set; }
+        public Object[] ps_acc { get; set; }
+        public Object[] date_acc_dynamic { get; set; }
+        public Object[] dfl_acc { get; set; }
+        public Object[] pwf_acc { get; set; }
+        public Object[] acc_pi { get; set; }
+        public Object[] acc_ipr { get; set; }
+        public Object[] date_unacc_static { get; set; }
+        public Object[] sfl_unacc { get; set; }
+        public Object[] ps_unacc { get; set; }
+        public Object[] date_unacc_dynamic { get; set; }
+        public Object[] dfl_unacc { get; set; }
+        public Object[] pwf_unacc { get; set; }
+        public Object[] unacc_pi { get; set; }
+        public Object[] unacc_ipr { get; set; }
         public Object[] rtl { get; set; }
         public Object[] remarks { get; set; }
     }

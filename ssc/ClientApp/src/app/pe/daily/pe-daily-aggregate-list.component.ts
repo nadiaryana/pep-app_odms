@@ -23,10 +23,6 @@ import { CommonService } from '../../common.service';
 
 export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
-  /**
-   * Kolom yang ditampilkan di tabel Material.
-   * Urutan: identitas well → data Week 1 (prev) → data Week 2 (today) → selisih (delta)
-   */
   displayedColumns: string[] = [
     'well', 'well_string',
 
@@ -55,25 +51,18 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     'delta_sm'
   ];
 
-  /**
-   * Header baris pertama (grup kolom): select, well, well_string, Week1, Week2, Delta
-   * Digunakan bersama headerColumns2 untuk multi-row header di HTML template.
-   */
   headerColumns1: string[] = [
     "well", "well_string",
     'week1', "week2", "delta"
   ];
 
-  /**
-   * Header baris kedua: nama field individual di dalam setiap grup
-   */
   headerColumns2: string[] = [
     'fig_curr_gross_prev', 'fig_curr_net_prev', 'wc_prev', 'gas_prev', 'ds_efficiency_prev', 'sm_prev',
     "fig_curr_gross_today", "fig_curr_net_today", "wc_today", "gas_today", "ds_efficiency_today", "sm_today",
     "delta_fig_curr_gross", "delta_fig_curr_net", "delta_wc", "delta_gas", "delta_ds_efficiency", "delta_sm"
   ];
 
-  // ─── Date Picker: Week 2 (periode baru = "today") ───────────────────────────
+  //Date Picker: Week 2 (periode baru = "today")
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 2 */
   start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
@@ -100,7 +89,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     day: "numeric",
   });
   
-  // ─── Date Picker: Week 1 (periode lama = "prev") ────────────────────────────
+  //Date Picker: Week 1 (periode lama = "prev")
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
   /** Tanggal awal Week 1 (default 7 hari yang lalu) */
   weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
@@ -122,11 +111,10 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     day: "numeric" }) 
     : "";
 
-  // ─── State tabel ────────────────────────────────────────────────────────────
+
   exampleDatabase: ExampleHttpDao | null = null;
   data: any[] = [];
   dataSource = new MatTableDataSource<any>(this.data);
-  /** Model seleksi checkbox (multi-select) */
   selection = new SelectionModel<any>(true, []);
   isEditing: boolean = false;
 
@@ -135,7 +123,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   isRateLimitReached = false;
   submitting = false;
 
-  /** Parameter dari route (opsional, untuk filter awal dari halaman lain) */
   start_submitDate: Number = 0;
   end_submitDate: Number = 0;
   group: string = '';
@@ -143,10 +130,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator = null!;
   @ViewChild(MatSort, { static: true }) sort: MatSort = null!;
-  /** Filter teks bebas (search box umum) */
+
   filterControl = new FormControl('');
 
-  // ─── FormControl untuk input filter per kolom (text input di header) ────────
   start_dateFilter = new FormControl('');
   end_dateFilter = new FormControl('');
   wellFilter = new FormControl('');
@@ -157,17 +143,10 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   gasFilter = new FormControl('');
   ds_efficiencyFilter = new FormControl('');
 
-  /**
-   * Array nilai yang dipilih user dari komponen xfilter (dropdown filter per kolom).
-   * Nama property mengikuti pola: {nama_kolom}_xSelected
-   * Diisi otomatis oleh subscription xfilterService.selected di ngOnInit.
-   *
-   * [PERUBAHAN] well_string_xSelected ditambahkan agar filter well_string
-   * bisa dikirim ke backend melalui getColumnFilter() → columnfilter["well_string"]
-   */
+
   date_xSelected = [];
   well_xSelected = [];
-  well_string_xSelected = [];   // [BARU] filter untuk kolom well_string
+  well_string_xSelected = [];   
   fig_curr_gross_xSelected = [];
   fig_curr_net_xSelected = [];
   gas_xSelected = [];
@@ -176,7 +155,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   wc_xSelected = [];
   ds_efficiency_xSelected = [];
 
-  // ─── Subscription RxJS (dibersihkan di ngOnDestroy) ─────────────────────────
+  
   filterSubscription: Subscription = null!;
   selectedSubscription: Subscription = null!;
   listSubscription: Subscription = null!;
@@ -196,7 +175,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    // Set judul halaman di navigation bar
     this.titleService.titleSource.next({
       title: "Aggregate",
       icon: "change_history",
@@ -206,7 +184,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       ]
     });
 
-    // ─── Baca parameter dari route URL (opsional, dikirim dari halaman lain) ──
     var p_start_submitDate = this.route.snapshot.paramMap.get('start_submitDate');
     if (p_start_submitDate != null && p_start_submitDate.length > 0) {
       this.start_submitDate = Number(p_start_submitDate);
@@ -223,35 +200,14 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     // Reset ke halaman pertama setiap kali kolom sort berubah
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
-    /**
-     * Subscription ke xfilterService.filter:
-     * Dipanggil ketika user mengetik di search box dalam dropdown xfilter.
-     * Akan memanggil getColumnValues() untuk mengambil pilihan yang tersedia.
-     */
+
     this.filterSubscription = this.xfilterService.filter.subscribe(res => {
       if (res) this.getColumnValues(res);
     });
-
-    /**
-     * Subscription ke xfilterService.selected:
-     * Dipanggil ketika user memilih/menghapus item di dropdown xfilter.
-     * Mengisi property {kolom}_xSelected secara dinamis, misal:
-     *   well_xSelected, well_string_xSelected, dll.
-     * Ini yang nantinya diambil oleh getColumnFilter() untuk dikirim ke backend.
-     */
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
       (this as any)[res["column"] + "_xSelected"] = res["selected"];
     });
 
-    /**
-     *
-     * Alur:
-     * 1. Panggil API Week 2 (start_dateControl ~ end_dateControl) → mode: weekly_average
-     * 2. Panggil API Week 1 (weekly_start_dateControl ~ weekly_end_dateControl) → mode: weekly_average
-     * 3. forkJoin: tunggu keduanya selesai
-     * 4. mergeWeeksData: gabungkan berdasarkan composite key well+well_string, hitung delta
-     * 5. sortMergedData: urutkan hasil merge sesuai pilihan sort user
-     */
     this.listSubscription = merge(
       this.sort.sortChange,
       this.paginator.page,
@@ -541,10 +497,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       const week1 = week1Map.get(key) || {};
       const week2 = week2Map.get(key) || {};
 
-      /**
-       * Utamakan data Week 2 (periode baru), fallback ke Week 1 jika Week 2 kosong.
-       * Ini memastikan kolom identitas tetap terisi meski salah satu minggu tidak punya data.
-       */
       const ref = Object.keys(week2).length > 0 ? week2 : week1;
 
       return {

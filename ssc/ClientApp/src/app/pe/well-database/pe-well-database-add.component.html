@@ -180,6 +180,86 @@
 						<td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.remarks_unacc?.value}" [matTooltip]="row._error.remarks_unacc?.message" matTooltipPosition="after">{{row.remarks_unacc || row._error.remarks_unacc?.value || '-'}}</td>
 					</ng-container>
 
+					<ng-container matColumnDef="acc_layer_sonolog">
+				      <th mat-header-cell *matHeaderCellDef colspan="6">Accessed Layer Sonolog</th>
+				    </ng-container>
+
+					<ng-container matColumnDef="date_acc_static">
+				      <th mat-header-cell *matHeaderCellDef>Date</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date_acc_static?.value}" [matTooltip]="row._error.date_acc_static?.message" matTooltipPosition="after">{{(row.date_acc_static | date: 'dd MMM y') || row._error.date_acc_static?.value || '-'}}</td>
+				    </ng-container>
+
+					<ng-container matColumnDef="sfl_acc">
+						<th mat-header-cell *matHeaderCellDef>SFL</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.sfl_acc?.value}" [matTooltip]="row._error.sfl_acc?.message" matTooltipPosition="after">{{(row.sfl_acc | number) || row._error.sfl_acc?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="ps_acc">
+						<th mat-header-cell *matHeaderCellDef>PS</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ps_acc?.value}" [matTooltip]="row._error.ps_acc?.message" matTooltipPosition="after">{{(row.ps_acc | number) || row._error.ps_acc?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="date_acc_dynamic">
+				      <th mat-header-cell *matHeaderCellDef>Date</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date_acc_dynamic?.value}" [matTooltip]="row._error.date_acc_dynamic?.message" matTooltipPosition="after">{{(row.date_acc_dynamic | date: 'dd MMM y') || row._error.date_acc_dynamic?.value || '-'}}</td>
+				    </ng-container>
+
+					<ng-container matColumnDef="dfl_acc">
+						<th mat-header-cell *matHeaderCellDef>DFL</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.dfl_acc?.value}" [matTooltip]="row._error.dfl_acc?.message" matTooltipPosition="after">{{(row.dfl_acc | number) || row._error.dfl_acc?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="pwf_acc">
+						<th mat-header-cell *matHeaderCellDef>PWF</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.pwf_acc?.value}" [matTooltip]="row._error.pwf_acc?.message" matTooltipPosition="after">{{(row.pwf_acc | number) || row._error.pwf_acc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="acc_pi">
+						<th mat-header-cell *matHeaderCellDef rowspan="2">PI</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.acc_pi?.value}" [matTooltip]="row._error.acc_pi?.message" matTooltipPosition="after">{{(row.acc_pi | number) || row._error.acc_pi?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="acc_ipr">
+						<th mat-header-cell *matHeaderCellDef rowspan="2">IPR</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.acc_ipr?.value}" [matTooltip]="row._error.acc_ipr?.message" matTooltipPosition="after">{{(row.acc_ipr | number) || row._error.acc_ipr?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="unacc_layer_sonolog">
+				      <th mat-header-cell *matHeaderCellDef colspan="6">Unaccessed Layer Sonolog</th>
+				    </ng-container>
+
+					<ng-container matColumnDef="date_unacc_static">
+				      <th mat-header-cell *matHeaderCellDef>Date</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date_unacc_static?.value}" [matTooltip]="row._error.date_unacc_static?.message" matTooltipPosition="after">{{(row.date_unacc_static | date: 'dd MMM y') || row._error.date_unacc_static?.value || '-'}}</td>
+				    </ng-container>
+
+					<ng-container matColumnDef="sfl_unacc">
+						<th mat-header-cell *matHeaderCellDef>SFL</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.sfl_unacc?.value}" [matTooltip]="row._error.sfl_unacc?.message" matTooltipPosition="after">{{(row.sfl_unacc | number) || row._error.sfl_unacc?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="ps_unacc">
+						<th mat-header-cell *matHeaderCellDef>PS</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.ps_unacc?.value}" [matTooltip]="row._error.ps_unacc?.message" matTooltipPosition="after">{{(row.ps_unacc | number) || row._error.ps_unacc?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="date_unacc_dynamic">
+				      <th mat-header-cell *matHeaderCellDef>Date</th>
+				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.date_unacc_dynamic?.value}" [matTooltip]="row._error.date_unacc_dynamic?.message" matTooltipPosition="after">{{(row.date_unacc_dynamic | date: 'dd MMM y') || row._error.date_unacc_dynamic?.value || '-'}}</td>
+				    </ng-container>
+
+					<ng-container matColumnDef="dfl_unacc">
+						<th mat-header-cell *matHeaderCellDef>DFL</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.dfl_unacc?.value}" [matTooltip]="row._error.dfl_unacc?.message" matTooltipPosition="after">{{(row.dfl_unacc | number) || row._error.dfl_unacc?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="pwf_unacc">
+						<th mat-header-cell *matHeaderCellDef>PWF</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.pwf_unacc?.value}" [matTooltip]="row._error.pwf_unacc?.message" matTooltipPosition="after">{{(row.pwf_unacc | number) || row._error.pwf_unacc?.value || '-'}}</td>
+					</ng-container>
+
+					<ng-container matColumnDef="unacc_pi">
+						<th mat-header-cell *matHeaderCellDef rowspan="2">PI</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.unacc_pi?.value}" [matTooltip]="row._error.unacc_pi?.message" matTooltipPosition="after">{{(row.unacc_pi | number) || row._error.unacc_pi?.value || '-'}}</td>
+					</ng-container>
+					<ng-container matColumnDef="unacc_ipr">
+						<th mat-header-cell *matHeaderCellDef rowspan="2">IPR</th>
+						<td mat-cell *matCellDef="let row" class="cell-right" [ngClass]="{'cell-error':row._error.unacc_ipr?.value}" [matTooltip]="row._error.unacc_ipr?.message" matTooltipPosition="after">{{(row.unacc_ipr | number) || row._error.unacc_ipr?.value || '-'}}</td>
+					</ng-container>
+
 					<ng-container matColumnDef="rtl">
 				      <th mat-header-cell *matHeaderCellDef rowspan="2">RTL</th>
 				      <td mat-cell *matCellDef="let row" class="cell-center" [ngClass]="{'cell-error':row._error.rtl?.value}" [matTooltip]="row._error.rtl?.message" matTooltipPosition="after">{{row.rtl || row._error.rtl?.value || '-'}}</td>

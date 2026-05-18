@@ -34,16 +34,21 @@ export class PeWellDatabaseListComponent implements OnInit {
     "layer_unacc","interval_unacc","top_2","bottom_2","hole_feature","panjang_feature", 
     "date_acc", "gross_acc", "net_acc", "wc_acc", "remarks_acc", 
     "date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc",
+    "date_acc_static","sfl_acc","ps_acc","date_acc_dynamic","dfl_acc", "pwf_acc","acc_pi", "acc_ipr",
+    "date_unacc_static","sfl_unacc","ps_unacc","date_unacc_dynamic","dfl_unacc", "pwf_unacc","unacc_pi", "unacc_ipr",
     "rtl","remarks"
   ];
   headerColumns1: string[] = [
     "select","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature", "acc_layer_perfo", "unacc_layer_perfo",
+    "acc_layer_sonolog", "acc_pi","acc_ipr","unacc_layer_sonolog","unacc_pi", "unacc_ipr",
     "rtl","remarks"
   ];
   headerColumns2: string[] = [
     "last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
     "layer_unacc","interval_unacc","top_2","bottom_2", "date_acc", "gross_acc", "net_acc", "wc_acc", "remarks_acc", 
-    "date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc",
+    "date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc", 
+    "date_acc_static","sfl_acc","ps_acc","date_acc_dynamic","dfl_acc", "pwf_acc",
+    "date_unacc_static","sfl_unacc","ps_unacc","date_unacc_dynamic","dfl_unacc", "pwf_unacc"
   ];
   exampleDatabase: ExampleHttpDao | null;
   data: PeWellDatabase[] = [];
@@ -88,6 +93,23 @@ export class PeWellDatabaseListComponent implements OnInit {
   net_unaccFilter = new FormControl('');
   wc_unaccFilter = new FormControl('');
   remarks_unaccFilter = new FormControl('');
+  date_acc_staticFilter = new FormControl('');
+  sfl_accFilter = new FormControl('');
+  ps_accFilter = new FormControl('');
+  date_acc_dynamicFilter = new FormControl('');
+  dfl_accFilter = new FormControl('');
+  pwf_accFilter = new FormControl('');
+  acc_piFilter = new FormControl('');
+  acc_iprFilter = new FormControl('');
+  date_unacc_staticFilter = new FormControl('');
+  sfl_unaccFilter = new FormControl('');
+  ps_unaccFilter = new FormControl('');
+  date_unacc_dynamicFilter = new FormControl('');
+  dfl_unaccFilter = new FormControl('');
+  pwf_unaccFilter = new FormControl('');
+  unacc_piFilter = new FormControl('');
+  unacc_iprFilter = new FormControl('');
+
   rtlFilter = new FormControl('');
   remarksFilter = new FormControl('');
 
@@ -113,6 +135,23 @@ export class PeWellDatabaseListComponent implements OnInit {
   net_unacc_xSelected = [];
   wc_unacc_xSelected = [];
   remarks_unacc_xSelected = [];
+  date_acc_static_xSelected = [];
+  sfl_acc_xSelected = [];
+  ps_acc_xSelected = [];
+  date_acc_dynamic_xSelected = [];
+  dfl_acc_xSelected = [];
+  pwf_acc_xSelected = [];
+  acc_pi_xSelected = [];
+  acc_ipr_xSelected = [];
+  date_unacc_static_xSelected = [];
+  sfl_unacc_xSelected = [];
+  ps_unacc_xSelected = [];
+  date_unacc_dynamic_xSelected = [];
+  dfl_unacc_xSelected = [];
+  pwf_unacc_xSelected = [];
+  unacc_pi_xSelected = [];
+  unacc_ipr_xSelected = [];
+
   rtl_xSelected = [];
   remarks_xSelected = [];
 
@@ -199,6 +238,23 @@ export class PeWellDatabaseListComponent implements OnInit {
       this.net_unaccFilter.valueChanges.pipe(debounceTime(300)),
       this.wc_unaccFilter.valueChanges.pipe(debounceTime(300)),
       this.remarks_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.date_acc_staticFilter.valueChanges.pipe(debounceTime(300)),
+      this.sfl_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.ps_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.date_acc_dynamicFilter.valueChanges.pipe(debounceTime(300)),
+      this.dfl_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.pwf_accFilter.valueChanges.pipe(debounceTime(300)),
+      this.acc_piFilter.valueChanges.pipe(debounceTime(300)),
+      this.acc_iprFilter.valueChanges.pipe(debounceTime(300)),
+      this.date_unacc_staticFilter.valueChanges.pipe(debounceTime(300)),
+      this.sfl_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.ps_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.date_unacc_dynamicFilter.valueChanges.pipe(debounceTime(300)),
+      this.dfl_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.pwf_unaccFilter.valueChanges.pipe(debounceTime(300)),
+      this.unacc_piFilter.valueChanges.pipe(debounceTime(300)),
+      this.unacc_iprFilter.valueChanges.pipe(debounceTime(300)),
+      
       this.rtlFilter.valueChanges.pipe(debounceTime(300)),
       this.remarksFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
@@ -499,6 +555,23 @@ export class PeWellDatabaseListComponent implements OnInit {
     if(this.net_unacc_xSelected.length) columnfilter["net_unacc"] = this.net_unacc_xSelected;
     if(this.wc_unacc_xSelected.length) columnfilter["wc_unacc"] = this.wc_unacc_xSelected;
     if(this.remarks_unacc_xSelected.length) columnfilter["remarks_unacc"] = this.remarks_unacc_xSelected;
+    if(this.date_acc_static_xSelected.length) columnfilter["date_acc_static"] = this.date_acc_static_xSelected;
+    if(this.sfl_acc_xSelected.length) columnfilter["sfl_acc"] = this.sfl_acc_xSelected;
+    if(this.ps_acc_xSelected.length) columnfilter["ps_acc"] = this.ps_acc_xSelected;
+    if(this.date_acc_dynamic_xSelected.length) columnfilter["date_acc_dynamic"] = this.date_acc_dynamic_xSelected;
+    if(this.dfl_acc_xSelected.length) columnfilter["dfl_acc"] = this.dfl_acc_xSelected;
+    if(this.pwf_acc_xSelected.length) columnfilter["pwf_acc"] = this.pwf_acc_xSelected;
+    if(this.acc_pi_xSelected.length) columnfilter["acc_pi"] = this.acc_pi_xSelected;
+    if(this.acc_ipr_xSelected.length) columnfilter["acc_ipr"] = this.acc_ipr_xSelected;
+    if(this.date_unacc_static_xSelected.length) columnfilter["date_unacc_static"] = this.date_unacc_static_xSelected;
+    if(this.sfl_unacc_xSelected.length) columnfilter["sfl_unacc"] = this.sfl_unacc_xSelected;
+    if(this.ps_unacc_xSelected.length) columnfilter["ps_unacc"] = this.ps_unacc_xSelected;
+    if(this.date_unacc_dynamic_xSelected.length) columnfilter["date_unacc_dynamic"] = this.date_unacc_dynamic_xSelected;
+    if(this.dfl_unacc_xSelected.length) columnfilter["dfl_unacc"] = this.dfl_unacc_xSelected;
+    if(this.pwf_unacc_xSelected.length) columnfilter["pwf_unacc"] = this.pwf_unacc_xSelected;
+    if(this.unacc_pi_xSelected.length) columnfilter["unacc_pi"] = this.unacc_pi_xSelected;
+    if(this.unacc_ipr_xSelected.length) columnfilter["unacc_ipr"] = this.unacc_ipr_xSelected;
+
     if(this.rtl_xSelected.length) columnfilter["rtl"] = this.rtl_xSelected;
     if(this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
 

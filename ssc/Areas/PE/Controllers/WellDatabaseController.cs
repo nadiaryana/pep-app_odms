@@ -58,7 +58,23 @@ namespace ssc.Areas.PE.Controllers
                 .Include(t => t.gross_unacc)
                 .Include(t => t.net_unacc)
                 .Include(t => t.wc_unacc)
-                .Include(t => t.remarks_unacc)
+                .Include(t => t.date_acc_static)
+                .Include(t => t.sfl_acc)
+                .Include(t => t.ps_acc)
+                .Include(t => t.date_acc_dynamic)
+                .Include(t => t.dfl_acc)
+                .Include(t => t.pwf_acc)
+                .Include(t => t.acc_pi)
+                .Include(t => t.acc_ipr)
+                .Include(t => t.date_unacc_static)
+                .Include(t => t.sfl_unacc)
+                .Include(t => t.ps_unacc)
+                .Include(t => t.date_unacc_dynamic)
+                .Include(t => t.dfl_unacc)
+                .Include(t => t.pwf_unacc)
+                .Include(t => t.unacc_pi)
+                .Include(t => t.unacc_ipr)
+
                 .Include(t => t.rtl)
                 .Include(t => t.remarks);
         }
@@ -98,7 +114,22 @@ namespace ssc.Areas.PE.Controllers
                     Builders<WellDatabase>.Filter.Regex(t => t.net_unacc, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.wc_unacc, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.remarks_unacc, new BsonRegularExpression(filter, "i")) |
-                    Builders<WellDatabase>.Filter.Regex(t => t.panjang_feature, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.date_acc_static, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.sfl_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.ps_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.date_acc_dynamic, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.dfl_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.pwf_acc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.acc_pi, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.acc_ipr, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.date_unacc_static, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.sfl_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.ps_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.date_unacc_dynamic, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.dfl_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.pwf_unacc, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.unacc_pi, new BsonRegularExpression(filter, "i")) |
+                    Builders<WellDatabase>.Filter.Regex(t => t.unacc_ipr, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.rtl, new BsonRegularExpression(filter, "i")) |
                     Builders<WellDatabase>.Filter.Regex(t => t.remarks, new BsonRegularExpression(filter, "i"));
             }
@@ -131,6 +162,23 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.net_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.net_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.net_unacc, Convert.ToDecimal(c))));
                 if (colfilter.wc_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.wc_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.wc_unacc, Convert.ToDecimal(c))));
                 if (colfilter.remarks_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.remarks_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.remarks_unacc, new BsonRegularExpression((string)c, "i"))));
+                if (colfilter.date_acc_static?.ToList().Count(c => !(c is JObject)) > 0) { var tzOffset = TimeZoneInfo.Local.BaseUtcOffset.ToString(@"hh\:mm"); xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.date_acc_static.ToList().Select(c => (c is DateTime) ? Builders<WellDatabase>.Filter.Eq(t => t.date_acc_static, new BsonDateTime(((DateTime)c).ToUniversalTime())) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date_acc_static\",timezone:\"+0" + tzOffset + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}")); }
+                if (colfilter.sfl_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.sfl_acc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.sfl_acc, Convert.ToDecimal(c))));
+                if (colfilter.ps_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.ps_acc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.ps_acc, Convert.ToDecimal(c))));
+                if (colfilter.date_acc_dynamic?.ToList().Count(c => !(c is JObject)) > 0) { var tzOffset = TimeZoneInfo.Local.BaseUtcOffset.ToString(@"hh\:mm"); xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.date_acc_dynamic.ToList().Select(c => (c is DateTime) ? Builders<WellDatabase>.Filter.Eq(t => t.date_acc_dynamic, new BsonDateTime(((DateTime)c).ToUniversalTime())) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date_acc_dynamic\",timezone:\"+0" + tzOffset + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}")); }
+                if (colfilter.dfl_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.dfl_acc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.dfl_acc, Convert.ToDecimal(c))));
+                if (colfilter.pwf_acc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.pwf_acc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.pwf_acc, Convert.ToDecimal(c))));
+                if (colfilter.acc_pi?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.acc_pi.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.acc_pi, Convert.ToDecimal(c))));
+                if (colfilter.acc_ipr?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.acc_ipr.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.acc_ipr, Convert.ToDecimal(c))));
+                if (colfilter.date_unacc_static?.ToList().Count(c => !(c is JObject)) > 0) { var tzOffset = TimeZoneInfo.Local.BaseUtcOffset.ToString(@"hh\:mm"); xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.date_unacc_static.ToList().Select(c => (c is DateTime) ? Builders<WellDatabase>.Filter.Eq(t => t.date_unacc_static, new BsonDateTime(((DateTime)c).ToUniversalTime())) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date_unacc_static\",timezone:\"+0" + tzOffset + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}")); }
+                if (colfilter.sfl_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.sfl_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.sfl_unacc, Convert.ToDecimal(c))));
+                if (colfilter.ps_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.ps_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.ps_unacc, Convert.ToDecimal(c))));
+                if (colfilter.date_unacc_dynamic?.ToList().Count(c => !(c is JObject)) > 0) { var tzOffset = TimeZoneInfo.Local.BaseUtcOffset.ToString(@"hh\:mm"); xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.date_unacc_dynamic.ToList().Select(c => (c is DateTime) ? Builders<WellDatabase>.Filter.Eq(t => t.date_unacc_dynamic, new BsonDateTime(((DateTime)c).ToUniversalTime())) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date_unacc_dynamic\",timezone:\"+0" + tzOffset + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}")); }
+                if (colfilter.dfl_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.dfl_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.dfl_unacc, Convert.ToDecimal(c))));
+                if (colfilter.pwf_unacc?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.pwf_unacc.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.pwf_unacc, Convert.ToDecimal(c))));
+                if (colfilter.unacc_pi?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.unacc_pi.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.unacc_pi, Convert.ToDecimal(c))));
+                if (colfilter.unacc_ipr?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.unacc_ipr.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Eq(t => t.unacc_ipr, Convert.ToDecimal(c))));
+
                 if (colfilter.rtl?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.rtl.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.rtl, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.remarks?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<WellDatabase>.Filter.Or(colfilter.remarks.ToList().Where(c => !(c is JObject)).Select(c => Builders<WellDatabase>.Filter.Regex(t => t.remarks, new BsonRegularExpression((string)c, "i"))));
 
@@ -160,8 +208,26 @@ namespace ssc.Areas.PE.Controllers
                     if (colfilter.net_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.net_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$net_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.wc_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.wc_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$wc_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.remarks_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.remarks_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$remarks_unacc\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.rtl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.panjang_feature.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$used_sl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
-                    if (colfilter.remarks?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.remarks.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$noted\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
+                    if (colfilter.date_acc_static?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date_acc_static.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date_acc_static\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
+                    if (colfilter.sfl_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sfl_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sfl_acc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.ps_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.ps_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$ps_acc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.date_acc_dynamic?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date_acc_dynamic.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date_acc_dynamic\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
+                    if (colfilter.dfl_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.dfl_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$dfl_acc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.pwf_acc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pwf_acc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pwf_acc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.acc_pi?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.acc_pi.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$acc_pi\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.acc_ipr?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.acc_ipr.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$acc_ipr\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+
+                    if (colfilter.date_unacc_static?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date_unacc_static.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date_unacc_static\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
+                    if (colfilter.sfl_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sfl_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sfl_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.ps_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.ps_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$ps_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.date_unacc_dynamic?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.date_unacc_dynamic.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[\"$date_unacc_dynamic\",ISODate(\"{1}\")]}}", ((JObject)c).GetValue("opr"), DateTime.Parse(((JObject)c).GetValue("val").ToString()).ToString("yyyy-MM-ddTHH:mm:ssZ"))).ToArray()), log);
+                    if (colfilter.dfl_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.dfl_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$dfl_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.pwf_unacc?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pwf_unacc.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pwf_unacc\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.unacc_pi?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.unacc_pi.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$unacc_pi\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.unacc_ipr?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.unacc_ipr.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$unacc_ipr\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+
+                    if (colfilter.rtl?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.rtl.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$rtl\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.remarks?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.remarks.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$remarks\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                 }
 
                 xfilter = xfilter & xcolfilter;
@@ -194,6 +260,22 @@ namespace ssc.Areas.PE.Controllers
                 case "net_unacc": _items = (order == "asc") ? _items.SortBy(t => t.net_unacc) : _items.SortByDescending(t => t.net_unacc); break;
                 case "wc_unacc": _items = (order == "asc") ? _items.SortBy(t => t.wc_unacc) : _items.SortByDescending(t => t.wc_unacc); break;
                 case "remarks_unacc": _items = (order == "asc") ? _items.SortBy(t => t.remarks_unacc) : _items.SortByDescending(t => t.remarks_unacc); break;
+                case "date_acc_static": _items = (order == "asc") ? _items.SortBy(t => t.date_acc_static) : _items.SortByDescending(t => t.date_acc_static); break;
+                case "sfl_acc": _items = (order == "asc") ? _items.SortBy(t => t.sfl_acc) : _items.SortByDescending(t => t.sfl_acc); break;
+                case "ps_acc": _items = (order == "asc") ? _items.SortBy(t => t.ps_acc) : _items.SortByDescending(t => t.ps_acc); break;
+                case "date_acc_dynamic": _items = (order == "asc") ? _items.SortBy(t => t.date_acc_dynamic) : _items.SortByDescending(t => t.date_acc_dynamic); break;
+                case "dfl_acc": _items = (order == "asc") ? _items.SortBy(t => t.dfl_acc) : _items.SortByDescending(t => t.dfl_acc); break;
+                case "pwf_acc": _items = (order == "asc") ? _items.SortBy(t => t.pwf_acc) : _items.SortByDescending(t => t.pwf_acc); break;
+                case "acc_pi": _items = (order == "asc") ? _items.SortBy(t => t.acc_pi) : _items.SortByDescending(t => t.acc_pi); break;
+                case "acc_ipr": _items = (order == "asc") ? _items.SortBy(t => t.acc_ipr) : _items.SortByDescending(t => t.acc_ipr); break;
+                case "date_unacc_static": _items = (order == "asc") ? _items.SortBy(t => t.date_unacc_static) : _items.SortByDescending(t => t.date_unacc_static); break;
+                case "sfl_unacc": _items = (order == "asc") ? _items.SortBy(t => t.sfl_unacc) : _items.SortByDescending(t => t.sfl_unacc); break;
+                case "ps_unacc": _items = (order == "asc") ? _items.SortBy(t => t.ps_unacc) : _items.SortByDescending(t => t.ps_unacc); break;
+                case "date_unacc_dynamic": _items = (order == "asc") ? _items.SortBy(t => t.date_unacc_dynamic) : _items.SortByDescending(t => t.date_unacc_dynamic); break;
+                case "dfl_unacc": _items = (order == "asc") ? _items.SortBy(t => t.dfl_unacc) : _items.SortByDescending(t => t.dfl_unacc); break;
+                case "pwf_unacc": _items = (order == "asc") ? _items.SortBy(t => t.pwf_unacc) : _items.SortByDescending(t => t.pwf_unacc); break;
+                case "unacc_pi": _items = (order == "asc") ? _items.SortBy(t => t.unacc_pi) : _items.SortByDescending(t => t.unacc_pi); break;
+                case "unacc_ipr": _items = (order == "asc") ? _items.SortBy(t => t.unacc_ipr) : _items.SortByDescending(t => t.unacc_ipr); break;
                 case "rtl": _items = (order == "asc") ? _items.SortBy(t => t.rtl) : _items.SortByDescending(t => t.rtl); break;
                 case "remarks": _items = (order == "asc") ? _items.SortBy(t => t.remarks) : _items.SortByDescending(t => t.remarks); break;
             }
@@ -396,28 +478,57 @@ namespace ssc.Areas.PE.Controllers
                         error_count++;
                     }
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 3].Value?.ToString()))
+                    // date mappings
+                    // Column indexes based on the provided Excel structure
+                    var dateMappings = new[]
                     {
-                        try
+                        new { key = "last_comp_date", col = 3 },
+                        new { key = "date_acc", col = 14 },
+                        new { key = "date_unacc", col = 19 },
+                        new { key = "date_acc_static", col = 24 },
+                        new { key = "date_acc_dynamic", col = 27 },
+                        new { key = "date_unacc_static", col = 32 },
+                        new { key = "date_unacc_dynamic", col = 35 },
+                    };
+
+                    foreach (var mapping in dateMappings)
+                    {
+                        var rawValue = ws.Cells[r, mapping.col].Value;
+                        var strValue = rawValue?.ToString().Trim();
+
+                        if (!string.IsNullOrWhiteSpace(strValue))
                         {
-                            if (ws.Cells[r, 3].Value.GetType() == DateTime.Now.GetType())
+                            try
                             {
-                                _row.last_comp_date = (DateTime?)ws.Cells[r, 3].Value;
+                                DateTime parsedDate;
+                                if (rawValue is DateTime dt)
+                                {
+                                    parsedDate = dt;
+                                }
+                                else
+                                {
+                                    parsedDate = DateTime.FromOADate(double.Parse(strValue));
+                                }
+
+                                var prop = typeof(WellDatabase).GetProperty(mapping.key);
+                                if (prop != null)
+                                    prop.SetValue(_row, (DateTime?)parsedDate);
                             }
-                            else
+                            catch (Exception e)
                             {
-                                _row.last_comp_date = DateTime.FromOADate(double.Parse(ws.Cells[r, 3].Value?.ToString().Trim()));
+                                var errorProp = typeof(WellDatabaseError).GetProperty(mapping.key);
+                                if (errorProp != null)
+                                    errorProp.SetValue(_row_error, new ErrorItem { value = strValue, message = e.Message });
+
+                                error_count++;
                             }
                         }
-                        catch (Exception e)
+                        else
                         {
-                            _row_error.last_comp_date = new ErrorItem { value = ws.Cells[r, 3].Value?.ToString(), message = e.Message };
-                            error_count++;
+                            var errorProp = typeof(WellDatabaseError).GetProperty(mapping.key);
+                            if (errorProp != null)
+                                errorProp.SetValue(_row_error, null);
                         }
-                    }
-                    else
-                    {
-                        _row_error.last_comp_date = null;
                     }
 
                     var arrayMappings = new[]
@@ -504,6 +615,18 @@ namespace ssc.Areas.PE.Controllers
                         new { key = "gross_unacc", col = 20 },
                         new { key = "net_unacc", col = 21 },
                         new { key = "wc_unacc", col = 22 },
+                        new { key = "sfl_acc", col = 25 },
+                        new { key = "ps_acc", col = 26 },
+                        new { key = "dfl_acc", col = 28 },
+                        new { key = "pwf_acc", col = 29 },
+                        new { key = "acc_pi", col = 30 },
+                        new { key = "acc_ipr", col = 31 },
+                        new { key = "sfl_unacc", col = 33 },
+                        new { key = "ps_unacc", col = 34 },
+                        new { key = "dfl_unacc", col = 36 },
+                        new { key = "pwf_unacc", col = 37 },
+                        new { key = "unacc_pi", col = 38 },
+                        new { key = "unacc_ipr", col = 39 },
                     };
 
                     foreach (var mapping in mappings)
@@ -562,54 +685,6 @@ namespace ssc.Areas.PE.Controllers
                     else
                     {
                         _row_error.hole_feature = null;
-                    }
-
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 14].Value?.ToString()))
-                    {
-                        try
-                        {
-                            if (ws.Cells[r, 14].Value.GetType() == DateTime.Now.GetType())
-                            {
-                                _row.date_acc = (DateTime?)ws.Cells[r, 14].Value;
-                            }
-                            else
-                            {
-                                _row.date_acc = DateTime.FromOADate(double.Parse(ws.Cells[r, 14].Value?.ToString().Trim()));
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _row_error.date_acc = new ErrorItem { value = ws.Cells[r, 14].Value?.ToString(), message = e.Message };
-                            error_count++;
-                        }
-                    }
-                    else
-                    {
-                        _row_error.date_acc = null;
-                    }
-
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 19].Value?.ToString()))
-                    {
-                        try
-                        {
-                            if (ws.Cells[r, 19].Value.GetType() == DateTime.Now.GetType())
-                            {
-                                _row.date_unacc = (DateTime?)ws.Cells[r, 19].Value;
-                            }
-                            else
-                            {
-                                _row.date_unacc = DateTime.FromOADate(double.Parse(ws.Cells[r, 19].Value?.ToString().Trim()));
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _row_error.date_unacc = new ErrorItem { value = ws.Cells[r, 19].Value?.ToString(), message = e.Message };
-                            error_count++;
-                        }
-                    }
-                    else
-                    {
-                        _row_error.date_unacc = null;
                     }
 
                     if (!String.IsNullOrWhiteSpace(ws.Cells[r, 18].Value?.ToString()))
@@ -817,6 +892,22 @@ namespace ssc.Areas.PE.Controllers
                         .Set(t => t.net_unacc, item.net_unacc)
                         .Set(t => t.wc_unacc, item.wc_unacc)
                         .Set(t => t.remarks_unacc, item.remarks_unacc)
+                        .Set(t => t.date_acc_static, item.date_acc_static)
+                        .Set(t => t.sfl_acc, item.sfl_acc)
+                        .Set(t => t.ps_acc, item.ps_acc)
+                        .Set(t => t.date_acc_dynamic, item.date_acc_dynamic)
+                        .Set(t => t.dfl_acc, item.dfl_acc)
+                        .Set(t => t.pwf_acc, item.pwf_acc)
+                        .Set(t => t.acc_pi, item.acc_pi)
+                        .Set(t => t.acc_ipr, item.acc_ipr)
+                        .Set(t => t.date_unacc_static, item.date_unacc_static)
+                        .Set(t => t.sfl_unacc, item.sfl_unacc)
+                        .Set(t => t.ps_unacc, item.ps_unacc)
+                        .Set(t => t.date_unacc_dynamic, item.date_unacc_dynamic)
+                        .Set(t => t.dfl_unacc, item.dfl_unacc)
+                        .Set(t => t.pwf_unacc, item.pwf_unacc)
+                        .Set(t => t.unacc_pi, item.unacc_pi)
+                        .Set(t => t.unacc_ipr, item.unacc_ipr)
                         .Set(t => t.rtl, item.rtl)
                         .Set(t => t.remarks, item.remarks)
                         .Set(t => t.updated_by, User.Identity.Name)

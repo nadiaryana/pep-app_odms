@@ -201,7 +201,7 @@
    </ng-container>
 
    <ng-container matColumnDef="wc_acc">
-          <th mat-header-cell *matHeaderCellDef rowspan="3">
+          <th mat-header-cell *matHeaderCellDef>
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
               <app-xfilter title="WC_acc" column="wc_acc" format="number" [selected]="wc_acc_xSelected"></app-xfilter>
@@ -255,7 +255,7 @@
    </ng-container>
 
    <ng-container matColumnDef="wc_unacc">
-          <th mat-header-cell *matHeaderCellDef rowspan="3">
+          <th mat-header-cell *matHeaderCellDef>
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
               <app-xfilter title="wc_unacc" column="wc_unacc" format="number" [selected]="wc_unacc_xSelected"></app-xfilter>
@@ -273,6 +273,170 @@
       </th>
       <td mat-cell *matCellDef="let row" class="cell-left" [class.clicked_row]="selection.isSelected(row)">{{ row.remarks_unacc || '-' }}</td>
     </ng-container>
+
+    <ng-container matColumnDef="acc_layer_sonolog">
+      <th mat-header-cell *matHeaderCellDef colspan="6">Accessed Layer Sonolog</th>
+    </ng-container>
+
+    <ng-container matColumnDef="date_acc_static">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="date_acc_static" column="date_acc_static" format="date_acc_static" [selected]="date_acc_static_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date_acc_static ? (row.date_acc_static | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="sfl_acc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">SFL</span>
+          <app-xfilter title="sfl_acc" column="sfl_acc" format="number" [selected]="sfl_acc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sfl_acc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+    <ng-container matColumnDef="ps_acc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Pstatic</span>
+          <app-xfilter title="ps_acc" column="ps_acc" format="number" [selected]="ps_acc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ps_acc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+    <ng-container matColumnDef="date_acc_dynamic">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="date_acc_dynamic" column="date_acc_dynamic" format="date_acc_dynamic" [selected]="date_acc_dynamic_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date_acc_dynamic ? (row.date_acc_dynamic | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+
+     <ng-container matColumnDef="dfl_acc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">DFL</span>
+          <app-xfilter title="dfl_acc" column="dfl_acc" format="number" [selected]="dfl_acc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.dfl_acc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+    <ng-container matColumnDef="pwf_acc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Pwf</span>
+          <app-xfilter title="pwf_acc" column="pwf_acc" format="number" [selected]="pwf_acc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.pwf_acc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="acc_pi">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">PI</span>
+          <app-xfilter title="acc_pi" column="acc_pi" [selected]="acc_pi_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.acc_pi}}</td>
+    </ng-container>
+   <ng-container matColumnDef="acc_ipr">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">IPR</span>
+          <app-xfilter title="acc_ipr" column="acc_ipr" [selected]="acc_ipr_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.acc_ipr}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="unacc_layer_sonolog">
+      <th mat-header-cell *matHeaderCellDef colspan="6">Unaccessed Layer Sonolog</th>
+    </ng-container>
+
+    <ng-container matColumnDef="date_unacc_static">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="date_unacc_static" column="date_unacc_static" format="date_unacc_static" [selected]="date_unacc_static_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date_unacc_static ? (row.date_unacc_static | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="sfl_unacc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">SFL</span>
+          <app-xfilter title="sfl_unacc" column="sfl_unacc" format="number" [selected]="sfl_unacc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sfl_unacc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+    <ng-container matColumnDef="ps_unacc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Pstatic</span>
+          <app-xfilter title="ps_unacc" column="ps_unacc" format="number" [selected]="ps_unacc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ps_unacc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+    <ng-container matColumnDef="date_unacc_dynamic">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
+          <app-xfilter title="date_unacc_dynamic" column="date_unacc_dynamic" format="date_unacc_dynamic" [selected]="date_unacc_dynamic_xSelected"></app-xfilter>
+        </div>
+     </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date_unacc_dynamic ? (row.date_unacc_dynamic | date: 'dd MMM y') : '-'}}</td>
+    </ng-container>
+
+     <ng-container matColumnDef="dfl_unacc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">DFL</span>
+          <app-xfilter title="dfl_unacc" column="dfl_unacc" format="number" [selected]="dfl_unacc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.dfl_unacc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+    <ng-container matColumnDef="pwf_unacc">
+      <th mat-header-cell *matHeaderCellDef>
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Pwf</span>
+          <app-xfilter title="pwf_unacc" column="pwf_unacc" format="number" [selected]="pwf_unacc_xSelected"></app-xfilter>
+        </div>
+     </th>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.pwf_unacc | number : '1.0-0') || '-'}}</td>
+   </ng-container>
+
+   <ng-container matColumnDef="unacc_pi">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">PI</span>
+          <app-xfilter title="unacc_pi" column="unacc_pi" [selected]="unacc_pi_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.unacc_pi}}</td>
+    </ng-container>
+   <ng-container matColumnDef="unacc_ipr">
+      <th mat-header-cell *matHeaderCellDef rowspan="2">
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">IPR</span>
+          <app-xfilter title="unacc_ipr" column="unacc_ipr" [selected]="unacc_ipr_xSelected"></app-xfilter>
+        </div>
+      </th>
+      <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.unacc_ipr}}</td>
+    </ng-container>
+
+    
 
    <ng-container matColumnDef="rtl">
       <th mat-header-cell *matHeaderCellDef rowspan="2">

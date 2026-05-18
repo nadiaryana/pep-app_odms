@@ -46,15 +46,23 @@ export class PeWellDatabaseAddComponent {
 	displayedColumns: string[] = [
 		"info", "well","last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
 		"layer_unacc","interval_unacc","top_2","bottom_2","hole_feature","panjang_feature",
+		"date_acc", "gross_acc", "net_acc", "wc_acc", "remarks_acc", 
+		"date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc",
+		"date_acc_static","sfl_acc","ps_acc","date_acc_dynamic","dfl_acc", "pwf_acc","acc_pi", "acc_ipr",
+		"date_unacc_static","sfl_unacc","ps_unacc","date_unacc_dynamic","dfl_unacc", "pwf_unacc","unacc_pi", "unacc_ipr",
 		"rtl","remarks"
 	];
 	headerColumns1: string[] = [
-		"info","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature",
+		"info","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature","acc_layer_perfo", "unacc_layer_perfo",
+    	"acc_layer_sonolog", "acc_pi","acc_ipr","unacc_layer_sonolog","unacc_pi", "unacc_ipr",
 		"rtl","remarks"
 	];
 	headerColumns2: string[] = [
 		"last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 
-		"layer_unacc","interval_unacc","top_2","bottom_2"
+		"layer_unacc","interval_unacc","top_2","bottom_2", "date_acc", "gross_acc", "net_acc", "wc_acc", "remarks_acc", 
+		"date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc", 
+		"date_acc_static","sfl_acc","ps_acc","date_acc_dynamic","dfl_acc", "pwf_acc",
+		"date_unacc_static","sfl_unacc","ps_unacc","date_unacc_dynamic","dfl_unacc", "pwf_unacc"
 	];
 
 	constructor(
