@@ -22,12 +22,10 @@ namespace ssc.Areas.PE.Models
         public string min_ch { get; set; }
         public string med_ch { get; set; }
         public string max_ch { get; set; }
-
         public decimal? min_sl { get; set; }
         public decimal? med_sl { get; set; }
         public decimal? max_sl { get; set; }
         public decimal? used_sl { get; set; }
-
         public string noted { get; set; }
         public string created_by { get; set; }
         public DateTime? created_date { get; set; }

@@ -729,17 +729,17 @@ namespace ssc.Areas.PE.Controllers
                         _row.remarks_unacc = null;
                     }
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 24].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 40].Value?.ToString()))
                     {
                         try
                         {
-                            _row.rtl = ws.Cells[r, 24].Value?.ToString().Trim();
+                            _row.rtl = ws.Cells[r, 40].Value?.ToString().Trim();
                         }
                         catch (Exception e)
                         {
                             _row_error.rtl = new ErrorItem
                             {
-                                value = ws.Cells[r, 24].Value?.ToString(),
+                                value = ws.Cells[r, 40].Value?.ToString(),
                                 message = e.Message
                             };
                             error_count++;
@@ -751,17 +751,17 @@ namespace ssc.Areas.PE.Controllers
                     }
 
 
-                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 25].Value?.ToString()))
+                    if (!String.IsNullOrWhiteSpace(ws.Cells[r, 41].Value?.ToString()))
                     {
                         try
                         {
-                            _row.remarks = ws.Cells[r, 25].Value?.ToString().Trim();
+                            _row.remarks = ws.Cells[r, 41].Value?.ToString().Trim();
                         }
                         catch (Exception e)
                         {
                             _row_error.remarks = new ErrorItem
                             {
-                                value = ws.Cells[r, 25].Value?.ToString(),
+                                value = ws.Cells[r, 41].Value?.ToString(),
                                 message = e.Message
                             };
                             error_count++;
@@ -969,6 +969,26 @@ namespace ssc.Areas.PE.Controllers
                 .Set(t => t.net_unacc, payload.net_unacc)
                 .Set(t => t.wc_unacc, payload.wc_unacc)
                 .Set(t => t.remarks_unacc, payload.remarks_unacc)
+
+                .Set(t => t.date_acc_static, payload.date_acc_static)
+                .Set(t => t.sfl_acc, payload.sfl_acc)
+                .Set(t => t.ps_acc, payload.ps_acc)
+                .Set(t => t.date_acc_dynamic, payload.date_acc_dynamic)
+                .Set(t => t.dfl_acc, payload.dfl_acc)
+                .Set(t => t.pwf_acc, payload.pwf_acc)
+                .Set(t => t.acc_pi, payload.acc_pi)
+                .Set(t => t.acc_ipr, payload.acc_ipr)
+
+                .Set(t => t.date_unacc_static, payload.date_unacc_static)
+                .Set(t => t.sfl_unacc, payload.sfl_unacc)
+                .Set(t => t.ps_unacc, payload.ps_unacc)
+                .Set(t => t.date_unacc_dynamic, payload.date_unacc_dynamic)
+                .Set(t => t.dfl_unacc, payload.dfl_unacc)
+                .Set(t => t.pwf_unacc, payload.pwf_unacc)
+                .Set(t => t.unacc_pi, payload.unacc_pi)
+                .Set(t => t.unacc_ipr, payload.unacc_ipr)
+
+
                 .Set(t => t.rtl, payload.rtl)
                 .Set(t => t.remarks, payload.remarks)
                 .Set(t => t.updated_by, User.Identity.Name)
