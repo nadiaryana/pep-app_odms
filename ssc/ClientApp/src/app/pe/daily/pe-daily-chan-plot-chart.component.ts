@@ -119,7 +119,7 @@ export class PeDailyChanPlotChartComponent {
             valueDecimals: 5
         },
 		marker: {
-		  symbol: 'circle', // Set the default marker type for the series
+		  symbol: 'circle', 
 		  radius: 3 // Set the default marker radius
 		}
 
@@ -136,7 +136,7 @@ export class PeDailyChanPlotChartComponent {
             valueDecimals: 5
         },
 		marker: {
-		  symbol: 'circle', // Set the default marker type for the series
+		  symbol: 'circle', 
 		  radius: 3 // Set the default marker radius
 		}
 
@@ -314,6 +314,8 @@ export class PeDailyChanPlotChartComponent {
 	  console.log(res["data"])
       console.log(res["data"].length)
 	  
+
+    //perhitungan wor'
 	  let worDaily = res["data"].map(d => d["wor"]);
 	  let worr = [];
 	  for (let i = 0; i < worDaily.length; i++){
@@ -321,7 +323,7 @@ export class PeDailyChanPlotChartComponent {
 			worr[i] = 0
 		}
 		else{
-			worr[i] = (worDaily[i]-worDaily[i-1])/1
+			worr[i] = (worDaily[i]-worDaily[i-1])/1         //hitung perubahan wor tiap data
 		}
 		
 		console.log("data worr' dlm: "+worr)
@@ -336,67 +338,67 @@ export class PeDailyChanPlotChartComponent {
 	  this.daily_chart_options["series"][3]["data"] = getTrendLine(worr);
 	  
 	  function getTrendLine(data) {
-		const n = data.length;
-		
-		console.log("Dlm trendline func data: "+data)
+      const n = data.length;
+      
+      console.log("Dlm trendline func data: "+data)
 
-		let sumX = 0,
-			sumY = 0,
-			sumXY = 0,
-			sumX2 = 0;
+      let sumX = 0,
+        sumY = 0,
+        sumXY = 0,
+        sumX2 = 0;
 
-		// Calculate the sums needed for linear regression
-		for (let i = 0; i < n; i++) {			
-			sumX += i;
-			sumY += data[i];
-			sumXY += i * data[i];
-			sumX2 += i * i;
-			
-		}
-		
-		console.log("Dlm trendline func sumX: "+sumX)
-		console.log("Dlm trendline func sumY: "+sumY)
-		console.log("Dlm trendline func sumXY: "+sumXY)
-		console.log("Dlm trendline func sumX2: "+sumX2)
-		
-		// Calculate the slope of the trend line
-		const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
-		
-		// Calculate the intercept of the trend line
-		let intercept = ((sumY / n) - slope * (sumX / n));
-				
-		const trendline = []; // Array to store the trend line data points
-		
-		// Find the minimum and maximum x-values from the scatter plot data		
-				
-		console.log("Dlm trendline slope : "+slope)
-		console.log("Dlm trendline intercept : "+intercept)
-		
-				
-		// console.log("Dlm trendline func dt: "+minX, maxX)
-		// console.log("Dlm trendline func min: "+[minX, MIN])
-		// console.log("Dlm trendline func max: "+[maxX, MAX])
-		
-		// Calculate the corresponding y-values for the trend line using the slope
-		// and intercept
-					
-		for (let i = 0; i < n; i++) {
-			
-			if (intercept < 0.000001){
-				intercept = 0.00001;
-			}
-			else{
-				intercept = intercept;
-			}
-			
-			let linee = slope * i + intercept;
-						
-			
-			trendline.push(linee);
-			console.log("Dlm trendline : "+linee);
-		}
-		
-		return trendline;
+      // Calculate the sums needed for linear regression
+      for (let i = 0; i < n; i++) {			
+        sumX += i;
+        sumY += data[i];
+        sumXY += i * data[i];
+        sumX2 += i * i;
+        
+      }
+      
+      console.log("Dlm trendline func sumX: "+sumX)
+      console.log("Dlm trendline func sumY: "+sumY)
+      console.log("Dlm trendline func sumXY: "+sumXY)
+      console.log("Dlm trendline func sumX2: "+sumX2)
+      
+      // Calculate the slope of the trend line
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
+      
+      // Calculate the intercept of the trend line
+      let intercept = ((sumY / n) - slope * (sumX / n));
+          
+      const trendline = []; // Array to store the trend line data points
+      
+      // Find the minimum and maximum x-values from the scatter plot data		
+          
+      console.log("Dlm trendline slope : "+slope)
+      console.log("Dlm trendline intercept : "+intercept)
+      
+          
+      // console.log("Dlm trendline func dt: "+minX, maxX)
+      // console.log("Dlm trendline func min: "+[minX, MIN])
+      // console.log("Dlm trendline func max: "+[maxX, MAX])
+      
+      // Calculate the corresponding y-values for the trend line using the slope
+      // and intercept
+            
+      for (let i = 0; i < n; i++) {
+        
+        if (intercept < 0.000001){
+          intercept = 0.00001;
+        }
+        else{
+          intercept = intercept;
+        }
+        
+        let linee = slope * i + intercept;
+              
+        
+        trendline.push(linee);
+        console.log("Dlm trendline : "+linee);
+      }
+      
+      return trendline;
 	}
 	 
       Highcharts.chart(this.daily_chart_el.nativeElement, this.daily_chart_options);

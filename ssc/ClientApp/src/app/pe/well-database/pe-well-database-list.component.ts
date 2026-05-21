@@ -177,7 +177,7 @@ export class PeWellDatabaseListComponent implements OnInit {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Well Database",
+      title: "Suspended Well Database",
       icon: "storage",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
@@ -273,7 +273,6 @@ export class PeWellDatabaseListComponent implements OnInit {
           );
       }),
       map(data => {
-        // Flip flag to show that loading has finished.
         this.isLoadingResults = false;
         this.isRateLimitReached = false;
         this.resultsLength = data.total_count;
@@ -282,7 +281,6 @@ export class PeWellDatabaseListComponent implements OnInit {
       }),
       catchError(() => {
         this.isLoadingResults = false;
-        // Catch if the GitHub API has reached its rate limit. Return empty data.
         this.isRateLimitReached = true;
         return observableOf([]);
       })
@@ -586,21 +584,18 @@ export class PeWellDatabaseListComponent implements OnInit {
     return arr.map(a => a.join("-")).join(", ");
   }
 
-  /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
     const numRows = this.dataSource.data.length;
     return numSelected === numRows;
   }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
     this.isAllSelected() ?
         this.selection.clear() :
         this.dataSource.data.forEach(row => this.selection.select(row));
   }
 
-  /** The label for the checkbox on the passed row */
   checkboxLabel(row?: any): string {
     if (!row) {
         return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
@@ -662,7 +657,6 @@ export class MatTableApi {
     ) {}
 }
 
-/** An example database that the data source uses to retrieve data for the table. */
 export class ExampleHttpDao {
   constructor(private http: HttpClient) {}
 

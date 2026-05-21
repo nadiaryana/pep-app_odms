@@ -216,13 +216,9 @@ export class xFilterDialogComponent {
 
 	onOk() {
 		var res;
-		//console.log("Ini apa ya: "+this.list.options);
-		// console.log(this.list.selectedOptions.selected.length + ' ' +  this.list.options.length + ' ' + this.data["selected"].length == 0 + ' ' + this.itemFilter.value);
-		// console.log(this.itemFilter);
-		// if(this.list.selectedOptions.selected.length == this.list.options.length && this.data["selected"].length == 0 && this.itemFilter.value == "") {
 		if(this.list.selectedOptions.selected.length == this.list.options.length && this.data["selected"].length == 0 && this.itemFilter.value == "") {
-			// res = [];
-			res = this.list.selectedOptions.selected.map(o => o.value);
+			// Semua item terpilih dan tidak ada filter aktif = no filter, kirim []
+			res = [];
 		} else {
 			res = this.list.selectedOptions.selected.map(o => o.value);
 		}

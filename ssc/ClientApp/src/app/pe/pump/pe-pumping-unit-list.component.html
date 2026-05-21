@@ -21,19 +21,19 @@
 
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef rowspan="2">
-        <mat-checkbox (change)="$event ? masterToggle() : null"
+        <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
           [checked]="selection.hasValue() && isAllSelected()"
           [indeterminate]="selection.hasValue() && !isAllSelected()"
           [aria-label]="checkboxLabel()"
-          *ngIf="pePermissionService.passPermission('pe/pump/delete')">
+          [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
         </mat-checkbox>
       </th>
       <td mat-cell *matCellDef="let row">
         <mat-checkbox (click)="$event.stopPropagation()"
-          (change)="$event ? selection.toggle(row) : null"
+          (change)="($event && !isEditing) ? selection.toggle(row) : null"
           [checked]="selection.isSelected(row)"
           [aria-label]="checkboxLabel(row)"
-          *ngIf="pePermissionService.passPermission('pe/pump/delete')">
+          [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
         </mat-checkbox>
       </td>
     </ng-container>

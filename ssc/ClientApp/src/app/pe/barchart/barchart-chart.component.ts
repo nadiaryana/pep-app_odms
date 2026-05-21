@@ -807,8 +807,7 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             svgEl.setAttribute('y', String(currentY - headerTop));
           });
 
-          // Sembunyikan SEMUA elemen yAxis dari KEDUA SVG menggunakan SVG-native display attribute
-          // (lebih andal dari CSS visibility:hidden untuk elemen SVG <g>)
+          //hide y
           clonedEl.querySelectorAll(
             '.highcharts-yaxis-labels, .highcharts-yaxis-grid, .highcharts-yaxis, .highcharts-yaxis-title'
           ).forEach((el: Element) => {
@@ -840,9 +839,9 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         ctx.drawImage(chartCanvas, 0, 0);
 
         // Tutup area kolom RIG dengan warna putih (hapus konten lama yang mungkin bergeser)
-        const coverWidth = (rigColumnWidth + 20) * scale;
+        // const coverWidth = (rigColumnWidth + 20) * scale;
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, rigColumnWidth * scale, totalHeight);
+        ctx.clearRect(0, 0, rigColumnWidth * scale, totalHeight);
 
         // Gambar ulang kolom RIG di atas (dari canvas terpisah yang scroll=0)
         ctx.drawImage(
