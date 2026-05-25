@@ -18,6 +18,7 @@ import { MatSnackBar } from '@angular/material';
 import { CommonService } from '../../common.service';
 import { TitleService } from '../../navigation/title/title.service';
 import { formatDate } from '@angular/common';
+import { AuthService } from '../../auth.service';
 
 
 @Component({
@@ -815,15 +816,18 @@ export class PeDashboardComponent   {
   isLoadingSOT:boolean = false;
   isLoadingProduction:boolean = false;
   valueOperation:number;
+  valueOperationActual:number;
   valueSOT:number;
   valueFigure:number;
   valueGas: number;
   valueGasSales: number;
   valueOperationDiff: number = null;
+  valueOperationActualDiff: number = null;
   valueGasDiff: number = null;
 
   interval: number;
   dateDiff: number;
+  currentUser: any;
 
   constructor(
   	private http: HttpClient,
@@ -831,8 +835,12 @@ export class PeDashboardComponent   {
     public commonService: CommonService,
     private route: ActivatedRoute,
     private router: Router,
-    @Inject(LOCALE_ID) public locale: string
-  	) { }
+    @Inject(LOCALE_ID) public locale: string,
+    private authService: AuthService,
+  	) {
+      // ambil user yang sedang login
+      this.authService.currentUser.subscribe(res => this.currentUser = res);
+  }
 
   ngOnInit(){
 

@@ -18,7 +18,7 @@ import { AuthService } from '../../auth.service';
 
 @Component({
   selector: 'pe-actual',
-  templateUrl: './pe-actual.component.html',
+  templateUrl: './pe-actual-list.component.html',
   styleUrls: ['./pe-actual.scss']
 })
 export class PeActualListComponent implements OnInit {

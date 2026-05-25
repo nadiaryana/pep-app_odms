@@ -163,7 +163,8 @@
 .title_dasboard {
   padding: 5px !important;
   text-align: center;
-  width: 100px;
+  min-width: 100px;
+  width: 70%;
   //color: #564646;
   border-radius: 8px;
   //background-color: #ffc6c2;
