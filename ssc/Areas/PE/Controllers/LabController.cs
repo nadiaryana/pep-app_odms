@@ -175,15 +175,26 @@ namespace ssc.Areas.PE.Controllers
                     dynamic res;
                     switch (mode)
                     {
-                        case "well":
-                        case "esp":
-                            res = _lab.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                        case "_id":
+                        case "nama_alat":
+                        case "spesifikasi":
+                        case "satuan":
+                        case "kegunaan":
+                        case "keterangan":
+                            res = _lab.Distinct<string>(mode, xfilter).ToEnumerable().Where(t => t != null).OrderBy(t => t).ToList();
                             break;
-                        case "date":
-                            res = _lab.Distinct<DateTime?>(mode, xfilter).ToEnumerable().OrderByDescending(t => t).ToList();
+                        case "nomor":
+                        case "baru":
+                        case "lama":
+                        case "rusak":
+                        case "stok_awal":
+                        case "barang_masuk":
+                        case "barang_keluar":
+                        case "stok_akhir":
+                            res = _lab.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
                             break;
                         default:
-                            res = _lab.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            res = _lab.Distinct<string>(mode, xfilter).ToEnumerable().Where(t => t != null).OrderBy(t => t).ToList();
                             break;
                     }
 

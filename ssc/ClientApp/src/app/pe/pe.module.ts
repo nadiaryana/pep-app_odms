@@ -98,6 +98,8 @@ import { PePumpingUnitDeleteDialogComponent, PePumpingUnitListComponent } from '
 import { PeWellDatabaseComponent } from './well-database/pe-well-database.component';
 import { PeWellDatabaseDeleteDialogComponent, PeWellDatabaseListComponent } from './well-database/pe-well-database-list.component';
 import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add.component';
+import { PeActualComponent } from './actual/pe-actual.component';
+import { PeActualListComponent } from './actual/pe-actual-list.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -194,6 +196,9 @@ import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add
   PeWellDatabaseAddComponent,
   PeWellDatabaseDeleteDialogComponent,
 
+  PeActualComponent,
+  PeActualListComponent,
+
   // PeGrafikComponent,
   ],
   imports: [
@@ -271,6 +276,7 @@ export class PeModule {
             new PanelSubItem("Aggregate", "pe/aggregate", "change_history"),
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
             new PanelSubItem("Optimasi", "pe/optimasi", "analytics"),
+            new PanelSubItem("Actual", "pe/actual", "data_usage"),
             
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),

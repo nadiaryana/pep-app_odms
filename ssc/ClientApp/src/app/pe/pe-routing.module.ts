@@ -83,6 +83,8 @@ import { PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.componen
 import { PeWellDatabaseComponent } from './well-database/pe-well-database.component';
 import { PeWellDatabaseListComponent } from './well-database/pe-well-database-list.component';
 import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add.component';
+import { PeActualComponent} from './actual/pe-actual.component';
+import { PeActualListComponent } from './actual/pe-actual-list.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -175,6 +177,12 @@ const peRoutes: Routes = [
     { path: 'well-database', component: PeWellDatabaseComponent, children:[
       { path: 'list', component: PeWellDatabaseListComponent, canActivate: [PePermissionGuard]},
       { path: 'add', component: PeWellDatabaseAddComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full"},
+    ]},
+
+    { path: 'actual', component: PeActualComponent, children:[
+      { path: 'list', component: PeActualListComponent, canActivate: [PePermissionGuard]},
+      // { path: 'add', component: PeActualAddComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
 

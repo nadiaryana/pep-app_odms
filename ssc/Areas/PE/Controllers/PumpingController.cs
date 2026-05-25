@@ -177,13 +177,26 @@ namespace ssc.Areas.PE.Controllers
                     {
                         case "well":
                         case "esp":
-                            res = _pumping.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                        case "nomor":
+                        case "status":
+                        case "primemover":
+                        case "merk":
+                        case "tipe":
+                        case "min_ch":
+                        case "med_ch":
+                        case "max_ch":
+                        case "noted":
+                        case "min_sl":
+                        case "med_sl":
+                        case "max_sl":
+                        case "used_sl":
+                            res = _pumping.Distinct<string>(mode, xfilter).ToEnumerable().Where(t => t != null).OrderBy(t => t).ToList();
                             break;
                         case "date":
                             res = _pumping.Distinct<DateTime?>(mode, xfilter).ToEnumerable().OrderByDescending(t => t).ToList();
                             break;
                         default:
-                            res = _pumping.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            res = _pumping.Distinct<string>(mode, xfilter).ToEnumerable().Where(t => t != null).OrderBy(t => t).ToList();
                             break;
                     }
 

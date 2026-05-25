@@ -116,6 +116,12 @@ export class PePermissionService {
 	new Menu("well-database/add", true, null, ["PeWellDatabase Add"]),
 	new Menu("well-database/edit", true, /[a-z]/i, ["PeWellDatabase Edit"]),
 	new Menu("well-database/delete", true,null, ["PeWellDatabase Delete"]),
+
+	new Menu("actual", true, null, ["PeActual Read"]),
+	new Menu("actual/list", true, null, ["PeActual Read"]),
+	new Menu("actual/add", true, null, ["PeActual Add"]),
+	new Menu("actual/edit", true, /[a-z]/i, ["PeActual Edit"]),
+	new Menu("actual/delete", true,null, ["PeActual Delete"]),
 	];
 	
 	

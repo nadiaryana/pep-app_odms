@@ -209,6 +209,7 @@ namespace ssc.Areas.PE.Models
         public static readonly IMongoCollection<Daily> _daily;
         public static readonly IMongoCollection<Sonolog> _sonolog;
         public static readonly IMongoCollection<Bhp> _bhp;
+        public static readonly IMongoCollection<Production> _actual;
         public static readonly IMongoCollection<Production> _production;
         public static readonly IMongoCollection<ProductionTmp> _production_tmp;
         public static readonly IMongoCollection<Structure> _structure;
@@ -218,6 +219,7 @@ namespace ssc.Areas.PE.Models
         public static ProjectionDefinition<Daily> _fields_daily;
         public static ProjectionDefinition<Sonolog> _fields_sonolog;
         public static ProjectionDefinition<Bhp> _fields_bhp;
+        public static ProjectionDefinition<Production> _fields_actual;
         public static ProjectionDefinition<Production> _fields_production;
         public static ProjectionDefinition<Structure> _fields_structure;
         public static string[] _logical;

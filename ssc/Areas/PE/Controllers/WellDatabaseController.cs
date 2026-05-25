@@ -310,13 +310,58 @@ namespace ssc.Areas.PE.Controllers
                     {
                         case "well":
                         case "esp":
-                            res = _welldatabase.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                        case "hole_feature":
+                        case "remarks_acc":
+                        case "remarks_unacc":
+                        case "rtl":
+                        case "remarks":
+                            res = _welldatabase.Distinct<string>(mode, xfilter).ToEnumerable().Where(t => t != null).OrderBy(t => t).ToList();
                             break;
+                        case "layer_acc":
+                        case "layer_unacc":
+                            res = GetDistinctStringArrayValues(mode, xfilter);
+                            break;
+                        case "last_comp_date":
+                        case "date_acc":
+                        case "date_unacc":
+                        case "date_acc_static":
+                        case "date_acc_dynamic":
+                        case "date_unacc_static":
+                        case "date_unacc_dynamic":
                         case "date":
                             res = _welldatabase.Distinct<DateTime?>(mode, xfilter).ToEnumerable().OrderByDescending(t => t).ToList();
                             break;
-                        default:
+                        case "interval_acc":
+                        case "interval_unacc":
+                            res = GetDistinctIntervalValues(mode, xfilter);
+                            break;
+                        case "top":
+                        case "bottom":
+                        case "top_2":
+                        case "bottom_2":
+                        case "panjang_feature":
+                        case "gross_acc":
+                        case "net_acc":
+                        case "wc_acc":
+                        case "gross_unacc":
+                        case "net_unacc":
+                        case "wc_unacc":
+                        case "sfl_acc":
+                        case "ps_acc":
+                        case "dfl_acc":
+                        case "pwf_acc":
+                        case "acc_pi":
+                        case "acc_ipr":
+                        case "sfl_unacc":
+                        case "ps_unacc":
+                        case "dfl_unacc":
+                        case "pwf_unacc":
+                        case "unacc_pi":
+                        case "unacc_ipr":
                             res = _welldatabase.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            break;
+                        default:
+                            res = _welldatabase.Distinct<string>(mode, xfilter).ToEnumerable().Where(t => t != null).OrderBy(t => t).ToList();
                             break;
                     }
 
@@ -327,6 +372,73 @@ namespace ssc.Areas.PE.Controllers
                     });
             }
 
+        }
+
+        private List<string> GetDistinctStringArrayValues(string mode, FilterDefinition<WellDatabase> xfilter)
+        {
+            switch (mode)
+            {
+                case "layer_acc":
+                    return _welldatabase.Find(xfilter)
+                        .Project(t => t.layer_acc)
+                        .ToList()
+                        .Where(t => t != null)
+                        .SelectMany(t => t)
+                        .Where(t => !String.IsNullOrWhiteSpace(t))
+                        .Distinct()
+                        .OrderBy(t => t)
+                        .ToList();
+
+                case "layer_unacc":
+                    return _welldatabase.Find(xfilter)
+                        .Project(t => t.layer_unacc)
+                        .ToList()
+                        .Where(t => t != null)
+                        .SelectMany(t => t)
+                        .Where(t => !String.IsNullOrWhiteSpace(t))
+                        .Distinct()
+                        .OrderBy(t => t)
+                        .ToList();
+
+                default:
+                    return new List<string>();
+            }
+        }
+
+        private List<string> GetDistinctIntervalValues(string mode, FilterDefinition<WellDatabase> xfilter)
+        {
+            switch (mode)
+            {
+                case "interval_acc":
+                    return _welldatabase.Find(xfilter)
+                        .Project(t => t.interval_acc)
+                        .ToList()
+                        .Where(t => t != null)
+                        .Select(FormatInterval)
+                        .Where(t => !String.IsNullOrWhiteSpace(t))
+                        .Distinct()
+                        .OrderBy(t => t)
+                        .ToList();
+
+                case "interval_unacc":
+                    return _welldatabase.Find(xfilter)
+                        .Project(t => t.interval_unacc)
+                        .ToList()
+                        .Where(t => t != null)
+                        .Select(FormatInterval)
+                        .Where(t => !String.IsNullOrWhiteSpace(t))
+                        .Distinct()
+                        .OrderBy(t => t)
+                        .ToList();
+
+                default:
+                    return new List<string>();
+            }
+        }
+
+        private string FormatInterval(decimal[][] intervals)
+        {
+            return String.Join(",", intervals.Select(interval => String.Join("-", interval)));
         }
 
         private string ReplaceMonth(string str)
