@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +69,7 @@ namespace ssc
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
+            services.AddDistributedMemoryCache();
             services.AddSession();
 
             var SecretKey = Encoding.ASCII.GetBytes
@@ -87,18 +89,18 @@ namespace ssc
                     ValidateIssuerSigningKey = true,
                     //Same Secret key will be used while creating the token
                     IssuerSigningKey = new SymmetricSecurityKey(SecretKey),
-                            ValidateIssuer = true,
-                  //Usually, this is your application base URL
-                 ValidIssuer = "https://localhost:80/",
-                  ValidateAudience = true,
+                    ValidateIssuer = true,
+                    //Usually, this is your application base URL
+                    ValidIssuer = "https://localhost:80/",
+                    ValidateAudience = true,
                     //Here, we are creating and using JWT within the same application.
                     //In this case, base URL is fine.
                     //If the JWT is created using a web service, then this would be the consumer URL.
-                         ValidAudience = "https://localhost:80/",
-                            RequireExpirationTime = true,
-                            ValidateLifetime = true,
-                            ClockSkew = TimeSpan.Zero
-                        };
+                    ValidAudience = "https://localhost:80/",
+                    RequireExpirationTime = true,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
             });
 
             System.Text.Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -119,15 +121,17 @@ namespace ssc
             app.UseHttpsRedirection();
 
 
-      app.UseSession();
+            app.UseSession();
             //Add JWToken to all incoming HTTP Request Header
             app.Use(async (context, next) =>
             {
-                var JWToken = context.Session.GetString("JWToken");
+                var session = context.Features.Get<ISessionFeature>()?.Session;
+                var JWToken = session?.GetString("JWToken");
 
                 if (!string.IsNullOrEmpty(JWToken))
                 {
-                    context.Request.Headers.Add("Authorization", "Bearer " + JWToken);
+                    if (!context.Request.Headers.ContainsKey("Authorization"))
+                        context.Request.Headers["Authorization"] = "Bearer " + JWToken;
                 }
                 await next();
             });
@@ -135,37 +139,37 @@ namespace ssc
             app.UseAuthentication();
             app.UseDefaultFiles();
 
-          app.UseStaticFiles();
-          app.UseStaticFiles(new StaticFileOptions
-              {
-                  FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(),"Resources")),
-                  RequestPath = new PathString("/Resources"),
+            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Resources")),
+                RequestPath = new PathString("/Resources"),
                 //     ContentTypeProvider = new FileExtensionContentTypeProvider(),
 
-              });
-
-      // User For Productions
-      app.UseMvc();
-      app.UseCors(builder => builder.WithOrigins("*"));
-
-      app.UseSpa(spa =>
-         {
-                    // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                    // see https://go.microsoft.com/fwlink/?linkid=864501
-
-               spa.Options.SourcePath = "ClientApp";
-
-                 if (env.IsDevelopment())
-                    {
-                        spa.UseAngularCliServer(npmScript: "start");
-                    }
-                });
-
-      app.Run(async (context) =>
-            {
-                context.Response.ContentType = "text/html";
-                await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
             });
+
+            // User For Productions
+            app.UseMvc();
+            app.UseCors(builder => builder.WithOrigins("*"));
+
+            app.UseSpa(spa =>
+               {
+                   // To learn more about options for serving an Angular SPA from ASP.NET Core,
+                   // see https://go.microsoft.com/fwlink/?linkid=864501
+
+                   spa.Options.SourcePath = "ClientApp";
+
+                   if (env.IsDevelopment())
+                   {
+                       spa.UseAngularCliServer(npmScript: "start");
+                   }
+               });
+
+            app.Run(async (context) =>
+                  {
+                      context.Response.ContentType = "text/html";
+                      await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
+                  });
         }
     }
 }

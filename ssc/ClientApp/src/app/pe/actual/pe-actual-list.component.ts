@@ -25,8 +25,8 @@ export class PeActualListComponent implements OnInit {
 
   currentUser: User;
 
-  displayedColumns: string[] = ["settings", "date","total_opr","sgt_mgs", "sbr_opr", "bd_opr"];
-  headerColumns1: string[] = ["settings", "date","total_opr","sgt_mgs", "sbr_opr", "bd_opr"];
+  displayedColumns: string[] = ["settings", "date","total_opr","sgt_mgs", "sbr_nsop", "bd"];
+  headerColumns1: string[] = ["settings", "date","total_opr","sgt_mgs", "sbr_nsop", "bd"];
  
   exampleDatabase: ExampleHttpDao | null;
   data = [];

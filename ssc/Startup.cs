@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +69,7 @@ namespace ssc
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
+            services.AddDistributedMemoryCache();
             services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromHours(1); // Idle timeout 1 jam
@@ -127,11 +129,13 @@ namespace ssc
             //Add JWToken to all incoming HTTP Request Header
             app.Use(async (context, next) =>
             {
-                var JWToken = context.Session.GetString("JWToken");
+                var session = context.Features.Get<ISessionFeature>()?.Session;
+                var JWToken = session?.GetString("JWToken");
 
                 if (!string.IsNullOrEmpty(JWToken))
                 {
-                    context.Request.Headers.Add("Authorization", "Bearer " + JWToken);
+                    if (!context.Request.Headers.ContainsKey("Authorization"))
+                        context.Request.Headers["Authorization"] = "Bearer " + JWToken;
                 }
                 await next();
             });

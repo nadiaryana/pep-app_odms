@@ -33,7 +33,8 @@ namespace ssc.Areas.PE.Models
     public decimal? rkap_gas { get; set; }
     public decimal? wpnb_gas { get; set; }
     public decimal? sgt_mgs { get; set; }
-    // public decimal? sbr_nsop { get; set; }
+    public decimal? sbr_nsop { get; set; }
+    public decimal? bd { get; set; }
     public decimal? total_opr { get; set; }
     public string created_by { get; set; }
     public DateTime? created_date { get; set; }
@@ -74,7 +75,8 @@ namespace ssc.Areas.PE.Models
     public ErrorItem rkap_gas { get; set; }
     public ErrorItem wpnb_gas { get; set; }
     public ErrorItem sgt_mgs { get; set; }
-    // public ErrorItem sbr_nsop { get; set; }
+    public ErrorItem sbr_nsop { get; set; }
+    public ErrorItem bd { get; set; }
     public ErrorItem total_opr { get; set; }
   }
 
@@ -107,7 +109,8 @@ namespace ssc.Areas.PE.Models
     public Object[] rkap_gas { get; set; }
     public Object[] wpnb_gas { get; set; }
     public Object[] sgt_mgs { get; set; }
-    // public Object[] sbr_nsop { get; set; }
+    public Object[] sbr_nsop { get; set; }
+    public Object[] bd { get; set; }
     public Object[] total_opr { get; set; }
   }
 

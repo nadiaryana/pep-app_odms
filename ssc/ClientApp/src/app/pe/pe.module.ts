@@ -100,6 +100,7 @@ import { PeWellDatabaseDeleteDialogComponent, PeWellDatabaseListComponent } from
 import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add.component';
 import { PeActualComponent } from './actual/pe-actual.component';
 import { PeActualListComponent } from './actual/pe-actual-list.component';
+import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -198,6 +199,8 @@ import { PeActualListComponent } from './actual/pe-actual-list.component';
 
   PeActualComponent,
   PeActualListComponent,
+  PeActualAddOprComponent,
+  // PeActualEditOprComponent,
 
   // PeGrafikComponent,
   ],

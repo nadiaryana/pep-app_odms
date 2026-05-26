@@ -209,17 +209,18 @@ namespace ssc.Areas.PE.Models
         public static readonly IMongoCollection<Daily> _daily;
         public static readonly IMongoCollection<Sonolog> _sonolog;
         public static readonly IMongoCollection<Bhp> _bhp;
-        public static readonly IMongoCollection<Production> _actual;
+        public static readonly IMongoCollection<Actual> _actual;
         public static readonly IMongoCollection<Production> _production;
         public static readonly IMongoCollection<ProductionTmp> _production_tmp;
         public static readonly IMongoCollection<Structure> _structure;
         public static readonly IMongoCollection<DailyTmp> _daily_tmp;
         public static readonly IMongoCollection<SonologTmp> _sonolog_tmp;
         public static readonly IMongoCollection<BhpTmp> _bhp_tmp;
+        public static readonly IMongoCollection<ActualTmp> _actual_tmp;
         public static ProjectionDefinition<Daily> _fields_daily;
         public static ProjectionDefinition<Sonolog> _fields_sonolog;
         public static ProjectionDefinition<Bhp> _fields_bhp;
-        public static ProjectionDefinition<Production> _fields_actual;
+        public static ProjectionDefinition<Actual> _fields_actual;
         public static ProjectionDefinition<Production> _fields_production;
         public static ProjectionDefinition<Structure> _fields_structure;
         public static string[] _logical;
@@ -233,6 +234,9 @@ namespace ssc.Areas.PE.Models
             _sonolog = database.GetCollection<Sonolog>("sonolog");
             _bhp = database.GetCollection<Bhp>("bhp");
             _production = database.GetCollection<Production>("production");
+
+            _actual = database.GetCollection<Actual>("actual");
+            _actual_tmp = database.GetCollection<ActualTmp>("actual_tmp");
 
             _daily_tmp = database.GetCollection<DailyTmp>("daily_tmp");
             _sonolog_tmp = database.GetCollection<SonologTmp>("sonolog_tmp");
@@ -326,6 +330,12 @@ namespace ssc.Areas.PE.Models
                .Include(t => t.rkap_gas)
                .Include(t => t.wpnb_gas);
 
+            _fields_actual = Builders<Actual>.Projection
+               .Include(t => t.date)
+               .Include(t => t.total_opr)
+               .Include(t => t.sgt_mgs)
+               .Include(t => t.sbr_nsop)
+               .Include(t => t.bd);
 
             _logical = new string[]{
                 "and", "or"

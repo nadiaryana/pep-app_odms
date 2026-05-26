@@ -85,6 +85,7 @@ import { PeWellDatabaseListComponent } from './well-database/pe-well-database-li
 import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add.component';
 import { PeActualComponent} from './actual/pe-actual.component';
 import { PeActualListComponent } from './actual/pe-actual-list.component';
+import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -184,6 +185,8 @@ const peRoutes: Routes = [
       { path: 'list', component: PeActualListComponent, canActivate: [PePermissionGuard]},
       // { path: 'add', component: PeActualAddComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},
+      { path: 'add-opr', component: PeActualAddOprComponent, canActivate: [PePermissionGuard] },
+      // { path: 'edit-opr/:id', component: PeActualEditOprComponent, canActivate: [PePermissionGuard] },
     ]},
 
   ]},

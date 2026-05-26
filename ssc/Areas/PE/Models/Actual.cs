@@ -1,0 +1,135 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using Oracle.ManagedDataAccess.Client;
+
+namespace ssc.Areas.PE.Models
+{
+  public class Actual
+  {
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public ObjectId _id { get; set; }
+    public DateTime? date { get; set; }
+    // public decimal? total_opr { get; set; }
+    // public decimal? sot { get; set; }
+    // public decimal? figure { get; set; }
+    // public decimal? gas { get; set; }
+    // public decimal? gas_sales { get; set; }
+    // public decimal? sgt_opr { get; set; }
+    // public decimal? sbr_opr { get; set; }
+    // public decimal? bd_opr { get; set; }
+    // public decimal? sgt_sot { get; set; }
+    // public decimal? sbr_sot { get; set; }
+    // public decimal? bd_sot { get; set; }
+    // public decimal? sgt_fig { get; set; }
+    // public decimal? sbr_fig { get; set; }
+    // public decimal? bd_fig { get; set; }
+    // public decimal? rkap_oil { get; set; }
+    // public decimal? wpnb_oil { get; set; }
+    // public decimal? rkap_gas { get; set; }
+    // public decimal? wpnb_gas { get; set; }
+    public decimal? sgt_mgs { get; set; }
+    public decimal? sbr_nsop { get; set; }
+    public decimal? bd { get; set; }
+    public decimal? total_opr { get; set; }
+    public string created_by { get; set; }
+    public DateTime? created_date { get; set; }
+    public string updated_by { get; set; }
+    public DateTime? updated_date { get; set; }
+    public ActualError _error { get; set; }
+  }
+
+  public class ActualTmp
+  {
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public ObjectId _id { get; set; }
+    public int error_count { get; set; }
+    public Actual[] items { get; set; }
+  }
+
+  public class ActualError
+  {
+    public ErrorItem _row { get; set; }
+    public ErrorItem date { get; set; }
+    // public ErrorItem sot { get; set; }
+    // public ErrorItem operation { get; set; }
+    // public ErrorItem figure { get; set; }
+    // public ErrorItem gas { get; set; }
+    // public ErrorItem gas_sale { get; set; }
+    // public ErrorItem sgt_opr { get; set; }
+    // public ErrorItem sbr_opr { get; set; }
+    // public ErrorItem bd_opr { get; set; }
+    // public ErrorItem sgt_sot { get; set; }
+    // public ErrorItem sbr_sot { get; set; }
+    // public ErrorItem bd_sot { get; set; }
+    // public ErrorItem sgt_fig { get; set; }
+    // public ErrorItem sbr_fig { get; set; }
+    // public ErrorItem bd_fig { get; set; }
+    // public ErrorItem rkap_oil { get; set; }
+    // public ErrorItem wpnb_oil { get; set; }
+    // public ErrorItem rkap_gas { get; set; }
+    // public ErrorItem wpnb_gas { get; set; }
+    public ErrorItem sgt_mgs { get; set; }
+    public ErrorItem sbr_nsop { get; set; }
+    public ErrorItem bd { get; set; }
+    public ErrorItem total_opr { get; set; }
+  }
+
+  public class ActualList
+  {
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public Object[] _id { get; set; }
+    public Object[] date { get; set; }
+    // public Object[] operation { get; set; }
+    // public Object[] sot { get; set; }
+    // public Object[] figure { get; set; }
+    // public Object[] gas { get; set; }
+    // public Object[] gas_sales { get; set; }
+    // public Object[] sgt_opr { get; set; }
+    // public Object[] sbr_opr { get; set; }
+    // public Object[] bd_opr { get; set; }
+    // public Object[] borderless_nkl_opr { get; set; }
+    // public Object[] borderless_sbj_opr { get; set; }
+    // public Object[] sgt_sot { get; set; }
+    // public Object[] sbr_sot { get; set; }
+    // public Object[] bd_sot { get; set; }
+    // public Object[] sgt_fig { get; set; }
+    // public Object[] sbr_fig { get; set; }
+    // public Object[] bd_fig { get; set; }
+    // public Object[] borderless_nkl_sot { get; set; }
+    // public Object[] borderless_sbj_sot { get; set; }
+    // public Object[] rkap_oil { get; set; }
+    // public Object[] wpnb_oil { get; set; }
+    // public Object[] rkap_gas { get; set; }
+    // public Object[] wpnb_gas { get; set; }
+    public Object[] sgt_mgs { get; set; }
+    public Object[] sbr_nsop { get; set; }
+    public Object[] bd { get; set; }
+    public Object[] total_opr { get; set; }
+  }
+
+  public class ListActual
+  {
+    public List<Actual> productions { get; set; }
+    public List<Actual> actuals { get; set; }
+  }
+
+  // public static class SOTCommon
+  // {
+  //   public static OracleConnection conn;
+  //   public static OracleCommand cmd;
+
+  //   static SOTCommon()
+  //   {
+  //     string connString = "User Id=sot2014pm;Password=tskkm1645pm;Data Source=pepkpdb014.pertamina-ep.net:1521/SOTPROD;";
+  //     conn = new OracleConnection(connString);
+  //     conn.Open();
+  //   }
+  // }
+}
