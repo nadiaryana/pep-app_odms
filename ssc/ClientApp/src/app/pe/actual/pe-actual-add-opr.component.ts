@@ -79,28 +79,57 @@ export class PeActualAddOprComponent {
 
     this.opsogForm = this.formBuilder.group({
       productions: this.formBuilder.array([
-        this.formBuilder.group({
-          date: ['', Validators.required],
-          total_opr: ['', Validators.required],
-          sgt_mgs: ['', Validators.required],
-          sbr_opr: ['', Validators.required],
-          bd_opr: ['', Validators.required],
-          // gas_sales: ['', Validators.required],
-        }),
+        this.createProductionFormGroup()
       ])
     });
   };
 
+  createProductionFormGroup(): FormGroup {
+    const group = this.formBuilder.group({
+      date: ['', Validators.required],
+      total_opr: [{ value: 0, disabled: true }],
+      sgt_mgs: [0, Validators.required],
+      sbr_opr: [0, Validators.required],
+      bd_opr: [0, Validators.required],
+    });
+
+    // Subscribe to changes on sgt_mgs, sbr_opr, bd_opr to auto-calculate total_opr
+    const sgtMgsCtrl = group.get('sgt_mgs');
+    const sbrOprCtrl = group.get('sbr_opr');
+    const bdOprCtrl = group.get('bd_opr');
+
+    if (sgtMgsCtrl) {
+      sgtMgsCtrl.valueChanges.subscribe(() => this.updateTotalOpr(group));
+    }
+    if (sbrOprCtrl) {
+      sbrOprCtrl.valueChanges.subscribe(() => this.updateTotalOpr(group));
+    }
+    if (bdOprCtrl) {
+      bdOprCtrl.valueChanges.subscribe(() => this.updateTotalOpr(group));
+    }
+
+    return group;
+  }
+
+  updateTotalOpr(group: FormGroup): void {
+    const sgtMgsCtrl = group.get('sgt_mgs');
+    const sbrOprCtrl = group.get('sbr_opr');
+    const bdOprCtrl = group.get('bd_opr');
+    const totalCtrl = group.get('total_opr');
+
+    const sgtMgs = sgtMgsCtrl ? parseFloat(sgtMgsCtrl.value) || 0 : 0;
+    const sbrOpr = sbrOprCtrl ? parseFloat(sbrOprCtrl.value) || 0 : 0;
+    const bdOpr = bdOprCtrl ? parseFloat(bdOprCtrl.value) || 0 : 0;
+    const total = sgtMgs + sbrOpr + bdOpr;
+
+    if (totalCtrl) {
+      totalCtrl.setValue(total);
+    }
+  }
+
   addOpsogForm(): void {
     const addForm = this.opsogForm.get('productions') as FormArray;
-    addForm.push(this.formBuilder.group({
-      date: ['', Validators.required],
-      total_opr: ['', Validators.required],
-      sgt_mgs: ['', Validators.required],
-      sbr_opr: ['', Validators.required],
-      bd_opr: ['', Validators.required],
-      // gas_sales: ['', Validators.required],
-    }));
+    addForm.push(this.createProductionFormGroup());
   }
 
   removeOpsogForm(index: number): void {

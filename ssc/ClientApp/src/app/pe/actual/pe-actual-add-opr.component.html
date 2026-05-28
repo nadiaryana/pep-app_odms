@@ -3,7 +3,7 @@
       <div [formGroup]="opsogForm">
         <ng-container formArrayName="productions">
           <mat-grid-list cols="16" *ngFor="let opsog of productions?.controls; let index=index">
-            <mat-grid-tile [colspan]="2" [rowspan]="1">
+            <mat-grid-tile [colspan]="3" [rowspan]="1">
               <mat-form-field floatLabel="never" [formGroupName]="index">
                 <mat-label>Date</mat-label>
                 <input matInput [matDatepicker]="datePicker" formControlName="date" (dateChange)="dateChange($event)">
@@ -13,7 +13,8 @@
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field class="example-full-width" appearance="" [formGroupName]="index">
-                <input matInput formControlName="total_opr" type="number" placeholder="Operation" />
+                <mat-label>Total</mat-label>
+                <input matInput formControlName="total_opr" type="number" readonly />
               </mat-form-field>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">

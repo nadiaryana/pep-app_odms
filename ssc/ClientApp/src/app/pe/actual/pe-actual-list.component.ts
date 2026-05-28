@@ -15,6 +15,7 @@ import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
 import { User } from '../../user';
 import { AuthService } from '../../auth.service';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
 @Component({
   selector: 'pe-actual',
@@ -25,13 +26,13 @@ export class PeActualListComponent implements OnInit {
 
   currentUser: User;
 
-  displayedColumns: string[] = ["settings", "date","total_opr","sgt_mgs", "sbr_nsop", "bd"];
-  headerColumns1: string[] = ["settings", "date","total_opr","sgt_mgs", "sbr_nsop", "bd"];
+  displayedColumns: string[] = ["select", "settings", "date","total_opr","sgt_mgs", "sbr_nsop", "bd"];
+  headerColumns1: string[] = ["select", "settings", "date","total_opr","sgt_mgs", "sbr_nsop", "bd"];
  
   exampleDatabase: ExampleHttpDao | null;
   data = [];
   completedData = [];
-  // dataSource = new MatTableDataSource<any>(this.data);
+  dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
   isEditing: boolean = false;
 
@@ -56,6 +57,7 @@ export class PeActualListComponent implements OnInit {
   filterSubscription: Subscription;
   selectedSubscription: Subscription;
   listSubscription: Subscription;
+  isMobile = false;
 
   constructor(
     private http: HttpClient,
@@ -69,6 +71,7 @@ export class PeActualListComponent implements OnInit {
     private xfilterService: xFilterService,
     public commonService: CommonService,
     private authService: AuthService,
+        private breakpointObserver: BreakpointObserver,
   ) {
     this.authService.currentUser.subscribe(res => {
       this.currentUser = res;
@@ -78,6 +81,10 @@ export class PeActualListComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Small])
+      .subscribe(result => {
+        this.isMobile = result.matches;
+      });
 
     this.titleService.titleSource.next({
       title: "Actual",
@@ -137,7 +144,7 @@ export class PeActualListComponent implements OnInit {
       })
     ).subscribe(data => {
       this.data = data;
-      // this.dataSource = new MatTableDataSource<any>(this.data);
+      this.dataSource = new MatTableDataSource<any>(this.data);
       this.selection.clear();
     });
 
@@ -246,16 +253,16 @@ export class PeActualListComponent implements OnInit {
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-   /* const dialogRef = this.dialog.open(PeLabDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeActualDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
-    }); 
+    });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.isLoadingResults = true;
+      if(result) {
+        this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/labreport', {
+        this.http.delete<any>('/api/pe/actual', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -263,23 +270,47 @@ export class PeActualListComponent implements OnInit {
             _ids: this.selection.selected.map<any>(s => s._id)
           }
         }).subscribe(res => {
-          this.isLoadingResults = false;
+          this.isLoadingResults = false; 
           this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
           this.paginator._changePageSize(this.paginator.pageSize);
+      
         },
-          error => {
-            this.isLoadingResults = false;
-            this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
-          })
+        error => {
+          this.isLoadingResults = false; 
+          this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
+      
+        })
       }
     });
-    */
   }
 
   alert(x) {
     window.alert(x);
   }
 
+
+
+  /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+        this.selection.clear() :
+        this.dataSource.data.forEach(row => this.selection.select(row));
+  }
+
+  /** The label for the checkbox on the passed row */
+  checkboxLabel(row?: any): string {
+    if (!row) {
+        return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+    }
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
+  }
 
 }
 
@@ -316,22 +347,21 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<any>('/api/pe/production', httpOption);
+    return this.http.get<any>('/api/pe/actual', httpOption);
   }
 
 }
 
-/*
 
 @Component({
-  selector: 'app-lab-delete-dialog',
+  selector: 'app-actual-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
-  styleUrls: ['./pe-lab.scss']
+  styleUrls: ['./pe-actual.scss']
 })
-export class PeLabDeleteDialogComponent {
+export class PeActualDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeLabDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeActualDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) { }
 
   onNoClick(): void {
@@ -342,4 +372,4 @@ export class PeLabDeleteDialogComponent {
     this.dialogRef.close();
   }
 
-}*/
+}

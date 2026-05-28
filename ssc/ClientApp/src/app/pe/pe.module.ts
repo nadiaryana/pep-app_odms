@@ -101,6 +101,7 @@ import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add
 import { PeActualComponent } from './actual/pe-actual.component';
 import { PeActualListComponent } from './actual/pe-actual-list.component';
 import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
+import { PeActualDeleteDialogComponent } from './actual/pe-actual-list.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -200,6 +201,7 @@ import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
   PeActualComponent,
   PeActualListComponent,
   PeActualAddOprComponent,
+  PeActualDeleteDialogComponent,
   // PeActualEditOprComponent,
 
   // PeGrafikComponent,
@@ -246,6 +248,7 @@ import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
   PeLaporanLabDeleteDialogComponent,
   PePumpingUnitDeleteDialogComponent,
   PeWellDatabaseDeleteDialogComponent,
+  PeActualDeleteDialogComponent,
   
   // PeSumurDeleteDialogComponent,
   // PeDailyZoneChartDeleteDialogComponent,
