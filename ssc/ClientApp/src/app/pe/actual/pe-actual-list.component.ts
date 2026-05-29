@@ -50,8 +50,16 @@ export class PeActualListComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
   filterControl = new FormControl('');
   dateFilter = new FormControl('');
+  total_oprFilter = new FormControl('');
+  sgt_mgsFilter = new FormControl('');
+  sbr_nsopFilter = new FormControl('');
+  bdFilter = new FormControl('');
  
   date_xSelected = [];
+  total_opr_xSelected = [];
+  sgt_mgs_xSelected = [];
+  sbr_nsop_xSelected = [];
+  bd_xSelected = [];
 
 
   filterSubscription: Subscription;
@@ -113,6 +121,10 @@ export class PeActualListComponent implements OnInit {
       this.paginator.page,
       this.filterControl.valueChanges.pipe(debounceTime(300)),
       this.dateFilter.valueChanges.pipe(debounceTime(300)),
+      this.total_oprFilter.valueChanges.pipe(debounceTime(300)),
+      this.sgt_mgsFilter.valueChanges.pipe(debounceTime(300)),
+      this.sbr_nsopFilter.valueChanges.pipe(debounceTime(300)),
+      this.bdFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
@@ -159,6 +171,14 @@ export class PeActualListComponent implements OnInit {
 
   passPermission(path: String) {
     return this.pePermissionService.passPermission(path);
+  }
+
+  canDeleteActual() {
+    return this.pePermissionService.passPermission('pe/actual/delete') || this.pePermissionService.passPermission('pe/daily/delete');
+  }
+
+  canUpdateActual() {
+    return this.pePermissionService.passPermission('pe/actual/edit') || this.pePermissionService.passPermission('pe/actual/add');
   }
   
   exportExcel() {
@@ -245,11 +265,35 @@ export class PeActualListComponent implements OnInit {
     var columnfilter = {};
 
     if (this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
+    if (this.total_opr_xSelected.length) columnfilter["total_opr"] = this.total_opr_xSelected;
+    if (this.sgt_mgs_xSelected.length) columnfilter["sgt_mgs"] = this.sgt_mgs_xSelected;
+    if (this.sbr_nsop_xSelected.length) columnfilter["sbr_nsop"] = this.sbr_nsop_xSelected;
+    if (this.bd_xSelected.length) columnfilter["bd"] = this.bd_xSelected;
 
     return columnfilter;
   }
+  
+  /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
 
-
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+        this.selection.clear() :
+        this.dataSource.data.forEach(row => this.selection.select(row));
+  }
+  /** The label for the checkbox on the passed row */
+  checkboxLabel(row?: any): string {
+    if (!row) {
+        return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+    }
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
+  }
+  
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
@@ -290,27 +334,7 @@ export class PeActualListComponent implements OnInit {
 
 
 
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource.data.length;
-    return numSelected === numRows;
-  }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  masterToggle() {
-    this.isAllSelected() ?
-        this.selection.clear() :
-        this.dataSource.data.forEach(row => this.selection.select(row));
-  }
-
-  /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: any): string {
-    if (!row) {
-        return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
-    }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
-  }
 
 }
 

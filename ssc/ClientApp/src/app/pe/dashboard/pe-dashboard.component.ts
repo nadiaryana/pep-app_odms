@@ -1024,6 +1024,22 @@ export class PeDashboardComponent   {
     }, () => {
 
     });
+
+    this.http.get('/api/pe/actual', { params: { sort: 'date', order: 'asc', pagesize: '10000', columnfilter: '{"date":[{"opr":"gte","val":"'+start_date.toISOString()+'","log":"and"},{"opr":"lte","val":"'+end_date.toISOString()+'","log":"and"}]}'}}).subscribe(res => {
+      let tempPrevOperationActual = 0;
+      res["items"].map(d => {
+        if (this.dateControl.value.toLocaleDateString("id-ID") == new Date(d.date).toLocaleDateString("id-ID")) {
+          this.valueOperationActual = d.total_opr;
+          this.valueOperationActualDiff = tempPrevOperationActual !== 0 ? d.total_opr - tempPrevOperationActual : null;
+        } else {
+          this.valueOperationActual = 0;
+          this.valueOperationActualDiff = null;
+          tempPrevOperationActual = d.total_opr || 0;
+        }
+      });
+    }, error => {
+
+    });
   }
 
   refresh_Production2() {

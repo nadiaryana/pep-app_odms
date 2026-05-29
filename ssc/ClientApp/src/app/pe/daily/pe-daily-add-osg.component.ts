@@ -45,8 +45,8 @@ export class PeDailyAddOsgComponent {
   data: PeDaily[] = [];
   data_error_count: number = 0;
 
-  displayedColumns: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales"];
-  headerColumns1: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales"];
+  displayedColumns: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales","sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  headerColumns1: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
 
   constructor(
     private formBuilder: FormBuilder,
