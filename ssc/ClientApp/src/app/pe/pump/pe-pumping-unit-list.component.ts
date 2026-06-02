@@ -42,6 +42,7 @@ export class PePumpingUnitListComponent implements OnInit {
   isLoadingResults = true;
   isRateLimitReached = false;
   submitting = false;
+  isEditing:boolean = false;
 
   start_submitDate: Number;
   end_submitDate: Number;

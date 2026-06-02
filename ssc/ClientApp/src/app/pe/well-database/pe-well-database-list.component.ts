@@ -55,7 +55,7 @@ export class PeWellDatabaseListComponent implements OnInit {
 
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
-  // isEditing:boolean = false;
+  isEditing:boolean = false;
 
   resultsLength = 0;
   isLoadingResults = true;
