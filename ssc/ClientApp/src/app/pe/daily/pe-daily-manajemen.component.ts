@@ -15,6 +15,8 @@ import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
 import { User } from '../../user';
 import { AuthService } from '../../auth.service';
+// import { PeDailyManajemenDeleteDialogComponent } from './daily/pe-daily-manajemen-list.component';
+import { PeDailyDeleteDialogComponent } from './pe-daily-list.component';
 
 @Component({
   selector: 'pe-daily-manajemen',
@@ -25,16 +27,17 @@ export class PeDailyManajemenComponent implements OnInit {
 
   currentUser: User;
 
-  displayedColumns: string[] = ["settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
-  headerColumns1: string[] = ["settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  displayedColumns: string[] = ["select", "settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  headerColumns1: string[] = ["select", "settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
   // displayedColumns: string[] = ["date","operation","figure", "sot", "gas", "gas_sales", "sgt_opr", "settings"];
   // headerColumns1: string[] = ["date", "operation", "figure", "sot", "gas", "gas_sales", "sgt_opr", "settings"];
   exampleDatabase: ExampleHttpDao | null;
   data = [];
   completedData = [];
-  // dataSource = new MatTableDataSource<any>(this.data);
+  dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
   isEditing: boolean = false;
+  isMobile = false;
 
   resultsLength = 0;
   isLoadingResults = true;
@@ -138,7 +141,7 @@ export class PeDailyManajemenComponent implements OnInit {
       })
     ).subscribe(data => {
       this.data = data;
-      // this.dataSource = new MatTableDataSource<any>(this.data);
+      this.dataSource = new MatTableDataSource<any>(this.data);
       this.selection.clear();
     });
 
@@ -153,6 +156,10 @@ export class PeDailyManajemenComponent implements OnInit {
 
   passPermission(path: String) {
     return this.pePermissionService.passPermission(path);
+  }
+
+  canDeleteManajemen() {
+    return this.pePermissionService.passPermission('pe/daily/delete');
   }
   
   exportExcel() {
@@ -244,19 +251,39 @@ export class PeDailyManajemenComponent implements OnInit {
   }
 
 
+isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+        this.selection.clear() :
+        this.dataSource.data.forEach(row => this.selection.select(row));
+  }
+  /** The label for the checkbox on the passed row */
+  checkboxLabel(row?: any): string {
+    if (!row) {
+        return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+    }
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
+  }
+  
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-   /* const dialogRef = this.dialog.open(PeLabDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeDailyDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
-    }); 
+    });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.isLoadingResults = true;
+      if(result) {
+        this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/labreport', {
+        this.http.delete<any>('/api/pe/production', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -264,17 +291,18 @@ export class PeDailyManajemenComponent implements OnInit {
             _ids: this.selection.selected.map<any>(s => s._id)
           }
         }).subscribe(res => {
-          this.isLoadingResults = false;
+          this.isLoadingResults = false; 
           this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
           this.paginator._changePageSize(this.paginator.pageSize);
+      
         },
-          error => {
-            this.isLoadingResults = false;
-            this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
-          })
+        error => {
+          this.isLoadingResults = false; 
+          this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
+      
+        })
       }
     });
-    */
   }
 
   alert(x) {

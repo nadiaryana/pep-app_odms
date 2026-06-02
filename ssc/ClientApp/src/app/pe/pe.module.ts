@@ -261,6 +261,8 @@ import { PeActualAddComponent } from './actual/pe-actual-add.component';
 })
 
 export class PeModule { 
+
+  private readonly actualAdminUsername = 'pe.admin';
   
   constructor (
     private panelService: PanelService,
@@ -284,7 +286,7 @@ export class PeModule {
             new PanelSubItem("Aggregate", "pe/aggregate", "change_history"),
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
             new PanelSubItem("Optimasi", "pe/optimasi", "analytics"),
-            new PanelSubItem("Actual", "pe/actual", "data_usage"),
+            ...(this.isActualAdmin(res) ? [new PanelSubItem("Actual", "pe/actual", "data_usage")] : []),
             
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
@@ -307,5 +309,9 @@ export class PeModule {
         ]));
     });
 
+  }
+
+  private isActualAdmin(user: any): boolean {
+    return user != null && user.Name === this.actualAdminUsername;
   }
 }

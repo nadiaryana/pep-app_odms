@@ -4,6 +4,7 @@
   </mat-form-field-->
 
 
+  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="canDeleteManajemen()"><mat-icon>delete</mat-icon> Delete Selected</button>
   <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/manajemen-chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
 </div>
 
@@ -21,16 +22,29 @@
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
 
     <table mat-table [dataSource]="data" class="pe-table"
-           matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
-      <!-- <ng-container matColumnDef="date" > -->
-        <!-- <th mat-header-cell *matHeaderCellDef rowspan="2"> -->
-          <!-- <div fxLayout="row" fxLayoutAlign="center center"> -->
-            <!-- <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span> -->
-            <!-- <app-xfilter title="Date" column="date" [selected]="date_xSelected"></app-xfilter> -->
-          <!-- </div> -->
-        <!-- </th> -->
-        <!-- <td mat-cell *matCellDef="let row" class="cell-center">{{row.date | date : 'd MMMM y'}}</td> -->
-      <!-- </ng-container> -->
+          matSort matSortActive="date" matSortDisableClear matSortDirection="desc" responsive="true">
+        <ng-container matColumnDef="select" [sticky]="!isMobile">
+          <th mat-header-cell *matHeaderCellDef rowspan="3">
+            <div fxLayout="row" center>
+              <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
+                            [checked]="selection.hasValue() && isAllSelected()"
+                            [indeterminate]="selection.hasValue() && !isAllSelected()"
+                            [aria-label]="checkboxLabel()"
+                            [disabled]="isEditing" *ngIf="canDeleteManajemen()">
+              </mat-checkbox>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <mat-checkbox (click)="$event.stopPropagation()"
+                            (change)="($event && !isEditing) ? selection.toggle(row) : null"
+                            [checked]="selection.isSelected(row)"
+                            [aria-label]="checkboxLabel(row)"
+                            [disabled]="isEditing" *ngIf="canDeleteManajemen()">
+              </mat-checkbox>
+              </div>
+          </td>
+        </ng-container>
 	  <ng-container matColumnDef="settings">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
           <div fxLayout="row" fxLayoutAlign="center center">

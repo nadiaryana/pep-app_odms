@@ -690,6 +690,51 @@ namespace ssc.Areas.PE.Controllers
         items = areaList
       });
     }
+
+    [Authorize("PeDaily Delete")]
+    [HttpDelete]
+    public ActionResult Delete([FromQuery] string[] _ids)
+    {
+      try
+      {
+        if (_ids == null || _ids.Length == 0)
+        {
+          return BadRequest(new { message = "No IDs provided" });
+        }
+
+        long deleted_count = 0;
+        long total_count = _ids.Length;
+
+        foreach (string _id in _ids)
+        {
+          try
+          {
+            ObjectId objectId = ObjectId.Parse(_id);
+            DeleteResult res = _production.DeleteOne(t => t._id == objectId);
+            deleted_count += res.DeletedCount;
+          }
+          catch (FormatException)
+          {
+            return BadRequest(new { message = $"Invalid ObjectId format: {_id}" });
+          }
+        }
+
+        return Ok(new
+        {
+          deleted_count = deleted_count,
+          total_count = total_count,
+          message = "Delete successful"
+        });
+      }
+      catch (MongoException e)
+      {
+        return BadRequest(new { message = $"Database error: {e.Message}" });
+      }
+      catch (Exception e)
+      {
+        return BadRequest(new { message = $"Error: {e.Message}" });
+      }
+    }
     //   [HttpGet("SaveDataProduction")]
     //   public ActionResult SaveDataProduction([FromQuery] List<Production> items)
     //   {
