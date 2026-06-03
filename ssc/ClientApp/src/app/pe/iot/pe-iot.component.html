@@ -1,0 +1,120 @@
+<div class="iot-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">
+        <span class="icon">📡</span> Monitoring IoT Sumur
+      </h2>
+      <span class="live-badge">
+        <span class="dot"></span> Live • Auto-refresh 15s
+      </span>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div
+      class="device-card"
+      *ngFor="let d of deviceSummaries"
+      [class.active]="d.wellId === selectedWell"
+      [class.card-on]="d.status === 1"
+      [class.card-off]="d.status === 0"
+      (click)="onWellChange(d.wellId)">
+      <div class="card-header">
+        <span class="device-name">{{ d.wellId }}</span>
+        <span class="status-badge" [ngClass]="getStatusClass(d.status)">
+          {{ getStatusLabel(d.status) }}
+        </span>
+      </div>
+      <div class="card-current">
+        <span class="current-value">{{ d.current | number:'1.2-2' }}</span>
+        <span class="current-unit">A</span>
+      </div>
+      <div class="card-time">{{ d.lastUpdate }}</div>
+    </div>
+  </div>
+
+  <!-- Chart Panel -->
+  <div class="chart-panel">
+
+    <!-- Toolbar -->
+    <div class="chart-toolbar">
+      <div class="toolbar-left">
+        <label class="select-label">Perangkat</label>
+        <select class="well-select" [(ngModel)]="selectedWell" (change)="onWellChange(selectedWell)">
+          <option *ngFor="let w of wells" [value]="w">{{ w }}</option>
+        </select>
+      </div>
+
+      <div class="toolbar-center">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="useRange" />
+          Filter Tanggal
+        </label>
+        <ng-container *ngIf="useRange">
+          <input type="datetime-local" class="date-input" [(ngModel)]="fromDate" />
+          <span class="separator">—</span>
+          <input type="datetime-local" class="date-input" [(ngModel)]="toDate" />
+        </ng-container>
+        <ng-container *ngIf="!useRange">
+          <label class="select-label">Data</label>
+          <select class="limit-select" [(ngModel)]="limit">
+            <option [value]="50">50 terakhir</option>
+            <option [value]="100">100 terakhir</option>
+            <option [value]="200">200 terakhir</option>
+          </select>
+        </ng-container>
+      </div>
+
+      <div class="toolbar-right">
+        <button class="btn-refresh" (click)="applyFilter()" [disabled]="isLoading">
+          <span *ngIf="!isLoading">⟳ Refresh</span>
+          <span *ngIf="isLoading">Loading...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="chart-area">
+      <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Memuat data...</p>
+      </div>
+
+      <div *ngIf="!isLoading && chartData.length === 0" class="empty-state">
+        <span class="empty-icon">📡</span>
+        <p>Belum ada data untuk perangkat ini.</p>
+      </div>
+
+      <!-- Chart menggunakan Chart.js via canvas -->
+      <canvas *ngIf="!isLoading && chartData.length > 0"
+              id="iotArusChart"
+              appIotChart
+              [labels]="chartLabels"
+              [values]="chartValues">
+      </canvas>
+    </div>
+
+    <!-- Stats bawah chart -->
+    <div class="chart-stats" *ngIf="chartData.length > 0">
+      <div class="stat-item">
+        <span class="stat-label">Max</span>
+        <span class="stat-value">{{ chartValues.length > 0 ? (chartValues | maxValue) : 0 | number:'1.2-2' }} A</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Min</span>
+        <span class="stat-value">{{ chartValues.length > 0 ? (chartValues | minValue) : 0 | number:'1.2-2' }} A</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Rata-rata</span>
+        <span class="stat-value">{{ chartValues.length > 0 ? (chartValues | avgValue) : 0 | number:'1.2-2' }} A</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Total Data</span>
+        <span class="stat-value">{{ chartData.length }}</span>
+      </div>
+    </div>
+
+  </div>
+</div>

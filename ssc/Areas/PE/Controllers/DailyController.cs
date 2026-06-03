@@ -410,7 +410,28 @@ namespace ssc.Areas.PE.Controllers
                     if (well != null && well.Length > 0)
                         areaFilter &= Builders<Daily>.Filter.In(r => r.well, well);
                     if (well_string != null && well_string.Length > 0)
-                        areaFilter &= Builders<Daily>.Filter.In(r => r.well_string, well_string);
+                    {
+                        var hasBlankWellString = well_string.Any(s => string.IsNullOrEmpty(s) || s == "NULL");
+                        var nonBlankWellStrings = well_string.Where(s => !string.IsNullOrEmpty(s) && s != "NULL").ToArray();
+                        FilterDefinition<Daily> wellStringFilter = Builders<Daily>.Filter.Empty;
+
+                        if (nonBlankWellStrings.Length > 0)
+                            wellStringFilter = Builders<Daily>.Filter.In(r => r.well_string, nonBlankWellStrings);
+
+                        if (hasBlankWellString)
+                        {
+                            var blankFilter = Builders<Daily>.Filter.Or(
+                                Builders<Daily>.Filter.Eq(r => r.well_string, null),
+                                Builders<Daily>.Filter.Eq(r => r.well_string, "")
+                            );
+
+                            wellStringFilter = nonBlankWellStrings.Length > 0
+                                ? Builders<Daily>.Filter.Or(wellStringFilter, blankFilter)
+                                : blankFilter;
+                        }
+
+                        areaFilter &= wellStringFilter;
+                    }
                     if (date.HasValue)
                         areaFilter &= Builders<Daily>.Filter.Gte(r => r.date, date);
                     if (end_date.HasValue)

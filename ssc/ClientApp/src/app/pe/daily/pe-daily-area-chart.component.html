@@ -15,10 +15,11 @@
 
 	<mat-form-field class="field-well" floatLabel="never">
 		<input matInput 
-			[(ngModel)]="well_string_xSelected" 
+			[value]="getWellStringSelectionLabel()" 
 			[disabled]="well_xSelected.length === 0"
+			readonly
 			placeholder="Select well first">
-		<app-xfilter title="Well String" column="well_string" [selected]="well_string_xSelected"></app-xfilter>
+		<app-xfilter title="Well String" column="well_string" [selected]="getWellStringFilterSelected()"></app-xfilter>
 	</mat-form-field>
 
 	<mat-form-field class="filter" floatLabel="never">

@@ -20,6 +20,9 @@ import { MatSnackBar } from '@angular/material';
 })
 export class PeDailyAreaChartComponent implements OnInit {
 
+  private readonly nullFilterToken = 'NULL';
+  private readonly emptySelectionToken = '__EMPTY_SELECTION__';
+
   @ViewChild('daily_chart_el', { static: true }) public daily_chart_el: ElementRef;
   daily_table_data = [];
   daily_table_columns: string[] = ["status", "count"];
@@ -257,8 +260,9 @@ export class PeDailyAreaChartComponent implements OnInit {
   end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
 
   exampleDatabase: ExampleHttpDao | null;
-  well_xSelected = [];
-  well_string_xSelected = [];
+  well_xSelected: any[] = [];
+  well_string_xSelected: any[] = [];
+  availableWellStringItems: any[] = [];
 
   isLoadingResults: boolean = false;
 
@@ -288,11 +292,19 @@ export class PeDailyAreaChartComponent implements OnInit {
     })
     this.xfilterService.selected.subscribe(res => {
       const column = res["column"];
-      this[column + "_xSelected"] = res["selected"];
+      let selected = (res["selected"] || []).filter(item => item !== this.emptySelectionToken);
+
+      if (column === "well") {
+        this.well_xSelected = selected;
+      } else if (column === "well_string") {
+        selected = this.normalizeWellStringSelection(selected);
+        this.well_string_xSelected = selected;
+      }
       
       // Jika well dipilih, reset well_string_xSelected
       if (column === "well") {
         this.well_string_xSelected = [];
+        this.availableWellStringItems = [];
       }
       
       this.checkAndRefreshDaily();
@@ -320,7 +332,7 @@ export class PeDailyAreaChartComponent implements OnInit {
       return values.map(v => {
         if (v === null || v === undefined || v === "") {
           // Use special marker untuk null/undefined values
-          return "__NULL__";
+          return "Null";
         }
         return "^" + v + "$";
       });
@@ -362,6 +374,10 @@ export class PeDailyAreaChartComponent implements OnInit {
       return res;
     })).subscribe(res => {
       console.log('getColumnValues response:', res.items);
+      if (column === 'well_string') {
+        this.availableWellStringItems = this.normalizeWellStringItems(res.items || []);
+        res.items = this.availableWellStringItems;
+      }
       this.xfilterService.updateItems({ column: column, items: res.items });
     }, () => {
 
@@ -425,12 +441,12 @@ export class PeDailyAreaChartComponent implements OnInit {
     
     // Query 1: Well dengan well_string yang dipilih
     const columnFilter1: any = {
-      well_string: this.well_string_xSelected.map(s => "^" + s + "$")
+      well_string: this.well_string_xSelected.map(s => s === this.nullFilterToken ? this.nullFilterToken : "^" + s + "$")
     };
 
     // Query 2: Well dengan well_string kosong/null
     const columnFilter2: any = {
-      well_string: []  // Empty array = match null/kosong
+      well_string: [this.nullFilterToken]
     };
 
     // Execute both queries in parallel
@@ -488,7 +504,7 @@ export class PeDailyAreaChartComponent implements OnInit {
     
     // Append selected well_strings (handle null)
     for (const ws of this.well_string_xSelected) {
-      params = params.append("well_string", ws || "");
+      params = params.append("well_string", ws === this.nullFilterToken ? this.nullFilterToken : (ws || ""));
     }
 
     this.http.get<any>('/api/pe/daily/GetAreaChart', { params: params }).subscribe(res => {
@@ -657,6 +673,40 @@ export class PeDailyAreaChartComponent implements OnInit {
     }, () => {
 
     });
+  }
+
+  private normalizeWellStringItems(items: any[]): any[] {
+    return items.map(item => (item === null || item === undefined || item === '') ? this.nullFilterToken : item);
+  }
+
+  private normalizeWellStringSelection(selected: any[]): any[] {
+    if (selected.length > 0) {
+      return this.normalizeWellStringItems(selected);
+    }
+
+    if (this.availableWellStringItems.length === 1 && this.availableWellStringItems[0] === this.nullFilterToken) {
+      return [this.nullFilterToken];
+    }
+
+    return selected;
+  }
+
+  getWellStringSelectionLabel(): string {
+    if (!this.well_string_xSelected || this.well_string_xSelected.length === 0) {
+      return '';
+    }
+
+    return this.well_string_xSelected
+      .map(item => item === this.nullFilterToken ? '(Blank)' : item)
+      .join(', ');
+  }
+
+  getWellStringFilterSelected(): any[] {
+    if (!this.well_string_xSelected || this.well_string_xSelected.length === 0) {
+      return [this.emptySelectionToken];
+    }
+
+    return this.well_string_xSelected;
   }
   
 }

@@ -590,50 +590,92 @@ namespace ssc.Areas.PE.Controllers
     //     });
     //   }
     // }
-    
+
     [Authorize("PeDaily Delete")]
     [HttpDelete]
     public ActionResult Delete([FromQuery] string[] _ids)
     {
-        try
+      try
+      {
+        if (_ids == null || _ids.Length == 0)
         {
-            if (_ids == null || _ids.Length == 0)
-            {
-                return BadRequest(new { message = "No IDs provided" });
-            }
+          return BadRequest(new { message = "No IDs provided" });
+        }
 
-            long deleted_count = 0;
-            long total_count = _ids.Length;
-            
-            foreach (string _id in _ids)
-            {
-                try
-                {
-                    ObjectId objectId = ObjectId.Parse(_id);
-                    DeleteResult res = _actual.DeleteOne(t => t._id == objectId);
-                    deleted_count += res.DeletedCount;
-                }
-                catch (FormatException)
-                {
-                    return BadRequest(new { message = $"Invalid ObjectId format: {_id}" });
-                }
-            }
-            
-            return Ok(new
-            {
-                deleted_count = deleted_count,
-                total_count = total_count,
-                message = "Delete successful"
-            });
-        }
-        catch (MongoException e)
+        long deleted_count = 0;
+        long total_count = _ids.Length;
+
+        foreach (string _id in _ids)
         {
-            return BadRequest(new { message = $"Database error: {e.Message}" });
+          try
+          {
+            ObjectId objectId = ObjectId.Parse(_id);
+            DeleteResult res = _actual.DeleteOne(t => t._id == objectId);
+            deleted_count += res.DeletedCount;
+          }
+          catch (FormatException)
+          {
+            return BadRequest(new { message = $"Invalid ObjectId format: {_id}" });
+          }
         }
-        catch (Exception e)
+
+        return Ok(new
         {
-            return BadRequest(new { message = $"Error: {e.Message}" });
-        }
+          deleted_count = deleted_count,
+          total_count = total_count,
+          message = "Delete successful"
+        });
+      }
+      catch (MongoException e)
+      {
+        return BadRequest(new { message = $"Database error: {e.Message}" });
+      }
+      catch (Exception e)
+      {
+        return BadRequest(new { message = $"Error: {e.Message}" });
+      }
+    }
+
+    [Authorize("PeActual Read")]
+    [HttpGet("GetActualChart")]
+
+    public ActionResult GetActualChart(string type, DateTime? date, DateTime? end_date, string[] well)
+    {
+      if (!string.Equals(type, "actual_operation", StringComparison.OrdinalIgnoreCase))
+      {
+        return BadRequest(new { message = "Unsupported chart type." });
+      }
+
+      FilterDefinition<Actual> filter = Builders<Actual>.Filter.Empty;
+
+      if (date.HasValue)
+      {
+        var startDate = DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Local).ToUniversalTime();
+        filter = filter & Builders<Actual>.Filter.Gte(r => r.date, startDate);
+      }
+
+      if (end_date.HasValue)
+      {
+        var endDate = DateTime.SpecifyKind(end_date.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Local).ToUniversalTime();
+        filter = filter & Builders<Actual>.Filter.Lte(r => r.date, endDate);
+      }
+
+      var actual_chart = _actual.Find(filter)
+          .Project<Actual>(_fields_actual)
+          .ToList()
+          .OrderBy(t => t.date)
+          .Select(s => new
+          {
+            date = s.date.HasValue
+              ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(s.date.Value, DateTimeKind.Utc), TimeZoneInfo.Local)
+              : (DateTime?)null,
+            total_operation = s.total_opr,
+            sgt = s.sgt_mgs,
+            sbr = s.sbr_nsop,
+            bd = s.bd,
+          });
+
+      return Ok(new { data = actual_chart });
     }
   }
 }

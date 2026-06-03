@@ -25,6 +25,8 @@ using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using ssc.Middleware;
+using MongoDB.Driver;
 
 namespace ssc
 {
@@ -51,6 +53,8 @@ namespace ssc
 
             services.AddSingleton<IPEDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<PEDatabaseSettings>>().Value);
+
+            // services.AddSingleton<SensorService>();
 
 
             services.AddHttpClient();
@@ -183,6 +187,8 @@ namespace ssc
                       context.Response.ContentType = "text/html";
                       await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
                   });
+
+            app.UseMiddleware<ApiKeyMiddleware>();
         }
     }
 }
