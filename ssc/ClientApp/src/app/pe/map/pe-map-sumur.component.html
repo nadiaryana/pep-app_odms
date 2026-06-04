@@ -1,12 +1,11 @@
 
 
 <div class="map-wrapper">
-
   <div class="map-header">
-    <div class="map-header__title">
+    <!-- <div class="map-header__title">
       <mat-icon>map</mat-icon>
       <span>Peta Sumur</span>
-    </div>
+    </div> -->
     <div class="container-top-bar" style="display: flex; gap: 16px;" >
       <mat-checkbox [(ngModel)]="showWell" (change)="updateMapVisibility()" >
         Well
@@ -20,10 +19,30 @@
         Station
       </mat-checkbox>
     </div>
-    <div class="map-header__legend">
+    <!-- <div class="header-info">
       <span class="legend-item legend-item--total">
         Total: {{ sumurList.length }} Sumur
       </span>
+    </div> -->
+    <div class="well-search">
+      <mat-form-field appearance="outline" style="width:200px;">
+        <input
+          matInput
+          placeholder="Cari Sumur..."
+          [(ngModel)]="searchWell"
+          (input)="onSearchWell()">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      <div
+        class="search-result"
+        *ngIf="filteredWells.length > 0">
+        <div
+          class="search-item"
+          *ngFor="let well of filteredWells"
+          (click)="selectWell(well)">
+          {{ well.wellName }}
+        </div>
+      </div>
     </div>
   </div>
 

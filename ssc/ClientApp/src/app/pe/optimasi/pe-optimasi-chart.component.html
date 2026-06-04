@@ -3,6 +3,16 @@
      fxLayoutAlign="start center"
      fxLayoutGap="20px">
 	
+	<!-- Area Filter -->
+	<mat-form-field class="filter">
+		<mat-label>Area</mat-label>
+		<mat-select [(ngModel)]="selectedArea" (ngModelChange)="onAreaChange()">
+			<mat-option value="all">Semua Area</mat-option>
+			<mat-option value="SBR">SBR Area</mat-option>
+			<mat-option value="SGT">SGT Area</mat-option>
+		</mat-select>
+	</mat-form-field>
+
 	<!-- Date Filters -->
 	<mat-form-field class="filter">
 		<mat-label>Start Date</mat-label>

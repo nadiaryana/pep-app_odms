@@ -64,40 +64,63 @@ export class PeDashboardComponent   {
         },
         maxPadding: 0.5
       },
-      yAxis: {
+      yAxis:[{
+        // Sumbu kiri
         title: {
-        text: 'BOPD',
-        style: {
-          color: '#666666'
+          text: 'BOPD',
+          style: {
+            color: '#666666'
+          }
+        },
+        labels: {
+          formatter: function () {
+            return this.value.toLocaleString('id-ID');
+          }
         }
-      },
-      labels: {
-      formatter: function () {
-        // Format angka agar tampil penuh (tanpa singkatan)
-        return this.value.toLocaleString('id-ID'); // hasil: 1.000, 2.000, dst.
-        }
-      }
-      },
-		  tooltip: {
-			  pointFormat: "{series.name}: <b>{point.y:.2f}</b>"
-		  },
-		  plotOptions: {
+      }, {
+        // Sumbu kanan untuk SOT
+        title: {
+          text: 'SOT',
+          style: {
+            color: '#000000'
+          }
+        },
+        labels: {
+        formatter: function () {
+          // Format angka agar tampil penuh (tanpa singkatan)
+          return this.value.toLocaleString('id-ID'); 
+          },
+          style: {
+            // color: '#ed7d31'
+          }
+        },
+        opposite: true,
+      }],
+		  // tooltip: {
+			//   pointFormat: "{series.name}: <b>{point.y:.2f}</b>"
+		  // },
+		  // plotOptions: {
 			
-		  },
+		  // },
+      opposite: true,
 		  series: [{
         name: "Operation",
+        yAxis : 0,
         color: '#5b9bd5',
 			  data: [],
 		  },{
         name: "SOT",
+        yAxis : 1,
         color: '#ed7d31',
         data: [],
       },{
         name: "Figure",
+        yAxis : 0,
         color: '#a9d18e',
         data: [],
       },{
         name: "RKAP Oil",
+        yAxis : 0,
         color: '#313647',
         data: [],
         marker: {
@@ -105,6 +128,7 @@ export class PeDashboardComponent   {
         }
       },{
         name: "WP&B Oil",
+        yAxis : 0,
         color: '#FF8F8F',
         data: [],
         marker: {

@@ -82,8 +82,8 @@ export class PeDailyAddOsgComponent {
       productions: this.formBuilder.array([
         this.formBuilder.group({
           date: [''],
-          operation: ['', Validators.required],
-          sot: ['', Validators.required],
+          operation: [''],
+          sot: [''],
           figure: [''],
           gas: ['', Validators.required],
           gas_sales: ['', Validators.required],
@@ -103,14 +103,16 @@ export class PeDailyAddOsgComponent {
         }),
       ])
     });
+    const firstGroup = (this.opsogForm.get('productions') as FormArray).at(0) as FormGroup;
+    this.setupAutoCalculation(firstGroup);
   };
 
   addOpsogForm() {
     let addForm = this.opsogForm.get('productions') as FormArray;
     addForm.push(this.formBuilder.group({
       date: [''],
-      operation: ['', Validators.required],
-      sot: ['', Validators.required],
+      operation: [''],
+      sot: [''],
       figure : [''],
       gas: ['', Validators.required],
       gas_sales: ['', Validators.required],
@@ -128,11 +130,24 @@ export class PeDailyAddOsgComponent {
       rkap_gas: ['', Validators.required],
       wpnb_gas: ['', Validators.required],
     }));
+    const newGroup = addForm.at(addForm.length - 1) as FormGroup;
+    this.setupAutoCalculation(newGroup);
   }
 
   removeOpsogForm(index) {
     let removeForm = this.opsogForm.get('productions') as FormArray;
     removeForm.removeAt(index);
+  }
+
+  setupAutoCalculation(group: FormGroup) {
+    group.valueChanges.subscribe(val => {
+      const sot = (+val.sgt_sot || 0) + (+val.sbr_sot || 0) + (+val.bd_sot || 0);
+      const operation = (+val.sgt_opr || 0) + (+val.sbr_opr || 0) + (+val.bd_opr || 0);
+      const figure = (+val.sgt_fig || 0) + (+val.sbr_fig || 0) + (+val.bd_fig || 0);
+      if (group.get('sot').value !== sot) group.get('sot').setValue(sot, { emitEvent: false });
+      if (group.get('operation').value !== operation) group.get('operation').setValue(operation, { emitEvent: false });
+      if (group.get('figure').value !== figure) group.get('figure').setValue(figure, { emitEvent: false });
+    });
   } 
 
   listDaily() {

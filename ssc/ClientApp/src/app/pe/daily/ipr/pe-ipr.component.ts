@@ -442,10 +442,6 @@ export class IprComponent implements OnInit {
               ? this.dailyAverages[0].gasAvg
               : 0;
 
-  
-
-
-
           // order data by date ascending
           const dataSortedDate = filteredData.sort((a, b) => {
             return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -724,7 +720,7 @@ export class IprComponent implements OnInit {
     this.prod_reservoir.setValue(prod_reservoir);
 
 
-    // operating
+    // Operating Design
     const sm2_raw = this.sm2.value;     //form control
     const kd2_raw = this.ds_kd2.value;
 

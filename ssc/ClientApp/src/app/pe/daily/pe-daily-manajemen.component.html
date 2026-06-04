@@ -70,7 +70,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sot? row.sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sot? row.sot : 0 )| number : '1.0-2'}}</td>
       </ng-container>
       <ng-container matColumnDef="operation" >
         <th mat-header-cell *matHeaderCellDef rowspan="5" >
@@ -78,7 +78,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.operation? row.operation : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.operation? row.operation : 0 )| number : '1.0-2'}}</td>
       </ng-container>
       <ng-container matColumnDef="figure" >
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -86,7 +86,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.figure? row.figure : 0)| number :  '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.figure? row.figure : 0)| number :  '1.0-2'}}</td>
       </ng-container>
       
       <ng-container matColumnDef="gas">
@@ -95,7 +95,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.gas? row.gas : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.gas? row.gas : 0 )| number : '1.0-2'}}</td>
       </ng-container>
       <ng-container matColumnDef="gas_sales">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -103,7 +103,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas Sales</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.gas_sales? row.gas_sales : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.gas_sales? row.gas_sales : 0 )| number : '1.0-2'}}</td>
       </ng-container>
     <ng-container matColumnDef="sgt_sot">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -111,7 +111,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sgt_sot? row.sgt_sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sgt_sot? row.sgt_sot : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="sbr_sot">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -119,7 +119,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sbr_sot? row.sbr_sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sbr_sot? row.sbr_sot : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="bd_sot">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -127,7 +127,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.bd_sot? row.bd_sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.bd_sot? row.bd_sot : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="sgt_opr">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -135,7 +135,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sgt_opr? row.sgt_opr : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sgt_opr? row.sgt_opr : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="sbr_opr">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -143,7 +143,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sbr_opr? row.sbr_opr : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sbr_opr? row.sbr_opr : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="bd_opr">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -151,7 +151,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.bd_opr? row.bd_opr : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.bd_opr? row.bd_opr : 0 )| number : '1.0-2'}}</td>
       </ng-container>
     <ng-container matColumnDef="sgt_fig">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -159,7 +159,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sgt_fig? row.sgt_fig : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sgt_fig? row.sgt_fig : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="sbr_fig">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -167,7 +167,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.sbr_fig? row.sbr_fig : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sbr_fig? row.sbr_fig : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="bd_fig">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -175,7 +175,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.bd_fig? row.bd_fig : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.bd_fig? row.bd_fig : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="rkap_oil">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -183,7 +183,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP Oil</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.rkap_oil? row.rkap_oil : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.rkap_oil? row.rkap_oil : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="wpnb_oil">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -191,7 +191,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B Oil</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.wpnb_oil? row.wpnb_oil : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.wpnb_oil? row.wpnb_oil : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="rkap_gas">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -199,7 +199,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP Gas</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.rkap_gas? row.rkap_gas : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.rkap_gas? row.rkap_gas : 0 )| number : '1.0-2'}}</td>
       </ng-container>
 	  <ng-container matColumnDef="wpnb_gas">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -207,7 +207,7 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B Gas</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center">{{(row.wpnb_gas? row.wpnb_gas : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.wpnb_gas? row.wpnb_gas : 0 )| number : '1.0-2'}}</td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
       <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>

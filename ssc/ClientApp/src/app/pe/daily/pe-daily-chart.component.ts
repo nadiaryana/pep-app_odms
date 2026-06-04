@@ -246,7 +246,7 @@ export class PeDailyChartComponent {
         enabled: false
       },
       tooltip: {
-        valueSuffix: ' Hz',
+        valueSuffix: ' mMD',
         valueDecimals: 2
       },
 	  visible: false

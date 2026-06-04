@@ -103,6 +103,7 @@ import { PeActualListComponent } from './actual/pe-actual-list.component';
 import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
 import { PeActualDeleteDialogComponent } from './actual/pe-actual-list.component';
 import { PeActualAddComponent } from './actual/pe-actual-add.component';
+import { PeActualChartComponent } from './actual/pe-actual-chart.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -204,6 +205,7 @@ import { PeActualAddComponent } from './actual/pe-actual-add.component';
   PeActualAddComponent,
   PeActualAddOprComponent,
   PeActualDeleteDialogComponent,
+  PeActualChartComponent,
   // PeActualEditOprComponent,
 
   // PeGrafikComponent,

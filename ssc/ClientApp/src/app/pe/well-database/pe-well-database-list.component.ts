@@ -36,12 +36,12 @@ export class PeWellDatabaseListComponent implements OnInit {
     "date_unacc", "gross_unacc", "net_unacc","wc_unacc","remarks_unacc",
     "date_acc_static","sfl_acc","ps_acc","date_acc_dynamic","dfl_acc", "pwf_acc","acc_pi", "acc_ipr",
     "date_unacc_static","sfl_unacc","ps_unacc","date_unacc_dynamic","dfl_unacc", "pwf_unacc","unacc_pi", "unacc_ipr",
-    "rtl","remarks"
+    "rtl","remarks", "action"
   ];
   headerColumns1: string[] = [
     "select","well","accessed_layer","unaccessed_layer", "hole_feature","panjang_feature", "acc_layer_perfo", "unacc_layer_perfo",
     "acc_layer_sonolog", "acc_pi","acc_ipr","unacc_layer_sonolog","unacc_pi", "unacc_ipr",
-    "rtl","remarks"
+    "rtl","remarks", "action"
   ];
   headerColumns2: string[] = [
     "last_comp_date", "layer_acc", "interval_acc", "top", "bottom", 

@@ -123,6 +123,7 @@ export class PePermissionService {
 	new Menu("actual/edit", true, /[a-z]/i, ["PeActual Edit"]),
 	new Menu("actual/delete", true,null, ["PeActual Delete"]),
 	new Menu("actual/add-opr", true, null, ["PeActual Add"]),
+	new Menu("actual/chart", true,null, ["PeActual Read"]),
 	// new Menu("daily/edit-opr", true, null, ["PeActual Add"]),
 	];
 	

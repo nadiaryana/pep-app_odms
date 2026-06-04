@@ -106,7 +106,6 @@ export class PeActualListComponent implements OnInit {
 
     this.exampleDatabase = new ExampleHttpDao(this.http);
 
-    // If the user changes the sort order, reset back to the first page.
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
     this.filterSubscription = this.xfilterService.filter.subscribe(res => {
@@ -141,7 +140,6 @@ export class PeActualListComponent implements OnInit {
         );
       }),
       map(data => {
-        // Flip flag to show that loading has finished.
         this.isLoadingResults = false;
         this.isRateLimitReached = false;
         this.resultsLength = data.total_count;
@@ -150,7 +148,6 @@ export class PeActualListComponent implements OnInit {
       }),
       catchError(() => {
         this.isLoadingResults = false;
-        // Catch if the GitHub API has reached its rate limit. Return empty data.
         this.isRateLimitReached = true;
         return observableOf([]);
       })
@@ -273,20 +270,18 @@ export class PeActualListComponent implements OnInit {
     return columnfilter;
   }
   
-  /** Whether the number of selected elements matches the total number of rows. */
     isAllSelected() {
       const numSelected = this.selection.selected.length;
       const numRows = this.dataSource.data.length;
       return numSelected === numRows;
     }
 
-    /** Selects all rows if they are not all selected; otherwise clear selection. */
     masterToggle() {
       this.isAllSelected() ?
           this.selection.clear() :
           this.dataSource.data.forEach(row => this.selection.select(row));
     }
-    /** The label for the checkbox on the passed row */
+
     checkboxLabel(row?: any): string {
       if (!row) {
           return `${this.isAllSelected() ? 'select' : 'deselect'} all`;

@@ -1031,7 +1031,7 @@ export class OneSlideComponent implements OnInit {
             enabled: false
           },
           tooltip: {
-            valueSuffix: ' Hz',
+            valueSuffix: ' mMD',
             valueDecimals: 2
           },
         // visible: false

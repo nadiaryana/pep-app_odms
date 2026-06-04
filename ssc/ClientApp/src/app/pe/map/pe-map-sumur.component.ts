@@ -95,7 +95,9 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   private svgOverlay: SVGElement | null = null;
   private flowlinePaths: SVGPathElement[] = [];
   private stationMarkers: L.Marker[] = [];
-  
+  searchWell = '';
+  filteredWells: Sumur[] = [];
+
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
@@ -250,6 +252,29 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
         this.snackbarService.status.next(new SnackbarApi(true, 'Gagal mengambil data sumur', 'dismiss'));
       }
     );
+  }
+
+  onSearchWell(): void {
+    const keyword = this.searchWell.trim().toLowerCase();
+
+    if (!keyword) {
+      this.filteredWells = [];
+      return;
+    }
+
+    this.filteredWells = this.sumurList
+      .filter(x =>
+        x.wellName &&
+        x.wellName.toLowerCase().includes(keyword)
+      )
+      .slice(0, 20);
+  }
+
+  selectWell(sumur: Sumur): void {
+    this.searchWell = sumur.wellName;
+    this.filteredWells = [];
+
+    this.flyToSumur(sumur);
   }
 
   

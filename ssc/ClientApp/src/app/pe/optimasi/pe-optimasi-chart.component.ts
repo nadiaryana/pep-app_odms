@@ -131,7 +131,8 @@ export class PeOptimasiChartComponent implements OnInit {
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
 
-
+  selectedArea: string = 'all';
+  private allItems: any[] = [];
 
   constructor(
         private http: HttpClient,
@@ -154,6 +155,64 @@ export class PeOptimasiChartComponent implements OnInit {
 
   this.start_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
   this.end_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
+  }
+
+  onAreaChange() {
+    if (this.allItems.length > 0) {
+      this.applyAreaFilter();
+    } else {
+      this.refreshQuadrant();
+    }
+  }
+
+  applyAreaFilter() {
+    let filteredItems = this.allItems;
+    if (this.selectedArea === 'SBR') {
+      const sbrPrefixes = ['SBR', 'KRM', 'SBT', 'SD', 'SLR'];
+
+      filteredItems = this.allItems.filter(x =>
+        x.well &&
+        sbrPrefixes.some(prefix =>
+          x.well.toUpperCase().startsWith(prefix)
+        )
+      );
+    } else if (this.selectedArea === 'SGT') {
+      const sgtPrefixes = ['ST-', 'TPH', 'UKM'];
+      filteredItems = this.allItems.filter(x => x.well && sgtPrefixes.some(prefix =>
+        x.well.toUpperCase().startsWith(prefix)
+      )
+    );
+    }
+
+    const points = filteredItems.map(x => ({
+      name: x.well,
+      x: x.avg_sm,
+      y: x.avg_ds_efficiency
+    }));
+
+    const thresholdX = this.quadrantX;
+    const thresholdY = this.quadrantY;
+
+    this.quadrant_chart_options.series[0].data = points;
+    this.quadrant_chart_options.xAxis.plotLines = [{
+      value: thresholdX,
+      color: 'red',
+      dashStyle: 'Dash',
+      width: 2,
+      label: { text: `X = ${thresholdX}`, align: 'right' }
+    }];
+    this.quadrant_chart_options.yAxis.plotLines = [{
+      value: thresholdY,
+      color: 'red',
+      dashStyle: 'Dash',
+      width: 2,
+      label: { text: `Y = ${thresholdY}%`, align: 'right' }
+    }];
+
+    this.chart = Highcharts.chart(
+      this.quadrant_chart_el.nativeElement,
+      this.quadrant_chart_options
+    );
   }
   
   formatDate(date: Date): string {
@@ -198,50 +257,8 @@ export class PeOptimasiChartComponent implements OnInit {
   this.http.get('/api/pe/daily/optimasi', { params })
     .subscribe((res: any) => {
 
-      const items = res.items || [];
-
-      const points = items.map(x => ({
-        name: x.well,
-        x: x.avg_sm,
-        y: x.avg_ds_efficiency
-      }));
-
-      const thresholdX = 50;  
-      const thresholdY = 25;  
-
-      // update series
-      this.quadrant_chart_options.series[0].data = points;
-
-      // update plotLines
-      this.quadrant_chart_options.xAxis.plotLines = [{
-        value: thresholdX,
-        color: 'red',
-        dashStyle: 'Dash',
-        width: 2,
-        // label: { text: 'AVG SM' }
-        label: {
-          text: `X = ${thresholdX}`,
-          align: 'right'
-        }
-      }];
-
-      this.quadrant_chart_options.yAxis.plotLines = [{
-        value: thresholdY,
-        color: 'red',
-        dashStyle: 'Dash',
-        width: 2,
-        // label: { text: 'AVG Efficiency' }
-        label: {
-          text: `Y = ${thresholdY}`,
-          align: 'right'
-        }
-      }];
-
-      this.chart = Highcharts.chart(
-        this.quadrant_chart_el.nativeElement,
-        this.quadrant_chart_options
-      );
-
+      this.allItems = res.items || [];
+      this.applyAreaFilter();
       this.isLoadingResults = false;
     }, _ => this.isLoadingResults = false);
 
