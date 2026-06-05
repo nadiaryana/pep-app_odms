@@ -170,8 +170,14 @@ export class PeDailyAddOsgComponent {
       console.log(res);
       this.snackbarService.status.next(new SnackbarApi(true, "Data berhasil disimpan !!", 'dismiss'));
       this.isLoading = false;
-    });
-    this.router.navigateByUrl('/pe/daily/manajemen');
+      this.router.navigateByUrl('/pe/daily/manajemen');
+    },
+    error => {
+        this.isLoading = false;
+        this.snackbarService.status.next(
+          new SnackbarApi(true, error['message'], 'dismiss')
+        );
+      });
   }
 
   dateChange(evt) {

@@ -292,8 +292,18 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       })
     ).subscribe(data => {
       this.data = this.sortMergedData(data);
+      let filtered = this.sortMergedData(data);
       console.log("Weekly Comparison Data (Week 1 vs Week 2):", this.data);
 
+      // ── Terapkan well filter di frontend ──
+      if (this.well_xSelected.length > 0) {
+        filtered = filtered.filter(row => this.well_xSelected.includes(row.well));
+      }
+      if (this.well_string_xSelected.length > 0) {
+        filtered = filtered.filter(row => this.well_string_xSelected.includes(row.well_string));
+      }
+
+      this.data = filtered;
       this.dataSource = new MatTableDataSource<any>(this.data);
       // Hubungkan paginator ke dataSource agar Material Table bisa memotong data per halaman
       this.dataSource.paginator = this.paginator;
@@ -539,8 +549,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
     // Filter identitas
     if (this.date_xSelected.length)         columnfilter["date"]         = this.date_xSelected;
-    if (this.well_xSelected.length)         columnfilter["well"]         = this.well_xSelected;
-    if (this.well_string_xSelected.length)  columnfilter["well_string"]  = this.well_string_xSelected;  
+    // if (this.well_xSelected.length)         columnfilter["well"]         = this.well_xSelected;
+    // if (this.well_string_xSelected.length)  columnfilter["well_string"]  = this.well_string_xSelected;  
 
     // Filter field numerik
     if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"]  = this.fig_curr_gross_xSelected;

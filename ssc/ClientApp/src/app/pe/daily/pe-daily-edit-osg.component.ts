@@ -44,8 +44,8 @@ export class PeDailyEditOsgComponent implements OnInit {
   data: any[] = [];
   data_error_count: number = 0;
 
-  displayedColumns: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
-  headerColumns1: string[] = ["info", "date", "operation", "sot", "gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "sgt_fig", "sbr_fig", "bd_fig", "rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  displayedColumns: string[] = ["info", "date", "sot","operation","figure", "gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  headerColumns1: string[] = ["info", "date", "sot", "operation","figure","gas", "gas_sales", "sgt_opr", "sbr_opr", "bd_opr", "sgt_sot", "sbr_sot", "bd_sot", "sgt_fig", "sbr_fig", "bd_fig", "rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -66,7 +66,7 @@ export class PeDailyEditOsgComponent implements OnInit {
         date: [''],
         operation: ['', Validators.required],
         sot: ['', Validators.required],
-        figure: [''],
+        figure: ['', Validators.required],
         gas: ['', Validators.required],
         gas_sales: ['', Validators.required],
 		sgt_opr: ['', Validators.required],
@@ -107,6 +107,7 @@ export class PeDailyEditOsgComponent implements OnInit {
         date: res.item[0].date,
         operation: res.item[0].operation,
         sot: res.item[0].sot,
+        figure: res.item[0].figure,
         gas: res.item[0].gas,
         gas_sales: res.item[0].gas_sales,
 		sgt_opr: res.item[0].sgt_opr,
