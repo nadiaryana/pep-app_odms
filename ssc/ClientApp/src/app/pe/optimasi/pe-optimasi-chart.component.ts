@@ -1,9 +1,9 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { HttpClient, HttpEventType, HttpParams, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { formatDate } from '@angular/common';
-import { MatDatepicker } from '@angular/material';
+import { MatDatepicker, MatDialog, MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
 import { FormControl } from '@angular/forms';
-import { merge, Observable, of as observableOf, forkJoin } from 'rxjs';
+import { merge, Observable, of as observableOf, forkJoin, Subscription } from 'rxjs';
 import { catchError, map, startWith, switchMap, debounceTime, take, mergeAll } from 'rxjs/operators';
 import { Chart } from 'angular-highcharts';
 import * as Highcharts from 'highcharts';
@@ -17,7 +17,10 @@ import { xFilterService } from '../../xfilter/xfilter.component';
 
 import { Export } from '../exporting.js';
 import { OfflineExport } from '../offline-exporting.js';
-import { ExampleHttpDao } from './pe-optimasi-list.component';
+import { ExampleHttpDao, PeDailyOptimasiDeleteDialogComponent } from './pe-optimasi-list.component';
+import { CommonService } from 'src/app/common.service';
+import { SelectionModel } from '@angular/cdk/collections';
+import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
 
 @Component({
   selector: 'app-pe-optimasi-chart',
@@ -25,6 +28,13 @@ import { ExampleHttpDao } from './pe-optimasi-list.component';
   styleUrls: ['./pe-optimasi.scss']
 })
 export class PeOptimasiChartComponent implements OnInit {
+
+  displayedColumns: string[] = ['well', 'avg_sm', 'avg_ds_efficiency'];
+
+  headerColumns1: string[] = ["well", "avg_sm", "avg_ds_efficiency"];
+  resultsLength = 0;
+  isEditing: boolean = false;
+  selection = new SelectionModel<any>(true, []);
   
   @ViewChild('quadrant_chart_el', { static: true }) public quadrant_chart_el: ElementRef;
   quadrant_table_data = [];
@@ -133,11 +143,34 @@ export class PeOptimasiChartComponent implements OnInit {
 
   selectedArea: string = 'all';
   private allItems: any[] = [];
+  dataSource = new MatTableDataSource<any>(this.allItems);
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+  wellFilter = new FormControl('');
+  dateFilter = new FormControl('');
+  avg_wcFilter = new FormControl('');
+  avg_smFilter = new FormControl('');
+  avg_ds_efficiencyFilter = new FormControl('');
+
+  date_xSelected = [];
+  avg_wc_xSelected = [];
+  avg_sm_xSelected = [];
+  avg_ds_efficiency_xSelected = [];
+
+  filterSubscription: Subscription;
+  selectedSubscription: Subscription;
+  listSubscription: Subscription;
+  @ViewChild(MatSort, { static: true }) sort: MatSort;
+  filterControl = new FormControl('');
+  isRateLimitReached = false;
 
   constructor(
         private http: HttpClient,
         private titleService: TitleService,
         private xfilterService: xFilterService,
+        public commonService: CommonService,
+        public dialog: MatDialog,
+        public snackBar: MatSnackBar,
+        public snackbarService: SnackbarService,
   ) { }
 
   ngOnInit() {
@@ -155,6 +188,28 @@ export class PeOptimasiChartComponent implements OnInit {
 
   this.start_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
   this.end_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
+  
+    // this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+
+    this.filterSubscription = this.xfilterService.filter.subscribe(res => {
+      if (res) this.getColumnValues(res);
+    })
+    
+    merge(
+      this.start_dateControl.valueChanges,
+      this.end_dateControl.valueChanges,
+    ).pipe(debounceTime(300)).subscribe(() => {
+      this.refreshQuadrant();
+    });
+
+    this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
+      this[res["column"] + "_xSelected"] = res["selected"];
+    })
+  }
+  ngOnDestroy() {
+    this.filterSubscription.unsubscribe();
+    this.selectedSubscription.unsubscribe();
+    // hapus this.listSubscription.unsubscribe()
   }
 
   onAreaChange() {
@@ -183,6 +238,10 @@ export class PeOptimasiChartComponent implements OnInit {
       )
     );
     }
+    this.dataSource = new MatTableDataSource<any>(filteredItems);
+    this.dataSource.paginator = this.paginator;  // ← INI yang penting!
+    this.resultsLength = filteredItems.length;
+    this.selection.clear();
 
     const points = filteredItems.map(x => ({
       name: x.well,
@@ -265,6 +324,46 @@ export class PeOptimasiChartComponent implements OnInit {
     
 }
 
+getColumnValues(param: any) {
+  var column = param["column"];
+  var filter = param["filter"];
+  var selected = param["selected"]
+  var clear = param["clear"];
+  var columnfilter = this.getColumnFilter();
+  if (filter) columnfilter[column] = [filter];
+  if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
+  if (clear) delete columnfilter[column];
+
+  return this.exampleDatabase!.getRepoIssues(
+    this.sort.active,
+    this.sort.direction,
+    this.paginator.pageIndex,
+    this.paginator.pageSize,
+    this.filterControl.value,
+    columnfilter,
+    column,
+    {},
+    // this.end_dateInput
+    this.start_dateControl.value,
+    this.end_dateControl.value
+  ).pipe(map((res) => {
+    return res;
+  })).subscribe(res => {
+    this.xfilterService.updateItems({ column: column, items: res.items });
+  }, () => {
+
+  });
+}
+getColumnFilter() {
+  var columnfilter = {};
+  if (this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
+  if (this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
+  if (this.avg_sm_xSelected.length) columnfilter["avg_sm"] = this.avg_sm_xSelected;
+  if (this.avg_ds_efficiency_xSelected.length) columnfilter["avg_ds_efficiency"] = this.avg_ds_efficiency_xSelected;
+  
+  return columnfilter;
+
+}
 updateXAxis(event?: any) {
   if (!this.chart) return;
   // update xAxisMax dari event target value (HTML range input)
@@ -329,6 +428,58 @@ updateYAxis(event?: any) {
 
   }
 
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.allItems.length;
+    return numSelected === numRows;
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+      this.selection.clear() :
+      this.allItems.forEach(row => this.selection.select(row));
+  }
+
+  /** The label for the checkbox on the passed row */
+  checkboxLabel(row?: any): string {
+    if (!row) {
+      return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+    }
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
+  }
+
+  deleteSelected() {
+    this.snackbarService.status.next(new SnackbarApi(false));
+
+    const dialogRef = this.dialog.open(PeDailyOptimasiDeleteDialogComponent, {
+      width: '250px',
+      data: this.selection.selected.length
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.isLoadingResults = true;
+        this.snackbarService.status.next(new SnackbarApi(false));
+        this.http.delete<any>('/api/pe/daily', {
+          headers: new HttpHeaders({
+            'Content-Type': 'application/json'
+          }),
+          params: {
+            _ids: this.selection.selected.map<any>(s => s._id)
+          }
+        }).subscribe(res => {
+          this.isLoadingResults = false;
+          this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
+          this.paginator._changePageSize(this.paginator.pageSize);
+        },
+          error => {
+            this.isLoadingResults = false;
+            this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
+          })
+      }
+    });
+  }
 }
 
 
