@@ -572,4 +572,15 @@ namespace ssc.Areas.PE.Models
         public string opr { get; set; }
         public decimal? val { get; set; }
     }
+
+    public class PeOptimasiQuadrantRemark
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string _id { get; set; }
+
+        public string well { get; set; }
+        public string remark { get; set; }
+        public DateTime updated_at { get; set; }
+    }
 }

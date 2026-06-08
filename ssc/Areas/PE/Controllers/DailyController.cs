@@ -27,8 +27,11 @@ namespace ssc.Areas.PE.Controllers
         private readonly IMongoCollection<Daily> _daily;
         private readonly IMongoCollection<DailyTmp> _daily_tmp;
         private readonly IMongoCollection<Structure> _structure;
+        // Tambah field di atas constructor
+        private readonly IMongoCollection<PeOptimasiQuadrantRemark> _quadrantRemarks;
         private ProjectionDefinition<Daily> _fields_daily;
         private ProjectionDefinition<Structure> _fields_structure;
+
         private readonly IMongoCollection<Production> _production;
         private readonly IBackgroundTaskQueue _taskQueue;
 
@@ -42,6 +45,8 @@ namespace ssc.Areas.PE.Controllers
             _fields_daily = DailyCommon._fields_daily;
             _fields_structure = DailyCommon._fields_structure;
             _taskQueue = taskQueue;
+
+            _quadrantRemarks = DailyCommon.database.GetCollection<PeOptimasiQuadrantRemark>("pe_optimasi_quadrant_remarks");
         }
 
         [Authorize("PeDaily Read")]
@@ -2548,6 +2553,35 @@ namespace ssc.Areas.PE.Controllers
                 total_count = totalCount
             });
         }
+
+        [Authorize("PeDaily Read")]
+        [HttpGet("optimasi/quadrant-remark")]
+        public IActionResult GetQuadrantRemarks()
+        {
+            var items = _quadrantRemarks.Find(_ => true).ToList();
+            return Ok(new { items });
+        }
+
+        [Authorize("PeDaily Read")]
+        [HttpPost("optimasi/quadrant-remark")]
+        public IActionResult UpsertQuadrantRemark([FromBody] PeOptimasiQuadrantRemark body)
+        {
+            if (string.IsNullOrWhiteSpace(body.well))
+                return BadRequest(new { message = "well is required" });
+
+            var filter = Builders<PeOptimasiQuadrantRemark>.Filter.Eq(r => r.well, body.well);
+            var update = Builders<PeOptimasiQuadrantRemark>.Update
+                .Set(r => r.well, body.well)
+                .Set(r => r.remark, body.remark)
+                .Set(r => r.updated_at, DateTime.UtcNow);
+
+            _quadrantRemarks.UpdateOne(filter, update, new UpdateOptions { IsUpsert = true });
+
+            return Ok(new { success = true });
+        }
+
+
+
 
 
         // [Authorize("PeDaily Read")]

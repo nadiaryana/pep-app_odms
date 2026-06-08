@@ -29,9 +29,9 @@ import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
 })
 export class PeOptimasiChartComponent implements OnInit {
 
-  displayedColumns: string[] = ['well', 'avg_sm', 'avg_ds_efficiency'];
+  displayedColumns: string[] = ['well', 'avg_sm', 'avg_ds_efficiency', 'remarks', 'action'];
 
-  headerColumns1: string[] = ["well", "avg_sm", "avg_ds_efficiency"];
+  headerColumns1: string[] = ["well", "avg_sm", "avg_ds_efficiency", 'remarks', 'action'];
   resultsLength = 0;
   isEditing: boolean = false;
   selection = new SelectionModel<any>(true, []);
@@ -301,8 +301,6 @@ export class PeOptimasiChartComponent implements OnInit {
   }
 
   refreshQuadrant() {
-    
-    // if start date or end date empty show warning
     if (!this.start_dateControl.value || !this.end_dateControl.value) {
       return;
     }
@@ -312,6 +310,24 @@ export class PeOptimasiChartComponent implements OnInit {
     .append('startDate', this.start_dateControl.value.toISOString())
     .append('endDate', this.end_dateControl.value.toISOString())
     .append('mode', 'optimasi_chart');
+  
+  forkJoin([
+    this.http.get<any>('/api/pe/daily/optimasi', { params }),
+    this.http.get<any>('/api/pe/daily/optimasi/quadrant-remark')
+  ]).subscribe(([optimasi, remarks]) => {
+
+    // Buat map well -> remark untuk merge
+    const remarkMap: Record<string, string> = {};
+    (remarks.items || []).forEach(r => remarkMap[r.well] = r.remark);
+
+    this.allItems = (optimasi.items || []).map(item => ({
+      ...item,
+      quadrant_remark: remarkMap[item.well] || ''
+    }));
+
+    this.applyAreaFilter();
+    this.isLoadingResults = false;
+  }, _ => this.isLoadingResults = false);
 
   this.http.get('/api/pe/daily/optimasi', { params })
     .subscribe((res: any) => {
@@ -320,9 +336,45 @@ export class PeOptimasiChartComponent implements OnInit {
       this.applyAreaFilter();
       this.isLoadingResults = false;
     }, _ => this.isLoadingResults = false);
+  }
 
-    
-}
+  savingRows: Set<string> = new Set();
+
+  editRemark(row: any) {
+    row._remarkBackup = row.quadrant_remark; // backup sebelum edit
+    row.isRemarkEdit = true;
+  }
+
+  cancelRemark(row: any) {
+    row.quadrant_remark = row._remarkBackup;  // restore backup
+    row.isRemarkEdit = false;
+  }
+
+  saveRemark(row: any) {
+    if (!row.well) return;
+    this.savingRows.add(row.well);
+
+    this.http.post('/api/pe/daily/optimasi/quadrant-remark', {
+      well: row.well,
+      remark: row.quadrant_remark
+    }).subscribe({
+      next: () => {
+        this.savingRows.delete(row.well);
+        row.isRemarkEdit = false;
+        delete row._remarkBackup;
+        this.snackbarService.status.next(
+          new SnackbarApi(true, `Remark ${row.well} saved.`, 'dismiss')
+        );
+      },
+      error: () => {
+        this.savingRows.delete(row.well);
+        this.cancelRemark(row); // rollback jika gagal
+        this.snackbarService.status.next(
+          new SnackbarApi(true, 'Failed to save remark.', 'dismiss')
+        );
+      }
+    });
+  }
 
 getColumnValues(param: any) {
   var column = param["column"];
@@ -480,6 +532,21 @@ updateYAxis(event?: any) {
       }
     });
   }
+
+  // saveRemark(row: any) {
+  //   this.http.post('/api/pe/optimasi/quadrant-remark', {
+  //     well: row.well,
+  //     remark: row.quadrant_remark
+  //   }).subscribe(res => {
+  //     this.snackbarService.status.next(
+  //       new SnackbarApi(true, 'Remark saved', 'dismiss')
+  //     );
+  //   }, err => {
+  //     this.snackbarService.status.next(
+  //       new SnackbarApi(true, 'Failed to save remark', 'dismiss')
+  //     );
+  //   });
+  // }
 }
 
 
