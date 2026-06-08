@@ -25,6 +25,8 @@ namespace ssc.Areas.PE.Controllers
     public class DailyController : ControllerBase
     {
         private readonly IMongoCollection<Daily> _daily;
+        // STEP 1 - define mongo collection for sonolog
+        // private readonly IMongoCollection<Sonolog> _sonolog;
         private readonly IMongoCollection<DailyTmp> _daily_tmp;
         private readonly IMongoCollection<Structure> _structure;
         // Tambah field di atas constructor
@@ -39,6 +41,8 @@ namespace ssc.Areas.PE.Controllers
         {
 
             _daily = DailyCommon._daily;
+            // STEP 2 - initialize mongo collection for sonolog
+            // _sonolog = DailyCommon._sonolog;
             _production = DailyCommon._production;
             _daily_tmp = DailyCommon._daily_tmp;
             _structure = DailyCommon._structure;
@@ -465,6 +469,22 @@ namespace ssc.Areas.PE.Controllers
                     });
 
                     return Ok(new { data = daily_area });
+                // STEP 3 - case for taking sfl attribute for biggest date that not null from sonolog
+                // case "sfl_latest":
+                //     if (well == null)
+                //         return BadRequest("well parameter is required");
+
+                //     var filter = Builders<Sonolog>.Filter.And(
+                //         Builders<Sonolog>.Filter.In(x => x.well, well),
+                //         Builders<Sonolog>.Filter.Ne(x => x.sfl, null)
+                //     );
+
+                //     var latestSfl = _sonolog
+                //         .Find(filter)
+                //         .SortByDescending(x => x.date)
+                //         .FirstOrDefault();
+
+                //     return Ok(new { data = latestSfl });
                 default:
                     return Ok(new { });
             }

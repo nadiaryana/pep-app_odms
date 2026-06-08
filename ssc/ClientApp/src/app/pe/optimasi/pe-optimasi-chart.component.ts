@@ -329,13 +329,13 @@ export class PeOptimasiChartComponent implements OnInit {
     this.isLoadingResults = false;
   }, _ => this.isLoadingResults = false);
 
-  this.http.get('/api/pe/daily/optimasi', { params })
-    .subscribe((res: any) => {
+  // this.http.get('/api/pe/daily/optimasi', { params })
+  //   .subscribe((res: any) => {
 
-      this.allItems = res.items || [];
-      this.applyAreaFilter();
-      this.isLoadingResults = false;
-    }, _ => this.isLoadingResults = false);
+  //     this.allItems = res.items || [];
+  //     this.applyAreaFilter();
+  //     this.isLoadingResults = false;
+  //   }, _ => this.isLoadingResults = false);
   }
 
   savingRows: Set<string> = new Set();
