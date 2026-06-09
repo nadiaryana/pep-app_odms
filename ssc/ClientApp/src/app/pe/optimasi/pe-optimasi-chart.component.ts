@@ -21,13 +21,14 @@ import { ExampleHttpDao, PeDailyOptimasiDeleteDialogComponent } from './pe-optim
 import { CommonService } from 'src/app/common.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
+import { AfterViewInit } from '@angular/core';
 
 @Component({
   selector: 'app-pe-optimasi-chart',
   templateUrl: './pe-optimasi-chart.component.html',
   styleUrls: ['./pe-optimasi.scss']
 })
-export class PeOptimasiChartComponent implements OnInit {
+export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
 
   displayedColumns: string[] = ['well', 'avg_sm', 'avg_ds_efficiency', 'remarks', 'action'];
 
@@ -175,37 +176,39 @@ export class PeOptimasiChartComponent implements OnInit {
 
   ngOnInit() {
     this.titleService.titleSource.next({
-    title: 'Quadrant Chart',
-    icon: 'auto_graph',
-    breadcrumbs: [
-      { label: 'Petroleum Engineering', routerLink: '' },
-      { label: 'Daily', routerLink: 'pe/daily' },
-      { label: 'Quadrant', routerLink: '' }
-    ]
-  });
-
-  // this.refreshQuadrant();
-
-  this.start_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
-  this.end_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
-  
-    // this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
-
-    this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if (res) this.getColumnValues(res);
-    })
-    
-    merge(
-      this.start_dateControl.valueChanges,
-      this.end_dateControl.valueChanges,
-    ).pipe(debounceTime(300)).subscribe(() => {
-      this.refreshQuadrant();
+      title: 'Quadrant Chart',
+      icon: 'auto_graph',
+      breadcrumbs: [
+        { label: 'Petroleum Engineering', routerLink: '' },
+        { label: 'Daily', routerLink: 'pe/daily' },
+        { label: 'Quadrant', routerLink: '' }
+      ]
     });
 
-    this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
-      this[res["column"] + "_xSelected"] = res["selected"];
-    })
+    // this.refreshQuadrant();
+
+    this.start_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
+    this.end_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
+    
+      // this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+
+      this.filterSubscription = this.xfilterService.filter.subscribe(res => {
+        if (res) this.getColumnValues(res);
+      })
+      
+      merge(
+        this.start_dateControl.valueChanges,
+        this.end_dateControl.valueChanges,
+      ).pipe(debounceTime(300)).subscribe(() => {
+        this.refreshQuadrant();
+      });
+
+      this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
+        this[res["column"] + "_xSelected"] = res["selected"];
+        this.refreshQuadrant();
+      })
   }
+
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
     this.selectedSubscription.unsubscribe();
@@ -218,6 +221,11 @@ export class PeOptimasiChartComponent implements OnInit {
     } else {
       this.refreshQuadrant();
     }
+  }
+
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
   }
 
   applyAreaFilter() {
@@ -239,7 +247,8 @@ export class PeOptimasiChartComponent implements OnInit {
     );
     }
     this.dataSource = new MatTableDataSource<any>(filteredItems);
-    this.dataSource.paginator = this.paginator;  // ← INI yang penting!
+    this.dataSource.paginator = this.paginator;  
+    this.dataSource.sort = this.sort; 
     this.resultsLength = filteredItems.length;
     this.selection.clear();
 

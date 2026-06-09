@@ -538,20 +538,20 @@ export class IprComponent implements OnInit {
       );
 
     // STEP 4 - get latest sfl
-    // var params_sfl = new HttpParams()
-    //   .append("type", "sfl_latest");
+    var params_sfl = new HttpParams()
+      .append("type", "sfl_latest");
       
-    // for (const w of this.well_xSelected) {
-    //   params_sfl = params_sfl.append("well", w);
-    // }
-    // this.http
-    //   .get<any>("/api/pe/daily/GetAreaChart", { params: params_sfl })
-    //   .subscribe(
-    //     (res) => {
-    //       // console.log("res sfl:", res);
-    //       const sfl = res.data && res.data.sfl != null ? Number(res.data.sfl) : 0;
-    //       this.static_fluid_level.setValue(sfl);
-    //     });
+    for (const w of this.well_xSelected) {
+      params_sfl = params_sfl.append("well", w);
+    }
+    this.http
+      .get<any>("/api/pe/daily/GetAreaChart", { params: params_sfl })
+      .subscribe(
+        (res) => {
+          // console.log("res sfl:", res);
+          const sfl = res.data && res.data.sfl != null ? Number(res.data.sfl) : 0;
+          this.static_fluid_level.setValue(sfl);
+        });
   }
 
   formatInterval(interval: any): string {
