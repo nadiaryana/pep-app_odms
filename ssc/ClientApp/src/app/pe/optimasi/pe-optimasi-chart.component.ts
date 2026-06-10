@@ -143,7 +143,7 @@ export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
   well_xSelected = [];
 
   selectedArea: string = 'all';
-  private allItems: any[] = [];
+  allItems: any[] = [];
   dataSource = new MatTableDataSource<any>(this.allItems);
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   wellFilter = new FormControl('');
@@ -205,7 +205,7 @@ export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
 
       this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
         this[res["column"] + "_xSelected"] = res["selected"];
-        this.refreshQuadrant();
+        this.applyAreaFilter(); // ← filter dari data lokal, tidak perlu API
       })
   }
 
@@ -226,61 +226,84 @@ export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
+    this.dataSource.sortingDataAccessor = (item: any, property: string) => {
+      const val = item[property];
+      if (val == null) return '';
+      if (typeof val === 'number') return val;
+      return String(val).toLowerCase();
+    };
   }
 
   applyAreaFilter() {
     let filteredItems = this.allItems;
+
     if (this.selectedArea === 'SBR') {
       const sbrPrefixes = ['SBR', 'KRM', 'SBT', 'SD', 'SLR'];
-
-      filteredItems = this.allItems.filter(x =>
-        x.well &&
-        sbrPrefixes.some(prefix =>
-          x.well.toUpperCase().startsWith(prefix)
-        )
+      filteredItems = filteredItems.filter(x =>
+        x.well && sbrPrefixes.some(p => x.well.toUpperCase().startsWith(p))
       );
     } else if (this.selectedArea === 'SGT') {
       const sgtPrefixes = ['ST-', 'TPH', 'UKM'];
-      filteredItems = this.allItems.filter(x => x.well && sgtPrefixes.some(prefix =>
-        x.well.toUpperCase().startsWith(prefix)
-      )
-    );
+      filteredItems = filteredItems.filter(x =>
+        x.well && sgtPrefixes.some(p => x.well.toUpperCase().startsWith(p))
+      );
     }
-    this.dataSource = new MatTableDataSource<any>(filteredItems);
-    this.dataSource.paginator = this.paginator;  
-    this.dataSource.sort = this.sort; 
+
+    // xSelected filters
+    if (this.well_xSelected.length > 0) {
+      filteredItems = filteredItems.filter(x => this.well_xSelected.includes(x.well));
+    }
+    if (this.avg_sm_xSelected.length > 0) {
+      filteredItems = filteredItems.filter(x =>
+        this.avg_sm_xSelected.includes(x.avg_sm)
+      );
+    }
+    if (this.avg_ds_efficiency_xSelected.length > 0) {
+      filteredItems = filteredItems.filter(x =>
+        this.avg_ds_efficiency_xSelected.includes(x.avg_ds_efficiency)
+      );
+    }
+
+    // ✅ Update data saja, JANGAN recreate MatTableDataSource
+    this.dataSource.data = filteredItems;
     this.resultsLength = filteredItems.length;
     this.selection.clear();
 
+    // Update chart
     const points = filteredItems.map(x => ({
       name: x.well,
       x: x.avg_sm,
       y: x.avg_ds_efficiency
     }));
 
-    const thresholdX = this.quadrantX;
-    const thresholdY = this.quadrantY;
-
     this.quadrant_chart_options.series[0].data = points;
     this.quadrant_chart_options.xAxis.plotLines = [{
-      value: thresholdX,
+      value: this.quadrantX,
       color: 'red',
       dashStyle: 'Dash',
       width: 2,
-      label: { text: `X = ${thresholdX}`, align: 'right' }
+      label: { text: `X = ${this.quadrantX}`, align: 'right' }
     }];
     this.quadrant_chart_options.yAxis.plotLines = [{
-      value: thresholdY,
+      value: this.quadrantY,
       color: 'red',
       dashStyle: 'Dash',
       width: 2,
-      label: { text: `Y = ${thresholdY}%`, align: 'right' }
+      label: { text: `Y = ${this.quadrantY}%`, align: 'right' }
     }];
 
-    this.chart = Highcharts.chart(
-      this.quadrant_chart_el.nativeElement,
-      this.quadrant_chart_options
-    );
+    if (this.chart) {
+      // ✅ Update chart existing, jangan recreate
+      this.chart.series[0].setData(points, true);
+      this.chart.xAxis[0].update({ plotLines: this.quadrant_chart_options.xAxis.plotLines }, false);
+      this.chart.yAxis[0].update({ plotLines: this.quadrant_chart_options.yAxis.plotLines }, true);
+    } else {
+      // Pertama kali, baru create
+      this.chart = Highcharts.chart(
+        this.quadrant_chart_el.nativeElement,
+        this.quadrant_chart_options
+      );
+    }
   }
   
   formatDate(date: Date): string {
@@ -386,34 +409,32 @@ export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
   }
 
 getColumnValues(param: any) {
-  var column = param["column"];
-  var filter = param["filter"];
-  var selected = param["selected"]
-  var clear = param["clear"];
-  var columnfilter = this.getColumnFilter();
-  if (filter) columnfilter[column] = [filter];
-  if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
-  if (clear) delete columnfilter[column];
+  const column = param["column"];
+  const filter = param["filter"];
 
-  return this.exampleDatabase!.getRepoIssues(
-    this.sort.active,
-    this.sort.direction,
-    this.paginator.pageIndex,
-    this.paginator.pageSize,
-    this.filterControl.value,
-    columnfilter,
-    column,
-    {},
-    // this.end_dateInput
-    this.start_dateControl.value,
-    this.end_dateControl.value
-  ).pipe(map((res) => {
-    return res;
-  })).subscribe(res => {
-    this.xfilterService.updateItems({ column: column, items: res.items });
-  }, () => {
+  let sourceItems = this.allItems;
 
-  });
+  if (filter && filter.trim() !== '') {
+    sourceItems = sourceItems.filter(item =>
+      item[column] != null &&
+      String(item[column]).toLowerCase().includes(filter.toLowerCase())
+    );
+  }
+
+  const uniqueValues: any[] = Array.from(
+    new Set(sourceItems.map(item => item[column]).filter(v => v != null))
+  );
+
+  const payload = { column: column, items: uniqueValues };
+
+  // Emit langsung (untuk kasus filter teks di dialog yang sudah subscribe)
+  this.xfilterService.updateItems(payload);
+
+  // Emit lagi setelah delay (untuk kasus pertama kali dialog dibuka,
+  // subscription belum aktif saat emit pertama)
+  setTimeout(() => {
+    this.xfilterService.updateItems(payload);
+  }, 100);
 }
 getColumnFilter() {
   var columnfilter = {};

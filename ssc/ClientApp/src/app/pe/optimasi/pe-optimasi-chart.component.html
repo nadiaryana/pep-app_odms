@@ -104,12 +104,12 @@
 			<h4 class="title_awy">Data Optimasi {{ selectedArea == 'all' ? 'Semua Area' : selectedArea + ' area' }}</h4>
 
 			<!-- no data -->
-			<div *ngIf="allItems.length === 0" class="no-data">
+			<div [hidden]="allItems.length > 0" class="no-data">
 				<p>No data available</p>
 			</div>
 
 			<div
-				*ngIf="allItems.length > 0"
+				[hidden]="allItems.length === 0"
 				class="container-table"
 				[style.max-height]="
 				commonService.Math.max(commonService.screenHeight - 180, 250) + 'px'
