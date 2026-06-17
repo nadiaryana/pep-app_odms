@@ -21,6 +21,10 @@ export class PeActualChartComponent implements OnInit {
 
   @ViewChild('actual_chart_el', { static: true }) public actual_chart_el: ElementRef;
 
+  yAxisMin: number = 0;
+  yAxisMax: number = 5000;
+  chart: Highcharts.Chart;
+
   actual_chart_options: any = {
     chart: {
       type: 'area',
@@ -95,21 +99,18 @@ export class PeActualChartComponent implements OnInit {
         data: [],
         color: '#89D7B7',
         zIndex: 3,
-        marker: { enabled: false },
       },
       {
         name: 'SBR NSOP',
         data: [],
         color: '#428475',
         zIndex: 2,
-        marker: { enabled: false },
       },
       {
         name: 'BD',
         data: [],
         color: '#1A312C',
         zIndex: 1,
-        marker: { enabled: false },
       }
     ],
     responsive: {
@@ -203,11 +204,37 @@ export class PeActualChartComponent implements OnInit {
       this.actual_chart_options['series'][1]['data'] = data.map(d => d['sbr']);
       this.actual_chart_options['series'][2]['data'] = data.map(d => d['bd']);
 
-      Highcharts.chart(this.actual_chart_el.nativeElement, this.actual_chart_options as any);
+      this.chart = Highcharts.chart(this.actual_chart_el.nativeElement, this.actual_chart_options as any);
       this.isLoadingResults = false;
 
     }, () => {
       this.isLoadingResults = false;
     });
+  }
+
+  updateYAxisMin(event?: any) {
+    if (!this.chart) return;
+    if (event && event.target && event.target.value) {
+      this.yAxisMin = Number(event.target.value);
+    }
+    this.chart.yAxis[0].update({
+      min: this.yAxisMin,
+      max: this.yAxisMax,
+      endOnTick: false,
+      startOnTick: true
+    }, true);
+  }
+
+  updateYAxisMax(event?: any) {
+    if (!this.chart) return;
+    if (event && event.target && event.target.value) {
+      this.yAxisMax = Number(event.target.value);
+    }
+    this.chart.yAxis[0].update({
+      min: this.yAxisMin,
+      max: this.yAxisMax,
+      endOnTick: false,
+      startOnTick: true
+    }, true);
   }
 }

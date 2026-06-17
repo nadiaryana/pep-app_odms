@@ -18,6 +18,38 @@
 
 </div>
 
+<div class="container-top-bar top-flow"
+     fxLayout="row"
+     fxLayoutAlign="start center"
+     fxLayoutGap="20px">
+    <div fxFlex>
+        <div class="slider-label">Y Axis Min (bopd)</div>
+        <input type="range"
+               min="0"
+               max="5000"
+               step="100"
+               class="custom-slider"
+               [(ngModel)]="yAxisMin"
+               (input)="updateYAxisMin($event)">
+        <div class="slider-value">
+            Min: <b>{{ yAxisMin }} bopd</b>
+        </div>
+    </div>
+    <div fxFlex>
+        <div class="slider-label">Y Axis Max (bopd)</div>
+        <input type="range"
+               min="500"
+               max="20000"
+               step="100"
+               class="custom-slider"
+               [(ngModel)]="yAxisMax"
+               (input)="updateYAxisMax($event)">
+        <div class="slider-value">
+            Max: <b>{{ yAxisMax }} bopd</b>
+        </div>
+    </div>
+</div>
+
 <div class="container-content top-flow">
   <mat-progress-bar *ngIf="isLoadingResults" mode="indeterminate"></mat-progress-bar>
   <div #actual_chart_el class="per_area_chart"></div>
