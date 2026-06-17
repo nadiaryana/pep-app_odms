@@ -22,6 +22,7 @@ import { CommonService } from 'src/app/common.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { SnackbarApi, SnackbarService } from 'src/app/snackbar.service';
 import { AfterViewInit } from '@angular/core';
+import { PePermissionService } from '../pe-permission.service';
 
 @Component({
   selector: 'app-pe-optimasi-chart',
@@ -172,6 +173,7 @@ export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
         public dialog: MatDialog,
         public snackBar: MatSnackBar,
         public snackbarService: SnackbarService,
+        public pePermissionService: PePermissionService,
   ) { }
 
   ngOnInit() {

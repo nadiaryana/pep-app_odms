@@ -23,6 +23,7 @@ export class PeActualChartComponent implements OnInit {
 
   actual_chart_options: any = {
     chart: {
+      type: 'area',
       zoomType: 'x',
       style: {
         fontFamily: 'Roboto, Helvetica Neue, sans-serif'
@@ -32,7 +33,7 @@ export class PeActualChartComponent implements OnInit {
       fallbackToExportServer: false
     },
     title: {
-      text: null
+      text: 'Actual Operation',
     },
     caption: {
       text: null,
@@ -56,9 +57,32 @@ export class PeActualChartComponent implements OnInit {
       }
     }],
     tooltip: {
-      shared: true
+      shared: true,
+      formatter: function (this: any) {
+        var s: string = '<b>' + this.x + '</b><br/>';
+        var total: number = 0;
+        this.points.forEach(function(p: any) {
+          var val: string = p.y != null ? p.y.toFixed(2) : '0.00';
+          s +=  p.series.name + ': <b>' + val + ' bopd</b><br/>';
+          total += p.y || 0;
+        });
+        s += '<b>Total: ' + total.toFixed(2) + ' bopd</b>';
+        return s;
+      }
+    },
+    plotOptions: {
+      area: {
+        stacking: 'normal',
+        lineWidth: 1,
+        marker: {
+          enabled: true,
+          symbol: 'circle',
+          radius: 3
+        }
+      }
     },
     legend: {
+      enable: true,
       layout: 'horizontal',
       align: 'center',
       verticalAlign: 'top',
@@ -67,44 +91,25 @@ export class PeActualChartComponent implements OnInit {
     },
     series: [
       {
-        name: 'Total Operation',
-        type: 'line',
-        yAxis: 0,
-        data: [],
-        color: '#000000',
-        zIndex: 4,
-        marker: { enabled: false },
-        tooltip: { valueSuffix: ' bopd', valueDecimals: 2 }
-      },
-      {
         name: 'SGT MGS',
-        type: 'line',
-        yAxis: 0,
         data: [],
-        color: '#00B050',
+        color: '#89D7B7',
         zIndex: 3,
         marker: { enabled: false },
-        tooltip: { valueSuffix: ' bopd', valueDecimals: 2 }
       },
       {
         name: 'SBR NSOP',
-        type: 'line',
-        yAxis: 0,
         data: [],
-        color: '#C00000',
+        color: '#428475',
         zIndex: 2,
         marker: { enabled: false },
-        tooltip: { valueSuffix: ' bopd', valueDecimals: 2 }
       },
       {
         name: 'BD',
-        type: 'line',
-        yAxis: 0,
         data: [],
-        color: '#0070C0',
+        color: '#1A312C',
         zIndex: 1,
         marker: { enabled: false },
-        tooltip: { valueSuffix: ' bopd', valueDecimals: 2 }
       }
     ],
     responsive: {
@@ -172,6 +177,7 @@ export class PeActualChartComponent implements OnInit {
       : '';
   }
 
+
   refresh_Actual() {
     if (!this.start_dateControl.value || !this.end_dateControl.value) return;
 
@@ -185,18 +191,21 @@ export class PeActualChartComponent implements OnInit {
     this.http.get('/api/pe/actual/GetActualChart', { params }).subscribe((res: any) => {
       const data: any[] = res['data'];
 
-      this.actual_chart_options["title"]["text"] = "Actual Operation";
+      // this.actual_chart_options['title']['text'] = 'Actual Operation';
+      this.actual_chart_options['caption']['text'] =
+        formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + ' - ' +
+        formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+
       this.actual_chart_options['xAxis'][0]['categories'] =
         data.map(d => formatDate(d['date'], 'dd-MMM-yy', 'en-US'));
 
-      this.actual_chart_options['series'][0]['data'] = data.map(d => d['total_operation']);
-      this.actual_chart_options['series'][1]['data'] = data.map(d => d['sgt']);
-      this.actual_chart_options['series'][2]['data'] = data.map(d => d['sbr']);
-      this.actual_chart_options['series'][3]['data'] = data.map(d => d['bd']);
+      this.actual_chart_options['series'][0]['data'] = data.map(d => d['sgt']);
+      this.actual_chart_options['series'][1]['data'] = data.map(d => d['sbr']);
+      this.actual_chart_options['series'][2]['data'] = data.map(d => d['bd']);
 
       Highcharts.chart(this.actual_chart_el.nativeElement, this.actual_chart_options as any);
-
       this.isLoadingResults = false;
+
     }, () => {
       this.isLoadingResults = false;
     });
