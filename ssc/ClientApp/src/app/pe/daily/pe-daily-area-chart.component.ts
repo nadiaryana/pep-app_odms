@@ -499,7 +499,6 @@ export class PeDailyAreaChartComponent implements OnInit {
     // Append selected wells
     for (const w of this.well_xSelected) {
       params = params.append("well", w || "");
-      console.log('Well:', w);
     }
     
     // Append selected well_strings (handle null)
@@ -508,170 +507,139 @@ export class PeDailyAreaChartComponent implements OnInit {
     }
 
     this.http.get<any>('/api/pe/daily/GetAreaChart', { params: params }).subscribe(res => {
-	  
-	  let tgl = res["data"].map(d => formatDate(d["date"], "dd-MMM-yy", "en-US"));
-	  let well = res["data"].map(d => d["well"]);
-	  let g = res["data"].map(d => d["gross"]);
-	  let n = res["data"].map(d => d["net"]);
-	  let w = res["data"].map(d => d["well"]);
-	  let wc = res["data"].map(d => d["wc"]);
-	  console.log("w: "+w);
-	  let tanggal = 0;
-	  var tg = []
-	  var tgg = ""
-	  let grs = []
-	  let sm = res["data"].map(d => d["sm"]);
-	  let gas = res["data"].map(d => d["gas"]);
-	  let uniqueWells = [...new Set(res["data"].map((d: any) => d["well"]) as string[])];
-	  let dt_well = this.well_xSelected.length > 0 ? this.well_xSelected.length : uniqueWells.length;
-	  
-	  let g1 = [];
-	  let n1 = [];
-	  let w1 = [];
-	  let wc1 = [];
-	  let sm1 = [];
-	  let gas1 = [];
-
-	  
-	  let dt_date = [];
-	  let dt_grs = [];
-	  let dt_net = [];
-	  let dt_wc = [];
-	  let dt_wc_orig = [];
-	  let dt_sm = [];
-	  let dt_gas = [];
-	  
-	  let dt_grss = []; 
-	  let dt_nett = [];
-	  let dt_wcc = [];
-	  let dt_wcc_orig = [];
-	  let dt_smm = [];
-	  let dt_gass = [];
-	  
-	  for (var s = 0; s < sm.length; s++){
-		  if (sm[s] < 0){
-			// console.log("SM minus: "+sm[s]);
-			sm[s] = 0;
-		  }
-		  else{
-			sm[s] = sm[s];
-		  }
-	  }
-	  
-	  
-      this.daily_chart_options["title"]["text"] = this.well_xSelected.length > 0
-        ? this.well_xSelected.join(",")
-        : this.well_string_xSelected.join(",");
-      this.daily_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+      const data = res["data"] || [];
       
-	  if (dt_well == 1){
-		  this.daily_chart_options["xAxis"][0]["categories"] = res["data"].map(d => formatDate(d["date"], "dd-MMM-yy", "en-US"));
-		  this.daily_chart_options["series"][0]["data"] = res["data"].map(d => d["gross"]);
-		  this.daily_chart_options["series"][1]["data"] = res["data"].map(d => d["gross"] - d["net"]);
-		  this.daily_chart_options["series"][2]["data"] = res["data"].map(d => d["net"]);
-		  this.daily_chart_options["series"][3]["data"] = sm;
-		  this.daily_chart_options["series"][4]["data"] = res["data"].map(d => (d["gas"] || 0) * 1000);			this.daily_chart_options["series"][5]["data"] = res["data"].map(d => d["wc"] || 0);
-	  }
-	  else{
-	      for (var y = 0; y < tgl.length; y++){
-			// Sintak LIKE //
-			// if(well[y].includes("NKL-1002")){
-				// console.log("Apa aja : "+well[y]);
-			// }
-			
-			var i = 0
-			if (well[y] == undefined){
-				console.log("gaada nilai nya: "+well[y]+" - "+g[y]);
-				// well[y] = 'SBJ-155';
-				g[y] = 0;
-				n1[y] = 0;
-				wc1[y] = 0;
-				sm1[y] = 0;
-				gas1[y] = 0;
-				
-				// console.log("nilai nya: "+g[y]);
-			}
-			
-			if (tanggal == tgl[y]){
-				g1[y] = g1[y-1] + g[y];
-				n1[y] = n1[y-1] + n[y];
-				wc1[y] = wc1[y-1] + (wc[y] || 0);
-				sm1[y] = sm1[y-1] + sm[y];
-				gas1[y] = gas1[y-1] + ((gas[y] || 0) * 1000);
-				
-				tg[y] = tgl[y];
-				i = i + 1;
-				
-				if (i == dt_well-1){
-					dt_grs[y] = [tg[y], g1[y]];
-					dt_wc[y] = [tg[y], g1[y]-n1[y]];
-					dt_net[y] = [tg[y], n1[y]];
-					dt_wc_orig[y] = [tg[y], wc1[y]/dt_well];
-					dt_sm[y] = [tg[y], sm1[y]/dt_well];
-          dt_gas[y] = [tg[y], gas1[y]/dt_well];
+      if (data.length === 0) {
+        this.clearChart();
+        this.daily_chart_options["title"]["text"] = "No data available";
+        Highcharts.chart(this.daily_chart_el.nativeElement, this.daily_chart_options);
+        return;
+      }
 
-				}
-				
-				
-			}
-			else{
-				i = 0;
-				tanggal = tgl[y];
-				g1[y] = g[y];
-				w1[y] = g[y] - n[y];
-				n1[y] = n[y];
-				wc1[y] = wc[y] || 0;
-				sm1[y] = sm[y];
-        gas1[y] = (gas[y] || 0) * 1000;
-				
-				// console.log("Masuk else kah ?");
-			}
-			
-			console.log("Nilai nya: "+well[y]+" - "+g1[y]);
-		}
-	  
-		
-		for (var x = 0; x < dt_grs.length; x++){
-			if (dt_grs[x] != undefined){
-				dt_date[i] = tg[x];
-				dt_grss[i] = dt_grs[x];
-				dt_wcc[i] = dt_wc[x];
-				dt_nett[i] = dt_net[x];
-				dt_wcc_orig[i] = dt_wc_orig[x];
-				dt_smm[i] = dt_sm[x];
-        dt_gass[i] = dt_gas[x];
+      // Group data by date + well combination
+      const groupedData = new Map();
+      data.forEach((item: any) => {
+        const dateKey = formatDate(item["date"], "dd-MMM-yy", "en-US");
+        const well = item["well"] || "UNKNOWN";
+        const key = `${dateKey}|${well}`; // Unique key for date+well combination
+        
+        if (!groupedData.has(key)) {
+          groupedData.set(key, {
+            date: dateKey,
+            well: well,
+            gross: 0,
+            net: 0,
+            water: 0,
+            sm: 0,
+            gas: 0,
+            wc: 0,
+            count: 0
+          });
+        }
+        
+        const entry = groupedData.get(key);
+        const gross = item["gross"] || 0;
+        const net = item["net"] || 0;
+        const water = gross - net;
+        const sm = item["sm"] || 0;
+        const gas = (item["gas"] || 0) * 1000;
+        const wc = item["wc"] || 0;
+        
+        // Aggregate (sum) the values for same date+well
+        entry.gross += gross;
+        entry.net += net;
+        entry.water += water;
+        entry.sm += sm;
+        entry.gas += gas;
+        entry.wc += wc;
+        entry.count += 1;
+      });
 
-				
-				// console.log("nilai grss2: "+dt_grss);
-				i++;
-			}
-			else{
-				// console.log("nilai grss3: "+dt_grss[x]);
-			}
-		}
-		
-		// -- FIXX --
-		this.daily_chart_options["xAxis"][0]["categories"] = dt_date;
-		this.daily_chart_options["series"][0]["data"] = dt_grss;
-		this.daily_chart_options["series"][1]["data"] = dt_wcc;
-		this.daily_chart_options["series"][2]["data"] = dt_nett;
-		this.daily_chart_options["series"][3]["data"] = dt_smm;
-    this.daily_chart_options["series"][4]["data"] = dt_gass;
-		this.daily_chart_options["series"][5]["data"] = dt_wcc_orig;
-		
-	  }
+      // Convert grouped data to array
+      const aggregatedData = Array.from(groupedData.values());
 
-      // console.log(res["data"].length)
-      // console.log("Datanya apa aja: "+res["data"].map(d => d["gross"]))
-      // console.log("nilai water: "+res["data"].map(d => d["gross"] - d["net"]));
-	    
-	  
+      // Check if we have multiple wells or single well
+      const uniqueWells = [...new Set(aggregatedData.map(d => d.well))];
+      const wellCount = uniqueWells.length;
+
+      if (wellCount === 1) {
+        // Single well - show data as is (grouped by date)
+        const sortedData = aggregatedData.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        this.daily_chart_options["xAxis"][0]["categories"] = sortedData.map(d => d.date);
+        this.daily_chart_options["series"][0]["data"] = sortedData.map(d => d.gross);
+        this.daily_chart_options["series"][1]["data"] = sortedData.map(d => d.water);
+        this.daily_chart_options["series"][2]["data"] = sortedData.map(d => d.net);
+        this.daily_chart_options["series"][3]["data"] = sortedData.map(d => d.sm);
+        this.daily_chart_options["series"][4]["data"] = sortedData.map(d => d.gas);
+        this.daily_chart_options["series"][5]["data"] = sortedData.map(d => d.wc);
+        
+      } else {
+        // Multiple wells - aggregate by date only (sum all wells for same date)
+        const dateMap = new Map();
+        aggregatedData.forEach((item: any) => {
+          if (!dateMap.has(item.date)) {
+            dateMap.set(item.date, {
+              date: item.date,
+              gross: 0,
+              net: 0,
+              water: 0,
+              sm: 0,
+              gas: 0,
+              wc: 0,
+              count: 0
+            });
+          }
+          
+          const entry = dateMap.get(item.date);
+          entry.gross += item.gross;
+          entry.net += item.net;
+          entry.water += item.water;
+          entry.sm += item.sm;
+          entry.gas += item.gas;
+          entry.wc += item.wc;
+          entry.count += 1;
+        });
+
+        const sortedDates = Array.from(dateMap.keys()).sort((a, b) => {
+          const dateA = new Date(a);
+          const dateB = new Date(b);
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        this.daily_chart_options["xAxis"][0]["categories"] = sortedDates;
+        this.daily_chart_options["series"][0]["data"] = sortedDates.map(date => dateMap.get(date).gross);
+        this.daily_chart_options["series"][1]["data"] = sortedDates.map(date => dateMap.get(date).water);
+        this.daily_chart_options["series"][2]["data"] = sortedDates.map(date => dateMap.get(date).net);
+        this.daily_chart_options["series"][3]["data"] = sortedDates.map(date => {
+          const entry = dateMap.get(date);
+          return entry.count > 0 ? entry.sm / entry.count : 0;
+        });
+        this.daily_chart_options["series"][4]["data"] = sortedDates.map(date => {
+          const entry = dateMap.get(date);
+          return entry.count > 0 ? entry.gas / entry.count : 0;
+        });
+        this.daily_chart_options["series"][5]["data"] = sortedDates.map(date => {
+          const entry = dateMap.get(date);
+          return entry.count > 0 ? entry.wc / entry.count : 0;
+        });
+      }
+
+      // Update chart title
+      this.daily_chart_options["title"]["text"] = this.well_xSelected.length > 0
+        ? this.well_xSelected.join(", ")
+        : this.well_string_xSelected.join(", ");
+
+      this.daily_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+
       Highcharts.chart(this.daily_chart_el.nativeElement, this.daily_chart_options);
 
     }, error => {
-
-    }, () => {
-
+      console.error('Error fetching daily chart data:', error);
     });
   }
 
