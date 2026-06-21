@@ -1,0 +1,137 @@
+<div class="container-content">
+  <mat-horizontal-stepper linear #stepper>
+    <mat-step completed=false>
+      <ng-template matStepLabel>Upload Excel</ng-template>
+      <div>
+        <input style="display: none" (change)="handleFile($event)" type="file" #fileInput />
+      </div>
+      <button mat-raised-button color="basic" (click)="fileInput.click()" class="margin-10">
+        <mat-icon>file_open</mat-icon> Pick File
+      </button> {{ fileName }}
+      <div class="loading-shade" *ngIf="isUploading">
+        <mat-spinner></mat-spinner>
+      </div>
+      <span class="margin-10"></span>
+      <button mat-raised-button color="secondary" (click)="onUpload()" *ngIf="fileName">
+        <mat-icon>upload</mat-icon> Upload
+      </button>
+      <div class="progress-bar" *ngIf="isUploading">
+        <mat-progress-bar mode="determinate" value="{{ progressPercent }}"></mat-progress-bar> {{ progressPercent }} %
+      </div>
+    </mat-step>
+    <mat-step completed=false>
+      <ng-template matStepLabel>Verify Data</ng-template>
+      <div *ngIf="data_error_count == 0">
+        Save this data ?
+        <button mat-raised-button (click)="stepper.reset();resetData()">
+          <mat-icon>cached</mat-icon> Reset
+        </button>
+        <span class="margin-10"></span>
+        <button mat-raised-button (click)="saveData()">
+          <mat-icon>save</mat-icon> Commit
+        </button>
+      </div>
+      <div *ngIf="data_error_count > 0">
+        <div class="cell-error">There are {{ data_error_count }} error(s) in your data</div>
+        <button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
+      </div>
+      <mat-form-field>
+        <mat-select [(value)]="data_mode" (selectionChange)="loadData()">
+          <mat-option value="all">Show All</mat-option>
+          <mat-option value="error">Show error(s) only</mat-option>
+          <mat-option value="warning">Show warning(s) only</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="loading-shade" *ngIf="isSaving || isLoading">
+        <mat-spinner></mat-spinner>
+      </div>
+      <div class="container-table">
+        <table mat-table [dataSource]="data" class="pe-table" matSort matSortActive="plan_start" matSortDisableClear
+          matSortDirection="desc">
+          
+          <ng-container matColumnDef="info">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-warning':row._error?._row?.value=='warning','cell-error':row._error?._row?.value=='error'}"
+              [matTooltip]="row._error?._row?.message" matTooltipPosition="after">
+              <mat-icon *ngIf="row._error?._row?.value">{{row._error?._row?.value}}</mat-icon>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="well">
+            <th mat-header-cell *matHeaderCellDef>Well</th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-error':row._error?.well?.value}" [matTooltip]="row._error?.well?.message"
+              matTooltipPosition="after">
+              {{row.well || row._error?.well?.value || '-'}}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="job">
+            <th mat-header-cell *matHeaderCellDef>Job</th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-error':row._error?.job?.value}" [matTooltip]="row._error?.job?.message"
+              matTooltipPosition="after">
+              {{row.job || row._error?.job?.value || '-'}}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="rig">
+            <th mat-header-cell *matHeaderCellDef>Rig</th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-error':row._error?.rig?.value}" [matTooltip]="row._error?.rig?.message"
+              matTooltipPosition="after">
+              {{row.rig || row._error?.rig?.value || '-'}}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="plan_start">
+            <th mat-header-cell *matHeaderCellDef>Plan Start</th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-error':row._error?.plan_start?.value}" [matTooltip]="row._error?.plan_start?.message"
+              matTooltipPosition="after">
+              {{(row.plan_start | date: 'dd MMM y') || row._error?.plan_start?.value || '-'}}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="plan_end">
+            <th mat-header-cell *matHeaderCellDef>Plan End</th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-error':row._error?.plan_end?.value}" [matTooltip]="row._error?.plan_end?.message"
+              matTooltipPosition="after">
+              {{(row.plan_end | date: 'dd MMM y') || row._error?.plan_end?.value || '-'}}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="remarks">
+            <th mat-header-cell *matHeaderCellDef>Remarks</th>
+            <td mat-cell *matCellDef="let row" class="cell-center"
+              [ngClass]="{'cell-error':row._error?.remarks?.value}" [matTooltip]="row._error?.remarks?.message"
+              matTooltipPosition="after">
+              {{row.remarks || row._error?.remarks?.value || '-'}}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+      <mat-paginator [length]="resultsLength" [pageSize]="50" [pageSizeOptions]="[10, 25, 50, 100]"></mat-paginator>
+    </mat-step>
+    <mat-step completed=false>
+      <ng-template matStepLabel>Done</ng-template>
+      <div>
+        <h3>Upload Complete!</h3>
+        <p>Created: {{ created_count }} item(s)</p>
+        <p>Modified: {{ modified_count }} item(s)</p>
+        <button mat-raised-button (click)="stepper.reset();resetData()">
+          <mat-icon>cached</mat-icon> Upload More
+        </button>
+        <span class="margin-10"></span>
+        <button mat-raised-button color="primary" (click)="listMonitoringRK()">
+          <mat-icon>list</mat-icon> Back to List
+        </button>
+      </div>
+    </mat-step>
+  </mat-horizontal-stepper>
+</div>

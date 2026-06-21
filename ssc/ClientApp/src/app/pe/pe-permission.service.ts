@@ -125,6 +125,13 @@ export class PePermissionService {
 	new Menu("actual/add-opr", true, null, ["PeActual Add"]),
 	new Menu("actual/chart", true,null, ["PeActual Read"]),
 	// new Menu("daily/edit-opr", true, null, ["PeActual Add"]),
+
+	new Menu("monitoring-rk", true,null, ["PeMonitoringRK Read"]),
+	new Menu("monitoring-rk/list", true,null, ["PeMonitoringRK Read"]),
+	new Menu("monitoring-rk/add", true,null, ["PeMonitoringRK Add"]),
+	new Menu("monitoring-rk/edit", true,null, ["PeMonitoringRK Edit"]),
+	new Menu("monitoring-rk/delete", true,null, ["PeMonitoringRK Delete"]),
+	new Menu("monitoring-rk/chart", true, null, ["PeMonitoringRK Read"]),
 	];
 	
 	

@@ -104,6 +104,10 @@ import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
 import { PeActualDeleteDialogComponent } from './actual/pe-actual-list.component';
 import { PeActualAddComponent } from './actual/pe-actual-add.component';
 import { PeActualChartComponent } from './actual/pe-actual-chart.component';
+import { MonitoringRKComponent } from './monitoring-rk/monitoring-rk.component';
+import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
+import { MonitoringRKDeleteDialogComponent, MonitoringRKListComponent } from './monitoring-rk/monitoring-rk-list.component';
+import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -207,6 +211,13 @@ import { PeActualChartComponent } from './actual/pe-actual-chart.component';
   PeActualDeleteDialogComponent,
   PeActualChartComponent,
   // PeActualEditOprComponent,
+  
+  MonitoringRKComponent,
+  MonitoringRKListComponent,
+  MonitoringRKAddComponent,
+  // MonitoringRKAddOprComponent,
+  MonitoringRKDeleteDialogComponent,
+  MonitoringRKChartComponent,
 
   // PeGrafikComponent,
   ],
@@ -289,6 +300,7 @@ export class PeModule {
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
             new PanelSubItem("Optimasi", "pe/optimasi", "analytics"),
             ...(this.isActualAdmin(res) ? [new PanelSubItem("Actual", "pe/actual", "data_usage")] : []),
+            new PanelSubItem("Monitoring RK", "pe/monitoring-rk", "analytics", this.pePermission.passPermission("pe/monitoring-rk")),
             
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),

@@ -1,0 +1,123 @@
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/monitoring-rk/add']" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/add')">
+    <mat-icon>add</mat-icon> Add/Edit
+  </button>
+  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/delete')">
+    <mat-icon>delete</mat-icon> Delete Selected
+  </button>
+  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults">
+    <mat-icon>file_download</mat-icon> Export to Excel
+  </button>
+	<button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/monitoring-rk/chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+
+  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
+
+    <table mat-table [dataSource]="data" class="pe-table" matSort matSortActive="plan_start" matSortDisableClear
+      matSortDirection="desc" responsive="true">
+      
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" center>
+            <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
+              [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()"
+              [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/delete')">
+            </mat-checkbox>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <mat-checkbox (click)="$event.stopPropagation()"
+              (change)="($event && !isEditing) ? selection.toggle(row) : null" [checked]="selection.isSelected(row)"
+              [aria-label]="checkboxLabel(row)" [disabled]="isEditing"
+              *ngIf="pePermissionService.passPermission('pe/monitoring-rk/delete')">
+            </mat-checkbox>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="well" sticky>
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
+            <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          {{row.well}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="job">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Job</span>
+            <app-xfilter title="Job" column="job" [selected]="job_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          {{row.job}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="rig">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Rig</span>
+            <app-xfilter title="Rig" column="rig" [selected]="rig_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          {{row.rig}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="plan_start">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan Start</span>
+            <app-xfilter title="Plan Start" column="plan_start" format="date" [selected]="plan_start_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          {{row.plan_start ? (row.plan_start | date: 'dd MMM y') : '-'}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="plan_end">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan End</span>
+            <app-xfilter title="Plan End" column="plan_end" format="date" [selected]="plan_end_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          {{row.plan_end ? (row.plan_end | date: 'dd MMM y') : '-'}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="remarks">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remarks</span>
+            <app-xfilter title="Remarks" column="remarks" [selected]="remarks_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          {{row.remarks}}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+  </div>
+  <mat-paginator [length]="resultsLength" [pageSize]="50" [pageSizeOptions]="[10, 25, 50, 100]"></mat-paginator>
+</div>

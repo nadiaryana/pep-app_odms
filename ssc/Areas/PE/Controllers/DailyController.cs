@@ -516,7 +516,8 @@ namespace ssc.Areas.PE.Controllers
                         sm = s.sm,
                         thp = s.ds_whp,
                         size = s.ds_size,
-                        efficiency = s.ds_efficiency
+                        efficiency = s.ds_efficiency,
+                        chp = s.ds_casing
 
                     });
 

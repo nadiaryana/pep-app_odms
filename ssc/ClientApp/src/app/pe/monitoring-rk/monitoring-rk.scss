@@ -1,0 +1,357 @@
+/* form */
+
+.container-top-bar {
+  margin-right: 0;
+}
+
+mat-card { 
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.container-content {
+  width: 100%;
+  min-height: 600px;
+}
+
+.chart-card {
+  width: 100%;
+  display: block;
+}
+
+.per_area_chart, .per_area_chart_off {
+  width: 100%;
+  height: 380px;
+  display: block;
+}
+mat-progress-bar {
+  width: 332px;
+}
+
+mat-form-field {
+   width: 250px;
+}
+
+::ng-deep .mat-card-header-text {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+mat-card-content {
+  
+}
+
+mat-card-actions {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* list */
+
+.rate-limit-reached {
+  color: #980000;
+  max-width: 360px;
+  text-align: center;
+}
+
+/* Column Widths */
+.mat-column-number,
+.mat-column-state {
+  max-width: 64px;
+}
+
+.mat-column-created {
+  max-width: 124px;
+}
+
+/* verify table */
+
+::ng-deep .mat-form-field-infix {
+  width: auto !important;
+}
+
+.select-well {
+  padding-top: 0.625em;
+  width: 100px
+}
+
+.input-hidden {
+    position: absolute;
+    width: 0px;
+    border: none;
+    height: 100%;
+}
+
+#daily_chart_el,
+#weekly_chart_el,
+#monthly_chart_el {
+  min-height: 400px;
+}
+
+::ng-deep .mat-form-field-wrapper {
+  padding-bottom: 5px !important;
+}
+
+::ng-deep .mat-form-field {
+  padding-right: 10px !important;
+}
+
+
+::ng-deep .mat-form-field-wrapper .mat-form-field-underline {
+  bottom: 5px !important;
+}
+
+::ng-deep .mat-form-field-wrapper .mat-form-field-infix {
+  padding: 5px !important;
+}
+
+.field-well app-xfilter {
+  position: absolute;
+  right: 0px;
+  top: -5px;
+}
+
+.daily_chart {
+  height : 80vh;
+}
+
+.clicked_row {
+  //background-color: lightgreen;
+  background-color: #f57070;
+}
+
+
+.container-content {
+  padding: 5px;
+  box-shadow: 0 2px 1px -1px rgb(255, 0, 0), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%);
+  background-color: white;
+  border-radius: 8px;
+}
+
+ng::host .mat-horizontal-stepper-content {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.margin-10 {
+  margin-right : 10px;
+}
+
+.progress-bar {
+  margin-top : 20px;
+}
+
+.table-action-header {
+  display : flex;
+  justify-content : space-between;
+  padding : 10px;
+}
+
+.table-action-header > button {
+  margin : 10px;
+}
+
+.form-report {
+  padding: 20px 30px !important;
+  margin-top: -8px;
+}
+
+.w_interval {
+  resize: horizontal;
+  min-width: 300px;
+}
+
+.w_art_lift_type {
+  resize: horizontal;
+  min-width: 200px;
+}
+
+.w_100 {
+  resize: horizontal;
+  min-width: 100px;
+}
+
+.manajemen_chart {
+  height: 550px;
+  // width: 100%;
+}
+
+/* Gantt Chart Styles */
+.gantt-chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  padding: 16px 0;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gantt-chart-container {
+  width: 100%;
+  min-height: 500px;
+  padding: 16px 0;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gantt-chart {
+  width: 100%;
+  min-height: 400px;
+}
+
+.rig-legend {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.legend-title {
+  font-weight: 500;
+  color: #333;
+  margin-right: 8px;
+  
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #555;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #999;
+  }
+  
+  p {
+    margin-bottom: 20px;
+    font-size: 16px;
+  }
+}
+
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+:host ::ng-deep .highcharts-grid-background {
+  fill: #ffffff !important;
+}
+
+
+.gantt-fixed-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 8px 16px 6px;
+}
+
+.gantt-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Zoom buttons - kiri
+.gantt-zoom-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .zoom-label {
+    font-size: 12px;
+    color: #555;
+    margin-right: 4px;
+  }
+
+  button {
+    min-width: 32px;
+    height: 26px;
+    padding: 0 10px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    color: #333;
+
+    &:hover {
+      background: #f0f0f0;
+    }
+
+    &.active {
+      background: #1976d2;
+      color: #fff;
+      border-color: #1976d2;
+      font-weight: bold;
+    }
+  }
+}
+
+// From - To - kanan
+.gantt-fromto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+
+  .fromto-label {
+    color: #666;
+  }
+
+  .fromto-value {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 2px 10px;
+    background: #fafafa;
+    color: #333;
+    font-weight: 500;
+    min-width: 90px;
+    text-align: center;
+  }
+}
+
+// Wrapper chart: overflow-x scroll hanya di area grid
+.gantt-chart-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}

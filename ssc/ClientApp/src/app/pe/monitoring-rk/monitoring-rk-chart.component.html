@@ -1,0 +1,81 @@
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" [hidden]="isCapturing">
+	<mat-form-field class="filter" floatLabel="never">
+		<mat-label>Start Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
+		<input matInput [(ngModel)]="start_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoading"></mat-datepicker-toggle>
+		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+	<mat-form-field class="filter" floatLabel="never">
+		<mat-label>End Date</mat-label>
+		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" disabled>
+		<input matInput [(ngModel)]="end_dateInput" disabled>
+		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoading"></mat-datepicker-toggle>
+		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
+	</mat-form-field>
+  <button mat-button color="primary" (click)="refreshChart()" [disabled]="isLoading">
+    <mat-icon>refresh</mat-icon> Refresh
+  </button>
+  <button mat-button color="accent" (click)="screenshotChart()" [disabled]="isLoading || isCapturing || chartData.length === 0">
+    <mat-icon *ngIf="!isCapturing">photo_camera</mat-icon>
+    <mat-spinner *ngIf="isCapturing" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+    {{ isCapturing ? 'Capturing...' : 'Screenshot' }}
+  </button>
+  <button mat-button [routerLink]="['/pe/monitoring-rk/list']">
+    <mat-icon>list</mat-icon> Back to List
+  </button>
+</div>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  
+  <!-- Loading Indicator -->
+  <div class="loading-shade" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <!-- Rig Legend -->
+  <div class="rig-legend" *ngIf="jobLegend.length > 0" [hidden]="isCapturing">
+    <span class="legend-title">Job: </span>
+    <span *ngFor="let job of jobLegend" class="legend-item">
+      <span class="legend-color" [style.background-color]="job.color"></span>
+      {{ job.name }}
+    </span>
+  </div>
+
+  <div class="gantt-fixed-header" *ngIf="!isLoading && chartData.length > 0">
+
+    <!-- Baris: Zoom kiri | Title tengah | From-To kanan -->
+    <div class="gantt-header-row">
+
+      <div class="gantt-zoom-group">
+        <span class="zoom-label">Zoom</span>
+        <button [class.active]="activeRange === '1m'" (click)="setRange('1m')">1m</button>
+        <button [class.active]="activeRange === '2m'" (click)="setRange('2m')">2m</button>
+        <button [class.active]="activeRange === '3m'" (click)="setRange('3m')">3m</button>
+        <button [class.active]="activeRange === 'all'" (click)="setRange('all')">All</button>
+      </div>
+
+      <!-- <div class="gantt-title">BARCHART RIG SANGATTA FIELD</div> -->
+
+      <div class="gantt-fromto">
+        <span class="fromto-label">From</span>
+        <span class="fromto-value">{{ start_dateInput || '-' }}</span>
+        <span class="fromto-label">To</span>
+        <span class="fromto-value">{{ end_dateInput || '-' }}</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Gantt Chart Container with horizontal scroll -->
+  <div class="gantt-chart-wrapper" [hidden]="isLoading || chartData.length === 0">
+    <div #ganttChart class="gantt-chart"></div>
+  </div>
+
+  <!-- No Data Message -->
+  <div *ngIf="!isLoading && chartData.length === 0" class="no-data">
+    <mat-icon>info</mat-icon>
+    <p>No data available for this date.</p>
+  </div>
+
+</div>

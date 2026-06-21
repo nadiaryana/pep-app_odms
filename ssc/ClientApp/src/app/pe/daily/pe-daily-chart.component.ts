@@ -80,7 +80,7 @@ export class PeDailyChartComponent {
     }],
     yAxis: [{ // Primary yAxis
       title: {
-        text: 'Gross (bfpd), Net (bopd), Qgas (MMscfd), SL (inch)',
+        text: 'Gross (bfpd), Net (bopd), Qgas (MMscfd), SL (inch), KD (mMD)',
         style: {
           color: '#666666'
         }
@@ -94,7 +94,7 @@ export class PeDailyChartComponent {
     }, { // Secondary yAxis
       gridLineWidth: 0,
       title: {
-        text: 'WC (%), THP (psi), SM (m), SPM (SPM)',
+        text: 'WC (%), THP (psi), SM (m), SPM (SPM), CHP (psig) ',
         style: {
           color: '#666666'
         }
@@ -247,6 +247,22 @@ export class PeDailyChartComponent {
       },
       tooltip: {
         valueSuffix: ' mMD',
+        valueDecimals: 2
+      },
+	  visible: false
+	  
+    }, {
+      name: 'CHP',
+      type: 'line',
+      yAxis: 1,
+      data: [],
+      color: '#443d16',
+      zIndex: 0,
+      marker: {
+        enabled: false
+      },
+      tooltip: {
+        valueSuffix: ' psig',
         valueDecimals: 2
       },
 	  visible: false
@@ -432,6 +448,7 @@ export class PeDailyChartComponent {
 	  let sl = res["data"].map(d => d["ds_sl"]);
 	  let spm = res["data"].map(d => d["ds_spm"]);
     let kd = res["data"].map(d => d["ds_kd"]);
+    let chp = res["data"].map(d => d["ds_casing"]);
 	  let note = res["data"].map(d => d["noted"]);
 	  let well = res["data"].map(d => d["well"]);
 	  
@@ -444,6 +461,7 @@ export class PeDailyChartComponent {
 	  let sl1 = [];
 	  let spm1 = [];
     let kd1 = [];
+    let chp1 = [];
 	  let tanggal = 0;
 	  var tg = [];
 	  var i = 0;
@@ -459,6 +477,7 @@ export class PeDailyChartComponent {
 	  let dt_sl = [];
 	  let dt_spm = [];
     let dt_kd = [];
+    let dt_chp = [];
 	  
 	  let dt_grss = [];	  
 	  let dt_nett = [];
@@ -469,6 +488,7 @@ export class PeDailyChartComponent {
 	  let dt_sll = [];
 	  let dt_spmm = [];
     let dt_kdd = [];
+    let dt_chpp = [];
 	  
 	  
 	  this.daily_chart_options["title"]["text"] = this.well_xSelected.join(",");
@@ -572,6 +592,7 @@ export class PeDailyChartComponent {
 		this.daily_chart_options["series"][6]["data"] = res["data"].map(d => d["sl"]);
 		this.daily_chart_options["series"][7]["data"] = res["data"].map(d => d["spm"]);
     this.daily_chart_options["series"][8]["data"] = res["data"].map(d => d["kd"]);
+    this.daily_chart_options["series"][9]["data"] = res["data"].map(d => d["chp"]);
 		this.daily_chart_options["annotations"] = annotationList;
 		// this.daily_chart_options["series"][9]["data"] = res["data"].map(d => d["noted"]);
 		// console.log("nilai noted: "+this.daily_chart_options["series"][9]["data"]);
@@ -602,6 +623,7 @@ export class PeDailyChartComponent {
 				sl1[y] = 0;
 				spm1[y] = 0;
         kd1[y] = 0;
+        chp1[y] = 0;
 				console.log("nilai nya: "+g[y]);
 			}
 			
@@ -615,6 +637,7 @@ export class PeDailyChartComponent {
 				sl1[y] = sl1[y-1] + sl[y];
 				spm1[y] = spm1[y-1] + spm[y];
         kd1[y] = kd1[y-1] + kd[y];
+        chp1[y] = chp1[y-1] + chp[y];
 				
 				console.log("Masuk if kah ? "+tanggal+" - "+g1[y])
 				tg[y] = tgl[y];
@@ -633,6 +656,7 @@ export class PeDailyChartComponent {
 					dt_sl[y] = [tg[y], sl1[y]/dt_well];
 					dt_spm[y] = [tg[y], spm1[y]/dt_well];
           dt_kd[y] = [tg[y], kd1[y]/dt_well];
+          dt_chp[y] = [tg[y], chp1[y]/dt_well];
 					// dt_grs[y] = 10;
 					// dt_net[y] = 10;
 					// dt_qmax[y] = 10;
@@ -660,7 +684,8 @@ export class PeDailyChartComponent {
 				sl1[y] = sl[y];
 				spm1[y] = spm[y];
         kd1[y] = kd1[y];
-				
+        chp1[y] = chp1[y];
+			
 				console.log("Masuk else kah ?");
 			}
 			
@@ -680,6 +705,7 @@ export class PeDailyChartComponent {
 				dt_sll[i] = dt_sl[x];
 				dt_spmm[i] = dt_spm[x];
         dt_kdd[i] = dt_kd[x];
+        dt_chpp[i] = dt_chp[x];
 				
 				// console.log("nilai grss2: "+dt_grss);
 				i++;
@@ -711,6 +737,7 @@ export class PeDailyChartComponent {
 		this.daily_chart_options["series"][6]["data"] = dt_sll;
 		this.daily_chart_options["series"][7]["data"] = dt_spmm;
 		this.daily_chart_options["series"][8]["data"] = dt_kdd;
+		this.daily_chart_options["series"][9]["data"] = dt_chpp;
 
 	  }
 	        
