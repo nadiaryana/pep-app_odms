@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Barchart } from './monitoring-rk';
+import { MonitoringRK } from './monitoring-rk';
 
 @Injectable({
   providedIn: 'root'

@@ -88,6 +88,10 @@ import { PeActualListComponent } from './actual/pe-actual-list.component';
 import { PeActualAddOprComponent } from './actual/pe-actual-add-opr.component';
 import { PeActualAddComponent } from './actual/pe-actual-add.component';
 import { PeActualChartComponent } from './actual/pe-actual-chart.component';
+import { MonitoringRKComponent } from './monitoring-rk/monitoring-rk.component';
+import { MonitoringRKListComponent } from './monitoring-rk/monitoring-rk-list.component';
+import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.component';
+import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -189,6 +193,15 @@ const peRoutes: Routes = [
       { path: 'chart', component: PeActualChartComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},
       { path: 'add-opr', component: PeActualAddOprComponent, canActivate: [PePermissionGuard] },
+      // { path: 'edit-opr/:id', component: PeActualEditOprComponent, canActivate: [PePermissionGuard] },
+    ]},
+
+    { path: 'monitoring-rk', component: MonitoringRKComponent, children:[
+      { path: 'list', component: MonitoringRKListComponent, canActivate: [PePermissionGuard]},
+      { path: 'add', component: MonitoringRKAddComponent, canActivate: [PePermissionGuard] },
+      { path: 'chart', component: MonitoringRKChartComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full"},
+      // { path: 'add-opr', component: MonitoringRKAddOprComponent, canActivate: [PePermissionGuard] },
       // { path: 'edit-opr/:id', component: PeActualEditOprComponent, canActivate: [PePermissionGuard] },
     ]},
 
