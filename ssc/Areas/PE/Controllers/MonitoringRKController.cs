@@ -190,6 +190,22 @@ namespace ssc.Areas.PE.Controllers
         }
 
         [Authorize("PeMonitoringRK Add")]
+        [HttpPost]
+        public ActionResult Post([FromBody] MonitoringRK[] items)
+        {
+            if (items == null || items.Length == 0)
+                return BadRequest(new { message = "No items provided" });
+
+            foreach (var item in items)
+            {
+                item.created_date = DateTime.Now;
+                _monitoring_rk.InsertOne(item);
+            }
+
+            return Ok(new { created_count = items.Length });
+        }
+
+        [Authorize("PeMonitoringRK Add")]
         [HttpPost("UploadFiles")]
         public async Task<IActionResult> Post(List<IFormFile> files)
         {

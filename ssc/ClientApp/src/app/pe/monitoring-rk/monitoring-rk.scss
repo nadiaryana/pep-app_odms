@@ -13,7 +13,7 @@ mat-card {
 
 .container-content {
   width: 100%;
-  min-height: 600px;
+  // min-height: 600px;
 }
 
 .chart-card {
@@ -122,14 +122,6 @@ mat-card-actions {
   background-color: #f57070;
 }
 
-
-.container-content {
-  padding: 5px;
-  box-shadow: 0 2px 1px -1px rgb(255, 0, 0), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%);
-  background-color: white;
-  border-radius: 8px;
-}
-
 ng::host .mat-horizontal-stepper-content {
   display: flex !important;
   align-items: center !important;
@@ -137,6 +129,33 @@ ng::host .mat-horizontal-stepper-content {
 
 .margin-10 {
   margin-right : 10px;
+}
+
+/* ===== Card sections for two-table layout ===== */
+.card-section {
+  margin-bottom: 16px;
+}
+
+.card-section-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  padding: 8px 0 6px 0;
+  margin-bottom: 4px;
+}
+
+.container-content {
+  padding: 8px 0 0 0;
+  box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+  background-color: white;
+  border-radius: 4px;
+}
+
+/* Container-top-bar di dalam container-content */
+.container-content .container-top-bar {
+  padding: 0 8px 8px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .progress-bar {

@@ -1,14 +1,11 @@
-import { Component, Input, HostListener, ViewChild } from '@angular/core';
+import { Component, HostListener, Inject, LOCALE_ID } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
-import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { MatStepper } from '@angular/material/stepper';
 import { Router } from "@angular/router";
-import { Observable, of } from 'rxjs';
-import { HttpClient, HttpEventType } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
-import { MonitoringRK, MonitoringRKTmp } from './monitoring-rk';
-import { SnackbarService } from '../../snackbar.service';
-import { SnackbarApi } from '../../snackbar.service';
+import { MonitoringRK } from './monitoring-rk';
+import { SnackbarService, SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
 
@@ -17,31 +14,10 @@ import { TitleService } from '../../navigation/title/title.service';
   templateUrl: './monitoring-rk-add.component.html',
   styleUrls: ['./monitoring-rk.scss']
 })
-
 export class MonitoringRKAddComponent {
-  loading = false;
-  monitoringrkForm: FormGroup;
 
-  isUploading = false;
   isLoading = false;
-  isSaving = false;
-  modified_count = 0;
-  created_count = 0;
-  progressPercent: number;
-  fileName: string;
-  @ViewChild('fileInput', { static: true }) fileInput;
-  @ViewChild('stepper', { static: true }) private stepper: MatStepper;
-
-  tmp_id: string;
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
-  data_mode = "all";
-  resultsLength = 0;
-
-  data: MonitoringRKTmp[] = [];
-  data_error_count: number = 0;
-
-  displayedColumns: string[] = ["info", "well", "job", "rig", "plan_start", "plan_end", "remarks"];
+  rkForm: FormGroup;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -50,145 +26,95 @@ export class MonitoringRKAddComponent {
     private dialogService: DialogService,
     private titleService: TitleService,
     private http: HttpClient,
+    @Inject(LOCALE_ID) public locale: string
   ) { }
 
-  onSubmit() {
-    this.loading = true;
-    this.snackbarService.status.next(new SnackbarApi(false));
-    this.monitoringrkForm.disable();
+  /** Getter untuk FormArray items */
+  get items(): FormArray {
+    return this.rkForm.get('items') as FormArray;
   }
 
-  get f() { return this.monitoringrkForm.controls; }
-
   ngOnInit() {
-
+    // Set judul & breadcrumbs
     this.titleService.titleSource.next({
-      title: "Add MonitoringRK",
+      title: "Add Monitoring RK",
       icon: "add",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
-        { label: 'MonitoringRK', routerLink: 'pe/monitoring-rk' },
+        { label: 'Monitoring RK', routerLink: 'pe/monitoring-rk' },
         { label: 'Add', routerLink: '' },
       ]
-    }
-    );
-
-    this.monitoringrkForm = this.formBuilder.group({
-      location_id: [''],
-      is_anchor: [''],
     });
 
-    this.paginator.page.subscribe(() => this.loadData());
-  };
+    // Inisialisasi form dengan satu baris kosong
+    this.rkForm = this.formBuilder.group({
+      items: this.formBuilder.array([this.createItemForm()])
+    });
+  }
 
-  listMonitoringRK() {
+  /** Buat satu FormGroup untuk satu item Monitoring RK */
+  createItemForm(): FormGroup {
+    return this.formBuilder.group({
+      well: ['', Validators.required],
+      job: ['', Validators.required],
+      rig: ['', Validators.required],
+      plan_start: [''],
+      plan_end: [''],
+      pop: [''],
+      target_oil: [''],
+      target_gas: [''],
+      realisasi_oil: [''],
+      realisasi_gas: [''],
+      remarks: ['']
+    });
+  }
+
+  /** Tambah baris input baru */
+  addRow() {
+    this.items.push(this.createItemForm());
+  }
+
+  /** Hapus baris input (minimal 1 baris) */
+  removeRow(index: number) {
+    if (this.items.length > 1) {
+      this.items.removeAt(index);
+    }
+  }
+
+  /** Kembali ke halaman list */
+  backToList() {
     this.router.navigate(['pe', 'monitoring-rk', 'list']);
   }
 
+  /** Cek apakah form boleh ditinggalkan (pristine = aman) */
   canDeactivate(): Observable<boolean> | boolean {
-    if (this.monitoringrkForm.pristine) {
+    if (this.rkForm.pristine) {
       return true;
     }
     return this.dialogService.confirm('Discard changes?');
   }
 
-  handleFile(event) {
-    this.progressPercent = null;
-    this.fileName = event.target.files[0].name;
-    const reader = new FileReader();
-    reader.onload = (event: any) => {
-      //this.image = event.target.result;
-    };
-    reader.readAsDataURL(event.target.files[0]);
-  }
-
-  onUpload() {
-    const fd = new FormData();
-    this.isUploading = true;
-    fd.append('files', this.fileInput.nativeElement.files[0]);
-    this.http.post('/api/pe/monitoring-rk/UploadFiles', fd, {
-      reportProgress: true,
-      observe: 'events'
-    })
-      .subscribe(event => {
-        if (event.type === HttpEventType.UploadProgress) {
-          this.progressPercent = Math.round((event.loaded / event.total) * 100);
-        } else if (event.type === HttpEventType.Response) {
-          this.isUploading = false;
-          this.data_error_count = event.body['error_count'];
-          this.tmp_id = event.body['_id'];
-          this.stepper.selected.completed = true;
-          this.stepper.next();
-          this.loadData();
-          if (this.data_error_count > 0) this.snackbarService.status.next(new SnackbarApi(true, "There are " + this.data_error_count + " error(s) in your data.", 'dismiss'));
-        }
-      }, error => {
-        if (error) {
-          this.isUploading = false;
-          this.resetData();
-          this.snackbarService.status.next(new SnackbarApi(true, "Wrong template file!", 'dismiss'));
-        }
-      });
-  }
-
-  loadData() {
+  /** Simpan semua item ke database via POST /api/pe/monitoring-rk */
+  onSave() {
     this.isLoading = true;
-    var httpOption = {
-      params: {
-        _id: this.tmp_id,
-        page: this.paginator.pageIndex.toString(),
-        pageSize: this.paginator.pageSize.toString(),
-        mode: this.data_mode
+    var payload = this.rkForm.value.items;
+
+    this.http.post('/api/pe/MonitoringRK', payload).subscribe(
+      res => {
+        this.isLoading = false;
+        this.snackbarService.status.next(new SnackbarApi(true, "Data berhasil disimpan!", 'dismiss'));
+        this.router.navigateByUrl('/pe/monitoring-rk/list');
+      },
+      error => {
+        this.isLoading = false;
+        this.snackbarService.status.next(new SnackbarApi(true, error['message'] || 'Gagal menyimpan data', 'dismiss'));
       }
-    }
-
-    this.http.get<any>('/api/pe/monitoring-rk/Tmp', httpOption).subscribe(res => {
-      this.isLoading = false;
-      this.data = res['items'];
-      this.data_error_count = res['error_count'];
-      this.resultsLength = res['total_count'];
-    }, error => {
-      this.isLoading = false;
-      this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
-      console.log(error);
-    });
-  }
-
-  saveData() {
-    this.isSaving = true;
-    this.http.get<any>('/api/pe/monitoring-rk/SaveData', { params: { _id: this.tmp_id } }).subscribe(res => {
-      this.isSaving = false;
-      this.modified_count = res["modified_count"];
-      this.created_count = res["created_count"];
-      this.stepper.selected.completed = true;
-      this.stepper.next();
-      this.snackbarService.status.next(new SnackbarApi(true, res["total_count"] + " item(s) saved successfully.", 'dismiss'));
-    }, error => {
-      this.isSaving = false;
-      this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
-      console.log(error);
-    });
-  }
-
-  resetData() {
-    this.isUploading = false;
-    this.isLoading = false;
-    this.isSaving = false;
-    this.modified_count = 0;
-    this.created_count = 0;
-    this.progressPercent = 0;
-    this.fileName = null;
-    this.data = [];
-    this.data_error_count = 0;
-    this.resultsLength = 0;
-    this.tmp_id = null;
-    this.data_mode = "all";
-    this.snackbarService.status.next(new SnackbarApi(false));
+    );
   }
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    return this.monitoringrkForm.pristine;
+    return this.rkForm.pristine;
   }
 
 }

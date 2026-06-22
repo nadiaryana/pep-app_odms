@@ -136,7 +136,7 @@ export class MonitoringRKChartComponent implements OnInit, AfterViewInit {
 
     params = params.append('mode', 'chart');
 
-    this.http.get<any>('/api/pe/monitoring-rk', {
+    this.http.get<any>('/api/pe/MonitoringRK', {
       params: params
     }).subscribe(
       (res) => {

@@ -8,7 +8,7 @@ import { MonitoringRK } from './monitoring-rk';
 })
 export class MonitoringRKService {
 
-  private apiUrl = '/api/pe/monitoring-rk';
+  private apiUrl = '/api/pe/MonitoringRK';
 
   constructor(private http: HttpClient) { }
 
