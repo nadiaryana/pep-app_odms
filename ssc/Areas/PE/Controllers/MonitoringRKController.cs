@@ -493,6 +493,36 @@ namespace ssc.Areas.PE.Controllers
             };
         }
 
+        [Authorize("PeMonitoringRK Add")]
+        [HttpPut("{id}")]
+        public ActionResult Put(string id, [FromBody] MonitoringRK item)
+        {
+            var filter = Builders<MonitoringRK>.Filter.Eq(t => t._id, id);
+            var existing = _monitoring_rk.Find(filter).FirstOrDefault();
+            if (existing == null)
+            {
+                return NotFound(new { message = "Item not found" });
+            }
+
+            var update = Builders<MonitoringRK>.Update
+                .Set(t => t.well, item.well)
+                .Set(t => t.job, item.job)
+                .Set(t => t.rig, item.rig)
+                .Set(t => t.plan_start, item.plan_start)
+                .Set(t => t.plan_end, item.plan_end)
+                .Set(t => t.pop, item.pop)
+                .Set(t => t.target_oil, item.target_oil)
+                .Set(t => t.target_gas, item.target_gas)
+                .Set(t => t.realisasi_oil, item.realisasi_oil)
+                .Set(t => t.realisasi_gas, item.realisasi_gas)
+                .Set(t => t.remarks, item.remarks)
+                .Set(t => t.updated_date, DateTime.Now);
+
+            _monitoring_rk.UpdateOne(filter, update);
+
+            return Ok(new { message = "Item updated successfully" });
+        }
+
         private ActionResult GetExcel(List<MonitoringRK> items)
         {
             using (var package = new ExcelPackage())

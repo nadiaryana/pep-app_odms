@@ -109,55 +109,83 @@
           <span matSuffix>m</span>
         </mat-form-field>
 
-        <!-- Perforation Depth Reference (disabled input; keep binding to its FormControl) -->
-        <mat-form-field class="filter">
-          <mat-label>Perforation Depth Reference</mat-label>
-          <input
-            matInput
-            [value]="perforation_depth_reference?.value"
-            type="number"
-            step="0.01"
-            inputmode="decimal"
-            placeholder="Perforation Depth Reference"
-            disabled
-          />
-          <span matSuffix>m</span>
-        </mat-form-field>
+        <!-- Perforation Depth Reference: manual input + auto info -->
+        <div fxLayout="row" fxLayoutGap="12px" fxLayoutAlign="start center" style="width:100%">
+          <mat-form-field class="filter" fxFlex>
+            <mat-label>Perforation Depth Reference</mat-label>
+            <input
+              matInput
+              [formControl]="perforation_depth_reference_manual"
+              type="number"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Input manual"
+            />
+            <span matSuffix>m</span>
+          </mat-form-field>
+          <div class="info-hint" *ngIf="perforation_depth_reference?.value">
+            Cal Perfo Ref: {{ perforation_depth_reference.value }} m
+          </div>
+        </div>
 
         <h3>Test Data</h3>
 
-        <!-- Gross Average -->
-        <mat-form-field class="filter">
-          <mat-label>Gross Average</mat-label>
-          <input
-            matInput
-            [value]="dailyAverages?.length ? dailyAverages[0]?.grossAvg : ''"
-            disabled
-          />
-          <span matSuffix>BFPD</span>
-        </mat-form-field>
+        <!-- Gross Average: manual input + auto info -->
+        <div fxLayout="row" fxLayoutGap="12px" fxLayoutAlign="start center" style="width:100%">
+          <mat-form-field class="filter" fxFlex>
+            <mat-label>Gross Average</mat-label>
+            <input
+              matInput
+              [formControl]="grossAvgManual"
+              type="number"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Input manual"
+            />
+            <span matSuffix>BFPD</span>
+          </mat-form-field>
+          <div class="info-hint" *ngIf="dailyAverages?.length">
+            Avg: {{ dailyAverages[0]?.grossAvg }} BFPD
+          </div>
+        </div>
 
-        <!-- Net Average -->
-        <mat-form-field class="filter">
-          <mat-label>Net Average</mat-label>
-          <input
-            matInput
-            [value]="dailyAverages?.length ? dailyAverages[0]?.netAvg : ''"
-            disabled
-          />
-          <span matSuffix>BOPD</span>
-        </mat-form-field>
+        <!-- Net Average: manual input + auto info -->
+        <div fxLayout="row" fxLayoutGap="12px" fxLayoutAlign="start center" style="width:100%">
+          <mat-form-field class="filter" fxFlex>
+            <mat-label>Net Average</mat-label>
+            <input
+              matInput
+              [formControl]="netAvgManual"
+              type="number"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Input manual"
+            />
+            <span matSuffix>BOPD</span>
+          </mat-form-field>
+          <div class="info-hint" *ngIf="dailyAverages?.length">
+            Avg: {{ dailyAverages[0]?.netAvg }} BOPD
+          </div>
+        </div>
 
-        <!-- WC Average -->
-        <mat-form-field class="filter">
-          <mat-label>WC Average</mat-label>
-          <input
-          matInput
-          [value]="dailyAverages?.length ? dailyAverages[0]?.wcAvg + '%' : ''"
-          disabled
-          />
-          <span matSuffix>%</span>
-        </mat-form-field>
+        <!-- WC Average: manual input + auto info -->
+        <div fxLayout="row" fxLayoutGap="12px" fxLayoutAlign="start center" style="width:100%">
+          <mat-form-field class="filter" fxFlex>
+            <mat-label>WC Average</mat-label>
+            <input
+              matInput
+              [formControl]="wcAvgManual"
+              type="number"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Input manual"
+            />
+            <span matSuffix>%</span>
+          </mat-form-field>
+          <div class="info-hint" *ngIf="dailyAverages?.length">
+            Avg: {{ dailyAverages[0]?.wcAvg }}%
+          </div>
+        </div>
         
         <mat-form-field class="filter">
           <mat-label>Factor Correction</mat-label>
@@ -171,44 +199,60 @@
           />
         </mat-form-field>
         
-        <mat-form-field class="filter">
-          <mat-label>Static Fluid Level</mat-label>
-          <!-- <input
-            matInput
-            [formControl]="static_fluid_level"
-            type="number"
-            step="0.01"
-            inputmode="decimal"
-            placeholder="Static Fluid Level"
-            (change)="testData()"
-          /> -->
-          <!-- STEP 5 - change to readOnly, delete input tag with (change) -->
-          <input
-            matInput
-            [formControl]="static_fluid_level"
-            type="number"
-            step="0.01"
-            inputmode="decimal"
-            placeholder="Static Fluid Level"
-            readonly
-          />
-          <span matSuffix>m</span>
-        </mat-form-field>
+        <!-- SFL Manual + info auto dari Sonolog -->
+        <div fxLayout="row" fxLayoutGap="12px" fxLayoutAlign="start center">
+          <mat-form-field class="filter" fxFlex>
+            <mat-label>Static Fluid Level</mat-label>
+            <input
+              matInput
+              [formControl]="static_fluid_level_manual"
+              type="number"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Input manual SFL"
+              (change)="testData()"
+            />
+            <span matSuffix>m</span>
+          </mat-form-field>
+
+          <!-- Hint di samping  -->
+          <div class="info-hint" *ngIf="static_fluid_level_manual.value || static_fluid_level.value">
+            <span *ngIf="static_fluid_level_manual.value">
+              SFL: {{static_fluid_level_manual.value}} m
+            </span>
+            <span *ngIf="!static_fluid_level_manual.value && static_fluid_level.value">
+              SFL: {{static_fluid_level.value}} m
+            </span>
+          </div>
+        </div>
 
         <!-- Bottom Perforation Depth -->
-        <mat-form-field class="filter">
-          <mat-label>Dynamic Fluid Level</mat-label>
-          <input
-            matInput
-            [formControl]="dynamic_fluid_level"
-            type="number"
-            step="0.01"
-            inputmode="decimal"
-            placeholder="Dynamic Fluid Level"
-            (change)="testData()"
-          />
-          <span matSuffix>m</span>
-        </mat-form-field>
+        <div fxLayout="row" fxLayoutGap="12px" fxLayoutAlign="start center">
+          <mat-form-field class="filter" fxFlex>
+            <mat-label>Dynamic Fluid Level</mat-label>
+            <input
+              matInput
+              [formControl]="dynamic_fluid_level_manual"
+              type="number"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Input manual DFL"
+              (change)="testData()"
+            />
+            <span matSuffix>m</span>
+          </mat-form-field>
+
+          <!-- Hint di samping  -->
+          <div class="info-hint" *ngIf="dynamic_fluid_level_manual.value || dynamic_fluid_level.value">
+            <span *ngIf="dynamic_fluid_level_manual.value">
+              DFL: {{dynamic_fluid_level_manual.value}} m
+            </span>
+            <span *ngIf="!dynamic_fluid_level_manual.value && dynamic_fluid_level.value">
+              DFL: {{dynamic_fluid_level.value}} m
+            </span>
+          </div>
+        </div>
+
         <mat-form-field class="filter">
           <mat-label>Static Bottomhole Pressure</mat-label>
           <input

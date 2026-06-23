@@ -846,6 +846,9 @@ export class OneSlideComponent implements OnInit {
         chart: {
           // type: 'area',
           zoomType: 'x',
+          style: {
+            fontFamily: 'Roboto, Helvetica Neue, sans-serif'
+          }
         },
         title: {
           text: 'Well Production Performance of ' + this.well_xSelected.join(', '),
@@ -881,16 +884,16 @@ export class OneSlideComponent implements OnInit {
           }
         },
         series: [
-          { name: 'Liquid Rate', data: gross, type: 'line', color: '#000000', 
+          { name: 'Liquid Rate', yAxis: 0, data: gross, type: 'line', color: '#000000', 
             marker: {
                 enabled: false
               }, },
-          { name: 'Water Cut', data: water, type: 'line', color: '#0070C0', 
+          { name: 'Water Cut', yAxis: 0, data: water, type: 'line', color: '#0070C0', 
             marker: {
                 enabled: false
               },
           },
-          { name: 'Oil Rate', data: net, type: 'area', color: '#acc52b', 
+          { name: 'Oil Rate', yAxis: 0,data: net, type: 'area', color: '#acc52b', 
             marker: {
                 enabled: false
               },

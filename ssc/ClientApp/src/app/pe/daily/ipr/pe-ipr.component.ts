@@ -86,11 +86,19 @@ export class IprComponent implements OnInit {
   gross = new FormControl("");  
   wc = new FormControl("");  
   gas = new FormControl("");  
+
+  // Manual input controls (user can override)
+  perforation_depth_reference_manual = new FormControl("");
+  grossAvgManual = new FormControl("");
+  netAvgManual = new FormControl("");
+  wcAvgManual = new FormControl("");
   
 
   perforation_depth_reference = new FormControl("");
   static_fluid_level = new FormControl("");
+  static_fluid_level_manual = new FormControl("");
   dynamic_fluid_level = new FormControl("");
+  dynamic_fluid_level_manual = new FormControl("");
   static_botthomhole_pressure = new FormControl("");
   flowing_bottomhole_pressure = new FormControl("");
   flowing_bottomhole_pressure2 = new FormControl("");
@@ -552,6 +560,21 @@ export class IprComponent implements OnInit {
           const sfl = res.data && res.data.sfl != null ? Number(res.data.sfl) : 0;
           this.static_fluid_level.setValue(sfl);
         });
+
+    var params_dfl = new HttpParams()
+      .append("type", "dfl_latest");
+      
+    for (const w of this.well_xSelected) {
+      params_dfl = params_dfl.append("well", w);
+    }
+    this.http
+      .get<any>("/api/pe/daily/GetAreaChart", { params: params_dfl })
+      .subscribe(
+        (res) => {
+          // console.log("res dfl:", res);
+          const dfl = res.data && res.data.dfl != null ? Number(res.data.dfl) : 0;
+          this.dynamic_fluid_level.setValue(dfl);
+        });
   }
 
   formatInterval(interval: any): string {
@@ -640,7 +663,24 @@ export class IprComponent implements OnInit {
       return;
     }
 
-    if (!this.static_fluid_level.value || !this.dynamic_fluid_level.value) {
+    // Gunakan manual SFL jika diisi gunakan auto dari sonolog
+    const sflValue = this.static_fluid_level_manual.value || this.static_fluid_level.value;
+    if (!sflValue || !this.dynamic_fluid_level.value) {
+      this.snackbarService.status.next(
+        new SnackbarApi(
+          true,
+          "Please enter static and dynamic fluid levels.",
+          "dismiss",
+          {
+            duration: 3000,
+          }
+        )
+      );
+      return;
+    }
+
+    const dflValue = this.dynamic_fluid_level_manual.value || this.dynamic_fluid_level.value;
+    if (!dflValue || !this.static_fluid_level.value) {
       this.snackbarService.status.next(
         new SnackbarApi(
           true,
@@ -659,10 +699,10 @@ export class IprComponent implements OnInit {
     // config data
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
-    const static_fl = this.static_fluid_level.value;
+    const static_fl = sflValue;
     // const sm2 = Number(this.sm2.value);
     // const ds_kd2 = Number(this.ds_kd2.value);
-    const dynamic_fl = this.dynamic_fluid_level.value;
+    const dynamic_fl = dflValue;
     const factor_corr = this.factor_corr.value;
     
 

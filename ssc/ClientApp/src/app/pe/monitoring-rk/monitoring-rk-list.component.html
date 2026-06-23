@@ -1,104 +1,29 @@
-<!-- ===================== CARD 1: BARCHART (READ-ONLY, dari API barchart) ===================== -->
-<div class="card-section">
-  <div class="card-section-title">Barchart</div>
-  <div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-    <div class="loading-shade" *ngIf="barchartIsLoadingResults || barchartIsRateLimitReached">
-      <mat-spinner *ngIf="barchartIsLoadingResults"></mat-spinner>
-    </div>
-    <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 400, 250))+'px'">
-      <table mat-table [dataSource]="barchartData" class="pe-table" matSort matSortActive="plan_start" matSortDisableClear
-        matSortDirection="desc" responsive="true" #barchartSort="matSort">
-        
-        <ng-container matColumnDef="bc_well" sticky>
-          <th mat-header-cell *matHeaderCellDef>
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
-              <app-xfilter title="Well" column="bc_well" [selected]="bc_well_xSelected"></app-xfilter>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-center">{{row.well}}</td>
-        </ng-container>
-        <ng-container matColumnDef="bc_job">
-          <th mat-header-cell *matHeaderCellDef>
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Job</span>
-              <app-xfilter title="Job" column="bc_job" [selected]="bc_job_xSelected"></app-xfilter>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-center">{{row.job}}</td>
-        </ng-container>
-        <ng-container matColumnDef="bc_rig">
-          <th mat-header-cell *matHeaderCellDef>
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Rig</span>
-              <app-xfilter title="Rig" column="bc_rig" [selected]="bc_rig_xSelected"></app-xfilter>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-center">{{row.rig}}</td>
-        </ng-container>
-        <ng-container matColumnDef="bc_plan_start">
-          <th mat-header-cell *matHeaderCellDef>
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan Start</span>
-              <app-xfilter title="Plan Start" column="bc_plan_start" format="date" [selected]="bc_plan_start_xSelected"></app-xfilter>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-center">{{row.plan_start ? (row.plan_start | date: 'dd MMM y') : '-'}}</td>
-        </ng-container>
-        <ng-container matColumnDef="bc_plan_end">
-          <th mat-header-cell *matHeaderCellDef>
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan End</span>
-              <app-xfilter title="Plan End" column="bc_plan_end" format="date" [selected]="bc_plan_end_xSelected"></app-xfilter>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-center">{{row.plan_end ? (row.plan_end | date: 'dd MMM y') : '-'}}</td>
-        </ng-container>
-        <ng-container matColumnDef="bc_remarks">
-          <th mat-header-cell *matHeaderCellDef>
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remarks</span>
-              <app-xfilter title="Remarks" column="bc_remarks" [selected]="bc_remarks_xSelected"></app-xfilter>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-center">{{row.remarks}}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="barchartDisplayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: barchartDisplayedColumns;"></tr>
-      </table>
-    </div>
-    <mat-paginator [length]="barchartResultsLength" [pageSize]="50" [pageSizeOptions]="[10, 25, 50, 100]" #barchartPaginator></mat-paginator>
-  </div>
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <button mat-button color="primary" [disabled]="rk_isLoadingResults" [routerLink]="['/pe/monitoring-rk/add']" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/add')">
+    <mat-icon>add</mat-icon> Add/Edit
+  </button>
+  <button mat-button color="warn" (click)="rkDeleteSelected()" [disabled]="!rk_selection.selected.length" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/delete')">
+    <mat-icon>delete</mat-icon> Delete Selected
+  </button>
+  <button mat-button color="secondary" (click)="rkExportExcel()" [disabled]="rk_isLoadingResults">
+    <mat-icon>file_download</mat-icon> Export to Excel
+  </button>
+	<button mat-button color="tertiary" [disabled]="rk_isLoadingResults" [routerLink]="['/pe/monitoring-rk/chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
 </div>
 
-<!-- ===================== CARD 2: MONITORING RK (bisa diedit/dihapus) ===================== -->
-<div class="card-section">
-  <div class="card-section-title">Monitoring RK</div>
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
 
-  <div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-    <!-- Tombol aksi di dalam card -->
-    <div class="container-top-bar">
-      <button mat-button color="primary" [routerLink]="['/pe/monitoring-rk/add']">
-        <mat-icon>add</mat-icon> Add/Edit
-      </button>
-      <button mat-button color="warn" (click)="rkDeleteSelected()" [disabled]="!rk_selection.selected.length">
-        <mat-icon>delete</mat-icon> Delete Selected
-      </button>
-      <button mat-button color="secondary" (click)="rkExportExcel()" [disabled]="rk_isLoadingResults">
-        <mat-icon>file_download</mat-icon> Export to Excel
-      </button>
-      <button mat-button color="tertiary" [disabled]="rk_isLoadingResults" [routerLink]="['/pe/monitoring-rk/chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
-    </div>
-    <div class="loading-shade" *ngIf="rk_isLoadingResults || rk_isRateLimitReached">
-      <mat-spinner *ngIf="rk_isLoadingResults"></mat-spinner>
-    </div>
-    <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
-      <table mat-table [dataSource]="rk_data" class="pe-table" matSort matSortActive="plan_start" matSortDisableClear
-        matSortDirection="desc" responsive="true" #rkSort="matSort">
+  <div class="loading-shade" *ngIf="rk_isLoadingResults || rk_isRateLimitReached">
+    <mat-spinner *ngIf="rk_isLoadingResults"></mat-spinner>
+  </div>
+  
+  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
+    <table mat-table [dataSource]="rk_data" class="pe-table" matSort matSortActive="plan_start" matSortDisableClear
+      matSortDirection="desc" responsive="true" #rkSort="matSort">
         
         <!-- Kolom checkbox untuk seleksi -->
         <ng-container matColumnDef="select">
-          <th mat-header-cell *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" center>
               <mat-checkbox (change)="($event && !rk_isEditing) ? rkMasterToggle() : null"
                 [checked]="rk_selection.hasValue() && rkIsAllSelected()"
@@ -119,63 +44,308 @@
         </ng-container>
 
         <ng-container matColumnDef="well" sticky>
-          <th mat-header-cell *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
               <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">{{row.well}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editWell">
+              {{row.well}}
+            </ng-container>
+            <ng-template #editWell>
+              <input matInput [(ngModel)]="row.well" list="bcWellList" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+              <datalist id="bcWellList">
+                <option *ngFor="let w of barchartWellList" [value]="w">{{w}}</option>
+              </datalist>
+            </ng-template>
+          </td>
         </ng-container>
         <ng-container matColumnDef="job">
-          <th mat-header-cell *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Job</span>
               <app-xfilter title="Job" column="job" [selected]="job_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">{{row.job}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editJob">
+              {{row.job}}
+            </ng-container>
+            <ng-template #editJob>
+              <input matInput [(ngModel)]="row.job" list="bcJobList" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+              <datalist id="bcJobList">
+                <option *ngFor="let j of barchartJobList" [value]="j">{{j}}</option>
+              </datalist>
+            </ng-template>
+          </td>
         </ng-container>
         <ng-container matColumnDef="rig">
-          <th mat-header-cell *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Rig</span>
               <app-xfilter title="Rig" column="rig" [selected]="rig_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">{{row.rig}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editRig">
+              {{row.rig}}
+            </ng-container>
+            <ng-template #editRig>
+              <input matInput [(ngModel)]="row.rig" list="bcRigList" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+              <datalist id="bcRigList">
+                <option *ngFor="let r of barchartRigList" [value]="r">{{r}}</option>
+              </datalist>
+            </ng-template>
+          </td>
         </ng-container>
-        <ng-container matColumnDef="plan_start">
-          <th mat-header-cell *matHeaderCellDef>
+        <ng-container matColumnDef="pop">
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan Start</span>
-              <app-xfilter title="Plan Start" column="plan_start" format="date" [selected]="plan_start_xSelected"></app-xfilter>
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">POP</span>
+              <app-xfilter title="POP" column="pop" [selected]="pop_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">{{row.plan_start ? (row.plan_start | date: 'dd MMM y') : '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editPop">
+              {{row.pop ? (row.pop | date: 'dd MMM y') : '-'}}
+            </ng-container>
+            <ng-template #editPop>
+              <input matInput [(ngModel)]="row.pop" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+            </ng-template>
+          </td>
         </ng-container>
-        <ng-container matColumnDef="plan_end">
+        
+        <ng-container matColumnDef="target">
+          <th mat-header-cell *matHeaderCellDef colspan="2">Target</th>
+        </ng-container>
+        
+        <ng-container matColumnDef="target_oil">
           <th mat-header-cell *matHeaderCellDef>
             <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan End</span>
-              <app-xfilter title="Plan End" column="plan_end" format="date" [selected]="plan_end_xSelected"></app-xfilter>
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Oil</span>
+              <app-xfilter title="Target Oil" column="target_oil" [selected]="target_oil_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">{{row.plan_end ? (row.plan_end | date: 'dd MMM y') : '-'}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editTargetOil">
+              {{row.target_oil || '-'}}
+            </ng-container>
+            <ng-template #editTargetOil>
+              <input matInput [(ngModel)]="row.target_oil" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+            </ng-template>
+          </td>
         </ng-container>
+        <ng-container matColumnDef="target_gas">
+          <th mat-header-cell *matHeaderCellDef>
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+              <app-xfilter title="Target Gas" column="target_gas" [selected]="target_gas_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editTargetGas">
+              {{row.target_gas || '-'}}
+            </ng-container>
+            <ng-template #editTargetGas>
+              <input matInput [(ngModel)]="row.target_gas" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+            </ng-template>
+          </td>
+        </ng-container>
+        
+        <ng-container matColumnDef="realisasi">
+          <th mat-header-cell *matHeaderCellDef colspan="2">Realisasi</th>
+        </ng-container>
+        
+        <ng-container matColumnDef="realisasi_oil">
+          <th mat-header-cell *matHeaderCellDef>
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Oil</span>
+              <app-xfilter title="Realisasi Oil" column="realisasi_oil" [selected]="realisasi_oil_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editRealisasiOil">
+              {{row.realisasi_oil || '-'}}
+            </ng-container>
+            <ng-template #editRealisasiOil>
+              <input matInput [(ngModel)]="row.realisasi_oil" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+            </ng-template>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="realisasi_gas">
+          <th mat-header-cell *matHeaderCellDef>
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+              <app-xfilter title="Realisasi Gas" column="realisasi_gas" [selected]="realisasi_gas_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editRealisasiGas">
+              {{row.realisasi_gas || '-'}}
+            </ng-container>
+            <ng-template #editRealisasiGas>
+              <input matInput [(ngModel)]="row.realisasi_gas" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+            </ng-template>
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="remarks">
-          <th mat-header-cell *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef  rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
               <span mat-sort-header arrowPosition="before" class="mat-sort-header">Remarks</span>
               <app-xfilter title="Remarks" column="remarks" [selected]="remarks_xSelected"></app-xfilter>
             </div>
           </th>
-          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">{{row.remarks}}</td>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editRemarks">
+              {{row.remarks || '-'}}
+            </ng-container>
+            <ng-template #editRemarks>
+              <input matInput [(ngModel)]="row.remarks" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+            </ng-template>
+          </td>
         </ng-container>
-        <tr mat-header-row *matHeaderRowDef="rk_displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: rk_displayedColumns;"></tr>
+        
+        <ng-container matColumnDef="action" stickyEnd>
+          <th mat-header-cell *matHeaderCellDef class="cell-center action-column" rowspan="2">
+            Action
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-center action-column">
+            <button
+              mat-icon-button
+              color="primary"
+              *ngIf="!row.isEdit && pePermissionService.passPermission('pe/monitoring-rk/add')"
+              (click)="rkEdit(row)"
+              matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <ng-container *ngIf="row.isEdit">
+              <button
+                mat-icon-button
+                color="accent"
+                (click)="rkSave(row)"
+                matTooltip="Save">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="rkCancel(row)"
+                matTooltip="Cancel">
+                <mat-icon>close</mat-icon>
+              </button>
+            </ng-container>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="headerColumns1; sticky: true"></tr>
+        <tr mat-header-row *matHeaderRowDef="headerColumns2; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: rk_displayedColumns;" (click)="rk_selection.toggle(row)"></tr>
       </table>
-    </div>
     <mat-paginator [length]="rk_resultsLength" [pageSize]="50" [pageSizeOptions]="[10, 25, 50, 100]" #rkPaginator></mat-paginator>
+  </div>
+</div>
+
+<!-- ====== Rigless Table (dari Barchart) ====== -->
+<h3 style="margin: 16px 0 8px; font-weight: 500;">Rigless Jobs (from Barchart)</h3>
+
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
+    <table mat-table [dataSource]="rk_rigless_dataSource" class="pe-table">
+
+      <ng-container matColumnDef="well">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span>Well</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.well}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="job">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span>Job</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.job}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="rig">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span>Rig</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.rig}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pop">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span>POP</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.pop ? (row.pop | date: 'dd MMM y') : '-'}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="target">
+        <th mat-header-cell *matHeaderCellDef colspan="2">Target</th>
+      </ng-container>
+
+      <ng-container matColumnDef="target_oil">
+        <th mat-header-cell *matHeaderCellDef>
+          <span>Oil</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.target_oil || '-'}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="target_gas">
+        <th mat-header-cell *matHeaderCellDef>
+          <span>Gas</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.target_gas || '-'}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="realisasi">
+        <th mat-header-cell *matHeaderCellDef colspan="2">Realisasi</th>
+      </ng-container>
+
+      <ng-container matColumnDef="realisasi_oil">
+        <th mat-header-cell *matHeaderCellDef>
+          <span>Oil</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.realisasi_oil || '-'}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="realisasi_gas">
+        <th mat-header-cell *matHeaderCellDef>
+          <span>Gas</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.realisasi_gas || '-'}}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="remarks">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span>Remarks</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center">
+          {{row.remarks || '-'}}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="rk_rigless_headerColumns1; sticky: true"></tr>
+      <tr mat-header-row *matHeaderRowDef="rk_rigless_headerColumns2; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: rk_rigless_displayedColumns;"></tr>
+    </table>
   </div>
 </div>

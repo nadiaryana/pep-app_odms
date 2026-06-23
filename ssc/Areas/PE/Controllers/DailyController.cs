@@ -485,6 +485,22 @@ namespace ssc.Areas.PE.Controllers
                         .FirstOrDefault();
 
                     return Ok(new { data = latestSfl });
+
+                case "dfl_latest":
+                    if (well == null)
+                        return BadRequest("well parameter is required");
+
+                    var filter_dfl = Builders<Sonolog>.Filter.And(
+                        Builders<Sonolog>.Filter.In(x => x.well, well),
+                        Builders<Sonolog>.Filter.Ne(x => x.dfl, null)
+                    );
+
+                    var latestDfl = _sonolog
+                        .Find(filter_dfl)
+                        .SortByDescending(x => x.date)
+                        .FirstOrDefault();
+
+                    return Ok(new { data = latestDfl });
                 default:
                     return Ok(new { });
             }

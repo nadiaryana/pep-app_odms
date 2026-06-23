@@ -10,7 +10,6 @@ import { SelectionModel } from '@angular/cdk/collections';
 
 import { MonitoringRKService } from './monitoring-rk.service';
 import { MonitoringRK } from './monitoring-rk';
-import { Barchart } from '../barchart/barchart';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
@@ -26,38 +25,17 @@ import { CommonService } from '../../common.service';
 })
 export class MonitoringRKListComponent implements OnInit {
 
-  // ==================== BARCHART TABLE (TOP) ====================
-  barchartDisplayedColumns: string[] = ["bc_well", "bc_job", "bc_rig", "bc_plan_start", "bc_plan_end", "bc_remarks"];
-  barchartData: Barchart[] = [];
-  barchartResultsLength = 0;
-  barchartIsLoadingResults = true;
-  barchartIsRateLimitReached = false;
-  barchartIsEditing = false;
-  barchartExampleDatabase: BarchartHttpDao | null;
+  barchartWellList: string[] = [];
+  barchartJobList: string[] = [];
+  barchartRigList: string[] = [];
+  barchartItems: any[] = [];
+  barchartLoaded: boolean = false;
+  autoAddedWells: Set<string> = new Set();
 
-  @ViewChild('barchartPaginator', { static: true }) barchartPaginator: MatPaginator;
-  @ViewChild('barchartSort', { static: true }) barchartSort: MatSort;
+  rk_displayedColumns: string[] = ["select", "well", "job", "rig","pop","target_oil","target_gas","realisasi_oil","realisasi_gas", "remarks", "action"];
+  headerColumns1: string[] = ["select",  "well", "job", "rig","pop","target","realisasi", "remarks","action"];
+  headerColumns2: string[] = ["target_oil","target_gas","realisasi_oil","realisasi_gas"];
 
-  bc_filterControl = new FormControl('');
-  bc_wellFilter = new FormControl('');
-  bc_jobFilter = new FormControl('');
-  bc_rigFilter = new FormControl('');
-  bc_plan_startFilter = new FormControl('');
-  bc_plan_endFilter = new FormControl('');
-  bc_remarksFilter = new FormControl('');
-
-  bc_well_xSelected: any[] = [];
-  bc_job_xSelected: any[] = [];
-  bc_rig_xSelected: any[] = [];
-  bc_plan_start_xSelected: any[] = [];
-  bc_plan_end_xSelected: any[] = [];
-  bc_remarks_xSelected: any[] = [];
-
-  bc_filterSubscription: Subscription;
-  bc_selectedSubscription: Subscription;
-
-  // ==================== MONITORING RK TABLE (BOTTOM) ====================
-  rk_displayedColumns: string[] = ["select", "well", "job", "rig", "plan_start", "plan_end", "remarks"];
   rkExampleDatabase: MonitoringRKHttpDao | null;
   rk_data: MonitoringRK[] = [];
   rk_dataSource = new MatTableDataSource<any>(this.rk_data);
@@ -77,6 +55,11 @@ export class MonitoringRKListComponent implements OnInit {
   rk_rigFilter = new FormControl('');
   rk_plan_startFilter = new FormControl('');
   rk_plan_endFilter = new FormControl('');
+  rk_popFilter = new FormControl('');
+  rk_target_oilFilter = new FormControl('');
+  rk_target_gasFilter = new FormControl('');
+  rk_realisasi_oilFilter = new FormControl('');
+  rk_realisasi_gasFilter = new FormControl('');
   rk_remarksFilter = new FormControl('');
 
   well_xSelected = [];
@@ -84,9 +67,20 @@ export class MonitoringRKListComponent implements OnInit {
   rig_xSelected = [];
   plan_start_xSelected = [];
   plan_end_xSelected = [];
+  pop_xSelected = [];
+  target_oil_xSelected = [];
+  target_gas_xSelected = [];
+  realisasi_oil_xSelected = [];
+  realisasi_gas_xSelected = [];
   remarks_xSelected = [];
 
-  barchart_listSubscription: Subscription;
+  // === Rigless Table ===
+  rk_rigless_displayedColumns: string[] = ["well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks"];
+  rk_rigless_headerColumns1: string[] = ["well", "job", "rig", "pop", "target", "realisasi", "remarks"];
+  rk_rigless_headerColumns2: string[] = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
+  rk_rigless_data: any[] = [];
+  rk_rigless_dataSource = new MatTableDataSource<any>(this.rk_rigless_data);
+
   rk_filterSubscription: Subscription;
   rk_selectedSubscription: Subscription;
   rk_listSubscription: Subscription;
@@ -103,6 +97,7 @@ export class MonitoringRKListComponent implements OnInit {
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
+    private service: MonitoringRKService,
   ) { }
 
   ngOnInit() {
@@ -116,72 +111,9 @@ export class MonitoringRKListComponent implements OnInit {
         { label: 'Monitoring RK', routerLink: '' }
       ]
     });
+    this.loadBarchartDistinctValues();
 
-    // ====================================================================
-    // BARCHART TABLE — data dari API /api/pe/barchart (read-only)
-    // Pakai prefix "bc_" untuk xFilter agar tidak bentrok dengan RK table
-    // ====================================================================
-    this.barchartExampleDatabase = new BarchartHttpDao(this.http);
-    // Reset paginator ke halaman 1 setiap kali sorting berubah
-    this.barchartSort.sortChange.subscribe(() => this.barchartPaginator.pageIndex = 0);
 
-    // Filter xFilter: hanya proses event dengan column prefix "bc_"
-    this.bc_filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if (res && res["column"] && res["column"].indexOf("bc_") === 0) this.bcGetColumnValues(res);
-    });
-    // Selected xFilter: update state untuk column prefix "bc_"
-    this.bc_selectedSubscription = this.xfilterService.selected.subscribe(res => {
-      var key = res["column"];
-      if (key && key.indexOf("bc_") === 0) {
-        (this as any)[key + "_xSelected"] = res["selected"];
-      }
-    });
-
-    // Observable utama: reload data saat sort, page, filter, atau xSelected berubah
-    this.barchart_listSubscription = merge(
-      this.barchartSort.sortChange,
-      this.barchartPaginator.page,
-      this.bc_filterControl.valueChanges.pipe(debounceTime(300)),
-      this.bc_wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.bc_jobFilter.valueChanges.pipe(debounceTime(300)),
-      this.bc_rigFilter.valueChanges.pipe(debounceTime(300)),
-      this.bc_plan_startFilter.valueChanges.pipe(debounceTime(300)),
-      this.bc_plan_endFilter.valueChanges.pipe(debounceTime(300)),
-      this.bc_remarksFilter.valueChanges.pipe(debounceTime(300)),
-      this.xfilterService.selected,
-    ).pipe(
-      startWith({}),               // Trigger pertama kali saat komponen di-load
-      switchMap(() => {
-        this.barchartIsLoadingResults = true;
-        var columnfilter = this.bcGetColumnFilter();
-        return this.barchartExampleDatabase!.getRepoIssues(
-          this.barchartSort.active,
-          this.barchartSort.direction,
-          this.barchartPaginator.pageIndex,
-          this.barchartPaginator.pageSize,
-          this.bc_filterControl.value,
-          columnfilter,
-        );
-      }),
-      map(data => {
-        this.barchartIsLoadingResults = false;
-        this.barchartIsRateLimitReached = false;
-        this.barchartResultsLength = data.total_count;
-        return data.items;
-      }),
-      catchError(() => {
-        this.barchartIsLoadingResults = false;
-        this.barchartIsRateLimitReached = true;
-        return observableOf([]);
-      })
-    ).subscribe(data => {
-      this.barchartData = data;
-    });
-
-    // ====================================================================
-    // MONITORING RK TABLE — data dari API /api/pe/MonitoringRK (bisa dihapus)
-    // Filter xFilter hanya untuk column tanpa prefix "bc_" (milik RK sendiri)
-    // ====================================================================
     this.rkExampleDatabase = new MonitoringRKHttpDao(this.http);
     this.rkSort.sortChange.subscribe(() => this.rkPaginator.pageIndex = 0);
 
@@ -206,6 +138,11 @@ export class MonitoringRKListComponent implements OnInit {
       this.rk_rigFilter.valueChanges.pipe(debounceTime(300)),
       this.rk_plan_startFilter.valueChanges.pipe(debounceTime(300)),
       this.rk_plan_endFilter.valueChanges.pipe(debounceTime(300)),
+      this.rk_popFilter.valueChanges.pipe(debounceTime(300)),
+      this.rk_target_oilFilter.valueChanges.pipe(debounceTime(300)),
+      this.rk_target_gasFilter.valueChanges.pipe(debounceTime(300)),
+      this.rk_realisasi_oilFilter.valueChanges.pipe(debounceTime(300)),
+      this.rk_realisasi_gasFilter.valueChanges.pipe(debounceTime(300)),
       this.rk_remarksFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
@@ -233,18 +170,20 @@ export class MonitoringRKListComponent implements OnInit {
         this.rk_isRateLimitReached = true;
         return observableOf([]);
       })
-    ).subscribe(data => {
-      this.rk_data = data;
-      this.rk_dataSource = new MatTableDataSource<any>(this.rk_data);
+    ).subscribe((data: MonitoringRK[]) => {
+      this.rk_data = data.map(d => ({
+        ...d,
+        isEdit: false
+      }));
+      this.rk_dataSource.data = this.rk_data;
       this.rk_selection.clear();
+      // Merge barchart items untuk mengisi well/job/rig yang belum ada
+      this.mergeBarchartToRK();
     });
   }
 
   /** Cleanup: unsubscribe semua subscription saat komponen di-destroy */
   ngOnDestroy() {
-    if (this.bc_filterSubscription) this.bc_filterSubscription.unsubscribe();
-    if (this.bc_selectedSubscription) this.bc_selectedSubscription.unsubscribe();
-    if (this.barchart_listSubscription) this.barchart_listSubscription.unsubscribe();
     if (this.rk_filterSubscription) this.rk_filterSubscription.unsubscribe();
     if (this.rk_selectedSubscription) this.rk_selectedSubscription.unsubscribe();
     if (this.rk_listSubscription) this.rk_listSubscription.unsubscribe();
@@ -255,50 +194,79 @@ export class MonitoringRKListComponent implements OnInit {
     return this.pePermissionService.passPermission(path);
   }
 
-  // ====================================================================
-  // BARCHART — ambil daftar value unik tiap kolom untuk popup xFilter
-  // Column name di-xFilter pakai prefix "bc_" → dipetakan ke nama asli API
-  // ====================================================================
-  bcGetColumnValues(param: any) {
-    var column = param["column"];
-    var filter = param["filter"];
-    var selected = param["selected"]
-    var clear = param["clear"];
-    var columnfilter: any = this.bcGetColumnFilter();
-    // Hapus prefix "bc_" untuk dapat nama kolom asli di API
-    var apiColumn = column.replace("bc_", "");
-    if (filter) columnfilter[apiColumn] = [filter];
-    if (selected && selected.length > 0) columnfilter[apiColumn] = selected.map((s: any) => "^" + s + "$");
-    if (clear) delete columnfilter[apiColumn];
-
-    return this.barchartExampleDatabase!.getRepoIssues(
-      this.barchartSort.active,
-      this.barchartSort.direction,
-      this.barchartPaginator.pageIndex,
-      this.barchartPaginator.pageSize,
-      this.bc_filterControl.value,
-      columnfilter,
-      apiColumn
-    ).pipe(map((res) => {
-      return res;
-    })).subscribe(res => {
-      this.xfilterService.updateItems({ column: column, items: res.items });
-    }, () => {});
+  //ambil data barchart
+  loadBarchartDistinctValues() {
+    // Ambil semua item barchart (well, job, rig)
+    this.http.get<any>('/api/pe/Barchart', {
+      params: { pagesize: '9999' }
+    }).subscribe(res => {
+      this.barchartItems = res.items || [];
+      this.barchartLoaded = true;
+      // Isi daftar distinct
+      this.barchartWellList = [...new Set(this.barchartItems.map((i: any) => i.well).filter((w: string) => w))];
+      this.barchartJobList = [...new Set(this.barchartItems.map((i: any) => i.job).filter((j: string) => j))];
+      this.barchartRigList = [...new Set(this.barchartItems.map((i: any) => i.rig).filter((r: string) => r))];
+      // Merge ke tabel monitoring RK jika data RK sudah ada
+      this.mergeBarchartToRK();
+      // Isi tabel rigless
+      this.populateRiglessData();
+    });
   }
 
-  /** Kumpulkan semua filter aktif Barchart → object untuk dikirim ke API */
-  bcGetColumnFilter() {
-    var columnfilter: any = {};
-    if (this.bc_well_xSelected.length) columnfilter["well"] = this.bc_well_xSelected;
-    if (this.bc_job_xSelected.length) columnfilter["job"] = this.bc_job_xSelected;
-    if (this.bc_rig_xSelected.length) columnfilter["rig"] = this.bc_rig_xSelected;
-    if (this.bc_plan_start_xSelected.length) columnfilter["plan_start"] = this.bc_plan_start_xSelected;
-    if (this.bc_plan_end_xSelected.length) columnfilter["plan_end"] = this.bc_plan_end_xSelected;
-    if (this.bc_remarks_xSelected.length) columnfilter["remarks"] = this.bc_remarks_xSelected;
-    return columnfilter;
+  /** Gabungkan data barchart ke monitoring RK untuk mengisi well/job/rig */
+  mergeBarchartToRK() {
+    if (!this.barchartLoaded || !this.rk_data) return;
+    var existingWells = new Set(this.rk_data.map(d => d.well));
+    var newRows: any[] = [];
+
+    // Tambah barchart items yang belum ada di RK & belum pernah di-auto-add
+    this.barchartItems.forEach(bc => {
+      if (bc.well && !existingWells.has(bc.well)) {
+        if (!this.autoAddedWells.has(bc.well)) {
+          newRows.push({
+            well: bc.well,
+            job: bc.job,
+            rig: bc.rig,
+            isEdit: false
+          });
+          this.autoAddedWells.add(bc.well);
+        } else {
+          // Auto-added sebelumnya, pastikan tetap masuk (karena rk_data di-replace)
+          newRows.push({
+            well: bc.well,
+            job: bc.job,
+            rig: bc.rig,
+            isEdit: false
+          });
+        }
+      }
+    });
+    if (newRows.length > 0) {
+      this.rk_data = [...this.rk_data, ...newRows];
+      this.rk_dataSource.data = this.rk_data;
+      this.rk_resultsLength = this.rk_data.length;
+    }
   }
 
-  // ========== MONITORING RK METHODS ==========
+  /** Isi tabel rigless dari barchart items yang rig-nya mengandung "rigless" */
+  populateRiglessData() {
+    if (!this.barchartItems.length) return;
+    this.rk_rigless_data = this.barchartItems
+      .filter(bc => bc.rig && bc.rig.toLowerCase().includes('rigless'))
+      .map(bc => ({
+        well: bc.well,
+        job: bc.job,
+        rig: bc.rig,
+        pop: null,
+        target_oil: null,
+        target_gas: null,
+        realisasi_oil: null,
+        realisasi_gas: null,
+        remarks: null,
+      }));
+    this.rk_rigless_dataSource.data = this.rk_rigless_data;
+  }
+
   rkExportExcel() {
 
     const httpOption: Object = {
@@ -382,6 +350,11 @@ export class MonitoringRKListComponent implements OnInit {
     if (this.rig_xSelected.length) columnfilter["rig"] = this.rig_xSelected;
     if (this.plan_start_xSelected.length) columnfilter["plan_start"] = this.plan_start_xSelected;
     if (this.plan_end_xSelected.length) columnfilter["plan_end"] = this.plan_end_xSelected;
+    if (this.pop_xSelected.length) columnfilter["pop"] = this.pop_xSelected;
+    if (this.target_oil_xSelected.length) columnfilter["target_oil"] = this.target_oil_xSelected;
+    if (this.target_gas_xSelected.length) columnfilter["target_gas"] = this.target_gas_xSelected;
+    if (this.realisasi_oil_xSelected.length) columnfilter["realisasi_oil"] = this.realisasi_oil_xSelected;
+    if (this.realisasi_gas_xSelected.length) columnfilter["realisasi_gas"] = this.realisasi_gas_xSelected;
     if (this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
     return columnfilter;
   }
@@ -440,40 +413,89 @@ export class MonitoringRKListComponent implements OnInit {
     });
   }
 
+  //edit, save, cancel
+
+  rkEdit(row: any) {
+    row._backup = { ...row };
+    row.isEdit = true;
+  }
+
+  rkSave(row: any) {
+    const payload: any = { ...row };
+    const backupData = { ...row._backup };
+
+    delete payload.isEdit;
+    delete payload._backup;
+    delete payload._error;
+
+    this.service.update(row._id, payload).subscribe({
+      next: (res) => {
+        row.isEdit = false;
+        delete row._backup;
+
+        const idx = this.rk_dataSource.data.findIndex(d => d._id === row._id);
+        if (idx !== -1) {
+          this.rk_dataSource.data[idx] = {
+            ...this.rk_dataSource.data[idx],
+            ...payload,
+            isEdit: false
+          };
+          this.rk_dataSource.data = [...this.rk_dataSource.data];
+        }
+
+        const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', { duration: 5000 });
+        snackBarRef.onAction().subscribe(() => {
+          this.rkUndoUpdate(row._id, backupData);
+        });
+      },
+      error: (error) => {
+        this.rkCancel(row);
+        this.snackBar.open(error.message ? error.message : 'Gagal mengupdate data', 'Tutup', { duration: 5000 });
+      }
+    });
+  }
+
+  rkUndoUpdate(id: string, backupData: any) {
+    const payload = { ...backupData };
+    delete payload.isEdit;
+    delete payload._backup;
+    delete payload._error;
+
+    this.service.update(id, payload).subscribe({
+      next: (res) => {
+        const dataIdx = this.rk_dataSource.data.findIndex(d => d._id === id);
+        if (dataIdx !== -1) {
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup' && key !== '_error') {
+              (this.rk_dataSource.data[dataIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.rk_dataSource.data[dataIdx] as any).isEdit = false;
+          delete (this.rk_dataSource.data[dataIdx] as any)._backup;
+        }
+        this.rk_dataSource.data = [...this.rk_dataSource.data];
+        this.snackBar.open('Perubahan dibatalkan', 'Tutup', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snackBar.open('Gagal membatalkan perubahan', 'Tutup', { duration: 5000 });
+      }
+    });
+  }
+
+  rkCancel(row: any) {
+    if (row._backup) {
+      Object.assign(row, row._backup);
+    }
+    row.isEdit = false;
+  }
+
 }
 
-// ==================== INTERFACES ====================
 export interface MonitoringRKApi {
   items: MonitoringRK[];
   total_count: number;
 }
 
-export interface BarchartApi {
-  items: Barchart[];
-  total_count: number;
-}
-
-// ==================== BARCHART HTTP DAO ====================
-export class BarchartHttpDao {
-  constructor(private http: HttpClient) { }
-
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: any, mode: string = "", httpOption: any = {}): Observable<any> {
-
-    var params: any = {};
-    if (sort != null) params["sort"] = sort;
-    if (order != null) params["order"] = order;
-    if (page != null) params["page"] = page.toString();
-    if (pagesize != null) params["pagesize"] = pagesize.toString();
-    if (filter != null) params["filter"] = filter;
-    if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
-    if (mode != null) params["mode"] = mode;
-
-    httpOption["params"] = params;
-    return this.http.get<any>('/api/pe/barchart', httpOption);
-  }
-}
-
-// ==================== MONITORING RK HTTP DAO ====================
 export class MonitoringRKHttpDao {
   constructor(private http: HttpClient) { }
 
@@ -493,7 +515,6 @@ export class MonitoringRKHttpDao {
   }
 }
 
-// ==================== DELETE DIALOG ====================
 @Component({
   selector: 'app-monitoring-rk-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',

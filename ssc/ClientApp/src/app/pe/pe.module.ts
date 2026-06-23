@@ -264,6 +264,7 @@ import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.comp
   PePumpingUnitDeleteDialogComponent,
   PeWellDatabaseDeleteDialogComponent,
   PeActualDeleteDialogComponent,
+  MonitoringRKDeleteDialogComponent,
   
   // PeSumurDeleteDialogComponent,
   // PeDailyZoneChartDeleteDialogComponent,
