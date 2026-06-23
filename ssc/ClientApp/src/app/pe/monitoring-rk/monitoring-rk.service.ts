@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { MonitoringRK } from './monitoring-rk';
 
@@ -20,8 +20,8 @@ export class MonitoringRKService {
     return this.http.get<MonitoringRK>(`${this.apiUrl}/${id}`);
   }
 
-  create(monitoringRK: MonitoringRK): Observable<MonitoringRK> {
-    return this.http.post<MonitoringRK>(this.apiUrl, monitoringRK);
+  create(items: MonitoringRK[]): Observable<any> {
+    return this.http.post<any>(this.apiUrl, items);
   }
 
   update(id: string, monitoringRK: MonitoringRK): Observable<MonitoringRK> {
@@ -30,5 +30,19 @@ export class MonitoringRKService {
 
   delete(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  // === Rigless endpoint ===
+  getRigless(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: any, mode: string = "", httpOption: any = {}): Observable<any> {
+    var params: any = {};
+    if (sort != null) params["sort"] = sort;
+    if (order != null) params["order"] = order;
+    if (page != null) params["page"] = page.toString();
+    if (pagesize != null) params["pagesize"] = pagesize.toString();
+    if (filter != null) params["filter"] = filter;
+    if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
+    if (mode != null) params["mode"] = mode;
+    httpOption["params"] = params;
+    return this.http.get<any>('/api/pe/MonitoringRK/rigless', httpOption);
   }
 }

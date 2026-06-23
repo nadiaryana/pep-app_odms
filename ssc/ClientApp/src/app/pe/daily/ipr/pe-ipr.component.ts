@@ -239,17 +239,7 @@ export class IprComponent implements OnInit {
       }
     });
 
-    this.sm2.valueChanges.subscribe(() => {
-      if (this.showChart) {
-        this.testData();
-      }
-    });
-
-    this.ds_kd2.valueChanges.subscribe(() => {
-      if (this.showChart) {
-        this.testData();
-      }
-    });
+    // Chart tidak lagi auto-generate — dikontrol oleh tombol Compile Chart
 
 
     // this.well_dateControl.valueChanges.subscribe((r) => {
@@ -559,6 +549,8 @@ export class IprComponent implements OnInit {
           // console.log("res sfl:", res);
           const sfl = res.data && res.data.sfl != null ? Number(res.data.sfl) : 0;
           this.static_fluid_level.setValue(sfl);
+          // Setelah SFL terisi, coba hitung otomatis
+          this.tryCalculateSBHP_FBHP();
         });
 
     var params_dfl = new HttpParams()
@@ -574,6 +566,8 @@ export class IprComponent implements OnInit {
           // console.log("res dfl:", res);
           const dfl = res.data && res.data.dfl != null ? Number(res.data.dfl) : 0;
           this.dynamic_fluid_level.setValue(dfl);
+          // Setelah DFL terisi, coba hitung otomatis
+          this.tryCalculateSBHP_FBHP();
         });
   }
 
@@ -640,8 +634,34 @@ export class IprComponent implements OnInit {
     const avg = (topDepth + bottomDepth) / 2;
     this.perforation_depth_reference.setValue(avg.toFixed(2));
 
-    // any other logic
-    // console.log("Perforation Change:", topDepth, bottomDepth, reference);
+    // Hitung ulang SBHP & FBHP
+    this.tryCalculateSBHP_FBHP();
+  }
+
+  /** Hitung SBHP dan FBHP tanpa snackbar error — dipanggil otomatis setelah SFL/DFL terisi */
+  tryCalculateSBHP_FBHP() {
+    const sflVal = this.static_fluid_level_manual.value || this.static_fluid_level.value;
+    const dflVal = this.dynamic_fluid_level_manual.value || this.dynamic_fluid_level.value;
+    const bottomRaw = this.bottom_perforation_depth.value;
+    const topRaw = this.top_perforation_depth.value;
+    const dailyAverages = this.dailyAverages;
+
+    if (!sflVal || !dflVal || !bottomRaw || !topRaw || !dailyAverages || !dailyAverages.length) {
+      return; // silent — data belum lengkap
+    }
+
+    const wcAvg = dailyAverages[0].wcAvg;
+    const bottomDepth = Number(bottomRaw);
+    const static_fl = Number(sflVal);
+    const dynamic_fl = Number(dflVal);
+
+    if (isNaN(wcAvg) || isNaN(bottomDepth) || isNaN(static_fl) || isNaN(dynamic_fl)) return;
+
+    const ps = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomDepth - static_fl) * 3.281;
+    const pwf = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomDepth - dynamic_fl) * 3.281;
+
+    if (isFinite(ps)) this.static_botthomhole_pressure.setValue(ps.toFixed(2));
+    if (isFinite(pwf)) this.flowing_bottomhole_pressure.setValue(pwf.toFixed(2));
   }
 
   testData() {
@@ -663,24 +683,10 @@ export class IprComponent implements OnInit {
       return;
     }
 
-    // Gunakan manual SFL jika diisi gunakan auto dari sonolog
+    // Gunakan manual SFL/DFL jika diisi, fallback ke auto dari sonolog
     const sflValue = this.static_fluid_level_manual.value || this.static_fluid_level.value;
-    if (!sflValue || !this.dynamic_fluid_level.value) {
-      this.snackbarService.status.next(
-        new SnackbarApi(
-          true,
-          "Please enter static and dynamic fluid levels.",
-          "dismiss",
-          {
-            duration: 3000,
-          }
-        )
-      );
-      return;
-    }
-
     const dflValue = this.dynamic_fluid_level_manual.value || this.dynamic_fluid_level.value;
-    if (!dflValue || !this.static_fluid_level.value) {
+    if (!sflValue || !dflValue) {
       this.snackbarService.status.next(
         new SnackbarApi(
           true,
@@ -760,12 +766,8 @@ export class IprComponent implements OnInit {
       
 
 
-    if(this.data_pwf.length > 0 && this.data_liquid_rate.length > 0){
-      this.generateChart();
-      this.showChart = true;
-    }else{
-      // this.showChart = false;
-    }
+    // Chart akan digenerate saat user klik tombol "Compile Chart"
+    this.showChart = false;
 
     let prod_reservoir = "-";
 
@@ -846,6 +848,22 @@ export class IprComponent implements OnInit {
     return liquid_rates;
   }
 
+
+  compileChart() {
+    // Jalankan ulang perhitungan testData() dulu
+    this.testData();
+
+    // Validasi: pastikan data IPR tersedia
+    if (!this.data_pwf.length || !this.data_liquid_rate.length) {
+      this.snackbarService.status.next(
+        new SnackbarApi(true, "Data tidak lengkap. Isi semua field yang diperlukan.", "dismiss", { duration: 3000 })
+      );
+      return;
+    }
+
+    this.generateChart();
+    this.showChart = true;
+  }
 
   generateChart() {
     if (this.iprChart) {

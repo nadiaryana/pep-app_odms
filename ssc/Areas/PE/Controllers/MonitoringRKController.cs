@@ -23,13 +23,14 @@ namespace ssc.Areas.PE.Controllers
     {
         private readonly IMongoCollection<MonitoringRK> _monitoring_rk;
         private readonly IMongoCollection<MonitoringRKTmp> _monitoring_rk_tmp;
+        private readonly IMongoDatabase _database;
 
         public MonitoringRKController(IPEDatabaseSettings settings)
         {
             var client = new MongoClient(settings.ConnectionString);
-            var database = client.GetDatabase(settings.DatabaseName);
-            _monitoring_rk = database.GetCollection<MonitoringRK>("monitoring_rk");
-            _monitoring_rk_tmp = database.GetCollection<MonitoringRKTmp>("monitoring_rk_tmp");
+            _database = client.GetDatabase(settings.DatabaseName);
+            _monitoring_rk = _database.GetCollection<MonitoringRK>("monitoring_rk");
+            _monitoring_rk_tmp = _database.GetCollection<MonitoringRKTmp>("monitoring_rk_tmp");
         }
 
         [Authorize("PeMonitoringRK Read")]
@@ -94,16 +95,144 @@ namespace ssc.Areas.PE.Controllers
             {
                 case "":
                 case null:
-                    List<MonitoringRK> items = _items
+                    // Ambil semua MonitoringRK yang terfilter (tanpa pagination) untuk di-merge
+                    var allFilteredRk = _monitoring_rk.Find(xfilter).ToList();
+
+                    // Kumpulkan well yang sudah ada di MonitoringRK (untuk cek duplikat)
+                    var rkWells = new HashSet<string>(allFilteredRk
+                        .Where(r => !string.IsNullOrEmpty(r.well))
+                        .Select(r => r.well));
+
+                    // Ambil data Barchart dengan text filter + column filter yang sama
+                    var barchartCollection = _database.GetCollection<Barchart>("barchart");
+                    FilterDefinition<Barchart> bcFilter = Builders<Barchart>.Filter.Ne("a", "b");
+                    if (!String.IsNullOrWhiteSpace(filter))
+                    {
+                        var lowerFilter = filter.ToLower();
+                        bcFilter =
+                            Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression(lowerFilter, "i")) |
+                            Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression(lowerFilter, "i")) |
+                            Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression(lowerFilter, "i")) |
+                            Builders<Barchart>.Filter.Regex(t => t.remarks, new BsonRegularExpression(lowerFilter, "i")) |
+                            Builders<Barchart>.Filter.Regex(t => t.plan_start, new BsonRegularExpression(lowerFilter, "i")) |
+                            Builders<Barchart>.Filter.Regex(t => t.plan_end, new BsonRegularExpression(lowerFilter, "i"));
+                    }
+                    // Apply column filter ke barchart
+                    if (!String.IsNullOrWhiteSpace(columnfilter))
+                    {
+                        try
+                        {
+                            var cf = JObject.Parse(columnfilter);
+                            if (cf["well"] != null && cf["well"].Type == JTokenType.Array)
+                            {
+                                var vals = cf["well"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                                if (vals.Length > 0)
+                                    bcFilter = bcFilter & Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            }
+                            if (cf["job"] != null && cf["job"].Type == JTokenType.Array)
+                            {
+                                var vals = cf["job"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                                if (vals.Length > 0)
+                                    bcFilter = bcFilter & Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            }
+                            if (cf["rig"] != null && cf["rig"].Type == JTokenType.Array)
+                            {
+                                var vals = cf["rig"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                                if (vals.Length > 0)
+                                    bcFilter = bcFilter & Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            }
+                            if (cf["remarks"] != null && cf["remarks"].Type == JTokenType.Array)
+                            {
+                                var vals = cf["remarks"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                                if (vals.Length > 0)
+                                    bcFilter = bcFilter & Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.remarks, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            }
+                        }
+                        catch { }
+                    }
+                    var allBarchart = barchartCollection.Find(bcFilter).ToList();
+
+                    // Merge items: barchart non-rigless yang well-nya belum ada di MonitoringRK
+                    var mergeItems = allBarchart
+                        .Where(b => b.rig != null
+                                    && !b.rig.ToLower().Contains("rigless")
+                                    && !string.IsNullOrEmpty(b.well)
+                                    && !rkWells.Contains(b.well))
+                        .Select(b => new MonitoringRK
+                        {
+                            well = b.well,
+                            job = b.job,
+                            rig = b.rig,
+                            plan_start = b.plan_start,
+                            plan_end = b.plan_end,
+                            remarks = null,
+                            pop = null,
+                            target_oil = null,
+                            target_gas = null,
+                            realisasi_oil = null,
+                            realisasi_gas = null
+                        })
+                        .ToList();
+
+                    // Gabungkan MonitoringRK + merge items untuk sorting & pagination terpadu
+                    var mergedList = allFilteredRk.Concat(mergeItems).ToList();
+
+                    // Apply sorting ke combined list
+                    IEnumerable<MonitoringRK> sortedList;
+                    switch (sort)
+                    {
+                        case "well": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.well) : mergedList.OrderByDescending(t => t.well); break;
+                        case "job": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.job) : mergedList.OrderByDescending(t => t.job); break;
+                        case "rig": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.rig) : mergedList.OrderByDescending(t => t.rig); break;
+                        case "plan_start": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.plan_start) : mergedList.OrderByDescending(t => t.plan_start); break;
+                        case "plan_end": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.plan_end) : mergedList.OrderByDescending(t => t.plan_end); break;
+                        case "pop": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.pop) : mergedList.OrderByDescending(t => t.pop); break;
+                        case "target_oil": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.target_oil) : mergedList.OrderByDescending(t => t.target_oil); break;
+                        case "target_gas": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.target_gas) : mergedList.OrderByDescending(t => t.target_gas); break;
+                        case "realisasi_oil": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.realisasi_oil) : mergedList.OrderByDescending(t => t.realisasi_oil); break;
+                        case "realisasi_gas": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.realisasi_gas) : mergedList.OrderByDescending(t => t.realisasi_gas); break;
+                        case "remarks": sortedList = (order == "asc") ? mergedList.OrderBy(t => t.remarks) : mergedList.OrderByDescending(t => t.remarks); break;
+                        default: sortedList = mergedList.OrderByDescending(t => t.plan_start); break;
+                    }
+
+                    // Apply pagination ke combined list
+                    var combinedTotal = mergedList.Count;
+                    var pageItems = sortedList
                         .Skip(page * pagesize)
-                        .Limit(pagesize)
+                        .Take(pagesize)
+                        .ToList();
+
+                    // Distinct values untuk autocomplete di frontend (dari semua barchart)
+                    var allBarchartUnfiltered = barchartCollection
+                        .Find(Builders<Barchart>.Filter.Ne("a", "b"))
+                        .ToList();
+                    var distinctWells = allBarchartUnfiltered
+                        .Where(b => !string.IsNullOrEmpty(b.well))
+                        .Select(b => b.well)
+                        .Distinct()
+                        .OrderBy(w => w)
+                        .ToList();
+                    var distinctJobs = allBarchartUnfiltered
+                        .Where(b => !string.IsNullOrEmpty(b.job))
+                        .Select(b => b.job)
+                        .Distinct()
+                        .OrderBy(j => j)
+                        .ToList();
+                    var distinctRigs = allBarchartUnfiltered
+                        .Where(b => !string.IsNullOrEmpty(b.rig))
+                        .Select(b => b.rig)
+                        .Distinct()
+                        .OrderBy(r => r)
                         .ToList();
 
                     return new JsonResult(new
                     {
-                        total_count = total_count,
+                        total_count = combinedTotal,
                         incomplete_result = false,
-                        items = items,
+                        items = pageItems,
+                        distinct_wells = distinctWells,
+                        distinct_jobs = distinctJobs,
+                        distinct_rigs = distinctRigs,
                     })
                     {
                         StatusCode = StatusCodes.Status200OK
@@ -147,17 +276,52 @@ namespace ssc.Areas.PE.Controllers
 
                 default:
                     dynamic res;
+                    var bcCollection = _database.GetCollection<Barchart>("barchart");
+
+                    // Bangun filter untuk Barchart dari columnfilter (untuk xFilter search)
+                    FilterDefinition<Barchart> xfBcFilter = Builders<Barchart>.Filter.Ne("a", "b");
+                    if (!string.IsNullOrWhiteSpace(columnfilter) && !string.IsNullOrWhiteSpace(mode))
+                    {
+                        try
+                        {
+                            var cf = JObject.Parse(columnfilter);
+                            if (cf[mode] != null && cf[mode].Type == JTokenType.Array)
+                            {
+                                var searchVals = cf[mode].ToObject<string[]>();
+                                if (searchVals.Length > 0)
+                                {
+                                    var pattern = string.Join("|", searchVals.Select(v => v.TrimStart('^').TrimEnd('$')));
+                                    xfBcFilter = xfBcFilter & Builders<Barchart>.Filter.Regex(mode, new BsonRegularExpression(pattern, "i"));
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
                     switch (mode)
                     {
                         case "well":
                         case "job":
                         case "rig":
                         case "remarks":
-                            res = _monitoring_rk.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
+                            var rkDistinct = _monitoring_rk.Distinct<string>(mode, xfilter).ToEnumerable().ToList();
+                            var bcDistinct = bcCollection.Distinct<string>(mode, xfBcFilter).ToEnumerable().ToList();
+                            res = rkDistinct.Union(bcDistinct).OrderBy(t => t).ToList();
                             break;
                         case "plan_start":
                         case "plan_end":
+                            var rkDates = _monitoring_rk.Distinct<DateTime?>(mode, xfilter).ToEnumerable().ToList();
+                            var bcDates = bcCollection.Distinct<DateTime?>(mode, xfBcFilter).ToEnumerable().ToList();
+                            res = rkDates.Union(bcDates).OrderByDescending(t => t).ToList();
+                            break;
+                        case "pop":
                             res = _monitoring_rk.Distinct<DateTime?>(mode, xfilter).ToEnumerable().OrderByDescending(t => t).ToList();
+                            break;
+                        case "target_oil":
+                        case "target_gas":
+                        case "realisasi_oil":
+                        case "realisasi_gas":
+                            res = _monitoring_rk.Distinct<decimal?>(mode, xfilter).ToEnumerable().OrderByDescending(t => t).ToList();
                             break;
                         default:
                             res = _monitoring_rk.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
@@ -173,6 +337,187 @@ namespace ssc.Areas.PE.Controllers
                         StatusCode = StatusCodes.Status200OK
                     };
             }
+        }
+
+        [Authorize("PeMonitoringRK Read")]
+        [HttpGet("rigless")]
+        public ActionResult GetRigless(String sort = "plan_start", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
+        {
+            var barchartCollection = _database.GetCollection<Barchart>("barchart");
+
+            // Ambil monitoring_rk dengan rig=Rigless
+            FilterDefinition<MonitoringRK> rkFilter = Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"));
+            FilterDefinition<Barchart> bcFilter = Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"));
+
+            // Text filter
+            if (!String.IsNullOrWhiteSpace(filter))
+            {
+                filter = filter.ToLower();
+                var rkTextFilter =
+                    Builders<MonitoringRK>.Filter.Regex(t => t.well, new BsonRegularExpression(filter, "i")) |
+                    Builders<MonitoringRK>.Filter.Regex(t => t.job, new BsonRegularExpression(filter, "i")) |
+                    Builders<MonitoringRK>.Filter.Regex(t => t.remarks, new BsonRegularExpression(filter, "i")) |
+                    Builders<MonitoringRK>.Filter.Regex(t => t.plan_start, new BsonRegularExpression(filter, "i")) |
+                    Builders<MonitoringRK>.Filter.Regex(t => t.plan_end, new BsonRegularExpression(filter, "i"));
+                rkFilter = rkFilter & rkTextFilter;
+
+                var bcTextFilter =
+                    Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression(filter, "i")) |
+                    Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression(filter, "i")) |
+                    Builders<Barchart>.Filter.Regex(t => t.remarks, new BsonRegularExpression(filter, "i")) |
+                    Builders<Barchart>.Filter.Regex(t => t.plan_start, new BsonRegularExpression(filter, "i")) |
+                    Builders<Barchart>.Filter.Regex(t => t.plan_end, new BsonRegularExpression(filter, "i"));
+                bcFilter = bcFilter & bcTextFilter;
+            }
+
+            // Column filter (hanya untuk kolom yang ada di barchart)
+            if (!String.IsNullOrWhiteSpace(columnfilter))
+            {
+                try
+                {
+                    var cf = JObject.Parse(columnfilter);
+                    if (cf["well"] != null && cf["well"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["well"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkWellFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v => Builders<MonitoringRK>.Filter.Regex(t => t.well, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            var bcWellFilter = Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.well, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            rkFilter = rkFilter & rkWellFilter;
+                            bcFilter = bcFilter & bcWellFilter;
+                        }
+                    }
+                    if (cf["job"] != null && cf["job"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["job"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkJobFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v => Builders<MonitoringRK>.Filter.Regex(t => t.job, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            var bcJobFilter = Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.job, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            rkFilter = rkFilter & rkJobFilter;
+                            bcFilter = bcFilter & bcJobFilter;
+                        }
+                    }
+                    if (cf["rig"] != null && cf["rig"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["rig"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkRigFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v => Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            var bcRigFilter = Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            rkFilter = rkFilter & rkRigFilter;
+                            bcFilter = bcFilter & bcRigFilter;
+                        }
+                    }
+                    if (cf["remarks"] != null && cf["remarks"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["remarks"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkRemarksFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v => Builders<MonitoringRK>.Filter.Regex(t => t.remarks, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            var bcRemarksFilter = Builders<Barchart>.Filter.Or(vals.Select(v => Builders<Barchart>.Filter.Regex(t => t.remarks, new BsonRegularExpression("^" + v.TrimStart('^').TrimEnd('$') + "$", "i"))).ToArray());
+                            rkFilter = rkFilter & rkRemarksFilter;
+                            bcFilter = bcFilter & bcRemarksFilter;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // Jika mode adalah nama kolom, kembalikan distinct values untuk xFilter
+            if (!string.IsNullOrWhiteSpace(mode))
+            {
+                dynamic distinctRes;
+                switch (mode)
+                {
+                    case "well":
+                    case "job":
+                    case "rig":
+                    case "remarks":
+                        var rkStr = _monitoring_rk.Distinct<string>(mode, rkFilter).ToEnumerable().ToList();
+                        var bcStr = barchartCollection.Distinct<string>(mode, bcFilter).ToEnumerable().ToList();
+                        distinctRes = rkStr.Union(bcStr).OrderBy(t => t).ToList();
+                        break;
+                    case "plan_start":
+                    case "plan_end":
+                    case "pop":
+                        var rkDt = _monitoring_rk.Distinct<DateTime?>(mode, rkFilter).ToEnumerable()
+                            .Where(d => d.HasValue).Select(d => d.Value.ToString("yyyy-MM-dd")).ToList();
+                        var bcDt = barchartCollection.Distinct<DateTime?>(mode, bcFilter).ToEnumerable()
+                            .Where(d => d.HasValue).Select(d => d.Value.ToString("yyyy-MM-dd")).ToList();
+                        distinctRes = rkDt.Union(bcDt).OrderByDescending(d => d).ToList();
+                        break;
+                    case "target_oil":
+                    case "target_gas":
+                    case "realisasi_oil":
+                    case "realisasi_gas":
+                        distinctRes = _monitoring_rk.Distinct<decimal?>(mode, rkFilter).ToEnumerable()
+                            .Where(d => d.HasValue).Select(d => d.Value.ToString()).OrderByDescending(d => d).ToList();
+                        break;
+                    default:
+                        distinctRes = _monitoring_rk.Distinct<string>(mode, rkFilter).ToEnumerable().OrderBy(t => t).ToList();
+                        break;
+                }
+                return new JsonResult(new
+                {
+                    total_count = 0,
+                    incomplete_result = false,
+                    items = distinctRes,
+                })
+                { StatusCode = StatusCodes.Status200OK };
+            }
+
+            // Mode data: ambil data rigless + pagination
+            var rkRiglessItems = _monitoring_rk.Find(rkFilter).ToList();
+            var bcRiglessItems = barchartCollection.Find(bcFilter).ToList();
+
+            // Gabung: ambil barchart rigless yang well-nya belum ada di monitoring_rk
+            var rkWells = new HashSet<string>(rkRiglessItems
+                .Where(r => !string.IsNullOrEmpty(r.well))
+                .Select(r => r.well));
+
+            var allItems = rkRiglessItems.Concat(
+                bcRiglessItems
+                    .Where(b => !string.IsNullOrEmpty(b.well) && !rkWells.Contains(b.well))
+                    .Select(b => new MonitoringRK
+                    {
+                        well = b.well,
+                        job = b.job,
+                        rig = b.rig,
+                        plan_start = b.plan_start,
+                        plan_end = b.plan_end
+                    })
+            ).ToList();
+
+            var total_count = allItems.Count;
+
+            // Sorting
+            IEnumerable<MonitoringRK> sortedList;
+            switch (sort)
+            {
+                case "well": sortedList = (order == "asc") ? allItems.OrderBy(t => t.well) : allItems.OrderByDescending(t => t.well); break;
+                case "job": sortedList = (order == "asc") ? allItems.OrderBy(t => t.job) : allItems.OrderByDescending(t => t.job); break;
+                case "rig": sortedList = (order == "asc") ? allItems.OrderBy(t => t.rig) : allItems.OrderByDescending(t => t.rig); break;
+                case "plan_start": sortedList = (order == "asc") ? allItems.OrderBy(t => t.plan_start) : allItems.OrderByDescending(t => t.plan_start); break;
+                case "plan_end": sortedList = (order == "asc") ? allItems.OrderBy(t => t.plan_end) : allItems.OrderByDescending(t => t.plan_end); break;
+                default: sortedList = allItems.OrderByDescending(t => t.plan_start); break;
+            }
+
+            // Pagination
+            var pageItems = sortedList
+                .Skip(page * pagesize)
+                .Take(pagesize)
+                .ToList();
+
+            return new JsonResult(new
+            {
+                total_count = total_count,
+                incomplete_result = false,
+                items = pageItems,
+            })
+            {
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
         [Authorize("PeMonitoringRK Delete")]

@@ -25,13 +25,6 @@ import { CommonService } from '../../common.service';
 })
 export class MonitoringRKListComponent implements OnInit {
 
-  barchartWellList: string[] = [];
-  barchartJobList: string[] = [];
-  barchartRigList: string[] = [];
-  barchartItems: any[] = [];
-  barchartLoaded: boolean = false;
-  autoAddedWells: Set<string> = new Set();
-
   rk_displayedColumns: string[] = ["select", "well", "job", "rig","pop","target_oil","target_gas","realisasi_oil","realisasi_gas", "remarks", "action"];
   headerColumns1: string[] = ["select",  "well", "job", "rig","pop","target","realisasi", "remarks","action"];
   headerColumns2: string[] = ["target_oil","target_gas","realisasi_oil","realisasi_gas"];
@@ -74,16 +67,40 @@ export class MonitoringRKListComponent implements OnInit {
   realisasi_gas_xSelected = [];
   remarks_xSelected = [];
 
+  // === Barchart distinct values untuk autocomplete ===
+  barchartWellList: string[] = [];
+  barchartJobList: string[] = [];
+  barchartRigList: string[] = [];
+
   // === Rigless Table ===
-  rk_rigless_displayedColumns: string[] = ["well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks"];
-  rk_rigless_headerColumns1: string[] = ["well", "job", "rig", "pop", "target", "realisasi", "remarks"];
-  rk_rigless_headerColumns2: string[] = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
-  rk_rigless_data: any[] = [];
-  rk_rigless_dataSource = new MatTableDataSource<any>(this.rk_rigless_data);
+  rl_displayedColumns: string[] = ["select", "well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
+  rl_headerColumns1: string[] = ["select", "well", "job", "rig", "pop", "target", "realisasi", "remarks", "action"];
+  rl_headerColumns2: string[] = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
+  rl_data: any[] = [];
+  rl_dataSource = new MatTableDataSource<any>(this.rl_data);
+  rl_selection = new SelectionModel<any>(true, []);
+  rl_isEditing: boolean = false;
+  rl_isLoadingResults: boolean = false;
+  rl_resultsLength = 0;
+
+  // Rigless xFilter selected values
+  rl_well_xSelected = [];
+  rl_job_xSelected = [];
+  rl_rig_xSelected = [];
+  rl_pop_xSelected = [];
+  rl_target_oil_xSelected = [];
+  rl_target_gas_xSelected = [];
+  rl_realisasi_oil_xSelected = [];
+  rl_realisasi_gas_xSelected = [];
+  rl_remarks_xSelected = [];
+
+  @ViewChild('rlSort', { static: true }) rlSort: MatSort;
+  @ViewChild('rlPaginator', { static: true }) rlPaginator: MatPaginator;
 
   rk_filterSubscription: Subscription;
   rk_selectedSubscription: Subscription;
   rk_listSubscription: Subscription;
+  rl_listSubscription: Subscription;
 
   constructor(
     private http: HttpClient,
@@ -111,24 +128,37 @@ export class MonitoringRKListComponent implements OnInit {
         { label: 'Monitoring RK', routerLink: '' }
       ]
     });
-    this.loadBarchartDistinctValues();
-
 
     this.rkExampleDatabase = new MonitoringRKHttpDao(this.http);
     this.rkSort.sortChange.subscribe(() => this.rkPaginator.pageIndex = 0);
 
-    // Filter xFilter: hanya proses event dengan column TANPA prefix "bc_"
+    // Filter xFilter
     this.rk_filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if (res && res["column"] && res["column"].indexOf("bc_") !== 0) this.rkGetColumnValues(res);
+      if (res && res["column"]) {
+        if (res["column"].indexOf("rl_") === 0) {
+          // Rigless xFilter — panggil API rigless dengan mode=column
+          this.rlGetColumnValues(res);
+        } else if (res["column"].indexOf("bc_") !== 0) {
+          this.rkGetColumnValues(res);
+        }
+      }
     })
-    // Selected xFilter: hanya update state untuk column TANPA prefix "bc_"
+    // Selected xFilter
     this.rk_selectedSubscription = this.xfilterService.selected.subscribe(res => {
-      if (res["column"] && res["column"].indexOf("bc_") !== 0) {
+      if (res["column"]) {
         (this as any)[res["column"] + "_xSelected"] = res["selected"];
+        // Jika rigless filter berubah, reload data rigless
+        if (res["column"].indexOf("rl_") === 0) {
+          this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
+        }
       }
     })
 
     // Observable utama: reload data saat sort/page/filter/xSelected berubah
+    // Hanya reaksi terhadap xfilter selected non-rl_ (rigless filter dikelola client-side)
+    const rkSelected$ = this.xfilterService.selected.pipe(
+      map(res => res && res["column"] && res["column"].indexOf("rl_") === 0 ? undefined : res)
+    );
     this.rk_listSubscription = merge(
       this.rkSort.sortChange,
       this.rkPaginator.page,
@@ -144,7 +174,7 @@ export class MonitoringRKListComponent implements OnInit {
       this.rk_realisasi_oilFilter.valueChanges.pipe(debounceTime(300)),
       this.rk_realisasi_gasFilter.valueChanges.pipe(debounceTime(300)),
       this.rk_remarksFilter.valueChanges.pipe(debounceTime(300)),
-      this.xfilterService.selected,
+      rkSelected$,
     ).pipe(
       startWith({}),
       switchMap(() => {
@@ -163,7 +193,14 @@ export class MonitoringRKListComponent implements OnInit {
         this.rk_isLoadingResults = false;
         this.rk_isRateLimitReached = false;
         this.rk_resultsLength = data.total_count;
-        return data.items;
+
+        // Set distinct values untuk autocomplete dari backend
+        if (data.distinct_wells) this.barchartWellList = data.distinct_wells;
+        if (data.distinct_jobs) this.barchartJobList = data.distinct_jobs;
+        if (data.distinct_rigs) this.barchartRigList = data.distinct_rigs;
+
+        // Gabungkan items monitoring_rk + merge_items dari barchart
+        return data.items || [];
       }),
       catchError(() => {
         this.rk_isLoadingResults = false;
@@ -177,8 +214,43 @@ export class MonitoringRKListComponent implements OnInit {
       }));
       this.rk_dataSource.data = this.rk_data;
       this.rk_selection.clear();
-      // Merge barchart items untuk mengisi well/job/rig yang belum ada
-      this.mergeBarchartToRK();
+    });
+
+    // ========== Rigless Table: Load data dari endpoint terpisah ==========
+    this.rlSort.sortChange.subscribe(() => this.rlPaginator.pageIndex = 0);
+
+    this.rl_listSubscription = merge(
+      this.rlSort.sortChange,
+      this.rlPaginator.page,
+    ).pipe(
+      startWith({}),
+      switchMap(() => {
+        this.rl_isLoadingResults = true;
+        var columnfilter = this.rlGetColumnFilter();
+        return this.service.getRigless(
+          this.rlSort.active,
+          this.rlSort.direction,
+          this.rlPaginator.pageIndex,
+          this.rlPaginator.pageSize,
+          '',
+          columnfilter,
+        );
+      }),
+      map(data => {
+        this.rl_isLoadingResults = false;
+        this.rl_resultsLength = data.total_count;
+        return data.items || [];
+      }),
+      catchError(() => {
+        this.rl_isLoadingResults = false;
+        return observableOf([]);
+      })
+    ).subscribe((data: any[]) => {
+      this.rl_data = data.map((d: any) => ({ ...d, isEdit: false }));
+      this.rl_dataSource.data = this.rl_data;
+      this.rl_dataSource.sort = this.rlSort;
+      this.rl_dataSource.paginator = this.rlPaginator;
+      this.rl_selection.clear();
     });
   }
 
@@ -187,84 +259,12 @@ export class MonitoringRKListComponent implements OnInit {
     if (this.rk_filterSubscription) this.rk_filterSubscription.unsubscribe();
     if (this.rk_selectedSubscription) this.rk_selectedSubscription.unsubscribe();
     if (this.rk_listSubscription) this.rk_listSubscription.unsubscribe();
+    if (this.rl_listSubscription) this.rl_listSubscription.unsubscribe();
   }
 
   /** Cek permission menu berdasarkan path */
   passPermission(path: String) {
     return this.pePermissionService.passPermission(path);
-  }
-
-  //ambil data barchart
-  loadBarchartDistinctValues() {
-    // Ambil semua item barchart (well, job, rig)
-    this.http.get<any>('/api/pe/Barchart', {
-      params: { pagesize: '9999' }
-    }).subscribe(res => {
-      this.barchartItems = res.items || [];
-      this.barchartLoaded = true;
-      // Isi daftar distinct
-      this.barchartWellList = [...new Set(this.barchartItems.map((i: any) => i.well).filter((w: string) => w))];
-      this.barchartJobList = [...new Set(this.barchartItems.map((i: any) => i.job).filter((j: string) => j))];
-      this.barchartRigList = [...new Set(this.barchartItems.map((i: any) => i.rig).filter((r: string) => r))];
-      // Merge ke tabel monitoring RK jika data RK sudah ada
-      this.mergeBarchartToRK();
-      // Isi tabel rigless
-      this.populateRiglessData();
-    });
-  }
-
-  /** Gabungkan data barchart ke monitoring RK untuk mengisi well/job/rig */
-  mergeBarchartToRK() {
-    if (!this.barchartLoaded || !this.rk_data) return;
-    var existingWells = new Set(this.rk_data.map(d => d.well));
-    var newRows: any[] = [];
-
-    // Tambah barchart items yang belum ada di RK & belum pernah di-auto-add
-    this.barchartItems.forEach(bc => {
-      if (bc.well && !existingWells.has(bc.well)) {
-        if (!this.autoAddedWells.has(bc.well)) {
-          newRows.push({
-            well: bc.well,
-            job: bc.job,
-            rig: bc.rig,
-            isEdit: false
-          });
-          this.autoAddedWells.add(bc.well);
-        } else {
-          // Auto-added sebelumnya, pastikan tetap masuk (karena rk_data di-replace)
-          newRows.push({
-            well: bc.well,
-            job: bc.job,
-            rig: bc.rig,
-            isEdit: false
-          });
-        }
-      }
-    });
-    if (newRows.length > 0) {
-      this.rk_data = [...this.rk_data, ...newRows];
-      this.rk_dataSource.data = this.rk_data;
-      this.rk_resultsLength = this.rk_data.length;
-    }
-  }
-
-  /** Isi tabel rigless dari barchart items yang rig-nya mengandung "rigless" */
-  populateRiglessData() {
-    if (!this.barchartItems.length) return;
-    this.rk_rigless_data = this.barchartItems
-      .filter(bc => bc.rig && bc.rig.toLowerCase().includes('rigless'))
-      .map(bc => ({
-        well: bc.well,
-        job: bc.job,
-        rig: bc.rig,
-        pop: null,
-        target_oil: null,
-        target_gas: null,
-        realisasi_oil: null,
-        realisasi_gas: null,
-        remarks: null,
-      }));
-    this.rk_rigless_dataSource.data = this.rk_rigless_data;
   }
 
   rkExportExcel() {
@@ -359,6 +359,41 @@ export class MonitoringRKListComponent implements OnInit {
     return columnfilter;
   }
 
+  rlGetColumnFilter() {
+    var columnfilter: any = {};
+    if (this.rl_well_xSelected.length) columnfilter["well"] = this.rl_well_xSelected;
+    if (this.rl_job_xSelected.length) columnfilter["job"] = this.rl_job_xSelected;
+    if (this.rl_rig_xSelected.length) columnfilter["rig"] = this.rl_rig_xSelected;
+    if (this.rl_pop_xSelected.length) columnfilter["pop"] = this.rl_pop_xSelected;
+    if (this.rl_remarks_xSelected.length) columnfilter["remarks"] = this.rl_remarks_xSelected;
+    return columnfilter;
+  }
+
+  rlGetColumnValues(param: any) {
+    var column = param["column"];
+    var filter = param["filter"];
+    var selected = param["selected"];
+    var clear = param["clear"];
+    var realCol = column.substring(3); // "rl_well" -> "well"
+    var columnfilter: any = this.rlGetColumnFilter();
+    if (filter) columnfilter[realCol] = [filter];
+    if (selected && selected.length > 0) columnfilter[realCol] = selected.map((s: any) => "^" + s + "$");
+    if (clear) delete columnfilter[realCol];
+
+    return this.service.getRigless(
+      this.rlSort.active,
+      this.rlSort.direction,
+      this.rlPaginator.pageIndex,
+      this.rlPaginator.pageSize,
+      '',
+      columnfilter,
+      realCol
+    ).pipe(map((res) => res))
+    .subscribe(res => {
+      this.xfilterService.updateItems({ column: column, items: res.items });
+    }, () => {});
+  }
+
   /** Whether the number of selected elements matches the total number of rows. */
   rkIsAllSelected() {
     const numSelected = this.rk_selection.selected.length;
@@ -428,29 +463,44 @@ export class MonitoringRKListComponent implements OnInit {
     delete payload._backup;
     delete payload._error;
 
-    this.service.update(row._id, payload).subscribe({
-      next: (res) => {
+    const isNew = !row._id;
+
+    const request$ = isNew
+      ? this.service.create([payload])  // Backend expects an array
+      : this.service.update(row._id, payload);
+
+    request$.subscribe({
+      next: (res: any) => {
         row.isEdit = false;
         delete row._backup;
 
-        const idx = this.rk_dataSource.data.findIndex(d => d._id === row._id);
-        if (idx !== -1) {
-          this.rk_dataSource.data[idx] = {
-            ...this.rk_dataSource.data[idx],
-            ...payload,
-            isEdit: false
-          };
-          this.rk_dataSource.data = [...this.rk_dataSource.data];
+        if (isNew) {
+          // Reload data setelah create agar mendapat _id dari database
+          this.rkPaginator._changePageSize(this.rkPaginator.pageSize);
+        } else {
+          const idx = this.rk_dataSource.data.findIndex(d => d._id === row._id);
+          if (idx !== -1) {
+            this.rk_dataSource.data[idx] = {
+              ...this.rk_dataSource.data[idx],
+              ...payload,
+              isEdit: false
+            };
+            this.rk_dataSource.data = [...this.rk_dataSource.data];
+          }
         }
 
-        const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', { duration: 5000 });
-        snackBarRef.onAction().subscribe(() => {
-          this.rkUndoUpdate(row._id, backupData);
-        });
+        const msg = isNew ? 'Data berhasil ditambahkan' : 'Data berhasil diupdate';
+        const snackBarRef = this.snackBar.open(msg, 'UNDO', { duration: 5000 });
+        if (!isNew) {
+          snackBarRef.onAction().subscribe(() => {
+            this.rkUndoUpdate(row._id, backupData);
+          });
+        }
       },
       error: (error) => {
         this.rkCancel(row);
-        this.snackBar.open(error.message ? error.message : 'Gagal mengupdate data', 'Tutup', { duration: 5000 });
+        const errMsg = isNew ? 'Gagal menambahkan data' : 'Gagal mengupdate data';
+        this.snackBar.open(error.message ? error.message : errMsg, 'Tutup', { duration: 5000 });
       }
     });
   }
@@ -487,6 +537,145 @@ export class MonitoringRKListComponent implements OnInit {
       Object.assign(row, row._backup);
     }
     row.isEdit = false;
+  }
+
+  // ========== Rigless Table Methods ==========
+
+  rlEdit(row: any) {
+    row._backup = { ...row };
+    row.isEdit = true;
+    this.rl_isEditing = true;
+  }
+
+  rlCancel(row: any) {
+    if (row._backup) {
+      Object.assign(row, row._backup);
+    }
+    row.isEdit = false;
+    this.rl_isEditing = false;
+  }
+
+  rlSave(row: any) {
+    const payload: any = { ...row };
+    const backupData = { ...row._backup };
+
+    delete payload.isEdit;
+    delete payload._backup;
+    delete payload._error;
+
+    const isNew = !row._id;
+
+    const request$ = isNew
+      ? this.service.create([payload])
+      : this.service.update(row._id, payload);
+
+    request$.subscribe({
+      next: (res: any) => {
+        row.isEdit = false;
+        delete row._backup;
+        this.rl_isEditing = false;
+
+        if (isNew) {
+          // Reload data rigless setelah create
+          this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
+        } else {
+          const idx = this.rl_dataSource.data.findIndex(d => d._id === row._id);
+          if (idx !== -1) {
+            this.rl_dataSource.data[idx] = {
+              ...this.rl_dataSource.data[idx],
+              ...payload,
+              isEdit: false
+            };
+            this.rl_dataSource.data = [...this.rl_dataSource.data];
+          }
+        }
+
+        const msg = isNew ? 'Data berhasil ditambahkan' : 'Data berhasil diupdate';
+        const snackBarRef = this.snackBar.open(msg, 'UNDO', { duration: 5000 });
+        if (!isNew) {
+          snackBarRef.onAction().subscribe(() => {
+            this.rlUndoUpdate(row._id, backupData);
+          });
+        }
+      },
+      error: (error) => {
+        this.rlCancel(row);
+        const errMsg = isNew ? 'Gagal menambahkan data' : 'Gagal mengupdate data';
+        this.snackBar.open(error.message ? error.message : errMsg, 'Tutup', { duration: 5000 });
+      }
+    });
+  }
+
+  rlUndoUpdate(id: string, backupData: any) {
+    const payload = { ...backupData };
+    delete payload.isEdit;
+    delete payload._backup;
+    delete payload._error;
+
+    this.service.update(id, payload).subscribe({
+      next: (res) => {
+        const dataIdx = this.rl_dataSource.data.findIndex(d => d._id === id);
+        if (dataIdx !== -1) {
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup' && key !== '_error') {
+              (this.rl_dataSource.data[dataIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.rl_dataSource.data[dataIdx] as any).isEdit = false;
+          delete (this.rl_dataSource.data[dataIdx] as any)._backup;
+        }
+        this.rl_dataSource.data = [...this.rl_dataSource.data];
+        this.snackBar.open('Perubahan dibatalkan', 'Tutup', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snackBar.open('Gagal membatalkan perubahan', 'Tutup', { duration: 5000 });
+      }
+    });
+  }
+
+  rlMasterToggle() {
+    this.rlIsAllSelected()
+      ? this.rl_selection.clear()
+      : this.rl_dataSource.data.forEach(row => this.rl_selection.select(row));
+  }
+
+  rlIsAllSelected() {
+    const numSelected = this.rl_selection.selected.length;
+    const numRows = this.rl_dataSource.data.length;
+    return numSelected === numRows;
+  }
+
+  rlDeleteSelected() {
+    const dialogRef = this.dialog.open(MonitoringRKDeleteDialogComponent, {
+      width: '350px',
+      data: this.rl_selection.selected.length
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 1) {
+        this.rl_isLoadingResults = true;
+        const ids = this.rl_selection.selected.map(s => s._id).filter((id: string) => id);
+        if (ids.length === 0) {
+          // Hanya item tanpa _id, reload rigless data
+          this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
+          this.rl_selection.clear();
+          this.rl_isLoadingResults = false;
+          this.snackbarService.status.next(new SnackbarApi(true, "Item(s) removed from view.", "dismiss"));
+          return;
+        }
+        this.http.delete('/api/pe/MonitoringRK', {
+          params: { _ids: ids }
+        }).subscribe((res: any) => {
+          this.rl_isLoadingResults = false;
+          this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
+          this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
+        },
+          error => {
+            this.rl_isLoadingResults = false;
+            this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
+          })
+      }
+    });
   }
 
 }

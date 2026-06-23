@@ -16,6 +16,7 @@ export class PePermissionService {
 	private currentUser: any;
 	private state: RouterStateSnapshot;
 	private basePath: string = "pe";
+	private permissionCache: Map<string, boolean> = new Map();
 
 	private root: Menu[] = [
 
@@ -139,21 +140,25 @@ export class PePermissionService {
 		private router: Router,
 		private authService: AuthService,
 		) { 
-		this.authService.currentUser.subscribe(res => this.currentUser = res);
+		this.authService.currentUser.subscribe(res => {
+			this.currentUser = res;
+			this.permissionCache.clear(); // Clear cache when user changes
+		});
 	}
 
   passPermission(path: String) {
 
-	console.log('Checking permission for:', path);
-	console.log('Current user:', this.currentUser);
-
     //if (path.indexOf('/') == -1) path = path.substring(1, path.lastIndexOf('/'))
     if (path.charAt(0) == "/") path = path.substring(1);
     if (path.match(/[/]/g).length > 2) path = path.substring(0, path.lastIndexOf('/'))
-    console.log(path)
+
+    // Return cached result if available
+    if (this.permissionCache.has(path as string)) {
+      return this.permissionCache.get(path as string)!;
+    }
+
       var res: boolean = false;
       var ms: Menu[] = this.root.filter(m => path == this.basePath + '/' + m.link);
-      console.log(ms)
         if(ms.length > 0) {
             var menu:Menu = ms[0];
             if (this.currentUser != null) {
@@ -170,6 +175,7 @@ export class PePermissionService {
                 res = !menu.auth;
             }
         }
+        this.permissionCache.set(path as string, res);
         return res;
     }
 
