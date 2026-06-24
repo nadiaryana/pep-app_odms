@@ -848,7 +848,9 @@ export class OneSlideComponent implements OnInit {
           zoomType: 'x',
           style: {
             fontFamily: 'Roboto, Helvetica Neue, sans-serif'
-          }
+          },
+          marginLeft: 100,
+          marginRight: 100
         },
         title: {
           text: 'Well Production Performance of ' + this.well_xSelected.join(', '),
@@ -866,13 +868,38 @@ export class OneSlideComponent implements OnInit {
         },
         xAxis: {
           categories: categories,
-          crosshair: true
+          crosshair: true,
+          labels: {
+            style: {
+              fontSize: '11px'
+            }
+          }
         },
         yAxis: [{
-          title: { text: 'Liquid (bfpd), Oil (bopd)' }
+          title: {
+            text: 'Liquid (bfpd), Oil (bopd)',
+            style: {
+              fontSize: '12px'
+            }
+          },
+          labels: {
+            style: {
+              fontSize: '11px'
+            }
+          }
         }, {
-          title: { text: 'WC (%), Gas (MMscfd)' },
-          opposite: true
+          title: {
+            text: 'WC (%), Gas (MMscfd)',
+            style: {
+              fontSize: '12px'
+            }
+          },
+          opposite: true,
+          labels: {
+            style: {
+              fontSize: '11px'
+            }
+          }
         }],
         tooltip: {
           shared: true
@@ -941,7 +968,9 @@ export class OneSlideComponent implements OnInit {
           zoomType: 'x',
           style: {
             fontFamily: 'Roboto, Helvetica Neue, sans-serif'
-          }
+          },
+          marginLeft: 100,
+          marginRight: 100
         },
       exporting: {
             fallbackToExportServer: false
@@ -961,22 +990,25 @@ export class OneSlideComponent implements OnInit {
         xAxis: [{
           categories: [],
           crosshair: true,
-          autoRotation: true,
           labels: {
-            // step: 7
-          }//,
+            style: {
+              fontSize: '11px'
+            }
+          }
         }],
         yAxis: [{ // Primary yAxis
           title: {
             text: 'WHP (m), EOT/PSD (m), SM (m), SL (in)',
             style: {
-              color: '#666666'
+              color: '#666666',
+              fontSize: '12px'
             }
           },
           labels: {
             format: '{value}',
             style: {
-              color: '#999999'
+              color: '#999999',
+              fontSize: '11px'
             }
           }
         }, { // Secondary yAxis
@@ -984,13 +1016,15 @@ export class OneSlideComponent implements OnInit {
           title: {
             text: 'SPM/Freq, OD Pump (in)',
             style: {
-              color: '#666666'
+              color: '#666666',
+              fontSize: '12px'
             }
           },
           labels: {
             format: '{value}',
             style: {
-              color: '#999999'
+              color: '#999999',
+              fontSize: '11px'
             }
           },
           opposite: true
@@ -1204,10 +1238,28 @@ export class OneSlideComponent implements OnInit {
         }),
         color: "#1E88E5",
         marker: {
-          enabled: false,
+          enabled: true,
           radius: 3,
         },
         zIndex: 2,
+        dataLabels: {
+          enabled: true,
+          formatter: function (this: any) {
+            var point = this.point;
+            var series = point.series;
+            if (point.index === 0 || point.index === series.data.length - 1) {
+              return 'Q: <b>' + point.x.toFixed(2) + '</b><br/>Pwf: <b>' + point.y.toFixed(2) + '</b>';
+            }
+            return null;
+          },
+          style: { fontSize: '10px', fontWeight: 'bold', color: '#1E88E5' },
+          backgroundColor: 'rgba(255,255,255,0.8)',
+          borderColor: '#1E88E5',
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: 4,
+          useHTML: true
+        }
       },
       {
         name: "Operating Point",
@@ -1224,6 +1276,22 @@ export class OneSlideComponent implements OnInit {
           symbol: "circle",
         },
         zIndex: 5,
+        dataLabels: {
+          enabled: true,
+          verticalAlign: 'bottom',
+          y: -16,
+          formatter: function (this: any) {
+            return 'Q: <b>' + this.point.x.toFixed(2) + '</b><br/>Pwf: <b>' + this.point.y.toFixed(2) + '</b>';
+          },
+          style: { fontSize: '12px', fontWeight: 'bold', color: '#E53935' },
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          borderColor: '#E53935',
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: 6,
+          shadow: true,
+          useHTML: true
+        }
       },
       {
         name: "Q_design",
@@ -1237,6 +1305,22 @@ export class OneSlideComponent implements OnInit {
         marker: { enabled: false },
         enableMouseTracking: false,
         zIndex: 1,
+        dataLabels: {
+          enabled: true,
+          align: 'left',
+          verticalAlign: 'middle',
+          formatter: function (this: any) {
+            if (this.point.index === 1) {
+              return 'Q_design: <b>' + this.x.toFixed(2) + '</b>';
+            }
+            return null;
+          },
+          style: { fontSize: '11px', fontWeight: 'bold', color: '#E53935' },
+          backgroundColor: 'rgba(255,255,255,0.85)',
+          padding: 4,
+          borderRadius: 3,
+          useHTML: true
+        }
       },
       {
         name: "Pwf_design",
@@ -1250,6 +1334,22 @@ export class OneSlideComponent implements OnInit {
         marker: { enabled: false },
         enableMouseTracking: false,
         zIndex: 1,
+        dataLabels: {
+          enabled: true,
+          align: 'left',
+          verticalAlign: 'top',
+          formatter: function (this: any) {
+            if (this.point.index === 1) {
+              return 'Pwf_design: <b>' + this.y.toFixed(2) + '</b>';
+            }
+            return null;
+          },
+          style: { fontSize: '11px', fontWeight: 'bold', color: '#E53935' },
+          backgroundColor: 'rgba(255,255,255,0.85)',
+          padding: 4,
+          borderRadius: 3,
+          useHTML: true
+        }
       },
     ],
     xAxis: {

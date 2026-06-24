@@ -3,18 +3,19 @@
     <input matInput placeholder="Filter" [formControl]="filterControl">
   </mat-form-field-->
 
-
+  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/actual/add-opr']" *ngIf="pePermissionService.passPermission('pe/actual/add')"><mat-icon>add</mat-icon> Update Actual Operation </button>
+  <button mat-button color="secondary" [disabled]="isLoadingResults" [routerLink]="['/pe/actual/add']" *ngIf="pePermissionService.passPermission('pe/actual/add')"><mat-icon>add</mat-icon> Upload Operation</button>
+  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
   <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="canDeleteActual()"><mat-icon>delete</mat-icon> Delete Selected</button>
   <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/actual/chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
 </div>
 
 <div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-  <div class="table-action-header">
-    <h3 class="table-title" style="flex-grow:2"><mat-icon>update</mat-icon> Actual Operation</h3>
+  <!-- <div class="table-action-header">
     <button mat-stroked-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/actual/add-opr']" *ngIf="pePermissionService.passPermission('pe/actual/add')"><mat-icon>add</mat-icon> Update Actual Operation </button>
     <button mat-stroked-button color="secondary" [disabled]="isLoadingResults" [routerLink]="['/pe/actual/add']" *ngIf="pePermissionService.passPermission('pe/actual/add')"><mat-icon>add</mat-icon> Upload Operation</button>
     <button mat-stroked-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
-  </div>
+  </div> -->
 
   <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
     <mat-spinner *ngIf="isLoadingResults"></mat-spinner>

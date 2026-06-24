@@ -894,6 +894,24 @@ export class IprComponent implements OnInit {
           radius: 3,
         },
         zIndex: 2,
+        dataLabels: {
+          enabled: true,
+          formatter: function () {
+            var point = this.point;
+            var series = point.series;
+            if (point.index === 0 || point.index === series.data.length - 1) {
+              return 'Q: <b>' + point.x.toFixed(2) + '</b><br/>Pwf: <b>' + point.y.toFixed(2) + '</b>';
+            }
+            return null;
+          },
+          style: { fontSize: '10px', fontWeight: 'bold', color: '#1E88E5' },
+          backgroundColor: 'rgba(255,255,255,0.8)',
+          borderColor: '#1E88E5',
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: 4,
+          useHTML: true
+        }
       },
       // OPERATING POINT
       {
@@ -911,6 +929,23 @@ export class IprComponent implements OnInit {
           symbol: "circle",
         },
         zIndex: 5,
+        enableMouseTracking: false,
+        dataLabels: {
+          enabled: true,
+          verticalAlign: 'bottom',
+          y: -16,
+          formatter: function () {
+            return 'Q: <b>' + this.point.x.toFixed(2) + '</b><br/>Pwf: <b>' + this.point.y.toFixed(2) + '</b>';
+          },
+          style: { fontSize: '12px', fontWeight: 'bold', color: '#E53935' },
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          borderColor: '#E53935',
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: 6,
+          shadow: false,
+          useHTML: true
+        }
       },
       {
         name: "Q_design",
@@ -924,6 +959,22 @@ export class IprComponent implements OnInit {
         marker: { enabled: false },
         enableMouseTracking: false,
         zIndex: 1,
+        // dataLabels: {
+        //   enabled: true,
+        //   align: 'left',
+        //   verticalAlign: 'middle',
+        //   formatter: function () {
+        //     if (this.point.index === 1) {
+        //       return 'Q_design: <b>' + this.x.toFixed(2) + '</b>';
+        //     }
+        //     return null;
+        //   },
+        //   style: { fontSize: '11px', fontWeight: 'bold', color: '#E53935' },
+        //   backgroundColor: 'rgba(255,255,255,0.85)',
+        //   padding: 4,
+        //   borderRadius: 3,
+        //   useHTML: true
+        // }
       },
       {
         name: "Pwf_design",
@@ -937,6 +988,22 @@ export class IprComponent implements OnInit {
         marker: { enabled: false },
         enableMouseTracking: false,
         zIndex: 1,
+        // dataLabels: {
+        //   enabled: true,
+        //   align: 'left',
+        //   verticalAlign: 'top',
+        //   formatter: function () {
+        //     if (this.point.index === 1) {
+        //       return 'Pwf_design: <b>' + this.y.toFixed(2) + '</b>';
+        //     }
+        //     return null;
+        //   },
+        //   style: { fontSize: '11px', fontWeight: 'bold', color: '#E53935' },
+        //   backgroundColor: 'rgba(255,255,255,0.85)',
+        //   padding: 4,
+        //   borderRadius: 3,
+        //   useHTML: true
+        // }
       },
     ],
     xAxis: {
@@ -945,10 +1012,10 @@ export class IprComponent implements OnInit {
     yAxis: {
       title: { text: "Pwf (psi)" },
     },
-    tooltip: {
-      headerFormat: "",
-      pointFormat: "Q: {point.x:.2f} <br>Pwf: {point.y:.2f}",
-    },
+    // tooltip: {
+    //   headerFormat: "",
+    //   pointFormat: "Q: {point.x:.2f} <br>Pwf: {point.y:.2f}",
+    // },
   };
 
   Highcharts.chart(this.ipr_chart_el.nativeElement, this.ipr_chart_options);

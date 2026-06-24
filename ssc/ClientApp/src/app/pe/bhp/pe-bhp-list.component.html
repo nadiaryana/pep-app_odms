@@ -137,7 +137,7 @@
 
     <ng-container matColumnDef="Actions">
       <th mat-header-cell *matHeaderCellDef>Action</th>   
-      <td mat-cell *matCellDef="let row"> 
+      <td mat-cell *matCellDef="let row">   
        <!--button mat-button *ngIf="passPermission('/pe/sensor/edit')" [routerLink]="['/', 'presence','device', 'edit', row.PE_TICKET_ID]" matTooltip="Edit Device" ><mat-icon>edit</mat-icon></button> 
        <button mat-button *ngIf="passPermission('/pe/sensor/delete')" (click)="deletePeSensor(row.PE_TICKET_ID)" matTooltip="Delete Device"><mat-icon>delete</mat-icon></button--> 
      </td>
@@ -150,5 +150,5 @@
 
 <mat-paginator [length]="resultsLength"  [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
 <router-outlet></router-outlet>
-<router-outlet name="overlay2"></router-outlet>
+<router-outlet   name="overlay2"></router-outlet>
 </div>
