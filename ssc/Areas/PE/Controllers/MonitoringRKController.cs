@@ -35,7 +35,18 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeMonitoringRK Read")]
         [HttpGet]
-        public ActionResult Get(String sort = "plan_start", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "", DateTime? start_date = null, DateTime? end_date = null)
+        public ActionResult Get(
+            String sort = "plan_start",
+            String order = "desc",
+            int page = 0,
+            int pagesize = 50,
+            String filter = "",
+            String columnfilter = "",
+            string mode = "",
+            DateTime? start_date = null,
+            DateTime? end_date = null,
+            string chart_type = ""
+            )
         {
             FilterDefinition<MonitoringRK> xfilter = Builders<MonitoringRK>.Filter.Ne("a", "b");
             FilterDefinition<MonitoringRK> xcolfilter;
@@ -238,37 +249,65 @@ namespace ssc.Areas.PE.Controllers
                         StatusCode = StatusCodes.Status200OK
                     };
 
-                // Mode chart: untuk Gantt Chart dengan filter date range
-                // Mengikuti pattern DataController (well_performance_sonolog)
+                // Mode chart: untuk Column Chart 
                 case "chart":
-                    // list template rig untuk pengurutan
-                    var templateOrderRig = new List<string> { "H-25", "L-350", "MH-262", "Rigless" };
-                    var chartData = _monitoring_rk.Find(
-                        r =>
-                            // jika masih dialam range
-                            (r.plan_start >= start_date &&
-                            r.plan_end <= end_date) ||
-                            // atau jika plan_start lebih kecil dari start_date dan plan_end lebih besar dari start_date
-                            (r.plan_start <= start_date &&
-                            r.plan_end >= start_date) ||
-                            // atau jika plan_end lebih besar dari end_date dan plan_start lebih kecil dari end_date
-                            (r.plan_end >= end_date &&
-                            r.plan_start <= end_date)
-                    ).ToList().OrderBy(t => t.plan_start).Select(s => new
+                    // Filter rig type if specified
+                    FilterDefinition<MonitoringRK> chartFilter;
+                    if (chart_type == "rigless")
                     {
-                        well = s.well,
-                        job = s.job,
-                        rig = s.rig,
-                        remarks = s.remarks,
-                        plan_start = s.plan_start,
-                        plan_end = s.plan_end
-                    });
-                    // Urutkan berdasarkan template rig
-                    chartData = chartData.OrderBy(d =>
+                        chartFilter = Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"));
+                    }
+                    else if (chart_type == "non-rigless")
                     {
-                        int index = templateOrderRig.IndexOf(d.rig);
-                        return index >= 0 ? index : int.MaxValue;
-                    });
+                        chartFilter = Builders<MonitoringRK>.Filter.And(
+                            Builders<MonitoringRK>.Filter.Exists(t => t.rig),
+                            Builders<MonitoringRK>.Filter.Not(Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i")))
+                        );
+                    }
+                    else
+                    {
+                        chartFilter = Builders<MonitoringRK>.Filter.Ne("a", "b");
+                    }
+
+                    // Filter date range 
+                    var combinedChartFilter = chartFilter;
+                    if (start_date.HasValue && end_date.HasValue)
+                    {
+                        FilterDefinition<MonitoringRK> dateFilter =
+                            Builders<MonitoringRK>.Filter.Or(
+                                // masih dalam range
+                                Builders<MonitoringRK>.Filter.And(
+                                    Builders<MonitoringRK>.Filter.Gte(r => r.plan_start, start_date),
+                                    Builders<MonitoringRK>.Filter.Lte(r => r.plan_end, end_date)
+                                ),
+                                // plan_start < start_date && plan_end >= start_date
+                                Builders<MonitoringRK>.Filter.And(
+                                    Builders<MonitoringRK>.Filter.Lte(r => r.plan_start, start_date),
+                                    Builders<MonitoringRK>.Filter.Gte(r => r.plan_end, start_date)
+                                ),
+                                // plan_end > end_date && plan_start <= end_date
+                                Builders<MonitoringRK>.Filter.And(
+                                    Builders<MonitoringRK>.Filter.Gte(r => r.plan_end, end_date),
+                                    Builders<MonitoringRK>.Filter.Lte(r => r.plan_start, end_date)
+                                )
+                            );
+                        combinedChartFilter = chartFilter & dateFilter;
+                    }
+
+                    var chartData = _monitoring_rk.Find(combinedChartFilter).ToList()
+                        .Select(s => new
+                        {
+                            well = s.well,
+                            job = s.job,
+                            rig = s.rig,
+                            remarks = s.remarks,
+                            plan_start = s.plan_start,
+                            plan_end = s.plan_end,
+                            target_oil = s.target_oil,
+                            target_gas = s.target_gas,
+                            realisasi_oil = s.realisasi_oil,
+                            realisasi_gas = s.realisasi_gas
+                        });
                     return Ok(new { data = chartData });
 
                 case "excel":
@@ -853,8 +892,6 @@ namespace ssc.Areas.PE.Controllers
                 .Set(t => t.well, item.well)
                 .Set(t => t.job, item.job)
                 .Set(t => t.rig, item.rig)
-                .Set(t => t.plan_start, item.plan_start)
-                .Set(t => t.plan_end, item.plan_end)
                 .Set(t => t.pop, item.pop)
                 .Set(t => t.target_oil, item.target_oil)
                 .Set(t => t.target_gas, item.target_gas)
@@ -870,52 +907,58 @@ namespace ssc.Areas.PE.Controllers
 
         private ActionResult GetExcel(List<MonitoringRK> items)
         {
-            using (var package = new ExcelPackage())
+            var workbook = new ExcelPackage();
+            var ws = workbook.Workbook.Worksheets.Add("MonitoringRK");
+
+            // Header row 1 — main categories
+            ws.Cells[1, 1].Value = "Well";
+            ws.Cells[1, 1, 2, 1].Merge = true;
+            ws.Cells[1, 2].Value = "Job";
+            ws.Cells[1, 2, 2, 2].Merge = true;
+            ws.Cells[1, 3].Value = "Rig";
+            ws.Cells[1, 3, 2, 3].Merge = true;
+            ws.Cells[1, 4].Value = "Pop";
+            ws.Cells[1, 4, 2, 4].Merge = true;
+
+            ws.Cells[1, 5].Value = "Target";
+            ws.Cells[1, 5, 2, 6].Merge = true;
+            ws.Cells[2, 5].Value = "Oil";
+            ws.Cells[2, 6].Value = "Gas";
+
+            ws.Cells[1, 7].Value = "Realisasi";
+            ws.Cells[1, 7, 2, 8].Merge = true;
+            ws.Cells[2, 7].Value = "Oil";
+            ws.Cells[2, 8].Value = "Gas";
+
+            ws.Cells[1, 9].Value = "Remarks";
+            ws.Cells[1, 9, 2, 9].Merge = true;
+
+            // Style headers
+            ws.Cells[1, 1, 2, 9].Style.Font.Bold = true;
+            ws.Cells[1, 1, 2, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            ws.Cells[1, 1, 2, 9].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+
+            // Data rows (mulai row 3)
+            for (int i = 0; i < items.Count(); i++)
             {
-                var worksheet = package.Workbook.Worksheets.Add("MonitoringRK");
-
-                // Header
-                worksheet.Cells[1, 2].Value = "Well";
-                worksheet.Cells[1, 3].Value = "Job";
-                worksheet.Cells[1, 4].Value = "Rig";
-                worksheet.Cells[1, 5].Value = "Plan Start";
-                worksheet.Cells[1, 6].Value = "Plan End";
-                worksheet.Cells[1, 7].Value = "Remarks";
-
-                // Style header
-                using (var range = worksheet.Cells[1, 1, 1, 5])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
-                }
-
-                // Data
-                int row = 2;
-                foreach (var item in items)
-                {
-                    worksheet.Cells[row, 2].Value = item.well;
-                    worksheet.Cells[row, 3].Value = item.job;
-                    worksheet.Cells[row, 4].Value = item.rig;
-                    worksheet.Cells[row, 5].Value = item.plan_start;
-                    worksheet.Cells[row, 6].Value = item.plan_end;
-
-                    worksheet.Cells[row, 5].Style.Numberformat.Format = "dd-MMM-yyyy";
-                    worksheet.Cells[row, 6].Style.Numberformat.Format = "dd-MMM-yyyy";
-
-                    worksheet.Cells[row, 7].Value = item.remarks;
-
-                    row++;
-                }
-
-                worksheet.Cells.AutoFitColumns();
-
-                var stream = new MemoryStream();
-                package.SaveAs(stream);
-                stream.Position = 0;
-
-                return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MonitoringRK.xlsx");
+                var t = items.ElementAt(i);
+                ws.Cells[3 + i, 1].Value = t.well;
+                ws.Cells[3 + i, 2].Value = t.job;
+                ws.Cells[3 + i, 3].Value = t.rig;
+                ws.Cells[3 + i, 4].Style.Numberformat.Format = "d-MMM-yy";
+                ws.Cells[3 + i, 4].Value = t.pop.HasValue ? t.pop.Value.ToLocalTime().ToOADate() : (double?)null;
+                ws.Cells[3 + i, 5].Value = t.target_oil;
+                ws.Cells[3 + i, 6].Value = t.target_gas;
+                ws.Cells[3 + i, 7].Value = t.realisasi_oil;
+                ws.Cells[3 + i, 8].Value = t.realisasi_gas;
+                ws.Cells[3 + i, 9].Value = t.remarks;
             }
+
+            ws.Cells.AutoFitColumns();
+
+            var memoryStream = new MemoryStream(workbook.GetAsByteArray());
+            memoryStream.Position = 0;
+            return File(memoryStream, "application/vnd.ms-excel", "MonitoringRK.xlsx");
         }
     }
 }

@@ -156,7 +156,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ds_efficiency_xSelected = [];
 
   
-  filterSubscription: Subscription = null!;
+  // filterSubscription: Subscription = null!;
+  private filterSubscription: any = null;
   selectedSubscription: Subscription = null!;
   listSubscription: Subscription = null!;
   
@@ -201,8 +202,13 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
 
-    this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if (res) this.getColumnValues(res);
+    this.xfilterService.filter.subscribe(res => {
+      // Cancel previous request jika masih ada
+      if (this.filterSubscription) {
+        this.filterSubscription.unsubscribe();
+        this.filterSubscription = null;
+      }
+      this.filterSubscription = this.getColumnValues(res);
     });
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
       (this as any)[res["column"] + "_xSelected"] = res["selected"];

@@ -265,6 +265,7 @@ export class PeDailyAreaChartComponent implements OnInit {
   availableWellStringItems: any[] = [];
 
   isLoadingResults: boolean = false;
+  private filterSubscription: any = null;
 
   constructor(
     private http: HttpClient,
@@ -288,7 +289,12 @@ export class PeDailyAreaChartComponent implements OnInit {
     );
 
     this.xfilterService.filter.subscribe(res => {
-      this.getColumnValues(res);
+      // Cancel previous request jika masih ada
+      if (this.filterSubscription) {
+        this.filterSubscription.unsubscribe();
+        this.filterSubscription = null;
+      }
+      this.filterSubscription = this.getColumnValues(res);
     })
     this.xfilterService.selected.subscribe(res => {
       const column = res["column"];

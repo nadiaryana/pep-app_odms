@@ -143,9 +143,10 @@ export class PeDailyListComponent implements OnInit {
 
   isMobile = false;
 
-  filterSubscription:Subscription;
+  // filterSubscription:Subscription;
   selectedSubscription:Subscription;
   listSubscription:Subscription;
+  private filterSubscription: any = null;
 
   constructor(
     private http: HttpClient,
@@ -197,8 +198,13 @@ export class PeDailyListComponent implements OnInit {
     // If the user changes the sort order, reset back to the first page.
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
-    this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if(res) this.getColumnValues(res);
+    this.xfilterService.filter.subscribe(res => {
+      // Cancel previous request jika masih ada
+      if (this.filterSubscription) {
+        this.filterSubscription.unsubscribe();
+        this.filterSubscription = null;
+      }
+      this.filterSubscription = this.getColumnValues(res);
     })
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
       this[res["column"] + "_xSelected"] = res["selected"];

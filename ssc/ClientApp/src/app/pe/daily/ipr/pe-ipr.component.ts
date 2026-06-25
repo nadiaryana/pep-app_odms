@@ -165,6 +165,7 @@ export class IprComponent implements OnInit {
   well_xSelected = [];
 
   isLoadingResults: boolean = false;
+  private filterSubscription: any = null;
 
   daily_data: any[] = [];
   data_pwf: any[] = [];
@@ -203,9 +204,14 @@ export class IprComponent implements OnInit {
       clear: false,
     });
 
-    this.xfilterService.filter.subscribe((res) => {
-      this.getColumnValues(res);
-    });
+    this.xfilterService.filter.subscribe(res => {
+      // Cancel previous request jika masih ada
+      if (this.filterSubscription) {
+        this.filterSubscription.unsubscribe();
+        this.filterSubscription = null;
+      }
+      this.filterSubscription = this.getColumnValues(res);
+    })
     this.xfilterService.selected.subscribe((res) => {
       // if res["selected"] is array and more than 1 then reset selected
       if (Array.isArray(res["selected"]) && res["selected"].length > 1) {

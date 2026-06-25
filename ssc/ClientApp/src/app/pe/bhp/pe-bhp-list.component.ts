@@ -68,7 +68,8 @@ export class PeBhpListComponent implements OnInit {
   tmax_xSelected = [];
   noted_xSelected = [];
 
-  filterSubscription:Subscription;
+  // filterSubscription:Subscription;
+  private filterSubscription: any = null;
   selectedSubscription:Subscription;
   listSubscription:Subscription;
 
@@ -117,8 +118,13 @@ export class PeBhpListComponent implements OnInit {
     // If the user changes the sort order, reset back to the first page.
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
-    this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if(res) this.getColumnValues(res);
+    this.xfilterService.filter.subscribe(res => {
+      // Cancel previous request jika masih ada
+      if (this.filterSubscription) {
+        this.filterSubscription.unsubscribe();
+        this.filterSubscription = null;
+      }
+      this.filterSubscription = this.getColumnValues(res);
     })
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
       this[res["column"] + "_xSelected"] = res["selected"];

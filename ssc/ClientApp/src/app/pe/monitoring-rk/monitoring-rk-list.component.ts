@@ -97,7 +97,7 @@ export class MonitoringRKListComponent implements OnInit {
   @ViewChild('rlSort', { static: true }) rlSort: MatSort;
   @ViewChild('rlPaginator', { static: true }) rlPaginator: MatPaginator;
 
-  rk_filterSubscription: Subscription;
+  private rk_filterSubscription: any = null;
   rk_selectedSubscription: Subscription;
   rk_listSubscription: Subscription;
   rl_listSubscription: Subscription;
@@ -139,7 +139,7 @@ export class MonitoringRKListComponent implements OnInit {
           // Rigless xFilter — panggil API rigless dengan mode=column
           this.rlGetColumnValues(res);
         } else if (res["column"].indexOf("bc_") !== 0) {
-          this.rkGetColumnValues(res);
+          this.rkGetColumnValues( res);
         }
       }
     })

@@ -342,6 +342,7 @@ export class PeDailyChartComponent {
 
   exampleDatabase: ExampleHttpDao | null;
   well_xSelected = [];
+  private filterSubscription: any = null;
 
   isLoadingResults: boolean = false;
   isLoadingResults2: boolean = false;
@@ -368,7 +369,12 @@ export class PeDailyChartComponent {
     );
 
     this.xfilterService.filter.subscribe(res => {
-      this.getColumnValues(res);
+      // Cancel previous request jika masih ada
+      if (this.filterSubscription) {
+        this.filterSubscription.unsubscribe();
+        this.filterSubscription = null;
+      }
+      this.filterSubscription = this.getColumnValues(res);
     })
     this.xfilterService.selected.subscribe(res => {
       this[res["column"] + "_xSelected"] = res["selected"];

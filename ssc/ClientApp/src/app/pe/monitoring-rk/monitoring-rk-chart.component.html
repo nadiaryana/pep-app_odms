@@ -1,18 +1,14 @@
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" [hidden]="isCapturing">
-	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>Start Date</mat-label>
-		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
-		<input matInput [(ngModel)]="start_dateInput" disabled>
-		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoading"></mat-datepicker-toggle>
-		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
-	</mat-form-field>
-	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>End Date</mat-label>
-		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" disabled>
-		<input matInput [(ngModel)]="end_dateInput" disabled>
-		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoading"></mat-datepicker-toggle>
-		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
-	</mat-form-field>
+<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" >
+  <!-- Dropdown chart type -->
+  <mat-form-field class="filter" floatLabel="never">
+    <mat-label>Chart Type</mat-label>
+    <mat-select [(value)]="selectedChartType" (selectionChange)="onChartTypeChange()">
+      <mat-option *ngFor="let ct of chartTypes" [value]="ct.value">
+        {{ ct.label }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
   <button mat-button [routerLink]="['/pe/monitoring-rk/list']">
     <mat-icon>list</mat-icon> Back to List
   </button>
@@ -25,15 +21,23 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  </div>
+  <!-- Column Chart: 4 grouped columns per well -->
+   <mat-card class="chart-card">
+    <div class="chart-card" [hidden]="isLoading || chartData.length === 0">
+      <div #columnChart class="per_area_chart"></div>
+    </div>
+  </mat-card>
 
-  <!-- Gantt Chart Container with horizontal scroll -->
-  <div class="gantt-chart-wrapper" [hidden]="isLoading || chartData.length === 0">
-    <div #ganttChart class="gantt-chart"></div>
-  </div>
+  <!-- Selisih Chart: persentase selisih -->
+   <mat-card class="chart-card">
+    <div class="chart-card" [hidden]="isLoading || chartData.length === 0" style="margin-top: 16px;">
+      <div #selisihChart class="per_area_chart"></div>
+    </div>
+  </mat-card>
 
   <!-- No Data Message -->
   <div *ngIf="!isLoading && chartData.length === 0" class="no-data">
     <mat-icon>info</mat-icon>
-    <p>No data available for this date.</p>
+    <p>No data available.</p>
   </div>
+</div>
