@@ -353,10 +353,10 @@ namespace ssc.Areas.PE.Models
         // DateTime? sonolog_sfl_date = _sonolog.Find(t => t.well == daily.well && t.date <= daily.date && t.sfl != null)
         //     .Project<Sonolog>(_fields_sonolog).ToList()?.Select(u => u.date).DefaultIfEmpty().Max() ?? null;
 
-        //     // DateTime? sonolog_date;
+        // DateTime? sonolog_date;
 
-        // //     decimal? pi = _sensor.Find(t => t.well == daily.well && t.date == sensor_date && t.pi != null).FirstOrDefault()?.pi;
-        // //     decimal? sgmix = daily.last_prod_wc / 100 * (decimal)1.01 + (1 - daily.last_prod_wc / 100) * (decimal)0.878;
+        //     decimal? pi = _sensor.Find(t => t.well == daily.well && t.date == sensor_date && t.pi != null).FirstOrDefault()?.pi;
+        //     decimal? sgmix = daily.last_prod_wc / 100 * (decimal)1.01 + (1 - daily.last_prod_wc / 100) * (decimal)0.878;
 
         // decimal? dfl = _sonolog.Find(t => t.well == daily.well && t.date == sonolog_dfl_date)
         // .Project<Sonolog>(_fields_sonolog).ToList()?.Average(i => i.dfl);
@@ -414,8 +414,8 @@ namespace ssc.Areas.PE.Models
         //     {
 
 
-        //         //     dfl = cdfl;
-        //         //    pump_capacity = _sensor.Find(t => t.well == daily.well && t.date == sensor_date).FirstOrDefault()?.capacity;
+        //     dfl = cdfl;
+        //    pump_capacity = _sensor.Find(t => t.well == daily.well && t.date == sensor_date).FirstOrDefault()?.capacity;
 
         //     }
 
@@ -439,7 +439,7 @@ namespace ssc.Areas.PE.Models
         //             sonolog_date = sensor_date;
         //         }
 
-        //         //sonolog_date = new DateTime();
+        //sonolog_date = new DateTime();
         //     }
         //     else
         //     {

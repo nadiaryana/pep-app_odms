@@ -153,7 +153,7 @@ export class MonitoringRKChartComponent implements OnInit {
           dataLabels: { 
             enabled: true, 
             format: '{y} bopd', 
-            style: { fontSize: '9px' }, 
+            style: { fontSize: '10px' }, 
             // rotation: 90, 
             y: -5 
           }
@@ -165,7 +165,7 @@ export class MonitoringRKChartComponent implements OnInit {
           dataLabels: { 
             enabled: true, 
             format: '⛽<br>{y} mmscfd', 
-            style: { fontSize: '9px' }, 
+            style: { fontSize: '10px' }, 
             // rotation: 90, 
             y: -5 
           }
@@ -177,7 +177,7 @@ export class MonitoringRKChartComponent implements OnInit {
           dataLabels: { 
             enabled: true, 
             format: '{y} bopd', 
-            style: { fontSize: '9px' }, 
+            style: { fontSize: '10px' }, 
             // rotation: 90, 
             y: -5 
           }
@@ -189,7 +189,7 @@ export class MonitoringRKChartComponent implements OnInit {
           dataLabels: { 
             enabled: true, 
             format: '⛽<br>{y} mmscfd', 
-            style: { fontSize: '9px' }, 
+            style: { fontSize: '10px' }, 
             // rotation: 90, 
             y: -5 
           }
@@ -266,20 +266,20 @@ export class MonitoringRKChartComponent implements OnInit {
           dataLabels: {
             enabled: true,
             format: '{y}%',
-            style: { fontSize: '9px' },
+            style: { fontSize: '10px' },
             y: -5
           }
         },
         {
           name: 'Gas',
           data: gasSelisih.map(v => Math.round(v * 10000) / 100),
-          color: '#5C6BC0',
+          color: '#7132CA',
           // negativeColor: '#EF5350',
           borderRadius: 8,
           dataLabels: {
             enabled: true,
             format: '{y}%',
-            style: { fontSize: '9px' },
+            style: { fontSize: '10px' },
             y: -5
           }
         }
