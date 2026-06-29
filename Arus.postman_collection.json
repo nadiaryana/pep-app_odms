@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "Arus API (PE)",
+    "description": "Koleksi testing endpoint Arus (sensor arus sumur). Atur variabel {{baseUrl}} & {{wellId}} di tab Variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:1911",
+      "type": "string"
+    },
+    {
+      "key": "wellId",
+      "value": "SUMUR-01",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "POST data (kirim reading)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"wellId\": \"{{wellId}}\",\n  \"current\": 12.5,\n  \"status\": 1,\n  \"recordedAt\": \"2026-06-29T08:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/arus/data",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "arus", "data"]
+        },
+        "description": "Pakai nama field C# (wellId, current, status, recordedAt). createdAt di-set server otomatis. wellId kosong -> 400."
+      }
+    },
+    {
+      "name": "POST data - wellId kosong (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"wellId\": \"\",\n  \"current\": 0,\n  \"status\": 0,\n  \"recordedAt\": \"2026-06-29T08:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/arus/data",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "arus", "data"]
+        },
+        "description": "Harus balas 400 { message: 'well_id tidak boleh kosong.' }"
+      }
+    },
+    {
+      "name": "GET data by well",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/arus/data/{{wellId}}?limit=100",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "arus", "data", "{{wellId}}"],
+          "query": [
+            { "key": "limit", "value": "100" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET data by well + range",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/arus/data/{{wellId}}/range?from=2026-06-01T00:00:00&to=2026-06-30T23:59:59",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "arus", "data", "{{wellId}}", "range"],
+          "query": [
+            { "key": "from", "value": "2026-06-01T00:00:00" },
+            { "key": "to", "value": "2026-06-30T23:59:59" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET last status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/arus/laststatus/{{wellId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "arus", "laststatus", "{{wellId}}"]
+        },
+        "description": "Dipanggil ESP32 saat boot. Kalau belum ada data -> { last_status: 0, current: 0.0, recorded_at: '' }"
+      }
+    },
+    {
+      "name": "GET all wells",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/arus/wells",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "arus", "wells"]
+        },
+        "description": "List semua well_id (buat dropdown Angular)."
+      }
+    }
+  ]
+}

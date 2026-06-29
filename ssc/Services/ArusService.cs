@@ -15,7 +15,7 @@ namespace ssc.Services
         {
             var connectionString = config["PESumurSettings:ConnectionString"];
             var databaseName = config["PESumurSettings:DatabaseName"];
-            var collectionName = config["PESumurSettings:SensorCollectionName"];
+            var collectionName = config["PESumurSettings:ArusCollectionName"];
 
             var client = new MongoClient(connectionString);
             var db = client.GetDatabase(databaseName);
