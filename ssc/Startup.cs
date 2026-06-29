@@ -54,7 +54,7 @@ namespace ssc
             services.AddSingleton<IPEDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<PEDatabaseSettings>>().Value);
 
-            // services.AddSingleton<SensorService>();
+            services.AddSingleton<ArusService>();
 
 
             services.AddHttpClient();
@@ -146,6 +146,8 @@ namespace ssc
             //Add JWToken Authentication service
             app.UseAuthentication();
 
+            app.UseMiddleware<ApiKeyMiddleware>();
+
             app.UseCors(builder => builder.WithOrigins("*"));
 
 
@@ -188,7 +190,7 @@ namespace ssc
                       await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
                   });
 
-            app.UseMiddleware<ApiKeyMiddleware>();
+
         }
     }
 }
