@@ -1,0 +1,11 @@
+# Use this workspace to collaborate
+workspace:
+  id: 6072009d-3982-4146-8197-9620df3179d3
+
+localResources:
+  collections:
+    - ../Arus.postman_collection.json
+
+cloudResources:
+  collections:
+    ../postman/collections/Arus API (PE): f36afda3-dd81-4ced-b58f-92b6e50861ee

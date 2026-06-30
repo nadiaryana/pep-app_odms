@@ -1,0 +1,5 @@
+$kind: http-request
+description: List semua well_id (buat dropdown Angular).
+url: "{{baseUrl}}/api/arus/wells"
+method: GET
+order: 6000

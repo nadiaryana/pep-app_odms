@@ -1,0 +1,5 @@
+$kind: collection
+description: Koleksi testing endpoint Arus (sensor arus sumur). Atur variabel {{baseUrl}} & {{wellId}} di tab Variables.
+variables:
+  baseUrl: http://localhost:1911
+  wellId: SUMUR-01

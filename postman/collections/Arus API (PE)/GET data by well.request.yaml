@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{baseUrl}}/api/arus/data/{{wellId}}?limit=100"
+method: GET
+queryParams:
+  limit: "100"
+order: 3000

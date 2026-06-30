@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Dipanggil ESP32 saat boot. Kalau belum ada data -> { last_status: 0, current: 0.0, recorded_at: '' }"
+url: "{{baseUrl}}/api/arus/laststatus/{{wellId}}"
+method: GET
+order: 5000

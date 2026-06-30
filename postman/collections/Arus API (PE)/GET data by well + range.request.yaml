@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/api/arus/data/{{wellId}}/range?from=2026-06-01T00:00:00&to=2026-06-30T23:59:59"
+method: GET
+queryParams:
+  from: 2026-06-01T00:00:00
+  to: 2026-06-30T23:59:59
+order: 4000

@@ -1,0 +1,16 @@
+$kind: http-request
+description: "Harus balas 400 { message: 'well_id tidak boleh kosong.' }"
+url: "{{baseUrl}}/api/arus/data"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "wellId": "",
+      "current": 0,
+      "status": 0,
+      "recordedAt": "2026-06-29T08:30:00"
+    }
+order: 2000

@@ -1,0 +1,16 @@
+$kind: http-request
+description: Pakai nama field C# (wellId, current, status, recordedAt). createdAt di-set server otomatis. wellId kosong -> 400.
+url: "{{baseUrl}}/api/arus/data"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "wellId": "{{wellId}}",
+      "current": 12.5,
+      "status": 1,
+      "recordedAt": "2026-06-29T08:30:00"
+    }
+order: 1000
