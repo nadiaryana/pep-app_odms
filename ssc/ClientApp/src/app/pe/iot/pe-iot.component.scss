@@ -1,270 +1,153 @@
-// ── Variabel ───────────────────────────────────────────
-$primary:    #0a84ff;
-$success:    #30d158;
-$danger:     #ff453a;
-$bg:         #0d0d0d;
-$surface:    #1c1c1e;
-$surface2:   #2c2c2e;
-$border:     #3a3a3c;
-$text:       #f5f5f7;
-$text-muted: #8e8e93;
+.dasboard_card {
+  border-radius: 12px;
+  padding: 10px;
+  max-width: 50%;
+  margin: 0 auto;
 
-// ── Wrapper ────────────────────────────────────────────
-.iot-wrapper {
-  padding: 24px;
-  background: $bg;
-  min-height: 100%;
-  color: $text;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  @media (max-width: 959px) {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
-// ── Header ─────────────────────────────────────────────
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0;
+// Kotak pencarian sumur
+.well-search {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: $text;
-  .icon { font-size: 20px; }
-}
+  background: #f1f3f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  padding: 4px 14px;
+  margin: 4px 0 12px;
+  transition: border-color 0.2s ease, background 0.2s ease;
 
-.live-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: $text-muted;
-  margin-left: 14px;
+  &:focus-within {
+    background: #fff;
+    border-color: #2196f3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.12);
+  }
 
-  .dot {
-    width: 8px; height: 8px;
-    background: $success;
+  .search-icon {
+    color: #9e9e9e;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-input {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: #333;
+    padding: 6px 0;
+
+    &::placeholder {
+      color: #9e9e9e;
+    }
+  }
+
+  .clear-icon {
+    color: #9e9e9e;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
     border-radius: 50%;
-    animation: pulse 1.5s infinite;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #555;
+    }
   }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(0.8); }
-}
+// Daftar sumur dengan tinggi tetap + scroll bila banyak
+.well-list-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px; // ruang untuk scrollbar agar tidak menempel teks
 
-// ── Summary Cards ──────────────────────────────────────
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.device-card {
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: 14px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover { border-color: $primary; transform: translateY(-2px); }
-
-  &.active {
-    border-color: $primary;
-    box-shadow: 0 0 0 2px rgba($primary, 0.25);
+  // Hilangkan padding bawaan mat-list supaya item pertama rata dgn atas kontainer
+  ::ng-deep .mat-list-base {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
 
-  &.card-on  { border-left: 3px solid $success; }
-  &.card-off { border-left: 3px solid $danger; }
+  // Scrollbar tipis
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
 }
 
-.card-header {
+.well-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-}
+  cursor: pointer;
+  padding: 6px 0;
 
-.device-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: $text;
-}
-
-.status-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 20px;
-
-  &.status-on  { background: rgba($success, 0.15); color: $success; }
-  &.status-off { background: rgba($danger, 0.15);  color: $danger;  }
-}
-
-.card-current {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-
-  .current-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: $text;
-    font-variant-numeric: tabular-nums;
-  }
-  .current-unit {
-    font-size: 13px;
-    color: $text-muted;
+  &:hover {
+    background-color: #f5f5f5;
+    border-radius: 6px;
   }
 }
 
-.card-time {
-  font-size: 10px;
-  color: $text-muted;
-  margin-top: 6px;
+.selected-well {
+  background-color: #e3f2fd !important; // Light blue background
+  border-left: 4px solid #2196f3; // Blue left border
+  border-radius: 6px;
+  font-weight: 500;
+
+  &:hover {
+    background-color: #bbdefb !important; // Darker blue on hover
+  }
 }
 
-// ── Chart Panel ────────────────────────────────────────
-.chart-panel {
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: 16px;
-  overflow: hidden;
+.status-on {
+  color: green;
+  font-weight: bold;
 }
 
-// ── Toolbar ────────────────────────────────────────────
-.chart-toolbar {
+.status-off {
+  color: red;
+  font-weight: bold;
+}
+
+::ng-deep .mat-list-item-content {
+  width: 100% !important;
+}
+
+// Tabel
+.cell-right {
+  text-align: right;
+}
+
+.loading-shade {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 20px;
-  border-bottom: 1px solid $border;
-  flex-wrap: wrap;
-}
-
-.toolbar-left, .toolbar-center, .toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.toolbar-right { margin-left: auto; }
-
-.select-label {
-  font-size: 12px;
-  color: $text-muted;
-}
-
-.well-select, .limit-select, .date-input {
-  background: $surface2;
-  color: $text;
-  border: 1px solid $border;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 13px;
-  outline: none;
-
-  &:focus { border-color: $primary; }
-}
-
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: $text-muted;
-  cursor: pointer;
-
-  input { accent-color: $primary; }
-}
-
-.separator { color: $text-muted; }
-
-.btn-refresh {
-  background: $primary;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 7px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-
-  &:hover    { opacity: 0.85; }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-}
-
-// ── Chart Area ─────────────────────────────────────────
-.chart-area {
-  padding: 20px;
-  min-height: 320px;
-  position: relative;
-  display: flex;
-  align-items: center;
   justify-content: center;
-
-  canvas { width: 100% !important; }
+  padding: 20px 0;
 }
 
-.loading-overlay {
-  text-align: center;
-  color: $text-muted;
-
-  .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid $border;
-    border-top-color: $primary;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto 12px;
-  }
-}
-
-.empty-state {
-  text-align: center;
-  color: $text-muted;
-  .empty-icon { font-size: 40px; display: block; margin-bottom: 8px; }
-  p { margin: 0; font-size: 14px; }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-// ── Stats bawah chart ──────────────────────────────────
-.chart-stats {
-  display: flex;
-  gap: 0;
-  border-top: 1px solid $border;
-
-  .stat-item {
-    flex: 1;
-    text-align: center;
-    padding: 12px;
-    border-right: 1px solid $border;
-
-    &:last-child { border-right: none; }
+@media (max-width: 959px) {
+  mat-form-field {
+    width: 100%;
   }
 
-  .stat-label {
-    display: block;
-    font-size: 11px;
-    color: $text-muted;
-    margin-bottom: 4px;
-  }
-
-  .stat-value {
-    display: block;
-    font-size: 16px;
-    font-weight: 700;
-    color: $text;
-    font-variant-numeric: tabular-nums;
+  highcharts-chart {
+    height: 300px !important;
   }
 }

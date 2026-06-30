@@ -92,6 +92,7 @@ import { MonitoringRKComponent } from './monitoring-rk/monitoring-rk.component';
 import { MonitoringRKListComponent } from './monitoring-rk/monitoring-rk-list.component';
 import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.component';
 import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
+import { PeIotComponent } from './iot/pe-iot.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -127,6 +128,7 @@ const peRoutes: Routes = [
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
     { path: 'ipr', component: IprComponent},
+    { path: 'iot', component: PeIotComponent, canActivate: [PePermissionGuard] },
     // { path: 'sumur', component: SumurComponent},
     { path: 'current', component: PeSumurCurrentComponent, children: [
       { path: 'list', component: PeSumurCurrentListComponent, canActivate: [PePermissionGuard] },

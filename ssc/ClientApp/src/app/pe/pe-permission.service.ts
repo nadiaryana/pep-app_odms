@@ -133,6 +133,8 @@ export class PePermissionService {
 	new Menu("monitoring-rk/edit", true,null, ["PeMonitoringRK Edit"]),
 	new Menu("monitoring-rk/delete", true,null, ["PeMonitoringRK Delete"]),
 	new Menu("monitoring-rk/chart", true, null, ["PeMonitoringRK Read"]),
+
+	new Menu("iot", true, null, ["PeIot Read"]),
 	];
 	
 	

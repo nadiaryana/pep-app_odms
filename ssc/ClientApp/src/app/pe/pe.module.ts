@@ -108,6 +108,7 @@ import { MonitoringRKComponent } from './monitoring-rk/monitoring-rk.component';
 import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
 import { MonitoringRKDeleteDialogComponent, MonitoringRKListComponent } from './monitoring-rk/monitoring-rk-list.component';
 import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.component';
+import { PeIotComponent } from './iot/pe-iot.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -219,6 +220,8 @@ import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.comp
   MonitoringRKDeleteDialogComponent,
   MonitoringRKChartComponent,
 
+  PeIotComponent,
+
   // PeGrafikComponent,
   ],
   imports: [
@@ -308,6 +311,7 @@ export class PeModule {
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [
           new PanelSubItem("iSRP", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur")),
           new PanelSubItem("Daily Current", "pe/current", "table_chart"),
+          new PanelSubItem("Arus", "pe/iot", "sensors", this.pePermission.passPermission("pe/iot")),
         ]),
         new PanelItem("Diagnostic Chart", "pe/grafik", "assessment", this.pePermission.passPermission("pe/grafik")),
         new PanelItem("Laboratorium", "", "science", this.pePermission.passPermission("pe/dasboard"), true, [

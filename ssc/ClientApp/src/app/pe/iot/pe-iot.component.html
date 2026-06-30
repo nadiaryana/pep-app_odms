@@ -1,120 +1,131 @@
-<div class="iot-wrapper">
+<div fxLayout="row" fxLayout.lt-lg="column" fxLayoutGap="10px" fxLayoutAlign="start stretch">
 
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-left">
-      <h2 class="page-title">
-        <span class="icon">📡</span> Monitoring IoT Sumur
-      </h2>
-      <span class="live-badge">
-        <span class="dot"></span> Live • Auto-refresh 15s
-      </span>
-    </div>
-  </div>
+    <mat-card fxFlex="30" class="dasboard_card">
+      <mat-card-content>
+        <h4 class="title_awy" align="center">Daftar Sumur (IoT Arus)</h4>
+        <h5 class="tanggal_awy" align="center">{{ todayDate }}</h5>
+        <hr class="garis_aw">
 
-  <!-- Summary Cards -->
-  <div class="summary-grid">
-    <div
-      class="device-card"
-      *ngFor="let d of deviceSummaries"
-      [class.active]="d.wellId === selectedWell"
-      [class.card-on]="d.status === 1"
-      [class.card-off]="d.status === 0"
-      (click)="onWellChange(d.wellId)">
-      <div class="card-header">
-        <span class="device-name">{{ d.wellId }}</span>
-        <span class="status-badge" [ngClass]="getStatusClass(d.status)">
-          {{ getStatusLabel(d.status) }}
-        </span>
-      </div>
-      <div class="card-current">
-        <span class="current-value">{{ d.current | number:'1.2-2' }}</span>
-        <span class="current-unit">A</span>
-      </div>
-      <div class="card-time">{{ d.lastUpdate }}</div>
-    </div>
-  </div>
+        <!-- Pencarian sumur -->
+        <div class="well-search">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="wellSearch"
+            placeholder="Cari sumur...">
+          <mat-icon
+            *ngIf="wellSearch"
+            class="clear-icon"
+            (click)="wellSearch = ''"
+            title="Bersihkan">close</mat-icon>
+        </div>
 
-  <!-- Chart Panel -->
-  <div class="chart-panel">
+        <div class="well-list-scroll">
+          <mat-list>
+            <mat-list-item
+              *ngFor="let well of filteredWells"
+              (click)="selectWell(well)"
+              class="well-item"
+              [class.selected-well]="selectedWell && selectedWell.name === well.name"
+              style="cursor: pointer; transition: background-color 0.3s ease;">
+              <div style="width: 100%; display:flex; justify-content: space-between;">
+                <span style="flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  {{ well.name }}
+                </span>
+                <span [ngClass]="well.status === 'ON' ? 'status-on' : 'status-off'" style="margin-left: 12px; font-weight: bold;">
+                  ● {{ well.status }}
+                </span>
+              </div>
+            </mat-list-item>
 
-    <!-- Toolbar -->
-    <div class="chart-toolbar">
-      <div class="toolbar-left">
-        <label class="select-label">Perangkat</label>
-        <select class="well-select" [(ngModel)]="selectedWell" (change)="onWellChange(selectedWell)">
-          <option *ngFor="let w of wells" [value]="w">{{ w }}</option>
-        </select>
-      </div>
+            <mat-list-item *ngIf="wells.length === 0">
+              <span style="color: #999;">Belum ada data dari perangkat IoT.</span>
+            </mat-list-item>
 
-      <div class="toolbar-center">
-        <label class="toggle-label">
-          <input type="checkbox" [(ngModel)]="useRange" />
-          Filter Tanggal
-        </label>
-        <ng-container *ngIf="useRange">
-          <input type="datetime-local" class="date-input" [(ngModel)]="fromDate" />
-          <span class="separator">—</span>
-          <input type="datetime-local" class="date-input" [(ngModel)]="toDate" />
-        </ng-container>
-        <ng-container *ngIf="!useRange">
-          <label class="select-label">Data</label>
-          <select class="limit-select" [(ngModel)]="limit">
-            <option [value]="50">50 terakhir</option>
-            <option [value]="100">100 terakhir</option>
-            <option [value]="200">200 terakhir</option>
-          </select>
-        </ng-container>
-      </div>
+            <mat-list-item *ngIf="wells.length > 0 && filteredWells.length === 0">
+              <span style="color: #999;">Sumur "{{ wellSearch }}" tidak ditemukan.</span>
+            </mat-list-item>
+          </mat-list>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-      <div class="toolbar-right">
-        <button class="btn-refresh" (click)="applyFilter()" [disabled]="isLoading">
-          <span *ngIf="!isLoading">⟳ Refresh</span>
-          <span *ngIf="isLoading">Loading...</span>
-        </button>
-      </div>
-    </div>
+    <mat-card fxFlex="70" class="dasboard_card">
+      <mat-card-content *ngIf="selectedWell">
+        <div #chartContainer
+             style="width: 100%; display: block;"
+             [style.height]="hasChartData ? '500px' : '0'"></div>
 
-    <!-- Chart Area -->
-    <div class="chart-area">
-      <div *ngIf="isLoading" class="loading-overlay">
-        <div class="spinner"></div>
-        <p>Memuat data...</p>
-      </div>
-
-      <div *ngIf="!isLoading && chartData.length === 0" class="empty-state">
-        <span class="empty-icon">📡</span>
-        <p>Belum ada data untuk perangkat ini.</p>
-      </div>
-
-      <!-- Chart menggunakan Chart.js via canvas -->
-      <canvas *ngIf="!isLoading && chartData.length > 0"
-              id="iotArusChart"
-              appIotChart
-              [labels]="chartLabels"
-              [values]="chartValues">
-      </canvas>
-    </div>
-
-    <!-- Stats bawah chart -->
-    <div class="chart-stats" *ngIf="chartData.length > 0">
-      <div class="stat-item">
-        <span class="stat-label">Max</span>
-        <span class="stat-value">{{ chartValues.length > 0 ? (chartValues | maxValue) : 0 | number:'1.2-2' }} A</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Min</span>
-        <span class="stat-value">{{ chartValues.length > 0 ? (chartValues | minValue) : 0 | number:'1.2-2' }} A</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Rata-rata</span>
-        <span class="stat-value">{{ chartValues.length > 0 ? (chartValues | avgValue) : 0 | number:'1.2-2' }} A</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Total Data</span>
-        <span class="stat-value">{{ chartData.length }}</span>
-      </div>
-    </div>
-
-  </div>
+        <div *ngIf="!hasChartData && !isLoadingResults" style="text-align:center; color:#999; padding: 40px 0;">
+          Belum ada data arus untuk sumur ini.
+        </div>
+      </mat-card-content>
+    </mat-card>
 </div>
+
+<!-- Table Section - Shown below chart when well is selected -->
+<mat-card *ngIf="selectedWell" style="margin-top: 20px;">
+  <mat-card-content>
+    <h4 class="title_awy">Data History - {{ selectedWell.name }}</h4>
+
+    <!-- Date Range Filter -->
+    <div fxLayout="row wrap" fxLayout.lt-md="column" fxLayoutGap="10px" fxLayoutAlign="start center" style="margin: 15px 0;">
+      <mat-form-field>
+        <mat-label>Tanggal Mulai</mat-label>
+        <input matInput [matDatepicker]="pickerStart" [formControl]="dateStartControl" placeholder="Pilih tanggal mulai">
+        <mat-datepicker-toggle matSuffix [for]="pickerStart"></mat-datepicker-toggle>
+        <mat-datepicker #pickerStart></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Tanggal Akhir</mat-label>
+        <input matInput [matDatepicker]="pickerEnd" [formControl]="dateEndControl" placeholder="Pilih tanggal akhir">
+        <mat-datepicker-toggle matSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+        <mat-datepicker #pickerEnd></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="applyDateFilter()" [disabled]="!isDateRangeValid()">
+        <mat-icon>search</mat-icon> Tampilkan Data
+      </button>
+    </div>
+
+    <div class="loading-shade" *ngIf="isLoadingResults">
+      <mat-spinner></mat-spinner>
+    </div>
+
+    <div class="container-table" style="max-height: 500px; overflow: auto;" *ngIf="dataSource.data.length > 0">
+      <table mat-table [dataSource]="dataSource" class="pe-table" style="width: 100%;" matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
+
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+          <td mat-cell *matCellDef="let row">{{row.date ? (row.date | date: 'dd MMM y (HH:mm:ss)') : '-'}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="wellName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Well Name</th>
+          <td mat-cell *matCellDef="let row">{{row.wellName || '-'}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="current">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Arus (A)</th>
+          <td mat-cell *matCellDef="let row" class="cell-right">{{(row.current | number : '1.2-2') || '-'}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <span [ngClass]="row.status === 1 ? 'status-on' : 'status-off'" style="font-weight: bold;">
+              {{ row.status === 1 ? 'ON' : 'OFF' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <mat-paginator *ngIf="dataSource.data.length > 0" [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
+  </mat-card-content>
+</mat-card>

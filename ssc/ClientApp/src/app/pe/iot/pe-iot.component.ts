@@ -1,131 +1,267 @@
-// import { Component, OnInit, OnDestroy } from '@angular/core';
-// import { PeIotService, IotReading } from './pe-iot.service';
-// import { interval, Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from "@angular/core";
+import { TitleService } from "src/app/navigation/title/title.service";
+import { HttpClient } from "@angular/common/http";
+import * as Highcharts from "highcharts";
+import { FormControl } from "@angular/forms";
+import { MatPaginator, MatSort, MatTableDataSource } from "@angular/material";
 
-// interface DeviceSummary {
-//   wellId: string;
-//   status: number;
-//   current: number;
-//   lastUpdate: string;
-// }
+// Bentuk dokumen di collection "arus" (lihat ArusReading.cs / api/arus).
+// API memakai Newtonsoft DefaultContractResolver => nama properti PascalCase.
+interface ArusReading {
+  Id: string;
+  WellId: string;
+  Current: number;
+  Status: number;        // 1 = ON, 0 = OFF
+  RecordedAt: string;
+  CreatedAt: string;
+}
 
-// @Component({
-//   selector: 'app-pe-iot',
-//   templateUrl: './pe-iot.component.html',
-//   styleUrls: ['./pe-iot.component.scss']
-// })
-// export class PeIotComponent implements OnInit, OnDestroy {
+// Item sumur untuk daftar di kiri (mirip Well di iSRP)
+interface IotWell {
+  name: string;          // = well_id
+  status: "ON" | "OFF" | "UNKNOWN";
+  current: number;
+  lastUpdate: string;
+}
 
-//   wells: string[] = [];
-//   selectedWell: string = '';
-//   chartData: IotReading[] = [];
-//   deviceSummaries: DeviceSummary[] = [];
+// Baris tabel yang sudah dinormalisasi agar id kolom == nama properti
+interface ArusRow {
+  date: string;
+  wellName: string;
+  current: number;
+  status: number;
+  recorded_at: string;
+}
 
-//   // Filter
-//   limit: number = 100;
-//   fromDate: string = '';
-//   toDate: string = '';
-//   useRange: boolean = false;
+@Component({
+  selector: "app-pe-iot",
+  templateUrl: "./pe-iot.component.html",
+  styleUrls: ["./pe-iot.component.scss"],
+})
+export class PeIotComponent implements OnInit, OnDestroy {
+  // Chart dirender langsung via Highcharts.chart() ke elemen div (pola yang dipakai
+  // komponen chart PE lainnya), bukan lewat selector highcharts-chart/angular-highcharts.
+  @ViewChild("chartContainer", { static: false }) chartContainer: ElementRef;
+  private chartRef: Highcharts.Chart | null = null;
+  hasChartData: boolean = false;
 
-//   isLoading: boolean = false;
-//   private refreshSub?: Subscription;
+  // Tabel
+  displayedColumns: string[] = ["date", "wellName", "current", "status"];
+  dataSource = new MatTableDataSource<ArusRow>([]);
+  resultsLength = 0;
+  isLoadingResults = false;
 
-//   constructor(private iotService: PeIotService) {}
+  // Filter tanggal
+  dateStartControl = new FormControl(null);
+  dateEndControl = new FormControl(null);
+  dateRangeError: string = "";
 
-//   ngOnInit(): void {
-//     this.loadWells();
-//     // Auto-refresh setiap 15 detik (sama dengan interval ESP32)
-//     this.refreshSub = interval(15000).subscribe(() => {
-//       if (this.selectedWell) this.loadChartData();
-//       this.loadAllSummaries();
-//     });
-//   }
+  @ViewChild(MatPaginator, { static: false }) paginator: MatPaginator;
+  @ViewChild(MatSort, { static: false }) sort: MatSort;
 
-//   ngOnDestroy(): void {
-//     this.refreshSub?.unsubscribe();
-//   }
+  todayDate: string = new Date().toLocaleDateString("id-ID");
 
-//   loadWells(): void {
-//     this.iotService.getWells().subscribe({
-//       next: (wells) => {
-//         this.wells = wells;
-//         if (wells.length > 0) {
-//           this.selectedWell = wells[0];
-//           this.loadChartData();
-//         }
-//         this.loadAllSummaries();
-//       },
-//       error: (err) => console.error('Gagal load wells:', err)
-//     });
-//   }
+  // Berapa banyak data terakhir yang diambil saat tidak memakai filter tanggal
+  defaultLimit: number = 200;
 
-//   loadAllSummaries(): void {
-//     this.wells.forEach(wellId => {
-//       this.iotService.getLastStatus(wellId).subscribe({
-//         next: (res) => {
-//           const idx = this.deviceSummaries.findIndex(d => d.wellId === wellId);
-//           const summary: DeviceSummary = {
-//             wellId,
-//             status: res.last_status,
-//             current: res.current,
-//             lastUpdate: res.recorded_at
-//           };
-//           if (idx >= 0) {
-//             this.deviceSummaries[idx] = summary;
-//           } else {
-//             this.deviceSummaries.push(summary);
-//           }
-//         }
-//       });
-//     });
-//   }
+  wells: IotWell[] = [];
+  selectedWell: IotWell | null = null;
 
-//   onWellChange(wellId: string): void {
-//     this.selectedWell = wellId;
-//     this.loadChartData();
-//   }
+  // Kata kunci pencarian sumur
+  wellSearch: string = "";
 
-//   loadChartData(): void {
-//     this.isLoading = true;
-//     const obs = this.useRange && this.fromDate && this.toDate
-//       ? this.iotService.getDataRange(this.selectedWell, this.fromDate, this.toDate)
-//       : this.iotService.getData(this.selectedWell, this.limit);
+  // Daftar sumur setelah difilter oleh kotak pencarian
+  get filteredWells(): IotWell[] {
+    const q = this.wellSearch.trim().toLowerCase();
+    if (!q) return this.wells;
+    return this.wells.filter((w) => w.name.toLowerCase().indexOf(q) !== -1);
+  }
 
-//     obs.subscribe({
-//       next: (data) => {
-//         // Balik urutan agar chart kiri = lama, kanan = terbaru
-//         this.chartData = [...data].reverse();
-//         this.isLoading = false;
-//       },
-//       error: (err) => {
-//         console.error('Gagal load chart:', err);
-//         this.isLoading = false;
-//       }
-//     });
-//   }
+  constructor(private titleService: TitleService, private http: HttpClient) {}
 
-//   applyFilter(): void {
-//     this.loadChartData();
-//   }
+  ngOnInit(): void {
+    this.titleService.titleSource.next({
+      title: "Monitoring IoT Arus",
+      icon: "sensors",
+      breadcrumbs: [],
+    });
+    this.loadWells();
+  }
 
-//   // Untuk chart — label waktu
-//   get chartLabels(): string[] {
-//     return this.chartData.map(d => {
-//       const date = new Date(d.created_at);
-//       return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-//     });
-//   }
+  ngOnDestroy(): void {
+    if (this.chartRef) {
+      this.chartRef.destroy();
+      this.chartRef = null;
+    }
+  }
 
-//   // Untuk chart — nilai arus
-//   get chartValues(): number[] {
-//     return this.chartData.map(d => d.current);
-//   }
+  // Ambil daftar well_id dari collection arus, lalu lengkapi status terakhirnya
+  loadWells(): void {
+    this.http.get<string[]>("/api/arus/wells").subscribe(
+      (ids) => {
+        this.wells = (ids || []).map((id) => ({
+          name: id,
+          status: "UNKNOWN" as const,
+          current: 0,
+          lastUpdate: "",
+        }));
+        this.wells.forEach((w) => this.refreshLastStatus(w));
+      },
+      (err) => console.error("Gagal memuat daftar sumur arus", err)
+    );
+  }
 
-//   getStatusLabel(status: number): string {
-//     return status === 1 ? 'ON' : 'OFF';
-//   }
+  // GET /api/arus/laststatus/{wellId}
+  refreshLastStatus(well: IotWell): void {
+    this.http
+      .get<any>(`/api/arus/laststatus/${encodeURIComponent(well.name)}`)
+      .subscribe(
+        (res) => {
+          well.status = res && res.last_status === 1 ? "ON" : "OFF";
+          well.current = (res && res.current) || 0;
+          well.lastUpdate = (res && res.recorded_at) || "";
+        },
+        (err) => console.error(`Gagal memuat status ${well.name}`, err)
+      );
+  }
 
-//   getStatusClass(status: number): string {
-//     return status === 1 ? 'status-on' : 'status-off';
-//   }
-// }
+  selectWell(well: IotWell): void {
+    this.selectedWell = well;
+
+    // Reset filter & tabel saat ganti sumur
+    this.dataSource.data = [];
+    this.resultsLength = 0;
+    this.dateStartControl.setValue(null);
+    this.dateEndControl.setValue(null);
+    this.dateRangeError = "";
+    this.hasChartData = false;
+    if (this.chartRef) {
+      this.chartRef.destroy();
+      this.chartRef = null;
+    }
+
+    // Default: tampilkan data terakhir tanpa filter tanggal
+    this.loadData();
+  }
+
+  // Validasi rentang tanggal (mirip iSRP)
+  isDateRangeValid(): boolean {
+    const start = this.dateStartControl.value;
+    const end = this.dateEndControl.value;
+
+    if (!start || !end) {
+      this.dateRangeError = "Pilih tanggal mulai dan tanggal akhir";
+      return false;
+    }
+    if (new Date(end) < new Date(start)) {
+      this.dateRangeError = "Tanggal akhir tidak boleh kurang dari tanggal mulai";
+      return false;
+    }
+    this.dateRangeError = "";
+    return true;
+  }
+
+  // Dipanggil tombol "Tampilkan Data" (pakai filter tanggal)
+  applyDateFilter(): void {
+    if (!this.selectedWell || !this.isDateRangeValid()) return;
+    this.loadData(true);
+  }
+
+  // Ambil data dari API arus. useRange = pakai endpoint /range
+  private loadData(useRange: boolean = false): void {
+    if (!this.selectedWell) return;
+
+    const wellId = encodeURIComponent(this.selectedWell.name);
+    let url: string;
+    let params: any = {};
+
+    if (useRange && this.isDateRangeValid()) {
+      const from = new Date(this.dateStartControl.value).toISOString();
+      const to = new Date(this.dateEndControl.value).toISOString();
+      url = `/api/arus/data/${wellId}/range`;
+      params = { from, to };
+    } else {
+      url = `/api/arus/data/${wellId}`;
+      params = { limit: this.defaultLimit.toString() };
+    }
+
+    this.isLoadingResults = true;
+    this.http.get<ArusReading[]>(url, { params }).subscribe(
+      (readings) => {
+        this.isLoadingResults = false;
+        const list = readings || [];
+        this.populateTable(list);
+        this.buildChart(list);
+      },
+      (err) => {
+        this.isLoadingResults = false;
+        console.error("Gagal memuat data arus", err);
+        this.dataSource.data = [];
+        this.resultsLength = 0;
+      }
+    );
+  }
+
+  private populateTable(readings: ArusReading[]): void {
+    const rows: ArusRow[] = readings.map((r) => ({
+      date: r.CreatedAt,
+      wellName: r.WellId,
+      current: r.Current,
+      status: r.Status,
+      recorded_at: r.RecordedAt,
+    }));
+
+    this.dataSource.data = rows;
+    this.resultsLength = rows.length;
+
+    // Pasang paginator & sort setelah tabel ter-render (karena pakai *ngIf)
+    setTimeout(() => {
+      if (this.paginator) this.dataSource.paginator = this.paginator;
+      if (this.sort) this.dataSource.sort = this.sort;
+    }, 0);
+  }
+
+  private buildChart(readings: ArusReading[]): void {
+    if (!this.selectedWell) return;
+
+    // Urut menaik berdasarkan waktu agar chart kiri->kanan = lama->baru
+    const chartData: [number, number][] = readings
+      .slice()
+      .sort((a, b) => Date.parse(a.CreatedAt) - Date.parse(b.CreatedAt))
+      .map((r) => [Date.parse(r.CreatedAt), r.Current]);
+
+    this.hasChartData = chartData.length > 0;
+    if (!this.hasChartData) {
+      if (this.chartRef) {
+        this.chartRef.destroy();
+        this.chartRef = null;
+      }
+      return;
+    }
+
+    const options: Highcharts.Options = {
+      chart: { type: "line", backgroundColor: "#fff" },
+      title: { text: this.selectedWell.name },
+      time: { useUTC: false },
+      xAxis: { type: "datetime" },
+      yAxis: { title: { text: "Arus (A)" } },
+      tooltip: { valueSuffix: " A" },
+      legend: { enabled: false },
+      series: [
+        {
+          type: "line",
+          name: "Arus",
+          data: chartData,
+        },
+      ],
+    };
+
+    // Render setelah div #chartContainer tersedia di DOM (di dalam *ngIf)
+    setTimeout(() => {
+      if (this.chartContainer && this.chartContainer.nativeElement) {
+        if (this.chartRef) this.chartRef.destroy();
+        this.chartRef = Highcharts.chart(this.chartContainer.nativeElement, options);
+      }
+    }, 0);
+  }
+}
