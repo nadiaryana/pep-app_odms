@@ -311,7 +311,7 @@ export class PeModule {
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [
           new PanelSubItem("iSRP", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur")),
           new PanelSubItem("Daily Current", "pe/current", "table_chart"),
-          new PanelSubItem("Arus", "pe/iot", "sensors", this.pePermission.passPermission("pe/iot")),
+          new PanelSubItem("Arus", "pe/iot", "bolt", this.pePermission.passPermission("pe/iot")),
         ]),
         new PanelItem("Diagnostic Chart", "pe/grafik", "assessment", this.pePermission.passPermission("pe/grafik")),
         new PanelItem("Laboratorium", "", "science", this.pePermission.passPermission("pe/dasboard"), true, [
