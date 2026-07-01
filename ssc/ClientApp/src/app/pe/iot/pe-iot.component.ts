@@ -82,7 +82,7 @@ export class PeIotComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.titleService.titleSource.next({
       title: "Monitoring IoT Arus",
-      icon: "sensors",
+      icon: "bolt",
       breadcrumbs: [],
     });
     this.loadWells();
