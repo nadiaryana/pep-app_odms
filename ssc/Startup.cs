@@ -58,6 +58,7 @@ namespace ssc
 
 
             services.AddHttpClient();
+            services.AddHostedService<WatchdogService>();
 
             // Register Background Task Queue and Hosted Service
             services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
