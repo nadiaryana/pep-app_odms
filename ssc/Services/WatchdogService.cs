@@ -15,17 +15,13 @@ namespace ssc.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<WatchdogService> _logger;
 
-        // Simpan status koneksi terakhir tiap sumur (true=online, false=offline/belum pernah)
         private readonly Dictionary<string, bool> _lastOnlineStatus = new Dictionary<string, bool>();
 
-        // Simpan status arus terakhir tiap sumur (1=ON, 0=OFF, -1=belum pernah)
         private readonly Dictionary<string, int> _lastArusStatus = new Dictionary<string, int>();
 
-        // Batas waktu offline — lebih dari 2 menit dianggap alat mati
         private readonly TimeSpan _offlineThreshold = TimeSpan.FromMinutes(2);
 
-        // Watchdog cek tiap 30 detik
-        private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(30);
+        private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(15);
 
         private const string PushoverToken = "ai2ce22rg828o1q1r5n6v6afp9vd1d";
         private const string PushoverUserKey = "ujjtrrauiqqqn84skaitcxwfsayqwt";
@@ -66,7 +62,7 @@ namespace ssc.Services
                     DateTime lastSeen = last.CreatedAt.Value;
                     TimeSpan selisih = DateTime.UtcNow - lastSeen;
                     bool isOnline = selisih <= _offlineThreshold;
-                    int arusStatus = last.Status; // 1=ON, 0=OFF dari ESP32
+                    int arusStatus = last.Status; // 1=ON, 0=OFF
 
                     bool sudahAdaOnlineStatus = _lastOnlineStatus.ContainsKey(wellId);
                     bool sudahAdaArusStatus = _lastArusStatus.ContainsKey(wellId);
@@ -80,12 +76,9 @@ namespace ssc.Services
                         " | Koneksi: " + (isOnline ? "ONLINE" : "OFFLINE") +
                         " | Arus status: " + arusStatus);
 
-                    // ─────────────────────────────────────────────────────
-                    // KASUS 1: Alat OFFLINE (tidak kirim data > 2 menit)
-                    // ─────────────────────────────────────────────────────
+
                     if (!isOnline)
                     {
-                        // Kirim notif OFF hanya kalau sebelumnya masih online
                         if (lastOnline || !sudahAdaOnlineStatus)
                         {
                             _logger.LogWarning("[WATCHDOG] " + wellId + " OFFLINE!");
@@ -100,25 +93,16 @@ namespace ssc.Services
 
                         _lastOnlineStatus[wellId] = false;
                         // Reset arus status ke -1 saat offline
-                        // biar saat online lagi bisa trigger notif ON
                         _lastArusStatus[wellId] = -1;
-                        continue; // skip cek arus kalau offline
+                        continue;
                     }
-
-                    // ─────────────────────────────────────────────────────
-                    // KASUS 2: Alat ONLINE — cek perubahan status arus
-                    // ─────────────────────────────────────────────────────
 
                     // Alat baru nyala lagi setelah offline
                     bool baruNyalaLagiSetelahOffline = sudahAdaOnlineStatus && !lastOnline;
 
                     if (arusStatus == 1)
                     {
-                        // ── ARUS ON ──
-                        // Kirim notif ON kalau:
-                        // 1. Pertama kali alat colok (belum ada status sebelumnya)
-                        // 2. Baru nyala lagi setelah offline
-                        // 3. Arus sebelumnya adalah OFF (0)
+                        // ── Arus ON ──
                         bool kirimOn = !sudahAdaArusStatus ||
                                        baruNyalaLagiSetelahOffline ||
                                        lastArus == 0 ||
@@ -137,10 +121,7 @@ namespace ssc.Services
                     }
                     else
                     {
-                        // ── ARUS OFF (arus < 1, pompa mati tapi alat masih hidup) ──
-                        // Kirim notif OFF kalau:
-                        // 1. Pertama kali alat colok dan langsung OFF
-                        // 2. Arus sebelumnya adalah ON (1)
+                        // ── Arus OFF < 1 ──
                         bool kirimOff = !sudahAdaArusStatus ||
                                         lastArus == 1 ||
                                         lastArus == -1;
