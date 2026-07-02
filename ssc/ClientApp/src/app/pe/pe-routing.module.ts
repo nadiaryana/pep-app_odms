@@ -206,7 +206,6 @@ const peRoutes: Routes = [
       // { path: 'add-opr', component: MonitoringRKAddOprComponent, canActivate: [PePermissionGuard] },
       // { path: 'edit-opr/:id', component: PeActualEditOprComponent, canActivate: [PePermissionGuard] },
     ]},
-
   ]},
 ]; 
 

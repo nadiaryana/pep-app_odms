@@ -5,8 +5,7 @@ import * as Highcharts from "highcharts";
 import { FormControl } from "@angular/forms";
 import { MatPaginator, MatSort, MatTableDataSource } from "@angular/material";
 
-// Bentuk dokumen di collection "arus" (lihat ArusReading.cs / api/arus).
-// API memakai Newtonsoft DefaultContractResolver => nama properti PascalCase.
+
 interface ArusReading {
   Id: string;
   WellId: string;
@@ -16,7 +15,6 @@ interface ArusReading {
   CreatedAt: string;
 }
 
-// Item sumur untuk daftar di kiri (mirip Well di iSRP)
 interface IotWell {
   name: string;          // = well_id
   status: "ON" | "OFF" | "UNKNOWN";
@@ -24,7 +22,7 @@ interface IotWell {
   lastUpdate: string;
 }
 
-// Baris tabel yang sudah dinormalisasi agar id kolom == nama properti
+
 interface ArusRow {
   date: string;
   wellName: string;
@@ -39,19 +37,17 @@ interface ArusRow {
   styleUrls: ["./pe-iot.component.scss"],
 })
 export class PeIotComponent implements OnInit, OnDestroy {
-  // Chart dirender langsung via Highcharts.chart() ke elemen div (pola yang dipakai
-  // komponen chart PE lainnya), bukan lewat selector highcharts-chart/angular-highcharts.
+
   @ViewChild("chartContainer", { static: false }) chartContainer: ElementRef;
   private chartRef: Highcharts.Chart | null = null;
   hasChartData: boolean = false;
 
-  // Tabel
+
   displayedColumns: string[] = ["date", "wellName", "current", "status"];
   dataSource = new MatTableDataSource<ArusRow>([]);
   resultsLength = 0;
   isLoadingResults = false;
 
-  // Filter tanggal
   dateStartControl = new FormControl(null);
   dateEndControl = new FormControl(null);
   dateRangeError: string = "";
@@ -67,10 +63,9 @@ export class PeIotComponent implements OnInit, OnDestroy {
   wells: IotWell[] = [];
   selectedWell: IotWell | null = null;
 
-  // Kata kunci pencarian sumur
   wellSearch: string = "";
 
-  // Daftar sumur setelah difilter oleh kotak pencarian
+
   get filteredWells(): IotWell[] {
     const q = this.wellSearch.trim().toLowerCase();
     if (!q) return this.wells;
@@ -128,7 +123,6 @@ export class PeIotComponent implements OnInit, OnDestroy {
   selectWell(well: IotWell): void {
     this.selectedWell = well;
 
-    // Reset filter & tabel saat ganti sumur
     this.dataSource.data = [];
     this.resultsLength = 0;
     this.dateStartControl.setValue(null);
@@ -140,7 +134,7 @@ export class PeIotComponent implements OnInit, OnDestroy {
       this.chartRef = null;
     }
 
-    // Default: tampilkan data terakhir tanpa filter tanggal
+
     this.loadData();
   }
 
@@ -161,13 +155,13 @@ export class PeIotComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  // Dipanggil tombol "Tampilkan Data" (pakai filter tanggal)
+
   applyDateFilter(): void {
     if (!this.selectedWell || !this.isDateRangeValid()) return;
     this.loadData(true);
   }
 
-  // Ambil data dari API arus. useRange = pakai endpoint /range
+  // Ambil data dari API arus
   private loadData(useRange: boolean = false): void {
     if (!this.selectedWell) return;
 
@@ -214,7 +208,6 @@ export class PeIotComponent implements OnInit, OnDestroy {
     this.dataSource.data = rows;
     this.resultsLength = rows.length;
 
-    // Pasang paginator & sort setelah tabel ter-render (karena pakai *ngIf)
     setTimeout(() => {
       if (this.paginator) this.dataSource.paginator = this.paginator;
       if (this.sort) this.dataSource.sort = this.sort;
@@ -256,7 +249,6 @@ export class PeIotComponent implements OnInit, OnDestroy {
       ],
     };
 
-    // Render setelah div #chartContainer tersedia di DOM (di dalam *ngIf)
     setTimeout(() => {
       if (this.chartContainer && this.chartContainer.nativeElement) {
         if (this.chartRef) this.chartRef.destroy();

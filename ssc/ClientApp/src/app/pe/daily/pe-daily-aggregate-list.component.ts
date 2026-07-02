@@ -23,93 +23,63 @@ import { CommonService } from '../../common.service';
 
 export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
-  displayedColumns: string[] = [
-    'well', 'well_string',
+  /** Tab aktif: 'annual' | 'monthly' | 'weekly' | 'daily' */
+  activeTab: string = 'weekly';
 
-    // === DATA WEEK 1 (periode lama / "prev") ===
-    'fig_curr_gross_prev',
-    'fig_curr_net_prev',
-    'wc_prev',
-    'gas_prev',
-    'ds_efficiency_prev',
-    'sm_prev',
+  /** Tampilan: 'well' | 'structure' */
+  viewMode: string = 'well';
 
-    // === DATA WEEK 2 (periode baru / "today") ===
-    'fig_curr_gross_today',
-    'fig_curr_net_today',
-    'wc_today',
-    'gas_today',
-    'ds_efficiency_today',
-    'sm_today',
+  // ─── Kolom dinamis (diatur oleh updateDisplayedColumns) ───
+  displayedColumns: string[] = [];
+  headerColumns1: string[] = [];
+  headerColumns2: string[] = [];
 
-    // === DELTA (Week 2 - Week 1) ===
-    'delta_fig_curr_gross',
-    'delta_fig_curr_net',
-    'delta_wc',
-    'delta_gas',
-    'delta_ds_efficiency',
-    'delta_sm'
-  ];
+  // DATE PICKERS — Monthly
+  @ViewChild('month1Picker', { static: true }) month1Picker: MatDatepicker<any> = null!;
+  month1Control = new FormControl(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1));
+  month1Input: string = '';
 
-  headerColumns1: string[] = [
-    "well", "well_string",
-    'week1', "week2", "delta"
-  ];
+  @ViewChild('month2Picker', { static: true }) month2Picker: MatDatepicker<any> = null!;
+  month2Control = new FormControl(new Date());
+  month2Input: string = '';
 
-  headerColumns2: string[] = [
-    'fig_curr_gross_prev', 'fig_curr_net_prev', 'wc_prev', 'gas_prev', 'ds_efficiency_prev', 'sm_prev',
-    "fig_curr_gross_today", "fig_curr_net_today", "wc_today", "gas_today", "ds_efficiency_today", "sm_today",
-    "delta_fig_curr_gross", "delta_fig_curr_net", "delta_wc", "delta_gas", "delta_ds_efficiency", "delta_sm"
-  ];
-
-  //Date Picker: Week 2 (periode baru = "today")
-  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
-  /** Tanggal awal Week 2 */
-  start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
-  // start_dateInput = this.start_dateControl.value
-  //   ? this.start_dateControl.value.toLocaleDateString("en-US", {
-  //       month: "short",
-  //       year: "numeric",
-  //       day: "numeric",
-  //     })
-  //   : "";
-  start_dateInput = new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-    day: "numeric",
-  });
-
-  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
-  /** Tanggal akhir Week 2 */
-  end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
-  // end_dateInput = this.end_dateControl.value ? this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" }) :  "";
-  end_dateInput = new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-    day: "numeric",
-  });
-  
-  //Date Picker: Week 1 (periode lama = "prev")
+  // DATE PICKERS — Weekly (existing)
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
-  /** Tanggal awal Week 1 (default 7 hari yang lalu) */
   weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
-  weekly_start_dateInput = this.weekly_start_dateControl.value
-    ? this.weekly_start_dateControl.value.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-        day: "numeric",
-      })
-    : "";
+  weekly_start_dateInput = '';
 
   @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any> = null!;
-  /** Tanggal akhir Week 1 */
   weekly_end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
-  weekly_end_dateInput = this.weekly_start_dateControl.value 
-  ? this.weekly_end_dateControl.value.toLocaleDateString("en-US", { 
-    month: "short", 
-    year: "numeric", 
-    day: "numeric" }) 
-    : "";
+  weekly_end_dateInput = '';
+
+  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
+  start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
+  start_dateInput = '';
+
+  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
+  end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
+  end_dateInput = '';
+
+  // DATE PICKERS — Daily
+  @ViewChild('daily1StartPicker', { static: true }) daily1StartPicker: MatDatepicker<any> = null!;
+  daily1StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 7)));
+  daily1StartInput: string = '';
+
+  @ViewChild('daily1EndPicker', { static: true }) daily1EndPicker: MatDatepicker<any> = null!;
+  daily1EndControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  daily1EndInput: string = '';
+
+  @ViewChild('daily2StartPicker', { static: true }) daily2StartPicker: MatDatepicker<any> = null!;
+  daily2StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 14)));
+  daily2StartInput: string = '';
+
+  @ViewChild('daily2EndPicker', { static: true }) daily2EndPicker: MatDatepicker<any> = null!;
+  daily2EndControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 8)));
+  daily2EndInput: string = '';
+
+  // DATE PICKERS — Annual
+  year1Control = new FormControl(new Date().getFullYear() - 1);
+  year2Control = new FormControl(new Date().getFullYear());
 
 
   exampleDatabase: ExampleHttpDao | null = null;
@@ -142,18 +112,19 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   wcFilter = new FormControl('');
   gasFilter = new FormControl('');
   ds_efficiencyFilter = new FormControl('');
+  smFilter = new FormControl('');
+  
 
 
-  date_xSelected = [];
-  well_xSelected = [];
-  well_string_xSelected = [];   
-  fig_curr_gross_xSelected = [];
-  fig_curr_net_xSelected = [];
-  gas_xSelected = [];
-  sm_xSelected = [];
-  wor_xSelected = [];
-  wc_xSelected = [];
-  ds_efficiency_xSelected = [];
+  date_xSelected: any[] = [];
+  well_xSelected: any[] = [];
+  well_string_xSelected: any[] = [];   
+  fig_curr_gross_xSelected: any[] = [];
+  fig_curr_net_xSelected: any[] = [];
+  wc_xSelected: any[] = [];
+  gas_xSelected: any[] = [];
+  ds_efficiency_xSelected: any[] = [];
+  sm_xSelected: any[] = [];
 
   
   // filterSubscription: Subscription = null!;
@@ -181,7 +152,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       icon: "change_history",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
-        { label: 'Daily Aggregate', routerLink: '' }
+        { label: 'Aggregate', routerLink: '' }
       ]
     });
 
@@ -197,6 +168,10 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.status = (this.route.snapshot.paramMap.get('status') as string) || '';
 
     this.exampleDatabase = new ExampleHttpDao(this.http);
+
+    // Inisialisasi kolom dan input tanggal
+    this.updateDisplayedColumns();
+    this.updateDateInputs();
 
     // Reset ke halaman pertama setiap kali kolom sort berubah
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
@@ -218,70 +193,61 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.sort.sortChange,
       this.paginator.page,
       this.filterControl.valueChanges.pipe(debounceTime(300)),
+      // Weekly
       this.start_dateControl.valueChanges.pipe(debounceTime(300)),
       this.end_dateControl.valueChanges.pipe(debounceTime(300)),
       this.weekly_start_dateControl.valueChanges.pipe(debounceTime(300)),
       this.weekly_end_dateControl.valueChanges.pipe(debounceTime(300)),
+      // Monthly
+      this.month1Control.valueChanges.pipe(debounceTime(300)),
+      this.month2Control.valueChanges.pipe(debounceTime(300)),
+      // Daily
+      this.daily1StartControl.valueChanges.pipe(debounceTime(300)),
+      this.daily1EndControl.valueChanges.pipe(debounceTime(300)),
+      this.daily2StartControl.valueChanges.pipe(debounceTime(300)),
+      this.daily2EndControl.valueChanges.pipe(debounceTime(300)),
+      // Annual
+      this.year1Control.valueChanges.pipe(debounceTime(300)),
+      this.year2Control.valueChanges.pipe(debounceTime(300)),
+      // Filters
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
       this.well_stringFilter.valueChanges.pipe(debounceTime(300)),
-      this.fig_curr_grossFilter.valueChanges.pipe(debounceTime(300)),
-      this.fig_curr_netFilter.valueChanges.pipe(debounceTime(300)),
-      this.ds_efficiencyFilter.valueChanges.pipe(debounceTime(300)),
-      this.wcFilter.valueChanges.pipe(debounceTime(300)),
-      this.gasFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
       switchMap(() => {
-        if (!this.start_dateControl.value || !this.end_dateControl.value ||
-            !this.weekly_start_dateControl.value || !this.weekly_end_dateControl.value) {
+        this.isLoadingResults = true;
+
+        // Tentukan tanggal berdasarkan tab aktif
+        const dates = this.getPeriodDates();
+        if (!dates) {
           return observableOf({ items: [], total_count: 0 });
         }
 
-        this.isLoadingResults = true;
+        const { period1Start, period1End, period2Start, period2End, mode } = dates;
 
-        console.log("start_dateControl value", this.start_dateControl.value);
-        console.log("end_dateControl value", this.end_dateControl.value);
-        // ── Request Week 2 (periode baru, "today") ──
-        const week2Observable = this.exampleDatabase!.getRepoIssues(
-          this.sort.active,
-          this.sort.direction,
-          0,       
-          9999,    // pagesize 
-          this.filterControl.value,
-          this.getColumnFilter(),
-          "weekly_average",
-          {},
-          this.start_dateControl.value,    
-          this.end_dateControl.value       
+        // ── Request Period 1 ──
+        const period1Obs = this.exampleDatabase!.getRepoIssues(
+          this.sort.active, this.sort.direction,
+          0, 9999,
+          this.filterControl.value, this.getColumnFilter(),
+          mode + '_period1', {},
+          period1Start, period1End
         );
 
-        // ── Request Week 1 (periode lama, "prev") ──
-        const week1Observable = this.exampleDatabase!.getRepoIssues(
-          this.sort.active,
-          this.sort.direction,
-          0,       
-          9999,    
-          this.filterControl.value,
-          this.getColumnFilter(),
-          "weekly_average",
-          {},
-          this.weekly_start_dateControl.value,   
-          this.weekly_end_dateControl.value       
+        // ── Request Period 2 ──
+        const period2Obs = this.exampleDatabase!.getRepoIssues(
+          this.sort.active, this.sort.direction,
+          0, 9999,
+          this.filterControl.value, this.getColumnFilter(),
+          mode + '_period2', {},
+          period2Start, period2End
         );
 
-        // ── Gabungkan kedua request, tunggu keduanya selesai ──
-        return forkJoin([week1Observable, week2Observable]).pipe(
-          map(([week1Data, week2Data]) => {
-            console.log("Week 1 (prev) raw API response count:", week1Data.items ? week1Data.items.length : 0);
-            console.log("Week 2 (today) raw API response count:", week2Data.items ? week2Data.items.length : 0);
-
-            // Merge data Week 1 dan Week 2, hitung delta di frontend
-            const mergedData = this.mergeWeeksData(week1Data.items || [], week2Data.items || []);
-            return {
-              items: mergedData,
-              total_count: mergedData.length
-            };
+        return forkJoin([period1Obs, period2Obs]).pipe(
+          map(([p1Data, p2Data]) => {
+            const mergedData = this.mergeWeeksData(p1Data.items || [], p2Data.items || []);
+            return { items: mergedData, total_count: mergedData.length };
           })
         );
       }),
@@ -318,13 +284,184 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ──────────────────────────────────────────────
+  // TAB HANDLING
+  // ──────────────────────────────────────────────
+  setActiveTab(tab: string) {
+    this.activeTab = tab;
+    this.updateDisplayedColumns();
+    this.updateDateInputs();
+    this.paginator.pageIndex = 0;
+    this.loadData();
+  }
+
+  // ──────────────────────────────────────────────
+  // VIEW MODE (Well / Structure)
+  // ──────────────────────────────────────────────
+  setViewMode(mode: string) {
+    this.viewMode = mode;
+    this.updateDisplayedColumns();
+    this.paginator.pageIndex = 0;
+    this.loadData();
+  }
+
+  get gainLossField(): string {
+    return (this.activeTab === 'weekly' || this.activeTab === 'daily') ? 'gain_loss_gross' : 'gain_loss_net';
+  }
+
+  get gainLossLabel(): string {
+    return (this.activeTab === 'weekly' || this.activeTab === 'daily') ? 'Gross' : 'Net';
+  }
+
+
+  // DYNAMIC COLUMNS
+  updateDisplayedColumns() {
+    const isGrossFirst = this.activeTab === 'weekly' || this.activeTab === 'daily';
+    const p1 = isGrossFirst
+      ? ['period1_gross', 'period1_net', 'period1_wc', 'period1_gas', 'period1_ds_efficiency', 'period1_sm']
+      : ['period1_net', 'period1_wc', 'period1_gross', 'period1_gas', 'period1_ds_efficiency', 'period1_sm'];
+    const p2 = isGrossFirst
+      ? ['period2_gross', 'period2_net', 'period2_wc', 'period2_gas', 'period2_ds_efficiency', 'period2_sm']
+      : ['period2_net', 'period2_wc', 'period2_gross', 'period2_gas', 'period2_ds_efficiency', 'period2_sm'];
+
+    const gainLoss = isGrossFirst
+    ? ['gain_loss_gross', 'gain_loss_net', 'gain_loss_wc', 'gain_loss_gas', 'gain_loss_ds_efficiency', 'gain_loss_sm']
+    : ['gain_loss_net', 'gain_loss_wc', 'gain_loss_gross', 'gain_loss_gas', 'gain_loss_ds_efficiency', 'gain_loss_sm'];
+
+    const firstCol = this.viewMode === 'well' ? 'well' : 'structure';
+
+    this.displayedColumns = [firstCol, ...p1, ...p2, ...gainLoss];
+    this.headerColumns1 = [firstCol, 'period1_group', 'period2_group', 'gain_loss_group'];
+    this.headerColumns2 = [...p1, ...p2, ...gainLoss];
+  }
+
+
   formatDate(date: Date): string {
     if (!date) return '';
     return date.toLocaleDateString('en-US', {
-      month: 'short',
-      year: 'numeric',
-      day: 'numeric'
+      month: 'short', year: 'numeric', day: 'numeric'
     });
+  }
+
+  formatMonth(date: Date): string {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }
+
+  getISOWeekNumber(date: Date): number {
+    if (!date) return 0;
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  }
+
+  getPeriod1Label(): string {
+    switch (this.activeTab) {
+      case 'annual': return `Year ${this.year1Control.value || ''}`;
+      case 'monthly': return this.month1Input || 'Period 1';
+      case 'weekly': return `Week ${this.getISOWeekNumber(this.weekly_start_dateControl.value)}`;
+      case 'daily': return `${this.formatDate(this.daily1StartControl.value)} - ${this.formatDate(this.daily1EndControl.value)}`;
+      default: return 'Period 1';
+    }
+  }
+
+  getPeriod2Label(): string {
+    switch (this.activeTab) {
+      case 'annual': return `Year ${this.year2Control.value || ''}`;
+      case 'monthly': return this.month2Input || 'Period 2';
+      case 'weekly': return `Week ${this.getISOWeekNumber(this.start_dateControl.value)}`;
+      case 'daily': return `${this.formatDate(this.daily2StartControl.value)} - ${this.formatDate(this.daily2EndControl.value)}`;
+      default: return 'Period 2';
+    }
+  }
+
+  /** Menentukan tanggal start/end & mode berdasarkan tab aktif */
+  getPeriodDates(): { period1Start: Date, period1End: Date, period2Start: Date, period2End: Date, mode: string } | null {
+    let period1Start: Date, period1End: Date, period2Start: Date, period2End: Date;
+    let mode: string;
+
+    switch (this.activeTab) {
+      case 'monthly': {
+        period1Start = new Date(this.month1Control.value);
+        period1Start.setDate(1);
+        period1End = new Date(period1Start);
+        period1End.setMonth(period1End.getMonth() + 1);
+        period1End.setDate(0);
+
+        period2Start = new Date(this.month2Control.value);
+        period2Start.setDate(1);
+        period2End = new Date(period2Start);
+        period2End.setMonth(period2End.getMonth() + 1);
+        period2End.setDate(0);
+        mode = 'monthly_average';
+        break;
+      }
+      case 'weekly': {
+        if (!this.weekly_start_dateControl.value || !this.weekly_end_dateControl.value ||
+            !this.start_dateControl.value || !this.end_dateControl.value) return null;
+        period1Start = this.weekly_start_dateControl.value;
+        period1End = this.weekly_end_dateControl.value;
+        period2Start = this.start_dateControl.value;
+        period2End = this.end_dateControl.value;
+        mode = 'weekly_average';
+        break;
+      }
+      case 'daily': {
+        if (!this.daily1StartControl.value || !this.daily1EndControl.value ||
+            !this.daily2StartControl.value || !this.daily2EndControl.value) return null;
+        period1Start = this.daily1StartControl.value;
+        period1End = this.daily1EndControl.value;
+        period2Start = this.daily2StartControl.value;
+        period2End = this.daily2EndControl.value;
+        mode = 'daily_average';
+        break;
+      }
+      case 'annual': {
+        period1Start = new Date(this.year1Control.value, 0, 1);
+        period1End = new Date(this.year1Control.value, 11, 31);
+        period2Start = new Date(this.year2Control.value, 0, 1);
+        period2End = new Date(this.year2Control.value, 11, 31);
+        mode = 'annual_average';
+        break;
+      }
+      default:
+        return null;
+    }
+
+    return { period1Start, period1End, period2Start, period2End, mode };
+  }
+
+  /** Update semua input teks tanggal dari control masing-masing */
+  updateDateInputs() {
+    this.month1Input = this.formatMonth(this.month1Control.value);
+    this.month2Input = this.formatMonth(this.month2Control.value);
+    this.weekly_start_dateInput = this.formatDate(this.weekly_start_dateControl.value);
+    this.weekly_end_dateInput = this.formatDate(this.weekly_end_dateControl.value);
+    this.start_dateInput = this.formatDate(this.start_dateControl.value);
+    this.end_dateInput = this.formatDate(this.end_dateControl.value);
+    this.daily1StartInput = this.formatDate(this.daily1StartControl.value);
+    this.daily1EndInput = this.formatDate(this.daily1EndControl.value);
+    this.daily2StartInput = this.formatDate(this.daily2StartControl.value);
+    this.daily2EndInput = this.formatDate(this.daily2EndControl.value);
+  }
+
+  // ──────────────────────────────────────────────
+  // DATE CHANGE HANDLERS
+  // ──────────────────────────────────────────────
+  month1Change(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.month1Control.setValue(d);
+    this.month1Input = this.formatMonth(d);
+  }
+
+  month2Change(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.month2Control.setValue(d);
+    this.month2Input = this.formatMonth(d);
   }
 
   start_dateChange(event: any) {
@@ -355,10 +492,46 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.weekly_end_dateInput = this.formatDate(d);
   }
 
+  daily1StartChange(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.daily1StartControl.setValue(d);
+    this.daily1StartInput = this.formatDate(d);
+  }
+
+  daily1EndChange(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.daily1EndControl.setValue(d);
+    this.daily1EndInput = this.formatDate(d);
+  }
+
+  daily2StartChange(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.daily2StartControl.setValue(d);
+    this.daily2StartInput = this.formatDate(d);
+  }
+
+  daily2EndChange(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.daily2EndControl.setValue(d);
+    this.daily2EndInput = this.formatDate(d);
+  }
+
+  year1Change() {
+    this.loadData();
+  }
+
+  year2Change() {
+    this.loadData();
+  }
+
   ngOnDestroy() {
-    this.filterSubscription.unsubscribe();
-    this.selectedSubscription.unsubscribe();
-    this.listSubscription.unsubscribe();
+    if (this.filterSubscription) this.filterSubscription.unsubscribe();
+    if (this.selectedSubscription) this.selectedSubscription.unsubscribe();
+    if (this.listSubscription) this.listSubscription.unsubscribe();
   }
 
   passPermission(path: String) {
@@ -515,34 +688,66 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
       const ref = Object.keys(week2).length > 0 ? week2 : week1;
 
+      const p1Gross = week1.fig_curr_gross || 0;
+      const p1Net   = week1.fig_curr_net   || 0;
+      const p1Wc    = week1.wc             || 0;
+      const p2Gross = week2.fig_curr_gross || 0;
+      const p2Net   = week2.fig_curr_net   || 0;
+      const p2Wc    = week2.wc             || 0;
+
       return {
+        // Field identitas (existing)
         well: ref.well,
         well_string: ref.well_string,
         location: ref.location,
 
-        //data week 1
-        fig_curr_gross_prev:  week1.fig_curr_gross  || 0,
-        fig_curr_net_prev:    week1.fig_curr_net    || 0,
-        wc_prev:              week1.wc              || 0,
+        // ── Field existing (untuk kompatibilitas) ──
+        fig_curr_gross_prev:  p1Gross,
+        fig_curr_net_prev:    p1Net,
+        wc_prev:              p1Wc,
         gas_prev:             week1.gas             || 0,
         ds_efficiency_prev:   week1.ds_efficiency   || 0,
         sm_prev:              week1.sm              || 0,
 
-        //data week 2
-        fig_curr_gross_today: week2.fig_curr_gross  || 0,
-        fig_curr_net_today:   week2.fig_curr_net    || 0,
-        wc_today:             week2.wc              || 0,
+        fig_curr_gross_today: p2Gross,
+        fig_curr_net_today:   p2Net,
+        wc_today:             p2Wc,
         gas_today:            week2.gas             || 0,
         ds_efficiency_today:  week2.ds_efficiency   || 0,
         sm_today:             week2.sm              || 0,
 
-        //delta 
-        delta_fig_curr_gross: (week2.fig_curr_gross  || 0) - (week1.fig_curr_gross  || 0),
-        delta_fig_curr_net:   (week2.fig_curr_net    || 0) - (week1.fig_curr_net    || 0),
-        delta_wc:             (week2.wc              || 0) - (week1.wc              || 0),
-        delta_gas:            (week2.gas             || 0) - (week1.gas             || 0),
-        delta_ds_efficiency:  (week2.ds_efficiency   || 0) - (week1.ds_efficiency   || 0),
-        delta_sm:             (week2.sm              || 0) - (week1.sm              || 0),
+        delta_fig_curr_gross: p2Gross - p1Gross,
+        delta_fig_curr_net:   p2Net   - p1Net,
+        delta_wc:             p2Wc    - p1Wc,
+        delta_gas:            (week2.gas || 0) - (week1.gas || 0),
+        delta_ds_efficiency:  (week2.ds_efficiency || 0) - (week1.ds_efficiency || 0),
+        delta_sm:             (week2.sm || 0) - (week1.sm || 0),
+        
+
+        // ── Field baru (Well Performance UI) ──
+        structure: ref.structure || ref.well || key,
+
+        period1_gross: p1Gross,
+        period1_net:   p1Net,
+        period1_wc:    p1Wc,
+        period1_gas:            week1.gas           || 0,   
+        period1_ds_efficiency:  week1.ds_efficiency || 0,   
+        period1_sm:             week1.sm            || 0,
+        
+
+        period2_gross: p2Gross,
+        period2_net:   p2Net,
+        period2_wc:    p2Wc,
+        period2_gas:            week2.gas           || 0,   
+        period2_ds_efficiency:  week2.ds_efficiency || 0,   
+        period2_sm:             week2.sm            || 0,
+
+        gain_loss_gross: p2Gross - p1Gross,
+        gain_loss_net:   p2Net   - p1Net,
+        gain_loss_wc:    p2Wc    - p1Wc,
+        gain_loss_gas:            (week2.gas || 0) - (week1.gas || 0),           
+        gain_loss_ds_efficiency:  (week2.ds_efficiency || 0) - (week1.ds_efficiency || 0), 
+        gain_loss_sm:             (week2.sm || 0) - (week1.sm || 0),
       };
     });
 
@@ -562,8 +767,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     if (this.fig_curr_gross_xSelected.length) columnfilter["fig_curr_gross"]  = this.fig_curr_gross_xSelected;
     if (this.fig_curr_net_xSelected.length)   columnfilter["fig_curr_net"]    = this.fig_curr_net_xSelected;
     if (this.gas_xSelected.length)            columnfilter["gas"]             = this.gas_xSelected;
-    if (this.sm_xSelected.length)             columnfilter["sm"]              = this.sm_xSelected;
-    if (this.wor_xSelected.length)            columnfilter["wor"]             = this.wor_xSelected;
+    if (this.wc_xSelected.length)             columnfilter["wc"]              = this.wc_xSelected;
+    if (this.sm_xSelected.length)            columnfilter["sm"]             = this.sm_xSelected;
     if (this.ds_efficiency_xSelected.length)  columnfilter["ds_efficiency"]   = this.ds_efficiency_xSelected;
 
     // Filter dari parameter route (end_submitDate), dikirim jika ada
@@ -637,49 +842,40 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   }
 
   loadData(): void {
-    const week2Start = this.start_dateControl.value;
-    const week2End = this.end_dateControl.value;
-    const week1Start = this.weekly_start_dateControl.value;
-    const week1End = this.weekly_end_dateControl.value;
-
-    // Validasi: semua 4 tanggal harus tersedia
-    if (!week2Start || !week2End || !week1Start || !week1End) {
-      console.warn('All dates are required (Week 1 and Week 2)');
+    const dates = this.getPeriodDates();
+    if (!dates) {
+      console.warn('Required dates are missing');
       return;
     }
 
+    const { period1Start, period1End, period2Start, period2End, mode } = dates;
     this.isLoadingResults = true;
 
-    // Request data Week 1 (periode lama)
-    const week1$ = this.http.get<any>('/api/pe/daily/delta', {
+    const period1$ = this.http.get<any>('/api/pe/daily/delta', {
       params: {
-        startDate: new Date(week1Start).toISOString(),
-        endDate: new Date(week1End).toISOString(),
-        mode: 'weekly_average',
-        page: '0',
-        pagesize: '200',
-        sort: 'well',
-        order: 'asc'
+        startDate: new Date(period1Start).toISOString(),
+        endDate: new Date(period1End).toISOString(),
+        mode: mode + '_period1',
+        page: '0', pagesize: '200',
+        sort: 'well', order: 'asc',
+        groupBy: this.viewMode === 'structure' ? 'structure' : 'well'
       }
     });
 
-    // Request data Week 2 (periode baru)
-    const week2$ = this.http.get<any>('/api/pe/daily/delta', {
+    const period2$ = this.http.get<any>('/api/pe/daily/delta', {
       params: {
-        startDate: new Date(week2Start).toISOString(),
-        endDate: new Date(week2End).toISOString(),
-        mode: 'weekly_average',
-        page: '0',
-        pagesize: '200',
-        sort: 'well',
-        order: 'asc'
+        startDate: new Date(period2Start).toISOString(),
+        endDate: new Date(period2End).toISOString(),
+        mode: mode + '_period2',
+        page: '0', pagesize: '200',
+        sort: 'well', order: 'asc',
+        groupBy: this.viewMode === 'structure' ? 'structure' : 'well'
       }
     });
 
-    forkJoin([week1$, week2$]).subscribe({
-      next: ([week1Res, week2Res]) => {
-        // Gabungkan data kedua minggu, hitung delta, lalu sort
-        const mergedData = this.mergeWeeksData(week1Res.items || [], week2Res.items || []);
+    forkJoin([period1$, period2$]).subscribe({
+      next: ([p1Res, p2Res]) => {
+        const mergedData = this.mergeWeeksData(p1Res.items || [], p2Res.items || []);
         const sortedData = this.sortMergedData(mergedData);
         this.dataSource.data = sortedData;
         this.isLoadingResults = false;
@@ -742,7 +938,7 @@ export class ExampleHttpDao {
 
 @Component({
   selector: 'app-daily-delete-dialog',
-  template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
+  template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button (click)="onYesClick()" cdkFocusInitial>Yes</button> <button mat-button (click)="onNoClick()">No</button> </div>',
   // styleUrls: ['./pe-daily.scss']
 })
 
@@ -753,11 +949,11 @@ export class PeDailyAggregateDeleteDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: number) { }
 
   onNoClick(): void {
-    this.dialogRef.close();
+    this.dialogRef.close(0);
   }
 
   onYesClick(): void {
-    this.dialogRef.close();
+    this.dialogRef.close(1);
   }
 
 }

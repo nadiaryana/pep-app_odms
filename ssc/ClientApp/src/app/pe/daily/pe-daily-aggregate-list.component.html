@@ -1,281 +1,425 @@
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-  <!--mat-form-field>
-    <input matInput placeholder="Filter" [formControl]="filterControl">
-  </mat-form-field-->
-  <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/delta']"><mat-icon>trending_up</mat-icon>Delta Chart</button> -->
-  
-	<div class="week-date-group">
-		<span class="week-date-title">Daily / Week / Month Average 1</span>
-		<div class="week-date-pickers">
+<div class="container-top-bar wp-topbar">
+
+	<!-- TABS -->
+	<div class="wp-tabs">
+		<button mat-flat-button 
+			[class.wp-tab-active]="activeTab === 'annual'"
+			(click)="setActiveTab('annual')">Annual</button>
+		<button mat-flat-button 
+			[class.wp-tab-active]="activeTab === 'monthly'"
+			(click)="setActiveTab('monthly')">Monthly</button>
+		<button mat-flat-button 
+			[class.wp-tab-active]="activeTab === 'weekly'"
+			(click)="setActiveTab('weekly')">Weekly</button>
+		<button mat-flat-button 
+			[class.wp-tab-active]="activeTab === 'daily'"
+			(click)="setActiveTab('daily')">Daily</button>
+	</div>
+
+	<!-- DATE PICKERS - MONTHLY -->
+	<div class="wp-date-group" *ngIf="activeTab === 'monthly'">
+		<div class="wp-date-field">
+			<label>Month 1</label>
 			<mat-form-field class="filter" floatLabel="never">
-				<mat-label>Week 1 Start Date</mat-label>
-				<input matInput class="input-hidden" [matDatepicker]="weekly_start_datePicker" [formControl]="weekly_start_dateControl" (dateChange)="weekly_start_dateChange($event)" readonly >
+				<input matInput class="input-hidden" [matDatepicker]="month1Picker" 
+					[formControl]="month1Control" (dateChange)="month1Change($event)" readonly>
+				<input matInput [(ngModel)]="month1Input" disabled>
+				<mat-datepicker-toggle matSuffix [for]="month1Picker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #month1Picker></mat-datepicker>
+			</mat-form-field>
+		</div>
+		<div class="wp-date-field">
+			<label>Month 2</label>
+			<mat-form-field class="filter" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="month2Picker" 
+					[formControl]="month2Control" (dateChange)="month2Change($event)" readonly>
+				<input matInput [(ngModel)]="month2Input" disabled>
+				<mat-datepicker-toggle matSuffix [for]="month2Picker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #month2Picker></mat-datepicker>
+			</mat-form-field>
+		</div>
+	</div>
+
+	<!-- DATE PICKERS - WEEKLY -->
+	<div class="wp-date-group" *ngIf="activeTab === 'weekly'">
+		<div class="wp-date-field">
+			<label>Week 1</label>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="weekly_start_datePicker" 
+					[formControl]="weekly_start_dateControl" (dateChange)="weekly_start_dateChange($event)" readonly>
 				<input matInput [(ngModel)]="weekly_start_dateInput" disabled>
 				<mat-datepicker-toggle matSuffix [for]="weekly_start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #weekly_start_datePicker disabled="false"></mat-datepicker>
+				<mat-datepicker #weekly_start_datePicker></mat-datepicker>
 			</mat-form-field>
-			<mat-form-field class="filter" floatLabel="never">
-				<mat-label>Week 1 End Date</mat-label>
-				<input matInput class="input-hidden" [matDatepicker]="weekly_end_datePicker" [formControl]="weekly_end_dateControl" (dateChange)="weekly_end_dateChange($event)" readonly>
+			<span class="wp-date-separator">-</span>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="weekly_end_datePicker" 
+					[formControl]="weekly_end_dateControl" (dateChange)="weekly_end_dateChange($event)" readonly>
 				<input matInput [(ngModel)]="weekly_end_dateInput" disabled>
 				<mat-datepicker-toggle matSuffix [for]="weekly_end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #weekly_end_datePicker disabled="false"></mat-datepicker>
+				<mat-datepicker #weekly_end_datePicker></mat-datepicker>
 			</mat-form-field>
 		</div>
-	</div>
-
-	<div class="week-date-group">
-		<span class="week-date-title">Daily / Week / Month Average 2</span>
-		<div class="week-date-pickers">
-			<mat-form-field class="filter" floatLabel="never">
-				<mat-label>Week 2 Start Date</mat-label>
-				<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" readonly >
+		<div class="wp-date-field">
+			<label>Week 2</label>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="start_datePicker" 
+					[formControl]="start_dateControl" (dateChange)="start_dateChange($event)" readonly>
 				<input matInput [(ngModel)]="start_dateInput" disabled>
 				<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
+				<mat-datepicker #start_datePicker></mat-datepicker>
 			</mat-form-field>
-			<mat-form-field class="filter" floatLabel="never">
-				<mat-label>Week 2 End Date</mat-label>
-				<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" readonly>
+			<span class="wp-date-separator">-</span>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="end_datePicker" 
+					[formControl]="end_dateControl" (dateChange)="end_dateChange($event)" readonly>
 				<input matInput [(ngModel)]="end_dateInput" disabled>
 				<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
+				<mat-datepicker #end_datePicker></mat-datepicker>
 			</mat-form-field>
 		</div>
 	</div>
-  
-</div>
 
-<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-
-  <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
-    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
-  </div>
-
-  <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
-    <table mat-table [dataSource]="dataSource" class="pe-table"
-           matSort matSortActive="date" matSortDisableClear matSortDirection="desc">
-      <!-- <ng-container matColumnDef="select" >
-        <th mat-header-cell *matHeaderCellDef rowspan="2">
-          <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
-                        [checked]="selection.hasValue() && isAllSelected()"
-                        [indeterminate]="selection.hasValue() && !isAllSelected()"
-                        [aria-label]="checkboxLabel()"
-                        [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
-          </mat-checkbox>
-        </th>
-        <td mat-cell *matCellDef="let row">
-          <mat-checkbox (click)="$event.stopPropagation()"
-                        (change)="($event && !isEditing) ? selection.toggle(row) : null"
-                        [checked]="selection.isSelected(row)"
-                        [aria-label]="checkboxLabel(row)"
-                        [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
-          </mat-checkbox>
-        </td>
-      </ng-container> -->
-
-      <!-- <ng-container matColumnDef="date" >
-		  <th mat-header-cell *matHeaderCellDef rowspan="2">
-			<div fxLayout="row" fxLayoutAlign="start center">
-			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Date</span>
-			  <app-xfilter title="Date" column="date" format="date" [selected]="date_xSelected"></app-xfilter>
-			</div>
-		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.date ? (row.date | date: 'dd MMM y') : '-'}}</td>
-	  </ng-container> -->
-		<ng-container matColumnDef="well" sticky>
-		  <th mat-header-cell *matHeaderCellDef rowspan="2">
-			<div fxLayout="row" fxLayoutAlign="start center">
-			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
-			  <app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
-			</div>
-		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
-		</ng-container> 
-		<ng-container matColumnDef="well_string" sticky>
-		  <th mat-header-cell *matHeaderCellDef rowspan="2">
-			<div fxLayout="row" fxLayoutAlign="start center">
-			  <span mat-sort-header arrowPosition="before" class="mat-sort-header">Well String</span>
-			  <app-xfilter title="Well String" column="well_string" [selected]="well_string_xSelected"></app-xfilter>
-			</div>
-		  </th>
-		  <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{row.well_string}}</td>
-		</ng-container>
-    <ng-container matColumnDef="week1">
-          <th mat-header-cell *matHeaderCellDef colspan="6">Week 1: {{ weekly_start_dateInput ? (weekly_start_dateInput) : "Week 1" }} - {{ weekly_end_dateInput ? (weekly_end_dateInput) : "" }}</th>
-    </ng-container>
-    <ng-container matColumnDef="fig_curr_gross_prev">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross Prev</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_gross_prev | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="fig_curr_net_prev">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net Prev</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_net_prev | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="wc_prev">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC Prev</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_prev | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="gas_prev">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas Prev</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.gas_prev | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="ds_efficiency_prev">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency Prev</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ds_efficiency_prev | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="sm_prev">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM Prev</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm_prev | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="week2">
-        <th mat-header-cell *matHeaderCellDef colspan="6">Week 2: {{ start_dateInput ? (start_dateInput) : "Week 2" }} - {{ end_dateInput ? (end_dateInput) : "" }}</th>
-    </ng-container>
-    <ng-container matColumnDef="fig_curr_gross_today">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_gross_today | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="fig_curr_net_today">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.fig_curr_net_today | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="wc_today">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.wc_today | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="gas_today">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{ row.gas_today | number:'1.2-2':'id-ID' }}</td>
-    </ng-container>
-    <ng-container matColumnDef="ds_efficiency_today">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.ds_efficiency_today | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-    <ng-container matColumnDef="sm_today">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.sm_today | number : '1.2-2') || '-'}}</td>
-    </ng-container>
-
-      <ng-container matColumnDef="delta">
-          <th mat-header-cell *matHeaderCellDef colspan="6">Delta</th>
-      </ng-container>
-      <ng-container matColumnDef="delta_fig_curr_gross">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header="delta_fig_curr_gross" arrowPosition="before" class="mat-sort-header">Δ Gross</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right"
-              [class.clicked_row]="selection.isSelected(row) ">{{(row.delta_fig_curr_gross | number : '1.2-2') || '-'}}</td>
-        </ng-container>
-      <ng-container matColumnDef="delta_fig_curr_net">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header="delta_fig_curr_net" arrowPosition="before" class="mat-sort-header">Δ Net</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.delta-up]="row.delta_fig_curr_net> 0"
-              [class.delta-down]="row.delta_fig_curr_net< 0"
-              [class.delta-same]="row.delta_fig_curr_net=== 0"  
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_fig_curr_net | number : '1.2-2') || '-'}}</td>
-        </ng-container>
-      <ng-container matColumnDef="delta_wc">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header="delta_wc" arrowPosition="before" class="mat-sort-header">Δ WC</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_wc | number : '1.2-2') || '-'}}</td>
-        </ng-container>
-      <ng-container matColumnDef="delta_gas">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header="delta_gas" arrowPosition="before" class="mat-sort-header">Δ Gas</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_gas | number : '1.2-2') || '-'}}</td>
-        </ng-container>
-      <ng-container matColumnDef="delta_ds_efficiency">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header="delta_ds_efficiency" arrowPosition="before" class="mat-sort-header">Δ Efficiency</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_ds_efficiency | number : '1.2-2') || '-'}}</td>
-        </ng-container>
-      <ng-container matColumnDef="delta_sm">
-          <th mat-header-cell *matHeaderCellDef rowspan="2">
-            <div fxLayout="row" fxLayoutAlign="start center">
-              <span mat-sort-header="delta_sm" arrowPosition="before" class="mat-sort-header">Δ SM</span>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let row" class="cell-right" 
-              [class.clicked_row]="selection.isSelected(row)">{{(row.delta_sm | number : '1.2-2') || '-'}}</td>
-        </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
-      <tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>
-      <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
-	</table>
+	<!-- DATE PICKERS - DAILY -->
+	<div class="wp-date-group" *ngIf="activeTab === 'daily'">
+		<div class="wp-date-field">
+			<label>Period 1</label>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="daily1StartPicker" 
+					[formControl]="daily1StartControl" (dateChange)="daily1StartChange($event)" readonly>
+				<input matInput [(ngModel)]="daily1StartInput" disabled>
+				<mat-datepicker-toggle matSuffix [for]="daily1StartPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #daily1StartPicker></mat-datepicker>
+			</mat-form-field>
+			<span class="wp-date-separator">-</span>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="daily1EndPicker" 
+					[formControl]="daily1EndControl" (dateChange)="daily1EndChange($event)" readonly>
+				<input matInput [(ngModel)]="daily1EndInput" disabled>
+				<mat-datepicker-toggle matSuffix [for]="daily1EndPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #daily1EndPicker></mat-datepicker>
+			</mat-form-field>
+		</div>
+		<div class="wp-date-field">
+			<label>Period 2</label>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="daily2StartPicker" 
+					[formControl]="daily2StartControl" (dateChange)="daily2StartChange($event)" readonly>
+				<input matInput [(ngModel)]="daily2StartInput" disabled>
+				<mat-datepicker-toggle matSuffix [for]="daily2StartPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #daily2StartPicker></mat-datepicker>
+			</mat-form-field>
+			<span class="wp-date-separator">-</span>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="daily2EndPicker" 
+					[formControl]="daily2EndControl" (dateChange)="daily2EndChange($event)" readonly>
+				<input matInput [(ngModel)]="daily2EndInput" disabled>
+				<mat-datepicker-toggle matSuffix [for]="daily2EndPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #daily2EndPicker></mat-datepicker>
+			</mat-form-field>
+		</div>
 	</div>
 
-  <mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+	<!-- DATE PICKERS - ANNUAL -->
+	<div class="wp-date-group" *ngIf="activeTab === 'annual'">
+		<div class="wp-date-field">
+			<label>Year 1</label>
+			<mat-form-field class="filter" floatLabel="never">
+				<input matInput type="number" [formControl]="year1Control" (change)="year1Change()" 
+					placeholder="YYYY" min="2000" max="2100">
+			</mat-form-field>
+		</div>
+		<div class="wp-date-field">
+			<label>Year 2</label>
+			<mat-form-field class="filter" floatLabel="never">
+				<input matInput type="number" [formControl]="year2Control" (change)="year2Change()" 
+					placeholder="YYYY" min="2000" max="2100">
+			</mat-form-field>
+		</div>
+	</div>
 
+	<!-- RADIO BUTTONS & EXPORT -->
+	<div class="wp-actions">
+		<mat-radio-group [ngModel]="viewMode" (ngModelChange)="setViewMode($event)" class="wp-radio-group">
+			<mat-radio-button value="well" color="primary">Well</mat-radio-button>
+			<mat-radio-button value="structure" color="primary">Structure</mat-radio-button>
+		</mat-radio-group>
 
-  
-  <router-outlet></router-outlet>
-  <router-outlet name="overlay2"></router-outlet> 
+		<a class="wp-export" (click)="exportExcel()">
+			<mat-icon>file_download</mat-icon> Export to Excel
+		</a>
+	</div>
+
+</div>
+
+<div class="container-content">
+
+	<div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+		<mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+	</div>
+
+	<div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
+		<table mat-table [dataSource]="dataSource" class="pe-table"
+			   matSort matSortActive="well" matSortDisableClear matSortDirection="asc">
+
+			<!-- Well Column (sticky) -->
+			<ng-container matColumnDef="well" sticky>
+				<th mat-header-cell *matHeaderCellDef rowspan="2">
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Well</span>
+						<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-left" 
+					[class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
+			</ng-container>
+
+			<!-- Structure Column (sticky) -->
+			<ng-container matColumnDef="structure" sticky>
+				<th mat-header-cell *matHeaderCellDef rowspan="2">
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Structure</span>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-left" 
+					[class.clicked_row]="selection.isSelected(row)">{{row.structure}}</td>
+			</ng-container>
+
+			<!-- PERIOD 1 GROUP HEADER -->
+			<ng-container matColumnDef="period1_group">
+				<th mat-header-cell *matHeaderCellDef colspan="6" class="wp-period-header">
+					{{ getPeriod1Label() }}
+				</th>
+			</ng-container>
+
+			<!-- Period 1 - Net -->
+			<ng-container matColumnDef="period1_net">
+				<th mat-header-cell *matHeaderCellDef>
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-right wp-cell-num" 
+					[class.clicked_row]="selection.isSelected(row)">{{row.period1_net | number:'1.2-2'}}</td>
+			</ng-container>
+
+			<!-- Period 1 - WC -->
+			<ng-container matColumnDef="period1_wc">
+				<th mat-header-cell *matHeaderCellDef>
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-right wp-cell-num" 
+					[class.clicked_row]="selection.isSelected(row)">{{row.period1_wc | number:'1.2-2'}}%</td>
+			</ng-container>
+
+			<!-- Period 1 - Gross -->
+			<ng-container matColumnDef="period1_gross">
+				<th mat-header-cell *matHeaderCellDef>
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-right wp-cell-num" 
+					[class.clicked_row]="selection.isSelected(row)">{{row.period1_gross | number:'1.2-2'}}</td>
+			</ng-container>
+
+      <ng-container matColumnDef="period1_gas">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.clicked_row]="selection.isSelected(row)">{{row.period1_gas | number:'1.2-2'}}</td>
+      </ng-container>
+
+      <!-- Period 1 - DS Efficiency -->
+      <ng-container matColumnDef="period1_ds_efficiency">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.clicked_row]="selection.isSelected(row)">{{row.period1_ds_efficiency | number:'1.2-2'}}%</td>
+      </ng-container>
+
+      <!-- Period 1 - SM -->
+      <ng-container matColumnDef="period1_sm">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.clicked_row]="selection.isSelected(row)">{{row.period1_sm | number:'1.2-2'}}</td>
+      </ng-container>
+
+			<!-- PERIOD 2 GROUP HEADER -->
+			<ng-container matColumnDef="period2_group">
+				<th mat-header-cell *matHeaderCellDef colspan="6" class="wp-period-header">
+					{{ getPeriod2Label() }}
+				</th>
+			</ng-container>
+
+			<!-- Period 2 - Net -->
+			<ng-container matColumnDef="period2_net">
+				<th mat-header-cell *matHeaderCellDef>
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-right wp-cell-num" 
+					[class.clicked_row]="selection.isSelected(row)">{{row.period2_net | number:'1.2-2'}}</td>
+			</ng-container>
+
+			<!-- Period 2 - WC -->
+			<ng-container matColumnDef="period2_wc">
+				<th mat-header-cell *matHeaderCellDef>
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-right wp-cell-num" 
+					[class.clicked_row]="selection.isSelected(row)">{{row.period2_wc | number:'1.2-2'}}%</td>
+			</ng-container>
+
+			<!-- Period 2 - Gross (highlighted) -->
+			<ng-container matColumnDef="period2_gross">
+				<th mat-header-cell *matHeaderCellDef>
+					<div fxLayout="row" fxLayoutAlign="start center">
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+					</div>
+				</th>
+				<td mat-cell *matCellDef="let row" class="cell-right wp-cell-num wp-cell-highlight"
+					[class.clicked_row]="selection.isSelected(row)">
+					{{row.period2_gross | number:'1.2-2'}}
+				</td>
+			</ng-container>
+
+      <ng-container matColumnDef="period2_gas">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.clicked_row]="selection.isSelected(row)">{{row.period2_gas | number:'1.2-2'}}</td>
+      </ng-container>
+
+      <!-- Period 2 - DS Efficiency -->
+      <ng-container matColumnDef="period2_ds_efficiency">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.clicked_row]="selection.isSelected(row)">{{row.period2_ds_efficiency | number:'1.2-2'}}%</td>
+      </ng-container>
+
+      <!-- Period 2 - SM -->
+      <ng-container matColumnDef="period2_sm">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.clicked_row]="selection.isSelected(row)">{{row.period2_sm | number:'1.2-2'}}</td>
+      </ng-container>
+
+			<!-- GAIN/LOSS GROUP HEADER -->
+      <ng-container matColumnDef="gain_loss_group">
+        <th mat-header-cell *matHeaderCellDef colspan="6" class="wp-gainloss-header">
+          Gain/Loss
+        </th>
+      </ng-container>
+
+      <!-- Gain/Loss - Gross -->
+      <ng-container matColumnDef="gain_loss_gross">
+        <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.gain-positive]="row.gain_loss_gross > 0"
+            [class.gain-negative]="row.gain_loss_gross < 0"
+            [class.gain-neutral]="row.gain_loss_gross === 0"
+            [class.clicked_row]="selection.isSelected(row)">
+          {{row.gain_loss_gross | number:'1.2-2'}}
+        </td>
+      </ng-container>
+
+      <!-- Gain/Loss - Net -->
+      <ng-container matColumnDef="gain_loss_net">
+        <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.gain-positive]="row.gain_loss_net > 0"
+            [class.gain-negative]="row.gain_loss_net < 0"
+            [class.gain-neutral]="row.gain_loss_net === 0"
+            [class.clicked_row]="selection.isSelected(row)">
+          {{row.gain_loss_net | number:'1.2-2'}}
+        </td>
+      </ng-container>
+
+      <!-- Gain/Loss - WC -->
+      <ng-container matColumnDef="gain_loss_wc">
+        <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.gain-positive]="row.gain_loss_wc > 0"
+            [class.gain-negative]="row.gain_loss_wc < 0"
+            [class.gain-neutral]="row.gain_loss_wc === 0"
+            [class.clicked_row]="selection.isSelected(row)">
+          {{row.gain_loss_wc | number:'1.2-2'}}%
+        </td>
+      </ng-container>
+
+      <!-- Gain/Loss - Gas -->
+      <ng-container matColumnDef="gain_loss_gas">
+        <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.gain-positive]="row.gain_loss_gas > 0"
+            [class.gain-negative]="row.gain_loss_gas < 0"
+            [class.gain-neutral]="row.gain_loss_gas === 0"
+            [class.clicked_row]="selection.isSelected(row)">
+          {{row.gain_loss_gas | number:'1.2-2'}}
+        </td>
+      </ng-container>
+
+      <!-- Gain/Loss - DS Efficiency -->
+      <ng-container matColumnDef="gain_loss_ds_efficiency">
+        <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.gain-positive]="row.gain_loss_ds_efficiency > 0"
+            [class.gain-negative]="row.gain_loss_ds_efficiency < 0"
+            [class.gain-neutral]="row.gain_loss_ds_efficiency === 0"
+            [class.clicked_row]="selection.isSelected(row)">
+          {{row.gain_loss_ds_efficiency | number:'1.2-2'}}%
+        </td>
+      </ng-container>
+
+      <!-- Gain/Loss - SM -->
+      <ng-container matColumnDef="gain_loss_sm">
+        <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
+            [class.gain-positive]="row.gain_loss_sm > 0"
+            [class.gain-negative]="row.gain_loss_sm < 0"
+            [class.gain-neutral]="row.gain_loss_sm === 0"
+            [class.clicked_row]="selection.isSelected(row)">
+          {{row.gain_loss_sm | number:'1.2-2'}}
+        </td>
+      </ng-container>
+
+			<tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
+			<tr mat-header-row *matHeaderRowDef='headerColumns2; sticky: true'></tr>
+			<tr mat-row *matRowDef='let row; columns: displayedColumns;' 
+				(click)="(!isEditing) ? selection.toggle(row) : null"></tr>
+
+		</table>
+	</div>
+
+	<mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+
+	<router-outlet></router-outlet>
+	<router-outlet name="overlay2"></router-outlet>
 </div> 

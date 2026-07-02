@@ -246,4 +246,192 @@ mat-slider {
   width: 30%;
 }
 
+/* ═══════════════════════════════════════════════
+   WELL PERFORMANCE — Custom Styles
+   ═══════════════════════════════════════════════ */
 
+.wp-topbar {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 8px 16px !important;
+}
+
+.wp-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.wp-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+/* Tabs */
+.wp-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e0e0e0;
+  width: 100%;
+}
+
+.wp-tabs button {
+  border-radius: 0;
+  padding: 6px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  min-width: auto;
+  line-height: 32px;
+}
+
+.wp-tabs button:hover {
+  color: #1a73e8;
+  background: transparent;
+}
+
+.wp-tabs button.wp-tab-active {
+  color: #1a73e8;
+  border-bottom: 2px solid #1a73e8;
+  background: transparent;
+}
+
+/* Date Group */
+.wp-date-group {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.wp-date-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wp-date-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  white-space: nowrap;
+}
+
+.wp-date-separator {
+  color: #999;
+  margin: 0 2px;
+}
+
+.wp-date-field .mat-form-field.filter {
+  width: 160px;
+}
+
+.wp-date-field .mat-form-field.filter-sm {
+  width: 140px;
+}
+
+/* Actions row */
+.wp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 32px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.wp-radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.wp-radio-group .mat-radio-label {
+  font-size: 13px;
+}
+
+.wp-export {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.wp-export:hover {
+  color: #1b5e20;
+  text-decoration: underline;
+}
+
+.wp-export mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+/* Table header period styling */
+.wp-period-header {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.wp-gainloss-header {
+  background-color: #fff3e0 !important;
+  color: #e65100 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.wp-gainloss-subheader {
+  background-color: #fff8e1 !important;
+}
+
+/* Gain/Loss colors */
+.gain-positive {
+  background-color: #c8e6c9 !important;
+  color: #2e7d32 !important;
+  font-weight: 500;
+}
+
+.gain-negative {
+  background-color: #ffcdd2 !important;
+  color: #c62828 !important;
+  font-weight: 500;
+}
+
+.gain-neutral {
+  color: #666;
+}
+
+/* Highlighted cell (Period 2 Gross) */
+.wp-cell-highlight {
+  background-color: #fff9c4 !important;
+}
+
+/* Cell alignment */
+.cell-left {
+  text-align: left !important;
+}
+
+.cell-right {
+  text-align: right !important;
+  padding-right: 16px !important;
+}
+
+.wp-cell-num {
+  min-width: 90px;
+}
