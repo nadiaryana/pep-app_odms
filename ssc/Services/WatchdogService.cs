@@ -15,16 +15,12 @@ namespace ssc.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<WatchdogService> _logger;
 
-        // Simpan status terakhir tiap sumur biar tau kapan berubah
-        private readonly Dictionary<string, int> _lastKnownStatus = new();
+        // C# 7.3 compatible — tulis tipe lengkap, tidak pakai new()
+        private readonly Dictionary<string, bool> _lastKnownOnline = new Dictionary<string, bool>();
 
-        // Batas waktu — kalau lebih dari ini dianggap offline
-        private readonly TimeSpan _offlineThreshold = TimeSpan.FromMinutes(2);
+        private readonly TimeSpan _offlineThreshold = TimeSpan.FromMinutes(1);
+        private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(30);
 
-        // Interval cek — tiap 1 menit
-        private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(1);
-
-        // Pushover config — samakan dengan di ESP32
         private const string PushoverToken = "ai2ce22rg828o1q1r5n6v6afp9vd1d";
         private const string PushoverUserKey = "ujjtrrauiqqqn84skaitcxwfsayqwt";
 
@@ -40,7 +36,8 @@ namespace ssc.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Watchdog service berjalan...");
+            _logger.LogInformation("[WATCHDOG] Service berjalan. Threshold offline: 1 menit.");
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -53,53 +50,62 @@ namespace ssc.Services
         {
             try
             {
-                // Ambil semua well ID
                 var wells = await _arusService.GetAllWellIdsAsync();
 
                 foreach (var wellId in wells)
                 {
                     var last = await _arusService.GetLastReadingAsync(wellId);
-                    if (last == null) continue;
+                    if (last == null || last.CreatedAt == null) continue;
 
-                    var lastSeen = last.CreatedAt ?? DateTime.MinValue;
-                    var selisih = DateTime.UtcNow - lastSeen;
+                    DateTime lastSeen = last.CreatedAt.Value;
+                    TimeSpan selisih = DateTime.UtcNow - lastSeen;
+                    bool isOnline = selisih <= _offlineThreshold;
 
-                    if (selisih > _offlineThreshold)
+                    _logger.LogInformation(
+                        "[WATCHDOG] " + wellId +
+                        " | Terakhir kirim: " + Math.Round(selisih.TotalSeconds) + "s lalu" +
+                        " | " + (isOnline ? "ONLINE" : "OFFLINE"));
+
+                    bool sudahAdaStatus = _lastKnownOnline.ContainsKey(wellId);
+                    bool statusBerubah = !sudahAdaStatus || _lastKnownOnline[wellId] != isOnline;
+
+                    if (statusBerubah)
                     {
-                        // Alat offline — cek apakah sudah pernah notif atau belum
-                        if (!_lastKnownStatus.ContainsKey(wellId) || _lastKnownStatus[wellId] != -1)
+                        if (!isOnline)
                         {
-                            _logger.LogWarning($"[WATCHDOG] {wellId} offline! Terakhir kirim: {lastSeen}");
+                            _logger.LogWarning("[WATCHDOG] " + wellId + " OFFLINE!");
 
-                            var msg = $"🔴 {wellId} OFF!\n" +
-                                      $"⚠ Tidak ada data sejak {Math.Round(selisih.TotalMinutes)} menit lalu\n" +
-                                      $"⏰ Terakhir aktif: {lastSeen.ToLocalTime():yyyy-MM-dd HH:mm:ss} WITA";
+                            string msg = "🔴 " + wellId + " Status: OFF\n" +
+                                         "⚠ Alat tidak mengirim data\n" +
+                                         "⏰ Terakhir aktif: " +
+                                         lastSeen.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            // await KirimPushover("⚠ Alat IoT Offline!", msg);
-                            _lastKnownStatus[wellId] = -1; // -1 = offline
+                            // await KirimPushover("⚠ " + wellId + " OFFLINE!", msg);
                         }
-                    }
-                    else
-                    {
-                        // Alat online — kalau sebelumnya offline, kirim notif ON
-                        if (_lastKnownStatus.ContainsKey(wellId) && _lastKnownStatus[wellId] == -1)
+                        else
                         {
-                            _logger.LogInformation($"[WATCHDOG] {wellId} kembali online!");
+                            // Hanya kirim notif ON kalau sebelumnya memang pernah offline
+                            // (bukan saat pertama kali startup)
+                            if (sudahAdaStatus && !_lastKnownOnline[wellId])
+                            {
+                                _logger.LogInformation("[WATCHDOG] " + wellId + " kembali ONLINE!");
 
-                            var msg = $"✅ {wellId} Kembali ON!\n" +
-                                      $"⚡ Arus: {last.Current:F2} A\n" +
-                                      $"⏰ Time: {DateTime.UtcNow.ToLocalTime():yyyy-MM-dd HH:mm:ss} WITA";
+                                string msg = "✅ " + wellId + " Status: ON\n" +
+                                             "⚡ Arus: " + last.Current.ToString("F2") + " A\n" +
+                                             "⏰ Kembali online: " +
+                                             DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            // await KirimPushover("✅ Alat IoT Online", msg);
+                                // await KirimPushover("✅ " + wellId + " Kembali Online!", msg);
+                            }
                         }
 
-                        _lastKnownStatus[wellId] = last.Status;
+                        _lastKnownOnline[wellId] = isOnline;
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"[WATCHDOG] Error: {ex.Message}");
+                _logger.LogError("[WATCHDOG] Error: " + ex.Message);
             }
         }
 
@@ -107,7 +113,8 @@ namespace ssc.Services
         {
             try
             {
-                var client = _httpClientFactory.CreateClient();
+                HttpClient client = _httpClientFactory.CreateClient();
+
                 var content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("token",   PushoverToken),
@@ -119,11 +126,11 @@ namespace ssc.Services
                 var response = await client.PostAsync(
                     "https://api.pushover.net/1/messages.json", content);
 
-                _logger.LogInformation($"[WATCHDOG] Pushover: {response.StatusCode}");
+                _logger.LogInformation("[WATCHDOG] Pushover: " + (int)response.StatusCode);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"[WATCHDOG] Gagal kirim Pushover: {ex.Message}");
+                _logger.LogError("[WATCHDOG] Gagal kirim Pushover: " + ex.Message);
             }
         }
     }
