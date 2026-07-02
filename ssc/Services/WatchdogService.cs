@@ -95,7 +95,7 @@ namespace ssc.Services
                                          "⏰ Terakhir aktif: " +
                                          lastSeen.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            await KirimPushover("🔴 " + wellId + " OFFLINE!", msg);
+                            await KirimPushover("Status IoT", msg);
                         }
 
                         _lastOnlineStatus[wellId] = false;
@@ -132,7 +132,7 @@ namespace ssc.Services
                                          "⚡ Arus: " + last.Current.ToString("F2") + " A\n" +
                                          "⏰ " + DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            await KirimPushover("✅ " + wellId + " ON!", msg);
+                            await KirimPushover("Status IoT", msg);
                         }
                     }
                     else
@@ -153,7 +153,7 @@ namespace ssc.Services
                                          "⚡ Arus: " + last.Current.ToString("F2") + " A\n" +
                                          "⏰ " + DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            await KirimPushover("⚠ " + wellId + " OFF", msg);
+                            await KirimPushover("Status IoT", msg);
                         }
                     }
 
