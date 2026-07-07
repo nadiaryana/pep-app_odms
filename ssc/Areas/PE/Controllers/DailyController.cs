@@ -1846,10 +1846,575 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
+        // [Authorize("PeDaily Read")]
+        // [HttpGet("delta")]
+        // public IActionResult GetDailyDelta(
+        //     // DateTime? date,
+        //     DateTime? startDate,
+        //     DateTime? endDate,
+        //     int page = 0,
+        //     int pagesize = 50,
+        //     string sort = "well",
+        //     string order = "asc",
+        //     string mode = "",
+        //     string columnfilter = ""
+        // )
+        // {
+        //     // Jika date tidak dipilih, kembalikan data kosong
+        //     if (!startDate.HasValue || !endDate.HasValue)
+        //     {
+        //         return Ok(new
+        //         {
+        //             items = new List<object>(),
+        //             total_count = 0,
+        //             message = "No date selected"
+        //         });
+        //     }
+
+        //     // var todayDate = date.Value.ToUniversalTime().Date;
+        //     // var yesterdayDate = todayDate.AddDays(-1);
+
+        //     var todayDate = endDate.Value.ToUniversalTime().Date;
+        //     var yesterdayDate = startDate.Value.ToUniversalTime().Date;
+
+        //     // DEBUG: Log parameters
+        //     System.Diagnostics.Debug.WriteLine($"=== GetDailyDelta DEBUG ===");
+        //     System.Diagnostics.Debug.WriteLine($"startDate: {startDate:yyyy-MM-dd HH:mm:ss}");
+        //     System.Diagnostics.Debug.WriteLine($"endDate: {endDate:yyyy-MM-dd HH:mm:ss}");
+        //     System.Diagnostics.Debug.WriteLine($"yesterdayDate (converted): {yesterdayDate:yyyy-MM-dd}");
+        //     System.Diagnostics.Debug.WriteLine($"todayDate (converted): {todayDate:yyyy-MM-dd}");
+        //     System.Diagnostics.Debug.WriteLine($"mode: {mode}");
+        //     System.Diagnostics.Debug.WriteLine($"columnfilter: {columnfilter}");
+
+
+        //     // xfilter = filter tambahan dari columnfilter (well, dll)
+        //     FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
+
+        //     if (!string.IsNullOrWhiteSpace(columnfilter))
+        //     {
+        //         try
+        //         {
+        //             dynamic colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
+
+        //             // Filter WELL jika ada
+        //             if (colfilter?.well != null)
+        //             {
+        //                 var jarr = colfilter.well as Newtonsoft.Json.Linq.JArray;
+        //                 if (jarr != null && jarr.Count > 0)
+        //                 {
+        //                     // Ambil list string well
+        //                     var wells = jarr
+        //                         .Where(x => !(x is Newtonsoft.Json.Linq.JObject))
+        //                         .Select(x => x.ToString())
+        //                         .ToList();
+
+        //                     if (wells.Any())
+        //                     {
+        //                         var regexFilters = wells
+        //                             .Select(w => Builders<Daily>.Filter.Regex(d => d.well, new MongoDB.Bson.BsonRegularExpression(w, "i")))
+        //                             .ToList();
+        //                         xfilter = Builders<Daily>.Filter.Or(regexFilters);
+        //                     }
+        //                 }
+        //             }
+
+        //             // Filter WELL_STRING jika ada
+        //             if (colfilter?.well_string != null)
+        //             {
+        //                 var jarr = colfilter.well_string as Newtonsoft.Json.Linq.JArray;
+        //                 if (jarr != null && jarr.Count > 0)
+        //                 {
+        //                     var wellStrings = jarr
+        //                         .Where(x => !(x is Newtonsoft.Json.Linq.JObject))
+        //                         .Select(x => x.ToString())
+        //                         .ToList();
+
+        //                     if (wellStrings.Any())
+        //                     {
+        //                         var regexFilters = wellStrings
+        //                             .Select(w => Builders<Daily>.Filter.Regex(d => d.well_string, new MongoDB.Bson.BsonRegularExpression(w, "i")))
+        //                             .ToList();
+        //                         xfilter = xfilter & Builders<Daily>.Filter.Or(regexFilters);
+        //                     }
+        //                 }
+        //             }
+        //             //filter gas
+
+
+        //         }
+        //         catch
+        //         {
+        //         }
+        //     }
+        //     if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "delta" && mode != "weekly_average")
+        //     {
+        //         switch (mode)
+        //         {
+        //             case "well":
+        //                 var wells = _daily.Distinct<string>("well", xfilter)
+        //                     .ToEnumerable().OrderBy(t => t).ToList();
+        //                 return Ok(new { items = wells });
+        //             case "well_string":
+        //                 var wellStrings = _daily.Distinct<string>("well_string", xfilter)
+        //                     .ToEnumerable().Where(t => !string.IsNullOrEmpty(t)).OrderBy(t => t).ToList();
+        //                 return Ok(new { items = wellStrings });
+        //             case "date":
+        //                 var dates = _daily.Distinct<DateTime?>("date", xfilter)
+        //                     .ToEnumerable().OrderByDescending(t => t).ToList();
+        //                 return Ok(new { items = dates });
+        //             case "location":
+        //                 var locations = _daily.Distinct<string>("location", xfilter)
+        //                     .ToEnumerable().OrderBy(t => t).ToList();
+        //                 return Ok(new { items = locations });
+        //             case "gas":
+        //                 var gas = _daily.Distinct<decimal?>("gas", xfilter).ToEnumerable().Select(t => t * 1000).OrderBy(t => t).ToList();
+        //                 return Ok(new { items = gas });
+        //             default:
+        //                 return Ok(new { items = new List<string>() });
+        //         }
+        //     }
+
+        //     // Tidak filter allowedWells secara hardcoded — biarkan semua well tampil
+        //     // (filter well bisa dilakukan via columnfilter dari frontend)
+        //     var mongoFilter = Builders<Daily>.Filter.And(
+        //         xfilter,
+        //         Builders<Daily>.Filter.Gte(d => d.date, yesterdayDate),
+        //         Builders<Daily>.Filter.Lt(d => d.date, todayDate.AddDays(1))
+        //     );
+
+        //     System.Diagnostics.Debug.WriteLine($"MongoDB Filter: {mongoFilter}");
+        //     System.Diagnostics.Debug.WriteLine($"Query will fetch records where date >= {yesterdayDate:yyyy-MM-dd} and date < {todayDate.AddDays(1):yyyy-MM-dd}");
+
+        //     var rawData = _daily
+        //         .Find(mongoFilter)
+        //         .SortByDescending(d => d.date)
+        //         .ToList();
+
+        //     System.Diagnostics.Debug.WriteLine($"rawData count: {rawData.Count}");
+        //     if (rawData.Count > 0)
+        //     {
+        //         System.Diagnostics.Debug.WriteLine($"First record date: {rawData.First().date:yyyy-MM-dd HH:mm:ss}");
+        //         System.Diagnostics.Debug.WriteLine($"First record well: {rawData.First().well}");
+        //         System.Diagnostics.Debug.WriteLine($"First 3 records:");
+        //         for (int i = 0; i < Math.Min(3, rawData.Count); i++)
+        //         {
+        //             var r = rawData[i];
+        //             System.Diagnostics.Debug.WriteLine($"  [{i}] well={r.well}, date={r.date:yyyy-MM-dd HH:mm:ss}, fig_curr_gross={r.fig_curr_gross}, fig_curr_net={r.fig_curr_net}");
+        //         }
+        //     }
+        //     else
+        //     {
+        //         // No data found with current filter, try without time restriction to see if ANY data exists
+        //         var anyData = _daily.Find(xfilter).SortByDescending(d => d.date).Limit(3).ToList();
+        //         System.Diagnostics.Debug.WriteLine($"No data in date range. Checking if any data exists in DB at all...");
+        //         System.Diagnostics.Debug.WriteLine($"Records found without date filter: {anyData.Count}");
+        //         if (anyData.Count > 0)
+        //         {
+        //             System.Diagnostics.Debug.WriteLine($"Sample existing records:");
+        //             for (int i = 0; i < anyData.Count; i++)
+        //             {
+        //                 System.Diagnostics.Debug.WriteLine($"  [{i}] date={anyData[i].date:yyyy-MM-dd HH:mm:ss}, well={anyData[i].well}");
+        //             }
+        //         }
+        //     }
+
+        //     List<dynamic> result;
+
+        //     if (mode == "weekly_average")
+        //     {
+        //         // Calculate average of all data within the date range
+        //         // GroupBy well + well_string agar satu well dengan string berbeda tidak digabung
+        //         result = rawData
+        //             .Where(x => x.date.HasValue)
+        //             .GroupBy(x => new { x.well, x.well_string })
+        //             .Select(g =>
+        //             {
+        //                 var latestDate = g.Where(x => x.date.HasValue)
+        //                     .OrderByDescending(x => x.date)
+        //                     .FirstOrDefault()?.date;
+
+        //                 return new
+        //                 {
+        //                     well = g.Key.well,
+        //                     well_string = g.Key.well_string,
+        //                     location = g.FirstOrDefault()?.location,
+        //                     latest_date = latestDate,
+
+        //                     fig_curr_gross = g.Where(x => x.fig_curr_gross.HasValue).Any()
+        //                         ? g.Where(x => x.fig_curr_gross.HasValue).Average(x => x.fig_curr_gross)
+        //                         : 0m,
+        //                     fig_curr_net = g.Where(x => x.fig_curr_net.HasValue).Any()
+        //                         ? g.Where(x => x.fig_curr_net.HasValue).Average(x => x.fig_curr_net)
+        //                         : 0m,
+        //                     wc = g.Where(x => x.wc.HasValue).Any()
+        //                         ? g.Where(x => x.wc.HasValue).Average(x => x.wc)
+        //                         : 0m,
+        //                     gas = g.Where(x => x.gas.HasValue).Any()
+        //                         ? g.Where(x => x.gas.HasValue).Average(x => x.gas)
+        //                         : 0m,
+        //                     ds_efficiency = g.Where(x => x.ds_efficiency.HasValue).Any()
+        //                         ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency)
+        //                         : 0m,
+        //                     sm = g.Where(x => x.sm.HasValue).Any()
+        //                         ? g.Where(x => x.sm.HasValue).Average(x => x.sm)
+        //                         : 0m,
+        //                 };
+        //             })
+        //             .Where(x => x != null)
+        //             .Cast<dynamic>()
+        //             .ToList();
+        //     }
+        //     else
+        //     {
+        //         // Delta mode: compare yesterday vs today
+        //         // GroupBy well + well_string 
+        //         result = rawData
+        //             .Where(x => x.date.HasValue)
+        //             .GroupBy(x => new { x.well, x.well_string })
+        //             .Select(g =>
+        //             {
+        //                 var ordered = g.OrderByDescending(x => x.date).ToList();
+
+        //                 // Ambil data today (endDate) — pilih yg fig_curr_gross tertinggi 
+        //                 var today = ordered
+        //                     .Where(x => x.date.Value.Date == todayDate)
+        //                     .OrderByDescending(x => x.fig_curr_gross)
+        //                     .FirstOrDefault();
+
+        //                 // Ambil data yesterday (startDate) — pilih yg fig_curr_gross tertinggi 
+        //                 var yesterday = ordered
+        //                     .Where(x => x.date.Value.Date == yesterdayDate)
+        //                     .OrderByDescending(x => x.fig_curr_gross)
+        //                     .FirstOrDefault();
+
+        //                 // Jika keduanya null → skip (data tidak relevan)
+        //                 if (today == null && yesterday == null) return null;
+
+        //                 // Pakai today jika ada, fallback ke yesterday untuk identitas well
+        //                 var reference = today ?? yesterday;
+
+        //                 return new
+        //                 {
+        //                     well = reference.well,
+        //                     well_string = reference.well_string,
+        //                     location = reference.location,
+
+        //                     fig_curr_gross_today = today?.fig_curr_gross,
+        //                     fig_curr_gross_prev = yesterday?.fig_curr_gross,
+        //                     delta_fig_curr_gross = (today?.fig_curr_gross ?? 0) - (yesterday?.fig_curr_gross ?? 0),
+
+        //                     fig_curr_net_today = today?.fig_curr_net,
+        //                     fig_curr_net_prev = yesterday?.fig_curr_net,
+        //                     delta_fig_curr_net = (today?.fig_curr_net ?? 0) - (yesterday?.fig_curr_net ?? 0),
+
+        //                     wc_today = today?.wc,
+        //                     wc_prev = yesterday?.wc,
+        //                     delta_wc = (today?.wc ?? 0) - (yesterday?.wc ?? 0),
+
+        //                     gas_today = today?.gas,
+        //                     gas_prev = yesterday?.gas,
+        //                     delta_gas = (today?.gas ?? 0) - (yesterday?.gas ?? 0),
+
+        //                     sm_today = today?.sm,
+        //                     sm_prev = yesterday?.sm,
+        //                     delta_sm = (today?.sm ?? 0) - (yesterday?.sm ?? 0),
+
+        //                     ds_efficiency_today = today?.ds_efficiency,
+        //                     ds_efficiency_prev = yesterday?.ds_efficiency,
+        //                     delta_ds_efficiency = (today?.ds_efficiency ?? 0) - (yesterday?.ds_efficiency ?? 0)
+        //                 };
+        //             })
+        //             .Where(x => x != null)
+        //             .Cast<dynamic>()
+        //             .ToList();
+        //     }
+
+        //     // sorting - field names differ based on mode
+        //     // Delta mode: fields have _prev, _today, and delta_ suffixes
+        //     // Weekly_average mode: fields are plain names without suffixes
+
+        //     bool isDesc = order == "desc";
+
+        //     switch (sort?.ToLower())
+        //     {
+        //         case "well":
+        //             result = isDesc
+        //                 ? result.OrderByDescending(x => x.well).ToList()
+        //                 : result.OrderBy(x => x.well).ToList();
+        //             break;
+        //         case "well_string":
+        //             result = isDesc
+        //                 ? result.OrderByDescending(x => x.well_string).ToList()
+        //                 : result.OrderBy(x => x.well_string).ToList();
+        //             break;
+        //         case "location":
+        //             result = isDesc
+        //                 ? result.OrderByDescending(x => x.location).ToList()
+        //                 : result.OrderBy(x => x.location).ToList();
+        //             break;
+
+        //         // ==================== TODAY / GROSS FIELD ====================
+        //         case "fig_curr_gross":
+        //         case "fig_curr_gross_today":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.fig_curr_gross_today).ToList()
+        //                     : result.OrderBy(x => x.fig_curr_gross_today).ToList();
+        //             }
+        //             else if (mode == "weekly_average")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.fig_curr_gross).ToList()
+        //                     : result.OrderBy(x => x.fig_curr_gross).ToList();
+        //             }
+        //             break;
+
+        //         // ==================== PREV / PREV GROSS FIELD ====================
+        //         case "fig_curr_gross_prev":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.fig_curr_gross_prev).ToList()
+        //                     : result.OrderBy(x => x.fig_curr_gross_prev).ToList();
+        //             }
+        //             break;
+
+        //         // ==================== DELTA GROSS FIELD ====================
+        //         case "delta_fig_curr_gross":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.delta_fig_curr_gross).ToList()
+        //                     : result.OrderBy(x => x.delta_fig_curr_gross).ToList();
+        //             }
+        //             break;
+
+        //         // ==================== NET FIELD ====================
+        //         case "fig_curr_net":
+        //         case "fig_curr_net_today":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.fig_curr_net_today).ToList()
+        //                     : result.OrderBy(x => x.fig_curr_net_today).ToList();
+        //             }
+        //             else if (mode == "weekly_average")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.fig_curr_net).ToList()
+        //                     : result.OrderBy(x => x.fig_curr_net).ToList();
+        //             }
+        //             break;
+
+        //         case "fig_curr_net_prev":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.fig_curr_net_prev).ToList()
+        //                     : result.OrderBy(x => x.fig_curr_net_prev).ToList();
+        //             }
+        //             break;
+
+        //         case "delta_fig_curr_net":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.delta_fig_curr_net).ToList()
+        //                     : result.OrderBy(x => x.delta_fig_curr_net).ToList();
+        //             }
+        //             break;
+
+        //         // ==================== WC FIELD ====================
+        //         case "wc":
+        //         case "wc_today":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.wc_today).ToList()
+        //                     : result.OrderBy(x => x.wc_today).ToList();
+        //             }
+        //             else if (mode == "weekly_average")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.wc).ToList()
+        //                     : result.OrderBy(x => x.wc).ToList();
+        //             }
+        //             break;
+
+        //         case "wc_prev":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.wc_prev).ToList()
+        //                     : result.OrderBy(x => x.wc_prev).ToList();
+        //             }
+        //             break;
+
+        //         case "delta_wc":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.delta_wc).ToList()
+        //                     : result.OrderBy(x => x.delta_wc).ToList();
+        //             }
+        //             break;
+
+        //         // ==================== GAS FIELD ====================
+        //         case "gas":
+        //         case "gas_today":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.gas_today).ToList()
+        //                     : result.OrderBy(x => x.gas_today).ToList();
+        //             }
+        //             else if (mode == "weekly_average")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.gas).ToList()
+        //                     : result.OrderBy(x => x.gas).ToList();
+        //             }
+        //             break;
+
+        //         case "gas_prev":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.gas_prev).ToList()
+        //                     : result.OrderBy(x => x.gas_prev).ToList();
+        //             }
+        //             break;
+
+        //         case "delta_gas":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.delta_gas).ToList()
+        //                     : result.OrderBy(x => x.delta_gas).ToList();
+        //             }
+        //             break;
+
+        //         // ==================== SM FIELD ====================
+        //         case "sm":
+        //         case "sm_today":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.sm_today).ToList()
+        //                     : result.OrderBy(x => x.sm_today).ToList();
+        //             }
+        //             else if (mode == "weekly_average")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.sm).ToList()
+        //                     : result.OrderBy(x => x.sm).ToList();
+        //             }
+        //             break;
+
+        //         case "sm_prev":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.sm_prev).ToList()
+        //                     : result.OrderBy(x => x.sm_prev).ToList();
+        //             }
+        //             break;
+
+        //         case "delta_sm":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.delta_sm).ToList()
+        //                     : result.OrderBy(x => x.delta_sm).ToList();
+        //             }
+        //             break;
+
+        //         // ==================== DS_EFFICIENCY FIELD ====================
+        //         case "ds_efficiency":
+        //         case "ds_efficiency_today":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.ds_efficiency_today).ToList()
+        //                     : result.OrderBy(x => x.ds_efficiency_today).ToList();
+        //             }
+        //             else if (mode == "weekly_average")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.ds_efficiency).ToList()
+        //                     : result.OrderBy(x => x.ds_efficiency).ToList();
+        //             }
+        //             break;
+
+        //         case "ds_efficiency_prev":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.ds_efficiency_prev).ToList()
+        //                     : result.OrderBy(x => x.ds_efficiency_prev).ToList();
+        //             }
+        //             break;
+
+        //         case "delta_ds_efficiency":
+        //             if (mode == "delta")
+        //             {
+        //                 result = isDesc
+        //                     ? result.OrderByDescending(x => x.delta_ds_efficiency).ToList()
+        //                     : result.OrderBy(x => x.delta_ds_efficiency).ToList();
+        //             }
+        //             break;
+
+        //         // default: sort by well
+        //         default:
+        //             result = isDesc
+        //                 ? result.OrderByDescending(x => x.well).ToList()
+        //                 : result.OrderBy(x => x.well).ToList();
+        //             break;
+        //     }
+
+        //     var totalCount = result.Count;
+
+        //     System.Diagnostics.Debug.WriteLine($"result count after processing: {totalCount}");
+        //     System.Diagnostics.Debug.WriteLine($"mode used: {mode}");
+
+        //     // Log sample results
+        //     if (result.Count > 0)
+        //     {
+        //         System.Diagnostics.Debug.WriteLine($"Sample result data (first 2 items):");
+        //         for (int i = 0; i < Math.Min(2, result.Count); i++)
+        //         {
+        //             dynamic item = result[i];
+        //             System.Diagnostics.Debug.WriteLine($"Item {i}: well={item.well}");
+
+        //             if (mode == "weekly_average")
+        //             {
+        //                 System.Diagnostics.Debug.WriteLine($"fig_curr_gross={item.fig_curr_gross}, fig_curr_net={item.fig_curr_net}, wc={item.wc}");
+        //             }
+        //             else if (mode == "delta")
+        //             {
+        //                 System.Diagnostics.Debug.WriteLine($"fig_curr_gross_prev={item.fig_curr_gross_prev}, fig_curr_gross_today={item.fig_curr_gross_today}, delta={item.delta_fig_curr_gross}");
+        //                 System.Diagnostics.Debug.WriteLine($"fig_curr_net_prev={item.fig_curr_net_prev}, fig_curr_net_today={item.fig_curr_net_today}, delta={item.delta_fig_curr_net}");
+        //             }
+        //         }
+        //     }
+
+        //     var paged = result
+        //         .Skip(page * pagesize)
+        //         .Take(pagesize)
+        //         .ToList();
+
+        //     return Ok(new
+        //     {
+        //         items = paged,
+        //         total_count = totalCount,
+        //         message = "Success"
+        //     });
+        // }
+
         [Authorize("PeDaily Read")]
         [HttpGet("delta")]
         public IActionResult GetDailyDelta(
-            // DateTime? date,
             DateTime? startDate,
             DateTime? endDate,
             int page = 0,
@@ -1857,7 +2422,8 @@ namespace ssc.Areas.PE.Controllers
             string sort = "well",
             string order = "asc",
             string mode = "",
-            string columnfilter = ""
+            string columnfilter = "",
+            string groupBy = "well"   // ⬅ BARU: "well" atau "station"
         )
         {
             // Jika date tidak dipilih, kembalikan data kosong
@@ -1871,21 +2437,39 @@ namespace ssc.Areas.PE.Controllers
                 });
             }
 
-            // var todayDate = date.Value.ToUniversalTime().Date;
-            // var yesterdayDate = todayDate.AddDays(-1);
-
             var todayDate = endDate.Value.ToUniversalTime().Date;
             var yesterdayDate = startDate.Value.ToUniversalTime().Date;
 
-            // DEBUG: Log parameters
+            // ─────────────────────────────────────────────────────────
+            // BARU: strip suffix "_period1" / "_period2" dari mode.
+            // Frontend sekarang mengirim mode seperti:
+            //   weekly_average_period1, monthly_average_period2,
+            //   daily_average_period1,  annual_average_period2
+            // Secara logic semuanya sama saja: hitung rata-rata data
+            // dalam rentang [startDate, endDate] — cuma rentang tanggalnya
+            // yang beda-beda diatur dari sisi frontend. Jadi kita cukup
+            // treat semua mode yang diakhiri "_average" (dengan/tanpa
+            // suffix period) sebagai mode averaging yang sama.
+            // ─────────────────────────────────────────────────────────
+            string baseMode = mode ?? "";
+            if (baseMode.EndsWith("_period1")) { baseMode = baseMode.Substring(0, baseMode.Length - "_period1".Length); }
+            else if (baseMode.EndsWith("_period2")) { baseMode = baseMode.Substring(0, baseMode.Length - "_period2".Length); }
+
+            bool isAverageMode =
+                baseMode == "weekly_average" ||
+                baseMode == "monthly_average" ||
+                baseMode == "daily_average" ||
+                baseMode == "annual_average";
+
+            // Normalisasi groupBy — hanya terima "well" atau "station", selain itu fallback ke "well"
+            groupBy = (groupBy == "station") ? "station" : "well";
+
             System.Diagnostics.Debug.WriteLine($"=== GetDailyDelta DEBUG ===");
             System.Diagnostics.Debug.WriteLine($"startDate: {startDate:yyyy-MM-dd HH:mm:ss}");
             System.Diagnostics.Debug.WriteLine($"endDate: {endDate:yyyy-MM-dd HH:mm:ss}");
-            System.Diagnostics.Debug.WriteLine($"yesterdayDate (converted): {yesterdayDate:yyyy-MM-dd}");
-            System.Diagnostics.Debug.WriteLine($"todayDate (converted): {todayDate:yyyy-MM-dd}");
-            System.Diagnostics.Debug.WriteLine($"mode: {mode}");
+            System.Diagnostics.Debug.WriteLine($"mode (raw): {mode}, baseMode: {baseMode}, isAverageMode: {isAverageMode}");
+            System.Diagnostics.Debug.WriteLine($"groupBy: {groupBy}");
             System.Diagnostics.Debug.WriteLine($"columnfilter: {columnfilter}");
-
 
             // xfilter = filter tambahan dari columnfilter (well, dll)
             FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
@@ -1896,13 +2480,11 @@ namespace ssc.Areas.PE.Controllers
                 {
                     dynamic colfilter = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(columnfilter);
 
-                    // Filter WELL jika ada
                     if (colfilter?.well != null)
                     {
                         var jarr = colfilter.well as Newtonsoft.Json.Linq.JArray;
                         if (jarr != null && jarr.Count > 0)
                         {
-                            // Ambil list string well
                             var wells = jarr
                                 .Where(x => !(x is Newtonsoft.Json.Linq.JObject))
                                 .Select(x => x.ToString())
@@ -1918,7 +2500,6 @@ namespace ssc.Areas.PE.Controllers
                         }
                     }
 
-                    // Filter WELL_STRING jika ada
                     if (colfilter?.well_string != null)
                     {
                         var jarr = colfilter.well_string as Newtonsoft.Json.Linq.JArray;
@@ -1938,15 +2519,36 @@ namespace ssc.Areas.PE.Controllers
                             }
                         }
                     }
-                    //filter gas
 
+                    // BARU: filter by station juga, kalau frontend kirim
+                    if (colfilter?.station != null)
+                    {
+                        var jarr = colfilter.station as Newtonsoft.Json.Linq.JArray;
+                        if (jarr != null && jarr.Count > 0)
+                        {
+                            var stations = jarr
+                                .Where(x => !(x is Newtonsoft.Json.Linq.JObject))
+                                .Select(x => x.ToString())
+                                .ToList();
 
+                            if (stations.Any())
+                            {
+                                var regexFilters = stations
+                                    .Select(w => Builders<Daily>.Filter.Regex(d => d.station, new MongoDB.Bson.BsonRegularExpression(w, "i")))
+                                    .ToList();
+                                xfilter = xfilter & Builders<Daily>.Filter.Or(regexFilters);
+                            }
+                        }
+                    }
                 }
                 catch
                 {
                 }
             }
-            if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "delta" && mode != "weekly_average")
+
+            // Mode "distinct list" (untuk dropdown xfilter) — tidak berubah,
+            // tinggal tambah case "station" untuk dropdown filter Station.
+            if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "delta" && !isAverageMode)
             {
                 switch (mode)
                 {
@@ -1958,6 +2560,10 @@ namespace ssc.Areas.PE.Controllers
                         var wellStrings = _daily.Distinct<string>("well_string", xfilter)
                             .ToEnumerable().Where(t => !string.IsNullOrEmpty(t)).OrderBy(t => t).ToList();
                         return Ok(new { items = wellStrings });
+                    case "station": // ⬅ BARU
+                        var stations = _daily.Distinct<string>("station", xfilter)
+                            .ToEnumerable().Where(t => !string.IsNullOrEmpty(t)).OrderBy(t => t).ToList();
+                        return Ok(new { items = stations });
                     case "date":
                         var dates = _daily.Distinct<DateTime?>("date", xfilter)
                             .ToEnumerable().OrderByDescending(t => t).ToList();
@@ -1974,8 +2580,6 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
-            // Tidak filter allowedWells secara hardcoded — biarkan semua well tampil
-            // (filter well bisa dilakukan via columnfilter dari frontend)
             var mongoFilter = Builders<Daily>.Filter.And(
                 xfilter,
                 Builders<Daily>.Filter.Gte(d => d.date, yesterdayDate),
@@ -1991,83 +2595,109 @@ namespace ssc.Areas.PE.Controllers
                 .ToList();
 
             System.Diagnostics.Debug.WriteLine($"rawData count: {rawData.Count}");
-            if (rawData.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"First record date: {rawData.First().date:yyyy-MM-dd HH:mm:ss}");
-                System.Diagnostics.Debug.WriteLine($"First record well: {rawData.First().well}");
-                System.Diagnostics.Debug.WriteLine($"First 3 records:");
-                for (int i = 0; i < Math.Min(3, rawData.Count); i++)
-                {
-                    var r = rawData[i];
-                    System.Diagnostics.Debug.WriteLine($"  [{i}] well={r.well}, date={r.date:yyyy-MM-dd HH:mm:ss}, fig_curr_gross={r.fig_curr_gross}, fig_curr_net={r.fig_curr_net}");
-                }
-            }
-            else
-            {
-                // No data found with current filter, try without time restriction to see if ANY data exists
-                var anyData = _daily.Find(xfilter).SortByDescending(d => d.date).Limit(3).ToList();
-                System.Diagnostics.Debug.WriteLine($"No data in date range. Checking if any data exists in DB at all...");
-                System.Diagnostics.Debug.WriteLine($"Records found without date filter: {anyData.Count}");
-                if (anyData.Count > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Sample existing records:");
-                    for (int i = 0; i < anyData.Count; i++)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"  [{i}] date={anyData[i].date:yyyy-MM-dd HH:mm:ss}, well={anyData[i].well}");
-                    }
-                }
-            }
 
             List<dynamic> result;
 
-            if (mode == "weekly_average")
+            if (isAverageMode)
             {
-                // Calculate average of all data within the date range
-                // GroupBy well + well_string agar satu well dengan string berbeda tidak digabung
-                result = rawData
-                    .Where(x => x.date.HasValue)
-                    .GroupBy(x => new { x.well, x.well_string })
-                    .Select(g =>
-                    {
-                        var latestDate = g.Where(x => x.date.HasValue)
-                            .OrderByDescending(x => x.date)
-                            .FirstOrDefault()?.date;
-
-                        return new
+                if (groupBy == "station")
+                {
+                    // ─────────────────────────────────────────────
+                    // GROUP BY STRUCTURE
+                    // Satu station bisa menaungi banyak well, jadi
+                    // gross/net di-SUM (karena itu volume produksi
+                    // kumulatif dari banyak sumur), sedangkan
+                    // wc/gas/ds_efficiency/sm di rata-rata (AVERAGE)
+                    // sederhana antar well dalam station tsb.
+                    //
+                    // CATATAN: sesuaikan lagi rumus agregasi ini kalau
+                    // definisi bisnisnya beda (mis. weighted average
+                    // berdasarkan gross, dsb).
+                    // ─────────────────────────────────────────────
+                    result = rawData
+                        .Where(x => x.date.HasValue && !string.IsNullOrEmpty(x.station))
+                        .GroupBy(x => x.station)
+                        .Select(g =>
                         {
-                            well = g.Key.well,
-                            well_string = g.Key.well_string,
-                            location = g.FirstOrDefault()?.location,
-                            latest_date = latestDate,
+                            return new
+                            {
+                                well = (string)null,
+                                well_string = (string)null,
+                                station = g.Key,
+                                location = g.FirstOrDefault()?.location,
 
-                            fig_curr_gross = g.Where(x => x.fig_curr_gross.HasValue).Any()
-                                ? g.Where(x => x.fig_curr_gross.HasValue).Average(x => x.fig_curr_gross)
-                                : 0m,
-                            fig_curr_net = g.Where(x => x.fig_curr_net.HasValue).Any()
-                                ? g.Where(x => x.fig_curr_net.HasValue).Average(x => x.fig_curr_net)
-                                : 0m,
-                            wc = g.Where(x => x.wc.HasValue).Any()
-                                ? g.Where(x => x.wc.HasValue).Average(x => x.wc)
-                                : 0m,
-                            gas = g.Where(x => x.gas.HasValue).Any()
-                                ? g.Where(x => x.gas.HasValue).Average(x => x.gas)
-                                : 0m,
-                            ds_efficiency = g.Where(x => x.ds_efficiency.HasValue).Any()
-                                ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency)
-                                : 0m,
-                            sm = g.Where(x => x.sm.HasValue).Any()
-                                ? g.Where(x => x.sm.HasValue).Average(x => x.sm)
-                                : 0m,
-                        };
-                    })
-                    .Where(x => x != null)
-                    .Cast<dynamic>()
-                    .ToList();
+                                fig_curr_gross = g.Where(x => x.fig_curr_gross.HasValue).Any()
+                                    ? g.Where(x => x.fig_curr_gross.HasValue).Sum(x => x.fig_curr_gross)
+                                    : 0m,
+                                fig_curr_net = g.Where(x => x.fig_curr_net.HasValue).Any()
+                                    ? g.Where(x => x.fig_curr_net.HasValue).Sum(x => x.fig_curr_net)
+                                    : 0m,
+                                wc = g.Where(x => x.wc.HasValue).Any()
+                                    ? g.Where(x => x.wc.HasValue).Average(x => x.wc)
+                                    : 0m,
+                                gas = g.Where(x => x.gas.HasValue).Any()
+                                    ? g.Where(x => x.gas.HasValue).Sum(x => x.gas)
+                                    : 0m,
+                                ds_efficiency = g.Where(x => x.ds_efficiency.HasValue).Any()
+                                    ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency)
+                                    : 0m,
+                                sm = g.Where(x => x.sm.HasValue).Any()
+                                    ? g.Where(x => x.sm.HasValue).Average(x => x.sm)
+                                    : 0m,
+                            };
+                        })
+                        .Where(x => x != null)
+                        .Cast<dynamic>()
+                        .ToList();
+                }
+                else
+                {
+                    // GROUP BY WELL (default/existing behaviour)
+                    result = rawData
+                        .Where(x => x.date.HasValue)
+                        .GroupBy(x => new { x.well, x.well_string })
+                        .Select(g =>
+                        {
+                            var latestDate = g.Where(x => x.date.HasValue)
+                                .OrderByDescending(x => x.date)
+                                .FirstOrDefault()?.date;
+
+                            return new
+                            {
+                                well = g.Key.well,
+                                well_string = g.Key.well_string,
+                                station = g.FirstOrDefault()?.station, // ⬅ BARU: ikut disertakan
+                                location = g.FirstOrDefault()?.location,
+                                latest_date = latestDate,
+
+                                fig_curr_gross = g.Where(x => x.fig_curr_gross.HasValue).Any()
+                                    ? g.Where(x => x.fig_curr_gross.HasValue).Average(x => x.fig_curr_gross)
+                                    : 0m,
+                                fig_curr_net = g.Where(x => x.fig_curr_net.HasValue).Any()
+                                    ? g.Where(x => x.fig_curr_net.HasValue).Average(x => x.fig_curr_net)
+                                    : 0m,
+                                wc = g.Where(x => x.wc.HasValue).Any()
+                                    ? g.Where(x => x.wc.HasValue).Average(x => x.wc)
+                                    : 0m,
+                                gas = g.Where(x => x.gas.HasValue).Any()
+                                    ? g.Where(x => x.gas.HasValue).Average(x => x.gas)
+                                    : 0m,
+                                ds_efficiency = g.Where(x => x.ds_efficiency.HasValue).Any()
+                                    ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency)
+                                    : 0m,
+                                sm = g.Where(x => x.sm.HasValue).Any()
+                                    ? g.Where(x => x.sm.HasValue).Average(x => x.sm)
+                                    : 0m,
+                            };
+                        })
+                        .Where(x => x != null)
+                        .Cast<dynamic>()
+                        .ToList();
+                }
             }
             else
             {
-                // Delta mode: compare yesterday vs today
-                // GroupBy well + well_string 
+                // Delta mode: compare yesterday vs today (tidak berubah, tetap group by well)
                 result = rawData
                     .Where(x => x.date.HasValue)
                     .GroupBy(x => new { x.well, x.well_string })
@@ -2075,28 +2705,25 @@ namespace ssc.Areas.PE.Controllers
                     {
                         var ordered = g.OrderByDescending(x => x.date).ToList();
 
-                        // Ambil data today (endDate) — pilih yg fig_curr_gross tertinggi 
                         var today = ordered
                             .Where(x => x.date.Value.Date == todayDate)
                             .OrderByDescending(x => x.fig_curr_gross)
                             .FirstOrDefault();
 
-                        // Ambil data yesterday (startDate) — pilih yg fig_curr_gross tertinggi 
                         var yesterday = ordered
                             .Where(x => x.date.Value.Date == yesterdayDate)
                             .OrderByDescending(x => x.fig_curr_gross)
                             .FirstOrDefault();
 
-                        // Jika keduanya null → skip (data tidak relevan)
-                        if (today == null && yesterday == null) return null;
+                        if (today == null && yesterday == null) { return null; }
 
-                        // Pakai today jika ada, fallback ke yesterday untuk identitas well
                         var reference = today ?? yesterday;
 
                         return new
                         {
                             well = reference.well,
                             well_string = reference.well_string,
+                            station = reference.station, // ⬅ BARU
                             location = reference.location,
 
                             fig_curr_gross_today = today?.fig_curr_gross,
@@ -2129,10 +2756,12 @@ namespace ssc.Areas.PE.Controllers
                     .ToList();
             }
 
-            // sorting - field names differ based on mode
-            // Delta mode: fields have _prev, _today, and delta_ suffixes
-            // Weekly_average mode: fields are plain names without suffixes
-
+            // ─────────────────────────────────────────────────────────
+            // Sorting — field names berbeda tergantung mode:
+            //   - Delta mode      : field punya suffix _prev/_today/delta_
+            //   - Average mode     : field polos (fig_curr_gross, wc, dst)
+            //   Sort by "station" ditambahkan untuk mode groupBy=station.
+            // ─────────────────────────────────────────────────────────
             bool isDesc = order == "desc";
 
             switch (sort?.ToLower())
@@ -2147,22 +2776,26 @@ namespace ssc.Areas.PE.Controllers
                         ? result.OrderByDescending(x => x.well_string).ToList()
                         : result.OrderBy(x => x.well_string).ToList();
                     break;
+                case "station": // ⬅ BARU
+                    result = isDesc
+                        ? result.OrderByDescending(x => x.station).ToList()
+                        : result.OrderBy(x => x.station).ToList();
+                    break;
                 case "location":
                     result = isDesc
                         ? result.OrderByDescending(x => x.location).ToList()
                         : result.OrderBy(x => x.location).ToList();
                     break;
 
-                // ==================== TODAY / GROSS FIELD ====================
                 case "fig_curr_gross":
                 case "fig_curr_gross_today":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.fig_curr_gross_today).ToList()
                             : result.OrderBy(x => x.fig_curr_gross_today).ToList();
                     }
-                    else if (mode == "weekly_average")
+                    else
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.fig_curr_gross).ToList()
@@ -2170,9 +2803,8 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // ==================== PREV / PREV GROSS FIELD ====================
                 case "fig_curr_gross_prev":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.fig_curr_gross_prev).ToList()
@@ -2180,9 +2812,8 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // ==================== DELTA GROSS FIELD ====================
                 case "delta_fig_curr_gross":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.delta_fig_curr_gross).ToList()
@@ -2190,16 +2821,15 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // ==================== NET FIELD ====================
                 case "fig_curr_net":
                 case "fig_curr_net_today":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.fig_curr_net_today).ToList()
                             : result.OrderBy(x => x.fig_curr_net_today).ToList();
                     }
-                    else if (mode == "weekly_average")
+                    else
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.fig_curr_net).ToList()
@@ -2208,7 +2838,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "fig_curr_net_prev":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.fig_curr_net_prev).ToList()
@@ -2217,7 +2847,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "delta_fig_curr_net":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.delta_fig_curr_net).ToList()
@@ -2225,16 +2855,15 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // ==================== WC FIELD ====================
                 case "wc":
                 case "wc_today":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.wc_today).ToList()
                             : result.OrderBy(x => x.wc_today).ToList();
                     }
-                    else if (mode == "weekly_average")
+                    else
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.wc).ToList()
@@ -2243,7 +2872,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "wc_prev":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.wc_prev).ToList()
@@ -2252,7 +2881,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "delta_wc":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.delta_wc).ToList()
@@ -2260,16 +2889,15 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // ==================== GAS FIELD ====================
                 case "gas":
                 case "gas_today":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.gas_today).ToList()
                             : result.OrderBy(x => x.gas_today).ToList();
                     }
-                    else if (mode == "weekly_average")
+                    else
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.gas).ToList()
@@ -2278,7 +2906,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "gas_prev":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.gas_prev).ToList()
@@ -2287,7 +2915,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "delta_gas":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.delta_gas).ToList()
@@ -2295,16 +2923,15 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // ==================== SM FIELD ====================
                 case "sm":
                 case "sm_today":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.sm_today).ToList()
                             : result.OrderBy(x => x.sm_today).ToList();
                     }
-                    else if (mode == "weekly_average")
+                    else
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.sm).ToList()
@@ -2313,7 +2940,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "sm_prev":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.sm_prev).ToList()
@@ -2322,7 +2949,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "delta_sm":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.delta_sm).ToList()
@@ -2330,16 +2957,15 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // ==================== DS_EFFICIENCY FIELD ====================
                 case "ds_efficiency":
                 case "ds_efficiency_today":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.ds_efficiency_today).ToList()
                             : result.OrderBy(x => x.ds_efficiency_today).ToList();
                     }
-                    else if (mode == "weekly_average")
+                    else
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.ds_efficiency).ToList()
@@ -2348,7 +2974,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "ds_efficiency_prev":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.ds_efficiency_prev).ToList()
@@ -2357,7 +2983,7 @@ namespace ssc.Areas.PE.Controllers
                     break;
 
                 case "delta_ds_efficiency":
-                    if (mode == "delta")
+                    if (!isAverageMode)
                     {
                         result = isDesc
                             ? result.OrderByDescending(x => x.delta_ds_efficiency).ToList()
@@ -2365,7 +2991,6 @@ namespace ssc.Areas.PE.Controllers
                     }
                     break;
 
-                // default: sort by well
                 default:
                     result = isDesc
                         ? result.OrderByDescending(x => x.well).ToList()
@@ -2376,28 +3001,7 @@ namespace ssc.Areas.PE.Controllers
             var totalCount = result.Count;
 
             System.Diagnostics.Debug.WriteLine($"result count after processing: {totalCount}");
-            System.Diagnostics.Debug.WriteLine($"mode used: {mode}");
-
-            // Log sample results
-            if (result.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"Sample result data (first 2 items):");
-                for (int i = 0; i < Math.Min(2, result.Count); i++)
-                {
-                    dynamic item = result[i];
-                    System.Diagnostics.Debug.WriteLine($"Item {i}: well={item.well}");
-
-                    if (mode == "weekly_average")
-                    {
-                        System.Diagnostics.Debug.WriteLine($"fig_curr_gross={item.fig_curr_gross}, fig_curr_net={item.fig_curr_net}, wc={item.wc}");
-                    }
-                    else if (mode == "delta")
-                    {
-                        System.Diagnostics.Debug.WriteLine($"fig_curr_gross_prev={item.fig_curr_gross_prev}, fig_curr_gross_today={item.fig_curr_gross_today}, delta={item.delta_fig_curr_gross}");
-                        System.Diagnostics.Debug.WriteLine($"fig_curr_net_prev={item.fig_curr_net_prev}, fig_curr_net_today={item.fig_curr_net_today}, delta={item.delta_fig_curr_net}");
-                    }
-                }
-            }
+            System.Diagnostics.Debug.WriteLine($"baseMode used: {baseMode}, groupBy: {groupBy}");
 
             var paged = result
                 .Skip(page * pagesize)

@@ -1,21 +1,45 @@
 <div class="container-top-bar wp-topbar">
 
 	<!-- TABS -->
-	<div class="wp-tabs">
-		<button mat-flat-button 
-			[class.wp-tab-active]="activeTab === 'annual'"
-			(click)="setActiveTab('annual')">Annual</button>
-		<button mat-flat-button 
-			[class.wp-tab-active]="activeTab === 'monthly'"
-			(click)="setActiveTab('monthly')">Monthly</button>
-		<button mat-flat-button 
-			[class.wp-tab-active]="activeTab === 'weekly'"
-			(click)="setActiveTab('weekly')">Weekly</button>
-		<button mat-flat-button 
-			[class.wp-tab-active]="activeTab === 'daily'"
-			(click)="setActiveTab('daily')">Daily</button>
+
+   <div class="wp-tabs">
+
+		<div
+			class="tab-indicator"
+			[style.transform]="getIndicatorTransform()">
+		</div>
+
+		<button
+			mat-button
+			[class.active]="activeTab === 'annual'"
+			(click)="setActiveTab('annual')">
+			Annual
+		</button>
+
+		<button
+			mat-button
+			[class.active]="activeTab === 'monthly'"
+			(click)="setActiveTab('monthly')">
+			Monthly
+		</button>
+
+		<button
+			mat-button
+			[class.active]="activeTab === 'weekly'"
+			(click)="setActiveTab('weekly')">
+			Weekly
+		</button>
+
+		<button
+			mat-button
+			[class.active]="activeTab === 'daily'"
+			(click)="setActiveTab('daily')">
+			Daily
+		</button>
+
 	</div>
 
+	<div class="wp-filter-row">
 	<!-- DATE PICKERS - MONTHLY -->
 	<div class="wp-date-group" *ngIf="activeTab === 'monthly'">
 		<div class="wp-date-field">
@@ -83,7 +107,7 @@
 	<!-- DATE PICKERS - DAILY -->
 	<div class="wp-date-group" *ngIf="activeTab === 'daily'">
 		<div class="wp-date-field">
-			<label>Period 1</label>
+			<label>Day 1</label>
 			<mat-form-field class="filter-sm" floatLabel="never">
 				<input matInput class="input-hidden" [matDatepicker]="daily1StartPicker" 
 					[formControl]="daily1StartControl" (dateChange)="daily1StartChange($event)" readonly>
@@ -91,31 +115,15 @@
 				<mat-datepicker-toggle matSuffix [for]="daily1StartPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
 				<mat-datepicker #daily1StartPicker></mat-datepicker>
 			</mat-form-field>
-			<span class="wp-date-separator">-</span>
-			<mat-form-field class="filter-sm" floatLabel="never">
-				<input matInput class="input-hidden" [matDatepicker]="daily1EndPicker" 
-					[formControl]="daily1EndControl" (dateChange)="daily1EndChange($event)" readonly>
-				<input matInput [(ngModel)]="daily1EndInput" disabled>
-				<mat-datepicker-toggle matSuffix [for]="daily1EndPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #daily1EndPicker></mat-datepicker>
-			</mat-form-field>
 		</div>
 		<div class="wp-date-field">
-			<label>Period 2</label>
+			<label>Day 2</label>
 			<mat-form-field class="filter-sm" floatLabel="never">
 				<input matInput class="input-hidden" [matDatepicker]="daily2StartPicker" 
 					[formControl]="daily2StartControl" (dateChange)="daily2StartChange($event)" readonly>
 				<input matInput [(ngModel)]="daily2StartInput" disabled>
 				<mat-datepicker-toggle matSuffix [for]="daily2StartPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
 				<mat-datepicker #daily2StartPicker></mat-datepicker>
-			</mat-form-field>
-			<span class="wp-date-separator">-</span>
-			<mat-form-field class="filter-sm" floatLabel="never">
-				<input matInput class="input-hidden" [matDatepicker]="daily2EndPicker" 
-					[formControl]="daily2EndControl" (dateChange)="daily2EndChange($event)" readonly>
-				<input matInput [(ngModel)]="daily2EndInput" disabled>
-				<mat-datepicker-toggle matSuffix [for]="daily2EndPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #daily2EndPicker></mat-datepicker>
 			</mat-form-field>
 		</div>
 	</div>
@@ -139,15 +147,29 @@
 	</div>
 
 	<!-- RADIO BUTTONS & EXPORT -->
-	<div class="wp-actions">
-		<mat-radio-group [ngModel]="viewMode" (ngModelChange)="setViewMode($event)" class="wp-radio-group">
-			<mat-radio-button value="well" color="primary">Well</mat-radio-button>
-			<mat-radio-button value="structure" color="primary">Structure</mat-radio-button>
-		</mat-radio-group>
+		<div class="wp-actions">
 
-		<a class="wp-export" (click)="exportExcel()">
-			<mat-icon>file_download</mat-icon> Export to Excel
-		</a>
+			<mat-radio-group
+				[ngModel]="viewMode"
+				(ngModelChange)="setViewMode($event)"
+				class="wp-radio-group">
+
+				<mat-radio-button value="well">Well</mat-radio-button>
+				<mat-radio-button value="station">Station</mat-radio-button>
+
+			</mat-radio-group>
+
+			<button
+				mat-button
+				color="primary"
+				(click)="exportExcel()">
+
+				<mat-icon>file_download</mat-icon>
+				Export to Excel
+
+			</button>
+
+		</div>
 	</div>
 
 </div>
@@ -174,15 +196,15 @@
 					[class.clicked_row]="selection.isSelected(row)">{{row.well}}</td>
 			</ng-container>
 
-			<!-- Structure Column (sticky) -->
-			<ng-container matColumnDef="structure" sticky>
+			<!-- station Column (sticky) -->
+			<ng-container matColumnDef="station" sticky>
 				<th mat-header-cell *matHeaderCellDef rowspan="2">
 					<div fxLayout="row" fxLayoutAlign="start center">
-						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Structure</span>
+						<span mat-sort-header arrowPosition="before" class="mat-sort-header">Station</span>
 					</div>
 				</th>
 				<td mat-cell *matCellDef="let row" class="cell-left" 
-					[class.clicked_row]="selection.isSelected(row)">{{row.structure}}</td>
+					[class.clicked_row]="selection.isSelected(row)">{{row.station}}</td>
 			</ng-container>
 
 			<!-- PERIOD 1 GROUP HEADER -->

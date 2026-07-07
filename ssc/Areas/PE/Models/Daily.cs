@@ -62,6 +62,8 @@ namespace ssc.Areas.PE.Models
 
         public string noted { get; set; }
         //end
+        public string station { get; set; }
+        [BsonElement("structure")]
         public DailyStructure structure { get; set; }
         public string created_by { get; set; }
         public DateTime? created_date { get; set; }

@@ -900,24 +900,24 @@ export class IprComponent implements OnInit {
           radius: 3,
         },
         zIndex: 2,
-        dataLabels: {
-          enabled: true,
-          formatter: function () {
-            var point = this.point;
-            var series = point.series;
-            if (point.index === 0 || point.index === series.data.length - 1) {
-              return 'Q: <b>' + point.x.toFixed(2) + '</b><br/>Pwf: <b>' + point.y.toFixed(2) + '</b>';
-            }
-            return null;
-          },
-          style: { fontSize: '10px', fontWeight: 'bold', color: '#1E88E5' },
-          backgroundColor: 'rgba(255,255,255,0.8)',
-          borderColor: '#1E88E5',
-          borderWidth: 1,
-          borderRadius: 4,
-          padding: 4,
-          useHTML: true
-        }
+        // dataLabels: {
+        //   enabled: true,
+        //   formatter: function () {
+        //     var point = this.point;
+        //     var series = point.series;
+        //     if (point.index === 0 || point.index === series.data.length - 1) {
+        //       return 'Q: <b>' + point.x.toFixed(2) + '</b><br/>Pwf: <b>' + point.y.toFixed(2) + '</b>';
+        //     }
+        //     return null;
+        //   },
+        //   style: { fontSize: '10px', fontWeight: 'bold', color: '#1E88E5' },
+        //   backgroundColor: 'rgba(255,255,255,0.8)',
+        //   borderColor: '#1E88E5',
+        //   borderWidth: 1,
+        //   borderRadius: 4,
+        //   padding: 4,
+        //   useHTML: true
+        // }
       },
       // OPERATING POINT
       {
