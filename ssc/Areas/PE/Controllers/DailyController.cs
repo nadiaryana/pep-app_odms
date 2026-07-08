@@ -2423,7 +2423,7 @@ namespace ssc.Areas.PE.Controllers
             string order = "asc",
             string mode = "",
             string columnfilter = "",
-            string groupBy = "well"   // ⬅ BARU: "well" atau "station"
+            string groupBy = "well"
         )
         {
             // Jika date tidak dipilih, kembalikan data kosong
@@ -2440,17 +2440,6 @@ namespace ssc.Areas.PE.Controllers
             var todayDate = endDate.Value.ToUniversalTime().Date;
             var yesterdayDate = startDate.Value.ToUniversalTime().Date;
 
-            // ─────────────────────────────────────────────────────────
-            // BARU: strip suffix "_period1" / "_period2" dari mode.
-            // Frontend sekarang mengirim mode seperti:
-            //   weekly_average_period1, monthly_average_period2,
-            //   daily_average_period1,  annual_average_period2
-            // Secara logic semuanya sama saja: hitung rata-rata data
-            // dalam rentang [startDate, endDate] — cuma rentang tanggalnya
-            // yang beda-beda diatur dari sisi frontend. Jadi kita cukup
-            // treat semua mode yang diakhiri "_average" (dengan/tanpa
-            // suffix period) sebagai mode averaging yang sama.
-            // ─────────────────────────────────────────────────────────
             string baseMode = mode ?? "";
             if (baseMode.EndsWith("_period1")) { baseMode = baseMode.Substring(0, baseMode.Length - "_period1".Length); }
             else if (baseMode.EndsWith("_period2")) { baseMode = baseMode.Substring(0, baseMode.Length - "_period2".Length); }
@@ -2546,8 +2535,7 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
 
-            // Mode "distinct list" (untuk dropdown xfilter) — tidak berubah,
-            // tinggal tambah case "station" untuk dropdown filter Station.
+            // untuk dropdown xfilter
             if (!string.IsNullOrEmpty(mode) && mode != "excel" && mode != "delta" && !isAverageMode)
             {
                 switch (mode)
@@ -2560,7 +2548,7 @@ namespace ssc.Areas.PE.Controllers
                         var wellStrings = _daily.Distinct<string>("well_string", xfilter)
                             .ToEnumerable().Where(t => !string.IsNullOrEmpty(t)).OrderBy(t => t).ToList();
                         return Ok(new { items = wellStrings });
-                    case "station": // ⬅ BARU
+                    case "station":
                         var stations = _daily.Distinct<string>("station", xfilter)
                             .ToEnumerable().Where(t => !string.IsNullOrEmpty(t)).OrderBy(t => t).ToList();
                         return Ok(new { items = stations });
@@ -2602,18 +2590,6 @@ namespace ssc.Areas.PE.Controllers
             {
                 if (groupBy == "station")
                 {
-                    // ─────────────────────────────────────────────
-                    // GROUP BY STRUCTURE
-                    // Satu station bisa menaungi banyak well, jadi
-                    // gross/net di-SUM (karena itu volume produksi
-                    // kumulatif dari banyak sumur), sedangkan
-                    // wc/gas/ds_efficiency/sm di rata-rata (AVERAGE)
-                    // sederhana antar well dalam station tsb.
-                    //
-                    // CATATAN: sesuaikan lagi rumus agregasi ini kalau
-                    // definisi bisnisnya beda (mis. weighted average
-                    // berdasarkan gross, dsb).
-                    // ─────────────────────────────────────────────
                     result = rawData
                         .Where(x => x.date.HasValue && !string.IsNullOrEmpty(x.station))
                         .GroupBy(x => x.station)
@@ -2697,7 +2673,7 @@ namespace ssc.Areas.PE.Controllers
             }
             else
             {
-                // Delta mode: compare yesterday vs today (tidak berubah, tetap group by well)
+                // Delta mode: compare yesterday vs today 
                 result = rawData
                     .Where(x => x.date.HasValue)
                     .GroupBy(x => new { x.well, x.well_string })
@@ -2723,7 +2699,7 @@ namespace ssc.Areas.PE.Controllers
                         {
                             well = reference.well,
                             well_string = reference.well_string,
-                            station = reference.station, // ⬅ BARU
+                            station = reference.station,
                             location = reference.location,
 
                             fig_curr_gross_today = today?.fig_curr_gross,
@@ -2756,12 +2732,6 @@ namespace ssc.Areas.PE.Controllers
                     .ToList();
             }
 
-            // ─────────────────────────────────────────────────────────
-            // Sorting — field names berbeda tergantung mode:
-            //   - Delta mode      : field punya suffix _prev/_today/delta_
-            //   - Average mode     : field polos (fig_curr_gross, wc, dst)
-            //   Sort by "station" ditambahkan untuk mode groupBy=station.
-            // ─────────────────────────────────────────────────────────
             bool isDesc = order == "desc";
 
             switch (sort?.ToLower())
@@ -2776,7 +2746,7 @@ namespace ssc.Areas.PE.Controllers
                         ? result.OrderByDescending(x => x.well_string).ToList()
                         : result.OrderBy(x => x.well_string).ToList();
                     break;
-                case "station": // ⬅ BARU
+                case "station":
                     result = isDesc
                         ? result.OrderByDescending(x => x.station).ToList()
                         : result.OrderBy(x => x.station).ToList();
@@ -3016,6 +2986,7 @@ namespace ssc.Areas.PE.Controllers
             });
         }
 
+
         [Authorize("PeDaily Read")]
         [HttpGet("optimasi")]
         public IActionResult GetDailyOptimasi(
@@ -3065,7 +3036,7 @@ namespace ssc.Areas.PE.Controllers
 
                             if (wells.Any())
                             {
-                                // Gunakan Regex OR (mirror behaviour lama)
+                                // Gunakan Regex OR 
                                 var regexFilters = wells
                                     .Select(w =>
                                         Builders<Daily>.Filter.Regex(
@@ -3122,7 +3093,7 @@ namespace ssc.Areas.PE.Controllers
                         ? g.Where(x => x.ds_efficiency.HasValue).Average(x => x.ds_efficiency.Value)
                         : 0;
 
-                    // Konversi ke percent jika nilai <= 1(format decimal 0.0 - 1.0 menjadi 0 - 100)
+                    // Konversi ke percent 
                     if (avgEfficiency > 0 && avgEfficiency < 2)
                     {
                         avgEfficiency *= 100;

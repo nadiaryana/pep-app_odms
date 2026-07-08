@@ -730,13 +730,14 @@ export class OneSlideComponent implements OnInit {
 
     // hitung IPR
     const pi = (grossAvg / (ps - pwf)) * factor_corr; // *factor correction
-    const qmax = pi * ps;
+    // const qmax =  pi * ps;
+    const qmax =  grossAvg / ((1 - 0.2 * (pwf / ps) - 0.8 * (Math.pow(pwf / ps, 2))));
 
     //nilai qmax
     this.qmax.setValue(qmax.toFixed(2));
 
     console.log(`pi = ${grossAvg} / ${ps} - ${pwf} * ${factor_corr}= ${pi}`);
-    console.log(`qmax = ${pi} * ${ps} = ${qmax}`);
+    console.log(`qmax = ${grossAvg} / (1 - 0.2 * (${pwf} / ${ps}) - 0.8 * (Math.pow(${pwf} / ${ps}, 2))) = ${qmax}`);
 
     // get pwf values
     const pwf_values = this.getPwf(this.static_botthomhole_pressure.value);
@@ -791,6 +792,7 @@ export class OneSlideComponent implements OnInit {
 
     this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));
 
+    // const q_design = qmax * (1 - 0.2 * (pwf2 / ps) - 0.8 * (Math.pow(pwf2 / ps, 2)));
     const q_design = qmax * (1 - 0.2 * (pwf2 / ps) - 0.8 * (Math.pow(pwf2 / ps, 2)));
     this.q_design.setValue(q_design.toFixed(2));
 

@@ -22,7 +22,6 @@ interface IotWell {
   lastUpdate: string;
 }
 
-
 interface ArusRow {
   date: string;
   wellName: string;

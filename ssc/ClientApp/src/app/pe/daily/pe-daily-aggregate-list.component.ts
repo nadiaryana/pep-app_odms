@@ -23,15 +23,14 @@ import { CommonService } from '../../common.service';
 
 export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
-  /** Tab aktif: 'annual' | 'monthly' | 'weekly' | 'daily' */
+
   activeTab = 'weekly';
   indicatorLeft = 0;
   indicatorWidth = 0;
 
-  /** Tampilan: 'well' | 'station' */
   viewMode: string = 'well';
 
-  // ─── Kolom dinamis (diatur oleh updateDisplayedColumns) ───
+  //kolom dinamis
   displayedColumns: string[] = [];
   headerColumns1: string[] = [];
   headerColumns2: string[] = [];
@@ -45,7 +44,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   month2Control = new FormControl(new Date());
   month2Input: string = '';
 
-  // DATE PICKERS — Weekly (existing)
+  // DATE PICKERS — Weekly 
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
   weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
   weekly_start_dateInput = '';
@@ -64,21 +63,28 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   // DATE PICKERS — Daily
   @ViewChild('daily1StartPicker', { static: true }) daily1StartPicker: MatDatepicker<any> = null!;
-  daily1StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  daily1StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 2)));
   daily1StartInput: string = '';
 
   @ViewChild('daily2StartPicker', { static: true }) daily2StartPicker: MatDatepicker<any> = null!;
-  daily2StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 2)));
+  daily2StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
   daily2StartInput: string = '';
 
   // DATE PICKERS — Annual
   year1Control = new FormControl(new Date().getFullYear() - 1);
   year2Control = new FormControl(new Date().getFullYear());
 
-  @ViewChild('annualTab', { read: ElementRef }) annualTab!: ElementRef;
-  @ViewChild('monthlyTab', { read: ElementRef }) monthlyTab!: ElementRef;
-  @ViewChild('weeklyTab', { read: ElementRef }) weeklyTab!: ElementRef;
-  @ViewChild('dailyTab', { read: ElementRef }) dailyTab!: ElementRef;
+  @ViewChild('annualTab', { read: ElementRef, static: false })
+  annualTab: ElementRef;
+
+  @ViewChild('monthlyTab', { read: ElementRef, static: false })
+  monthlyTab: ElementRef;
+
+  @ViewChild('weeklyTab', { read: ElementRef, static: false })
+  weeklyTab: ElementRef;
+
+  @ViewChild('dailyTab', { read: ElementRef, static: false })
+  dailyTab: ElementRef;
 
 
   exampleDatabase: ExampleHttpDao | null = null;
@@ -113,8 +119,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   ds_efficiencyFilter = new FormControl('');
   smFilter = new FormControl('');
   
-
-
   date_xSelected: any[] = [];
   well_xSelected: any[] = [];
   well_string_xSelected: any[] = [];   
@@ -167,12 +171,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.status = (this.route.snapshot.paramMap.get('status') as string) || '';
 
     this.exampleDatabase = new ExampleHttpDao(this.http);
-
-    // Inisialisasi kolom dan input tanggal
     this.updateDisplayedColumns();
     this.updateDateInputs();
 
-    // Reset ke halaman pertama setiap kali kolom sort berubah
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
 
@@ -281,13 +282,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     });
   }
 
-  //  ngAfterViewInit(): void {
-  //   setTimeout(() => this.updateIndicator());
-  // }
-
-  // ──────────────────────────────────────────────
-  // TAB HANDLING
-  // ──────────────────────────────────────────────
   setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
@@ -312,9 +306,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     }
 }
 
-  // ──────────────────────────────────────────────
-  // VIEW MODE (Well / station)
-  // ──────────────────────────────────────────────
   setViewMode(mode: string) {
     this.viewMode = mode;
     this.updateDisplayedColumns();
@@ -347,8 +338,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     ? ['gain_loss_gross', 'gain_loss_net', 'gain_loss_wc', 'gain_loss_gas', 'gain_loss_ds_efficiency', 'gain_loss_sm']
     : ['gain_loss_net', 'gain_loss_wc', 'gain_loss_gross', 'gain_loss_gas', 'gain_loss_ds_efficiency', 'gain_loss_sm'];
 
-    this.displayedColumns = [firstCol, ...p1, ...p2, ...gainLoss];
-    this.headerColumns1 = [firstCol, 'period1_group', 'period2_group', 'gain_loss_group'];
+    this.displayedColumns = [firstCol, 'well_string', ...p1, ...p2, ...gainLoss];
+    this.headerColumns1 = [firstCol, 'well_string', 'period1_group', 'period2_group', 'gain_loss_group'];
     this.headerColumns2 = [...p1, ...p2, ...gainLoss];
   }
 
@@ -394,7 +385,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Menentukan tanggal start/end & mode berdasarkan tab aktif */
+
   getPeriodDates(): { period1Start: Date, period1End: Date, period2Start: Date, period2End: Date, mode: string } | null {
     let period1Start: Date, period1End: Date, period2Start: Date, period2End: Date;
     let mode: string;
@@ -449,7 +440,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     return { period1Start, period1End, period2Start, period2End, mode };
   }
 
-  /** Update semua input teks tanggal dari control masing-masing */
   updateDateInputs() {
     this.month1Input = this.formatMonth(this.month1Control.value);
     this.month2Input = this.formatMonth(this.month2Control.value);
@@ -461,9 +451,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.daily2StartInput = this.formatDate(this.daily2StartControl.value);
   }
 
-  // ──────────────────────────────────────────────
-  // DATE CHANGE HANDLERS
-  // ──────────────────────────────────────────────
   month1Change(event: any) {
     if (!event.value) return;
     const d = new Date(event.value); d.setHours(0, 0, 0, 0);
@@ -564,7 +551,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     ).pipe(map((res) => {
       this.isLoadingResults = false;
       return {
-        filename: 'Daily.xlsx',
+        filename: 'Aggregate.xlsx',
         data: new Blob(
           [res['body']],
           { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }

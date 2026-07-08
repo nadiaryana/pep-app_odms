@@ -1,11 +1,15 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using ssc.Services;
+using ssc.Areas.PE.Models;
 using System;
 using System.Net.Http;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Driver;
 
 namespace ssc.Services
 {
@@ -14,13 +18,9 @@ namespace ssc.Services
         private readonly ArusService _arusService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<WatchdogService> _logger;
-
-        private readonly Dictionary<string, bool> _lastOnlineStatus = new Dictionary<string, bool>();
-
-        private readonly Dictionary<string, int> _lastArusStatus = new Dictionary<string, int>();
+        private readonly IMongoCollection<WatchdogState> _stateCollection;
 
         private readonly TimeSpan _offlineThreshold = TimeSpan.FromMinutes(2);
-
         private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(15);
 
         private const string PushoverToken = "ai2ce22rg828o1q1r5n6v6afp9vd1d";
@@ -29,11 +29,25 @@ namespace ssc.Services
         public WatchdogService(
             ArusService arusService,
             IHttpClientFactory httpClientFactory,
-            ILogger<WatchdogService> logger)
+            ILogger<WatchdogService> logger,
+            IConfiguration config)
         {
             _arusService = arusService;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+
+            // Inisialisasi koleksi MongoDB untuk persistent state
+            var connectionString = config["PESumurSettings:ConnectionString"];
+            var databaseName = config["PESumurSettings:DatabaseName"];
+            var client = new MongoClient(connectionString);
+            var db = client.GetDatabase(databaseName);
+            _stateCollection = db.GetCollection<WatchdogState>("watchdog_state");
+
+            // Index agar cepat cari berdasar well_id
+            var indexKeys = Builders<WatchdogState>.IndexKeys.Ascending(x => x.WellId);
+            var indexOptions = new CreateIndexOptions { Unique = true };
+            _stateCollection.Indexes.CreateOne(
+                new CreateIndexModel<WatchdogState>(indexKeys, indexOptions));
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,6 +68,12 @@ namespace ssc.Services
             {
                 var wells = await _arusService.GetAllWellIdsAsync();
 
+                // Load semua state dari MongoDB sekali per siklus
+                var allState = await _stateCollection.Find(_ => true).ToListAsync();
+                var stateMap = allState.ToDictionary(s => s.WellId, s => s);
+
+                var bulkOps = new List<WriteModel<WatchdogState>>();
+
                 foreach (var wellId in wells)
                 {
                     var last = await _arusService.GetLastReadingAsync(wellId);
@@ -64,11 +84,22 @@ namespace ssc.Services
                     bool isOnline = selisih <= _offlineThreshold;
                     int arusStatus = last.Status; // 1=ON, 0=OFF
 
-                    bool sudahAdaOnlineStatus = _lastOnlineStatus.ContainsKey(wellId);
-                    bool sudahAdaArusStatus = _lastArusStatus.ContainsKey(wellId);
+                    // Ambil state dari MongoDB (atau default jika belum ada)
+                    bool stateExists = stateMap.TryGetValue(wellId, out var state);
+                    if (!stateExists)
+                    {
+                        state = new WatchdogState
+                        {
+                            WellId = wellId,
+                            LastOnline = false,
+                            LastArusStatus = -1,
+                            OfflineNotified = false
+                        };
+                    }
 
-                    int lastArus = sudahAdaArusStatus ? _lastArusStatus[wellId] : -1;
-                    bool lastOnline = sudahAdaOnlineStatus ? _lastOnlineStatus[wellId] : false;
+                    bool lastOnline = state.LastOnline;
+                    int lastArus = state.LastArusStatus;
+                    bool offlineNotified = state.OfflineNotified;
 
                     _logger.LogInformation(
                         "[WATCHDOG] " + wellId +
@@ -79,7 +110,8 @@ namespace ssc.Services
 
                     if (!isOnline)
                     {
-                        if (lastOnline || !sudahAdaOnlineStatus)
+                        // Kirim notif hanya sekali per periode offline & belum pernah dikirim
+                        if (!offlineNotified)
                         {
                             _logger.LogWarning("[WATCHDOG] " + wellId + " OFFLINE!");
 
@@ -91,20 +123,22 @@ namespace ssc.Services
                             await KirimPushover("Status IoT", msg);
                         }
 
-                        _lastOnlineStatus[wellId] = false;
-                        // Reset arus status ke -1 saat offline
-                        _lastArusStatus[wellId] = -1;
+                        // Update state: offline, notified flag tetap true
+                        state.LastOnline = false;
+                        state.LastArusStatus = -1;
+                        state.OfflineNotified = true;
+                        bulkOps.Add(UpsertState(state));
                         continue;
                     }
 
-                    // Alat baru nyala lagi setelah offline
-                    bool baruNyalaLagiSetelahOffline = sudahAdaOnlineStatus && !lastOnline;
+                    // ── WELL ONLINE ──
+                    // Reset flag offline_notified karena sudah online kembali
 
                     if (arusStatus == 1)
                     {
                         // ── Arus ON ──
-                        bool kirimOn = !sudahAdaArusStatus ||
-                                       baruNyalaLagiSetelahOffline ||
+                        bool kirimOn = !stateExists ||
+                                       lastOnline == false ||
                                        lastArus == 0 ||
                                        lastArus == -1;
 
@@ -122,7 +156,7 @@ namespace ssc.Services
                     else
                     {
                         // ── Arus OFF < 1 ──
-                        bool kirimOff = !sudahAdaArusStatus ||
+                        bool kirimOff = !stateExists ||
                                         lastArus == 1 ||
                                         lastArus == -1;
 
@@ -138,15 +172,33 @@ namespace ssc.Services
                         }
                     }
 
-                    // Update status
-                    _lastOnlineStatus[wellId] = true;
-                    _lastArusStatus[wellId] = arusStatus;
+                    // Update state: online, reset offline_notified untuk periode offline berikutnya
+                    state.LastOnline = true;
+                    state.LastArusStatus = arusStatus;
+                    state.OfflineNotified = false;
+                    bulkOps.Add(UpsertState(state));
+                }
+
+                // Simpan semua perubahan state ke MongoDB sekaligus
+                if (bulkOps.Count > 0)
+                {
+                    await _stateCollection.BulkWriteAsync(bulkOps, new BulkWriteOptions { IsOrdered = false });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError("[WATCHDOG] Error: " + ex.Message);
             }
+        }
+
+        private static WriteModel<WatchdogState> UpsertState(WatchdogState state)
+        {
+            var filter = Builders<WatchdogState>.Filter.Eq(s => s.WellId, state.WellId);
+            var update = Builders<WatchdogState>.Update
+                .Set(s => s.LastOnline, state.LastOnline)
+                .Set(s => s.LastArusStatus, state.LastArusStatus)
+                .Set(s => s.OfflineNotified, state.OfflineNotified);
+            return new UpdateOneModel<WatchdogState>(filter, update) { IsUpsert = true };
         }
 
         private async Task KirimPushover(string title, string message)
