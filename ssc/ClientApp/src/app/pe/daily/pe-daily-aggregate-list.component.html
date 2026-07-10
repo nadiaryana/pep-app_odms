@@ -375,7 +375,9 @@
       <!-- Gain/Loss - Gross -->
       <ng-container matColumnDef="gain_loss_gross">
         <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gross</span>
+          </div>
         </th>
         <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
             [class.gain-positive]="row.gain_loss_gross > 0"
@@ -389,7 +391,9 @@
       <!-- Gain/Loss - Net -->
       <ng-container matColumnDef="gain_loss_net">
         <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Net</span>
+          </div>
         </th>
         <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
             [class.gain-positive]="row.gain_loss_net > 0"
@@ -403,7 +407,9 @@
       <!-- Gain/Loss - WC -->
       <ng-container matColumnDef="gain_loss_wc">
         <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">WC</span>
+          </div>
         </th>
         <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
             [class.gain-positive]="row.gain_loss_wc > 0"
@@ -417,7 +423,9 @@
       <!-- Gain/Loss - Gas -->
       <ng-container matColumnDef="gain_loss_gas">
         <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
+          </div>
         </th>
         <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
             [class.gain-positive]="row.gain_loss_gas > 0"
@@ -431,7 +439,9 @@
       <!-- Gain/Loss - DS Efficiency -->
       <ng-container matColumnDef="gain_loss_ds_efficiency">
         <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency</span>
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Efficiency</span>
+          </div>
         </th>
         <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
             [class.gain-positive]="row.gain_loss_ds_efficiency > 0"
@@ -445,7 +455,9 @@
       <!-- Gain/Loss - SM -->
       <ng-container matColumnDef="gain_loss_sm">
         <th mat-header-cell *matHeaderCellDef class="wp-gainloss-subheader">
-          <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">SM</span>
+          </div>
         </th>
         <td mat-cell *matCellDef="let row" class="cell-right wp-cell-num"
             [class.gain-positive]="row.gain_loss_sm > 0"

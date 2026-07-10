@@ -104,12 +104,12 @@
 			<h4 class="title_awy">Data Optimasi {{ selectedArea == 'all' ? 'Semua Area' : selectedArea + ' area' }}</h4>
 
 			<!-- no data -->
-			<div [hidden]="allItems.length > 0" class="no-data">
+			<div *ngIf="allItems.length === 0" class="no-data">
 				<p>No data available</p>
 			</div>
 
 			<div
-				[hidden]="allItems.length === 0"
+				*ngIf="allItems.length > 0"
 				class="container-table"
 				[style.max-height]="
 				commonService.Math.max(commonService.screenHeight - 180, 250) + 'px'
@@ -124,7 +124,7 @@
 				matSortDisableClear
 				matSortDirection="asc"
 				>
-				<ng-container matColumnDef="select">
+				<!-- <ng-container matColumnDef="select">
 					<th mat-header-cell *matHeaderCellDef rowspan="2">
 					<mat-checkbox
 						(change)="$event && !isEditing ? masterToggle() : null"
@@ -147,9 +147,9 @@
 					>
 					</mat-checkbox>
 					</td>
-				</ng-container>
+				</ng-container> -->
 
-				<ng-container matColumnDef="date">
+				<!-- <ng-container matColumnDef="date"> -->
 					<!-- <th mat-header-cell *matHeaderCellDef rowspan="2">
 					<div fxLayout="row" fxLayoutAlign="start center">
 						<span mat-sort-header arrowPosition="before" class="mat-sort-header"
@@ -163,7 +163,7 @@
 						></app-xfilter>
 					</div>
 					</th> -->
-					<td
+					<!-- <td
 					mat-cell
 					*matCellDef="let row"
 					class="cell-center"
@@ -171,7 +171,7 @@
 					>
 					{{ row.date ? (row.date | date: 'dd MMM y') : '-' }}
 					</td>
-				</ng-container>
+				</ng-container> -->
 				<ng-container matColumnDef="well">
 					<th mat-header-cell *matHeaderCellDef rowspan="2">
 					<div fxLayout="row" fxLayoutAlign="start center">

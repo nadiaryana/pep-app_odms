@@ -216,20 +216,20 @@ ng::host .mat-horizontal-stepper-content {
   // width: 100%;
 }
 
-.delta-up {
-  color: #2e7d32;   // hijau
-  font-weight: 600;
-}
+// .delta-up {
+//   color: #2e7d32;   // hijau
+//   font-weight: 600;
+// }
 
-.delta-down {
-  color: #c62828;   // merah
-  font-weight: 600;
-}
+// .delta-down {
+//   color: #c62828;   // merah
+//   font-weight: 600;
+// }
 
-.delta-same {
-  color: #f9a825;   // kuning
-  font-weight: 600;
-}
+// .delta-same {
+//   color: #f9a825;   // kuning
+//   font-weight: 600;
+// }
 
 .slider-label {
   font-size: 12px;
@@ -335,7 +335,7 @@ mat-slider {
 
 .wp-date-field label {
   font-size: 13px;
-  font-weight: 500;
+  // font-weight: 500;
   color: #555;
   white-space: nowrap;
 }
@@ -411,17 +411,17 @@ mat-slider {
 
 /* Table header period styling */
 .wp-period-header {
-  background-color: #e8f0fe !important;
-  color: #1a73e8 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
+  // background-color: #e8f0fe !important;
+  // color: #1a73e8 !important;
+  // font-weight: 600 !important;
+  font-size: 16px !important;
 }
 
 .wp-gainloss-header {
-  background-color: #fff3e0 !important;
-  color: #e65100 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
+  background-color: #e8f0fe !important;
+  // color: #e65100 !important;
+  // font-weight: 600 !important;
+  font-size: 16px !important;
 }
 
 // .wp-gainloss-subheader {
@@ -442,12 +442,12 @@ mat-slider {
 }
 
 .gain-neutral {
-  color: #666;
+  color: #000000;
 }
 
 /* Highlighted cell (Period 2 Gross) */
 .wp-cell-highlight {
-  background-color: #fff9c4 !important;
+  // background-color: #fff9c4 !important;
 }
 
 /* Cell alignment */

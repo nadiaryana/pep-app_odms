@@ -15,6 +15,7 @@ using ssc.Services;
 using System.Globalization;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using System.Drawing;
 using System.IO;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 
@@ -2424,6 +2425,8 @@ namespace ssc.Areas.PE.Controllers
             string mode = "",
             string columnfilter = "",
             string groupBy = "well"
+
+
         )
         {
             // Jika date tidak dipilih, kembalikan data kosong
@@ -2460,7 +2463,7 @@ namespace ssc.Areas.PE.Controllers
             System.Diagnostics.Debug.WriteLine($"groupBy: {groupBy}");
             System.Diagnostics.Debug.WriteLine($"columnfilter: {columnfilter}");
 
-            // xfilter = filter tambahan dari columnfilter (well, dll)
+            // xfilter 
             FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
 
             if (!string.IsNullOrWhiteSpace(columnfilter))
@@ -2509,7 +2512,7 @@ namespace ssc.Areas.PE.Controllers
                         }
                     }
 
-                    // BARU: filter by station juga, kalau frontend kirim
+                    // filter station
                     if (colfilter?.station != null)
                     {
                         var jarr = colfilter.station as Newtonsoft.Json.Linq.JArray;
@@ -2628,7 +2631,7 @@ namespace ssc.Areas.PE.Controllers
                 }
                 else
                 {
-                    // GROUP BY WELL (default/existing behaviour)
+                    // GROUP BY WELL 
                     result = rawData
                         .Where(x => x.date.HasValue)
                         .GroupBy(x => new { x.well, x.well_string })
@@ -2642,10 +2645,11 @@ namespace ssc.Areas.PE.Controllers
                             {
                                 well = g.Key.well,
                                 well_string = g.Key.well_string,
-                                station = g.FirstOrDefault()?.station, // ⬅ BARU: ikut disertakan
+                                station = g.FirstOrDefault()?.station,
                                 location = g.FirstOrDefault()?.location,
                                 latest_date = latestDate,
 
+                                //merata-ratakan
                                 fig_curr_gross = g.Where(x => x.fig_curr_gross.HasValue).Any()
                                     ? g.Where(x => x.fig_curr_gross.HasValue).Average(x => x.fig_curr_gross)
                                     : 0m,
@@ -2673,7 +2677,7 @@ namespace ssc.Areas.PE.Controllers
             }
             else
             {
-                // Delta mode: compare yesterday vs today 
+                // Delta mode
                 result = rawData
                     .Where(x => x.date.HasValue)
                     .GroupBy(x => new { x.well, x.well_string })

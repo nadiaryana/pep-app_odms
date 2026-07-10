@@ -808,7 +808,8 @@ export class IprComponent implements OnInit {
     }
 
     //perhitungan operating point
-    const dfl2 = ds_kd2 - sm2
+    const dfl2 = ds_kd2 + sm2
+    // const pwf2 = ((0.433 * wcAvg/100) + (0.346 * (1 - wcAvg/100))) * (bottomRaw - dfl2) * 3.281;
     const pwf2 = ((0.433 * wcAvg/100) + (0.346 * (1 - wcAvg/100))) * (bottomRaw - dfl2) * 3.281;
 
     this.flowing_bottomhole_pressure2.setValue(pwf2.toFixed(2));

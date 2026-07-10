@@ -265,7 +265,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       let filtered = this.sortMergedData(data);
       console.log("Aggregate Data:", this.data);
 
-      // ── Terapkan well filter di frontend ──
+      //well filter
       if (this.well_xSelected.length > 0) {
         filtered = filtered.filter(row => this.well_xSelected.includes(row.well));
       }
@@ -275,7 +275,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
       this.data = filtered;
       this.dataSource = new MatTableDataSource<any>(this.data);
-      // Hubungkan paginator ke dataSource agar Material Table bisa memotong data per halaman
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
       this.selection.clear();
@@ -285,7 +284,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
-  
+
+  //animasi UI
   getIndicatorTransform(): string {
 
     switch (this.activeTab) {
@@ -385,7 +385,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     }
   }
 
-
+  //penentuan rentang tanggal
   getPeriodDates(): { period1Start: Date, period1End: Date, period2Start: Date, period2End: Date, mode: string } | null {
     let period1Start: Date, period1End: Date, period2Start: Date, period2End: Date;
     let mode: string;
@@ -451,6 +451,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.daily2StartInput = this.formatDate(this.daily2StartControl.value);
   }
 
+  //handler perubahan tanggal
   month1Change(event: any) {
     if (!event.value) return;
     const d = new Date(event.value); d.setHours(0, 0, 0, 0);
@@ -525,39 +526,78 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     return this.pePermissionService.passPermission(path);
   }
 
+  // ──────────────────────────────────────────────
+// EXPORT TO EXCEL — bekerja untuk semua tab
+// (Annual / Monthly / Weekly / Daily)
+// ──────────────────────────────────────────────
+
+  // Nama file export disesuaikan dengan tab aktif
+  private getExportFilename(): string {
+    const tabLabel = this.activeTab.charAt(0).toUpperCase() + this.activeTab.slice(1);
+    return `${tabLabel}_Aggregate.xlsx`;
+  }
+
   exportExcel() {
+    const dates = this.getPeriodDates();
+
+    if (!dates) {
+      this.snackbarService.status.next(
+        new SnackbarApi(true, 'Please complete all date fields before exporting.', 'dismiss')
+      );
+      return;
+    }
+
+    const { period1Start, period1End, period2Start, period2End, mode } = dates;
 
     const httpOption: Object = {
       observe: 'response',
       headers: new HttpHeaders({
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }),
-      responseType: 'arraybuffer'
+      responseType: 'arraybuffer',
     };
-    this.isLoadingResults = true;
-    var columnfilter = this.getColumnFilter();
 
-    this.exampleDatabase!.getRepoIssues(
-      this.sort.active,
-      this.sort.direction,
-      this.paginator.pageIndex,
-      this.paginator.pageSize,
-      this.filterControl.value,
-      columnfilter,
-      "excel",
-      httpOption,
-      this.start_dateControl.value,
-      this.end_dateControl.value
-    ).pipe(map((res) => {
-      this.isLoadingResults = false;
-      return {
-        filename: 'Aggregate.xlsx',
-        data: new Blob(
-          [res['body']],
-          { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-        ),
-      };
-    })).subscribe(res => {
+    this.isLoadingResults = true;
+    const columnfilter = this.getColumnFilter();
+
+
+    const params: any = {
+      sort: this.sort.active,
+      order: this.sort.direction,
+      page: this.paginator.pageIndex.toString(),
+      pagesize: this.paginator.pageSize.toString(),
+      filter: this.filterControl.value || '',
+      mode: 'excel',
+      aggregateMode: mode,
+      groupBy: this.viewMode === 'station' ? 'station' : 'well',
+      period1Start: new Date(period1Start).toISOString(),
+      period1End: new Date(period1End).toISOString(),
+      period2Start: new Date(period2Start).toISOString(),
+      period2End: new Date(period2End).toISOString(),
+      startDate: new Date(period2Start).toISOString(),
+      endDate: new Date(period2End).toISOString(),
+    };
+
+    if (Object.keys(columnfilter).length > 0) {
+      params.columnfilter = JSON.stringify(columnfilter);
+    }
+
+    (httpOption as any)['params'] = params;
+
+    const filename = this.getExportFilename();
+
+    this.http.get('/api/pe/daily/delta', httpOption).pipe(
+      map((res: any) => {
+        this.isLoadingResults = false;
+        return {
+          filename,
+          data: new Blob(
+            [res['body']],
+            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+          ),
+        };
+      })
+    ).subscribe(res => {
       if ((window.navigator as any).msSaveOrOpenBlob) {
         (window.navigator as any).msSaveBlob(res.data, res.filename);
       } else {
@@ -673,6 +713,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       const week1 = week1Map.get(key) || {};
       const week2 = week2Map.get(key) || {};
 
+      //ref = info identitas dari week2 jika ada
       const ref = Object.keys(week2).length > 0 ? week2 : week1;
 
       const p1Gross = week1.fig_curr_gross || 0;
@@ -683,7 +724,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       const p2Wc    = week2.wc             || 0;
 
       return {
-        // Field identitas (existing)
+        // Field identitas 
         well: ref.well,
         well_string: ref.well_string,
         location: ref.location,
@@ -711,7 +752,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         delta_sm:             (week2.sm || 0) - (week1.sm || 0),
         
 
-        // ── Field baru (Well Performance UI) ──
+        // ── Field baru (UI) ──
         station: ref.station || ref.well || key,
 
         period1_gross: p1Gross,
