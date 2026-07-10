@@ -178,6 +178,33 @@ namespace ssc.Areas.PE.Models
         public string shortName { get; set; }
     }
 
+    public class AggregateExportRow
+    {
+        public string Label { get; set; }        // well atau station
+        public string WellString { get; set; }
+
+        public decimal P1Gross { get; set; }
+        public decimal P1Net { get; set; }
+        public decimal P1Wc { get; set; }
+        public decimal P1Gas { get; set; }
+        public decimal P1Ds { get; set; }
+        public decimal P1Sm { get; set; }
+
+        public decimal P2Gross { get; set; }
+        public decimal P2Net { get; set; }
+        public decimal P2Wc { get; set; }
+        public decimal P2Gas { get; set; }
+        public decimal P2Ds { get; set; }
+        public decimal P2Sm { get; set; }
+
+        public decimal GainGross { get; set; }
+        public decimal GainNet { get; set; }
+        public decimal GainWc { get; set; }
+        public decimal GainGas { get; set; }
+        public decimal GainDs { get; set; }
+        public decimal GainSm { get; set; }
+    }
+
     public class Structure
     {
         [BsonId]
