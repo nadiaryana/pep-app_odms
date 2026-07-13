@@ -280,6 +280,8 @@ mat-slider {
     display: flex;
     border-bottom: 1px solid #e0e0e0;
     width: 100%;
+    gap: 4px;
+    padding: 4px;
 }
 
 .wp-tabs button {
@@ -288,15 +290,62 @@ mat-slider {
     font-weight: 400;
     color: #444;
     border-radius: 8px;
-    
+    background: transparent;
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .wp-tabs button.active {
     border-radius: 8px;
-    color: #1a73e8;
+    // color: #1a73e8;
     border: none; 
     border-bottom: 2px solid transparent;
 }
+
+.wp-tabs button.tab-annual.active {
+    background-color: #8CC0EB;
+    color: #406AAF;
+    font-weight: 500;
+}
+
+.wp-tabs button.tab-monthly.active {
+    background-color: #E4DFFB;
+    color: #6C5CE7;
+    font-weight: 500;
+}
+
+.wp-tabs button.tab-weekly.active {
+    background-color: #FBDFF0;
+    color: #C2408D;
+    font-weight: 500;
+}
+
+.wp-tabs button.tab-daily.active {
+    background-color: #FBF7D4;
+    color: #A68B00;
+    font-weight: 500;
+}
+
+//hover
+.wp-tabs button.tab-annual:not(.active):hover {
+    background-color: #EDEBFB;
+    color: #8CC0EB;
+}
+
+.wp-tabs button.tab-monthly:not(.active):hover {
+    background-color: #F2EFFC;
+    color: #6C5CE7;
+}
+
+.wp-tabs button.tab-weekly:not(.active):hover {
+    background-color: #FCEEF7;
+    color: #C2408D;
+}
+
+.wp-tabs button.tab-daily:not(.active):hover {
+    background-color: #FDFAE8;
+    color: #A68B00;
+}
+
 
 .tab-indicator {
     position: absolute;

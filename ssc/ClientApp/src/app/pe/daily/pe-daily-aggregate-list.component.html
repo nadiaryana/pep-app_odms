@@ -4,13 +4,14 @@
 
    <div class="wp-tabs">
 
-		<div
+		<!-- <div
 			class="tab-indicator"
 			[style.transform]="getIndicatorTransform()">
-		</div>
+		</div> -->
 
 		<button
 			mat-button
+			class="tab-annual"
 			[class.active]="activeTab === 'annual'"
 			(click)="setActiveTab('annual')">
 			Annual
@@ -18,6 +19,7 @@
 
 		<button
 			mat-button
+			class="tab-monthly"
 			[class.active]="activeTab === 'monthly'"
 			(click)="setActiveTab('monthly')">
 			Monthly
@@ -25,6 +27,7 @@
 
 		<button
 			mat-button
+			class="tab-weekly"
 			[class.active]="activeTab === 'weekly'"
 			(click)="setActiveTab('weekly')">
 			Weekly
@@ -32,6 +35,7 @@
 
 		<button
 			mat-button
+			class="tab-daily"
 			[class.active]="activeTab === 'daily'"
 			(click)="setActiveTab('daily')">
 			Daily
@@ -46,20 +50,22 @@
 			<label>Month 1</label>
 			<mat-form-field class="filter" floatLabel="never">
 				<input matInput class="input-hidden" [matDatepicker]="month1Picker" 
-					[formControl]="month1Control" (dateChange)="month1Change($event)" readonly>
+					[formControl]="month1Control" readonly>
 				<input matInput [(ngModel)]="month1Input" disabled>
 				<mat-datepicker-toggle matSuffix [for]="month1Picker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #month1Picker></mat-datepicker>
+				<mat-datepicker #month1Picker startView="year"
+					(monthSelected)="chosenMonthHandler($event, month1Picker, 1)"></mat-datepicker>
 			</mat-form-field>
 		</div>
 		<div class="wp-date-field">
 			<label>Month 2</label>
 			<mat-form-field class="filter" floatLabel="never">
 				<input matInput class="input-hidden" [matDatepicker]="month2Picker" 
-					[formControl]="month2Control" (dateChange)="month2Change($event)" readonly>
+					[formControl]="month2Control" readonly>
 				<input matInput [(ngModel)]="month2Input" disabled>
 				<mat-datepicker-toggle matSuffix [for]="month2Picker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-				<mat-datepicker #month2Picker></mat-datepicker>
+				<mat-datepicker #month2Picker startView="year"
+					(monthSelected)="chosenMonthHandler($event, month2Picker, 2)"></mat-datepicker>
 			</mat-form-field>
 		</div>
 	</div>

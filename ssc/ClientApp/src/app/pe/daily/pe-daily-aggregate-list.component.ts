@@ -426,8 +426,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         break;
       }
       case 'annual': {
-        period1Start = new Date(this.year1Control.value, 0, 1);
-        period1End = new Date(this.year1Control.value, 11, 31);
+        period1Start = new Date(this.year1Control.value, 0, 1);  //1 januari
+        period1End = new Date(this.year1Control.value, 11, 31); //31 desember
         period2Start = new Date(this.year2Control.value, 0, 1);
         period2End = new Date(this.year2Control.value, 11, 31);
         mode = 'annual_average';
@@ -451,19 +451,21 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.daily2StartInput = this.formatDate(this.daily2StartControl.value);
   }
 
-  //handler perubahan tanggal
-  month1Change(event: any) {
-    if (!event.value) return;
-    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
-    this.month1Control.setValue(d);
-    this.month1Input = this.formatMonth(d);
-  }
+  //handler perubahan monthly
+  chosenMonthHandler(normalizedMonth: Date, datepicker: MatDatepicker<any>, which: 1 | 2): void {
+    const d = new Date(normalizedMonth);
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
 
-  month2Change(event: any) {
-    if (!event.value) return;
-    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
-    this.month2Control.setValue(d);
-    this.month2Input = this.formatMonth(d);
+    if (which === 1) {
+      this.month1Control.setValue(d);
+      this.month1Input = this.formatMonth(d);
+    } else {
+      this.month2Control.setValue(d);
+      this.month2Input = this.formatMonth(d);
+    }
+
+    datepicker.close();
   }
 
   start_dateChange(event: any) {
@@ -526,10 +528,6 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     return this.pePermissionService.passPermission(path);
   }
 
-  // ──────────────────────────────────────────────
-// EXPORT TO EXCEL — bekerja untuk semua tab
-// (Annual / Monthly / Weekly / Daily)
-// ──────────────────────────────────────────────
 
   // Nama file export disesuaikan dengan tab aktif
   private getExportFilename(): string {

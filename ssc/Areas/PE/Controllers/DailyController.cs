@@ -2526,9 +2526,7 @@ namespace ssc.Areas.PE.Controllers
             return xfilter;
         }
 
-        /// Query + grouping rata-rata (average) untuk satu rentang tanggal.
-        /// Sama seperti logic "isAverageMode" di GetDailyDelta, dipisah jadi
-        /// method supaya bisa dipanggil 2x (period1 & period2) untuk export.
+
         private List<dynamic> GetAggregatedData(DateTime startDate, DateTime endDate, FilterDefinition<Daily> xfilter, string groupBy)
         {
             var todayDate = endDate.ToUniversalTime().Date;
@@ -2584,9 +2582,6 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-
-        /// Gabungkan data Period 1 & Period 2 
-        /// hitung delta/gain-loss untuk tiap metric.
         private List<AggregateExportRow> MergeAggregateRows(List<dynamic> period1Items, List<dynamic> period2Items, string groupBy)
         {
             string MakeKey(dynamic item)
@@ -2802,32 +2797,7 @@ namespace ssc.Areas.PE.Controllers
         }
 
         /// DTO internal untuk 1 baris hasil merge, dipakai saat build Excel
-        private class AggregateExportRow
-        {
-            public string Label { get; set; }        // well atau station
-            public string WellString { get; set; }
 
-            public decimal P1Gross { get; set; }
-            public decimal P1Net { get; set; }
-            public decimal P1Wc { get; set; }
-            public decimal P1Gas { get; set; }
-            public decimal P1Ds { get; set; }
-            public decimal P1Sm { get; set; }
-
-            public decimal P2Gross { get; set; }
-            public decimal P2Net { get; set; }
-            public decimal P2Wc { get; set; }
-            public decimal P2Gas { get; set; }
-            public decimal P2Ds { get; set; }
-            public decimal P2Sm { get; set; }
-
-            public decimal GainGross { get; set; }
-            public decimal GainNet { get; set; }
-            public decimal GainWc { get; set; }
-            public decimal GainGas { get; set; }
-            public decimal GainDs { get; set; }
-            public decimal GainSm { get; set; }
-        }
 
 
         [Authorize("PeDaily Read")]
