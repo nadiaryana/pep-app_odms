@@ -28,8 +28,8 @@ namespace ssc.Services
         private const string GrupWAId = "120363408080815318@g.us";
         private const string FonnteUrl = "https://api.fonnte.com/send";
 
-        private const string PushoverToken = "ai2ce22rg828o1q1r5n6v6afp9vd1d";
-        private const string PushoverUserKey = "ujjtrrauiqqqn84skaitcxwfsayqwt";
+        // private const string PushoverToken = "ai2ce22rg828o1q1r5n6v6afp9vd1d";
+        // private const string PushoverUserKey = "ujjtrrauiqqqn84skaitcxwfsayqwt";
 
         public WatchdogService(
             ArusService arusService,
@@ -125,7 +125,7 @@ namespace ssc.Services
                                          "⏰ Terakhir aktif: " +
                                          lastSeen.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            await KirimPushover("Status IoT", msg);
+                            await KirimWA(msg);
                         }
 
                         // Update state: offline, notified flag tetap true
@@ -155,7 +155,7 @@ namespace ssc.Services
                                          "⚡ Arus: " + last.Current.ToString("F2") + " A\n" +
                                          "⏰ " + DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            await KirimPushover("Status IoT", msg);
+                            await KirimWA(msg);
                         }
                     }
                     else
@@ -173,7 +173,7 @@ namespace ssc.Services
                                          "⚡ Arus: " + last.Current.ToString("F2") + " A\n" +
                                          "⏰ " + DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 
-                            await KirimPushover("Status IoT", msg);
+                            await KirimWA(msg);
                         }
                     }
 
@@ -206,55 +206,55 @@ namespace ssc.Services
             return new UpdateOneModel<WatchdogState>(filter, update) { IsUpsert = true };
         }
 
-        private async Task KirimPushover(string title, string message)
-        {
-            try
-            {
-                HttpClient client = _httpClientFactory.CreateClient();
-
-                var content = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("token",   PushoverToken),
-                    new KeyValuePair<string, string>("user",    PushoverUserKey),
-                    new KeyValuePair<string, string>("title",   title),
-                    new KeyValuePair<string, string>("message", message),
-                });
-
-                var response = await client.PostAsync(
-                    "https://api.pushover.net/1/messages.json", content);
-
-                _logger.LogInformation("[WATCHDOG] Pushover: " + (int)response.StatusCode);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("[WATCHDOG] Gagal kirim Pushover: " + ex.Message);
-            }
-        }
-
-        // private async Task KirimWA(string message)
+        // private async Task KirimPushover(string title, string message)
         // {
         //     try
         //     {
         //         HttpClient client = _httpClientFactory.CreateClient();
-        //         client.DefaultRequestHeaders.Clear();
-        //         client.DefaultRequestHeaders.Add("Authorization", FonnteToken);
 
         //         var content = new FormUrlEncodedContent(new[]
         //         {
-        //             new KeyValuePair<string, string>("target",  GrupWAId),
+        //             new KeyValuePair<string, string>("token",   PushoverToken),
+        //             new KeyValuePair<string, string>("user",    PushoverUserKey),
+        //             new KeyValuePair<string, string>("title",   title),
         //             new KeyValuePair<string, string>("message", message),
-        //             new KeyValuePair<string, string>("isGroup", "true"),
         //         });
 
-        //         var response = await client.PostAsync(FonnteUrl, content);
-        //         string result = await response.Content.ReadAsStringAsync();
+        //         var response = await client.PostAsync(
+        //             "https://api.pushover.net/1/messages.json", content);
 
-        //         _logger.LogInformation("[WATCHDOG] Fonnte WA response: " + result);
+        //         _logger.LogInformation("[WATCHDOG] Pushover: " + (int)response.StatusCode);
         //     }
         //     catch (Exception ex)
         //     {
-        //         _logger.LogError("[WATCHDOG] Gagal kirim WA: " + ex.Message);
+        //         _logger.LogError("[WATCHDOG] Gagal kirim Pushover: " + ex.Message);
         //     }
         // }
+
+        private async Task KirimWA(string message)
+        {
+            try
+            {
+                HttpClient client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("Authorization", FonnteToken);
+
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("target",  GrupWAId),
+                    new KeyValuePair<string, string>("message", message),
+                    new KeyValuePair<string, string>("isGroup", "true"),
+                });
+
+                var response = await client.PostAsync(FonnteUrl, content);
+                string result = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("[WATCHDOG] Fonnte WA response: " + result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("[WATCHDOG] Gagal kirim WA: " + ex.Message);
+            }
+        }
     }
 }
