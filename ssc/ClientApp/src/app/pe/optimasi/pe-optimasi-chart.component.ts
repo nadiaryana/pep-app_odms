@@ -187,15 +187,11 @@ export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
       ]
     });
 
-    // this.refreshQuadrant();
-
-    this.start_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
-    this.end_dateControl.valueChanges.subscribe(() => this.refreshQuadrant());
-    
-      // this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+    // Reset filter service untuk cegah stale data dari halaman sebelumnya
+    this.xfilterService.resetFilter();
 
       this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-        if (res) this.getColumnValues(res);
+        if (res && this.allItems.length > 0) this.getColumnValues(res);
       })
       
       merge(
@@ -206,14 +202,19 @@ export class PeOptimasiChartComponent implements OnInit, AfterViewInit{
       });
 
       this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
+        if (!res || !res["column"]) return; // Guard untuk empty/stale data
         this[res["column"] + "_xSelected"] = res["selected"];
-        this.applyAreaFilter(); // ← filter dari data lokal, tidak perlu API
+        if (this.allItems.length > 0) this.applyAreaFilter(); // Hanya filter jika ada data
       })
   }
 
   ngOnDestroy() {
-    this.filterSubscription.unsubscribe();
-    this.selectedSubscription.unsubscribe();
+     if (this.filterSubscription) {
+      this.filterSubscription.unsubscribe();
+    }
+    if (this.selectedSubscription) {
+      this.selectedSubscription.unsubscribe();
+    }
     // hapus this.listSubscription.unsubscribe()
   }
 

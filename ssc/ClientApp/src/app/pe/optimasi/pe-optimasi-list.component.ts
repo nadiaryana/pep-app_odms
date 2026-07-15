@@ -205,9 +205,15 @@ export class PeOptimasiListComponent implements OnInit {
   }
 
   ngOnDestroy() {
+    if (this.filterSubscription) {
     this.filterSubscription.unsubscribe();
-    this.selectedSubscription.unsubscribe();
-    this.listSubscription.unsubscribe();
+    }
+    if (this.selectedSubscription) {
+      this.selectedSubscription.unsubscribe();
+    }
+    if (this.listSubscription){
+      this.listSubscription.unsubscribe();
+    }
   }
 
   passPermission(path: String) {

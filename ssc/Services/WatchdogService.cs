@@ -23,6 +23,11 @@ namespace ssc.Services
         private readonly TimeSpan _offlineThreshold = TimeSpan.FromMinutes(2);
         private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(15);
 
+        // Fonnte WhatsApp config
+        private const string FonnteToken = "uY32HEmm747kGmXPcx8h";
+        private const string GrupWAId = "120363408080815318@g.us";
+        private const string FonnteUrl = "https://api.fonnte.com/send";
+
         private const string PushoverToken = "ai2ce22rg828o1q1r5n6v6afp9vd1d";
         private const string PushoverUserKey = "ujjtrrauiqqqn84skaitcxwfsayqwt";
 
@@ -225,5 +230,31 @@ namespace ssc.Services
                 _logger.LogError("[WATCHDOG] Gagal kirim Pushover: " + ex.Message);
             }
         }
+
+        // private async Task KirimWA(string message)
+        // {
+        //     try
+        //     {
+        //         HttpClient client = _httpClientFactory.CreateClient();
+        //         client.DefaultRequestHeaders.Clear();
+        //         client.DefaultRequestHeaders.Add("Authorization", FonnteToken);
+
+        //         var content = new FormUrlEncodedContent(new[]
+        //         {
+        //             new KeyValuePair<string, string>("target",  GrupWAId),
+        //             new KeyValuePair<string, string>("message", message),
+        //             new KeyValuePair<string, string>("isGroup", "true"),
+        //         });
+
+        //         var response = await client.PostAsync(FonnteUrl, content);
+        //         string result = await response.Content.ReadAsStringAsync();
+
+        //         _logger.LogInformation("[WATCHDOG] Fonnte WA response: " + result);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError("[WATCHDOG] Gagal kirim WA: " + ex.Message);
+        //     }
+        // }
     }
 }
