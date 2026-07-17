@@ -216,20 +216,20 @@ ng::host .mat-horizontal-stepper-content {
   // width: 100%;
 }
 
-// .delta-up {
-//   color: #2e7d32;   // hijau
-//   font-weight: 600;
-// }
+.delta-up {
+  color: #2e7d32;   // hijau
+  font-weight: 600;
+}
 
-// .delta-down {
-//   color: #c62828;   // merah
-//   font-weight: 600;
-// }
+.delta-down {
+  color: #c62828;   // merah
+  font-weight: 600;
+}
 
-// .delta-same {
-//   color: #f9a825;   // kuning
-//   font-weight: 600;
-// }
+.delta-same {
+  color: #f9a825;   // kuning
+  font-weight: 600;
+}
 
 .slider-label {
   font-size: 12px;
@@ -327,8 +327,8 @@ mat-slider {
 
 //hover
 .wp-tabs button.tab-annual:not(.active):hover {
-    background-color: #EDEBFB;
-    color: #8CC0EB;
+    background-color: #c0e1fc;
+    color: #406AAF;
 }
 
 .wp-tabs button.tab-monthly:not(.active):hover {

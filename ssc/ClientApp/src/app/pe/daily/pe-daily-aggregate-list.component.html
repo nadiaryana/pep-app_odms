@@ -121,6 +121,14 @@
 				<mat-datepicker-toggle matSuffix [for]="daily1StartPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
 				<mat-datepicker #daily1StartPicker></mat-datepicker>
 			</mat-form-field>
+			<span class="wp-date-separator">-</span>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="daily1EndPicker" 
+					[formControl]="daily1EndControl" (dateChange)="daily1EndChange($event)" readonly>
+				<input matInput [(ngModel)]="daily1EndInput" disabled>
+				<mat-datepicker-toggle matSuffix [for]="daily1EndPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #daily1EndPicker></mat-datepicker>
+			</mat-form-field>
 		</div>
 		<div class="wp-date-field">
 			<label>Day 2</label>
@@ -130,6 +138,14 @@
 				<input matInput [(ngModel)]="daily2StartInput" disabled>
 				<mat-datepicker-toggle matSuffix [for]="daily2StartPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
 				<mat-datepicker #daily2StartPicker></mat-datepicker>
+			</mat-form-field>
+			<span class="wp-date-separator">-</span>
+			<mat-form-field class="filter-sm" floatLabel="never">
+				<input matInput class="input-hidden" [matDatepicker]="daily2EndPicker" 
+					[formControl]="daily2EndControl" (dateChange)="daily2EndChange($event)" readonly>
+				<input matInput [(ngModel)]="daily2EndInput" disabled>
+				<mat-datepicker-toggle matSuffix [for]="daily2EndPicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
+				<mat-datepicker #daily2EndPicker></mat-datepicker>
 			</mat-form-field>
 		</div>
 	</div>

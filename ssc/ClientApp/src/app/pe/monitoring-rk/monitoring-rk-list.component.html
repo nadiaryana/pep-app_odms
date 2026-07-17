@@ -1,4 +1,6 @@
-<h3 style="margin: 16px 0 20px; font-weight: 500; margin-right: auto;">Non-Rigless</h3>
+  <div class="section-badge">
+      NON-RIGLESS
+  </div>
 
 <div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
   
@@ -249,8 +251,10 @@
     <mat-paginator [length]="rk_resultsLength" [pageSize]="50" [pageSizeOptions]="[10, 25, 50, 100]" #rkPaginator></mat-paginator>
 </div>
 
-<!-- ====== Rigless Table ====== -->
-<h3 style="margin: 16px 0 20px; font-weight: 500;">Rigless</h3>
+  <!-- ====== Rigless Table ====== -->
+  <div class="section-badge">
+      RIGLESS
+  </div>
 
 <div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
   <button mat-button color="warn" (click)="rlDeleteSelected()" [disabled]="!rl_selection.selected.length" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/delete')">

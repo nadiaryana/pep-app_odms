@@ -46,7 +46,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   // DATE PICKERS — Weekly 
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
-  weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
+  weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0))); //7 hari lalu
   weekly_start_dateInput = '';
 
   @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any> = null!;
@@ -54,7 +54,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   weekly_end_dateInput = '';
 
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
-  start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
+  start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0))); //1 hari lalu
   start_dateInput = '';
 
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
@@ -66,9 +66,17 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   daily1StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 2)));
   daily1StartInput: string = '';
 
+  @ViewChild('daily1EndPicker', { static: true }) daily1EndPicker: MatDatepicker<any> = null!;
+  daily1EndControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 2)));
+  daily1EndInput: string = '';
+
   @ViewChild('daily2StartPicker', { static: true }) daily2StartPicker: MatDatepicker<any> = null!;
   daily2StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
   daily2StartInput: string = '';
+
+  @ViewChild('daily2EndPicker', { static: true }) daily2EndPicker: MatDatepicker<any> = null!;
+  daily2EndControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  daily2EndInput: string = '';
 
   // DATE PICKERS — Annual
   year1Control = new FormControl(new Date().getFullYear() - 1);
@@ -203,7 +211,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.month2Control.valueChanges.pipe(debounceTime(300)),
       // Daily
       this.daily1StartControl.valueChanges.pipe(debounceTime(300)),
+      this.daily1EndControl.valueChanges.pipe(debounceTime(300)),
       this.daily2StartControl.valueChanges.pipe(debounceTime(300)),
+      this.daily2EndControl.valueChanges.pipe(debounceTime(300)),
       // Annual
       this.year1Control.valueChanges.pipe(debounceTime(300)),
       this.year2Control.valueChanges.pipe(debounceTime(300)),
@@ -360,8 +370,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     if (!date) return 0;
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-    const week1 = new Date(d.getFullYear(), 0, 4);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7); //hari kamis sebagai minggu pertama
+    const week1 = new Date(d.getFullYear(), 0, 4); //4 januari selalu ada di week 1 (standar ISO)
     return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
   }
 
@@ -370,7 +380,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       case 'annual': return `Year ${this.year1Control.value || ''}`;
       case 'monthly': return this.month1Input || 'Period 1';
       case 'weekly': return `Week ${this.getISOWeekNumber(this.weekly_start_dateControl.value)}`;
-      case 'daily': return `${this.formatDate(this.daily1StartControl.value)}`;
+      case 'daily': return `${this.formatDate(this.daily1StartControl.value)} - ${this.formatDate(this.daily1EndControl.value)}`;
       default: return 'Period 1';
     }
   }
@@ -380,7 +390,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       case 'annual': return `Year ${this.year2Control.value || ''}`;
       case 'monthly': return this.month2Input || 'Period 2';
       case 'weekly': return `Week ${this.getISOWeekNumber(this.start_dateControl.value)}`;
-      case 'daily': return `${this.formatDate(this.daily2StartControl.value)}`;
+      case 'daily': return `${this.formatDate(this.daily2StartControl.value)} - ${this.formatDate(this.daily2EndControl.value)}`;
       default: return 'Period 2';
     }
   }
@@ -417,11 +427,12 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
         break;
       }
       case 'daily': {
-        if (!this.daily1StartControl.value || !this.daily2StartControl.value) return null;
+        if (!this.daily1StartControl.value || !this.daily1EndControl.value ||
+            !this.daily2StartControl.value || !this.daily2EndControl.value) return null;
         period1Start = this.daily1StartControl.value;
-        period1End = this.daily1StartControl.value;
+        period1End = this.daily1EndControl.value;
         period2Start = this.daily2StartControl.value;
-        period2End = this.daily2StartControl.value;
+        period2End = this.daily2EndControl.value;
         mode = 'daily_average';
         break;
       }
@@ -448,7 +459,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.start_dateInput = this.formatDate(this.start_dateControl.value);
     this.end_dateInput = this.formatDate(this.end_dateControl.value);
     this.daily1StartInput = this.formatDate(this.daily1StartControl.value);
+    this.daily1EndInput = this.formatDate(this.daily1EndControl.value);
     this.daily2StartInput = this.formatDate(this.daily2StartControl.value);
+    this.daily2EndInput = this.formatDate(this.daily2EndControl.value);
   }
 
   //handler perubahan monthly
@@ -503,11 +516,25 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
     this.daily1StartInput = this.formatDate(d);
   }
 
+  daily1EndChange(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.daily1EndControl.setValue(d);
+    this.daily1EndInput = this.formatDate(d);
+  }
+
   daily2StartChange(event: any) {
     if (!event.value) return;
     const d = new Date(event.value); d.setHours(0, 0, 0, 0);
     this.daily2StartControl.setValue(d);
     this.daily2StartInput = this.formatDate(d);
+  }
+
+  daily2EndChange(event: any) {
+    if (!event.value) return;
+    const d = new Date(event.value); d.setHours(0, 0, 0, 0);
+    this.daily2EndControl.setValue(d);
+    this.daily2EndInput = this.formatDate(d);
   }
 
   year1Change() {
