@@ -67,7 +67,7 @@ export class MonitoringRKListComponent implements OnInit {
   realisasi_gas_xSelected = [];
   remarks_xSelected = [];
 
-  // === Barchart distinct values untuk autocomplete ===
+
   barchartWellList: string[] = [];
   barchartJobList: string[] = [];
   barchartRigList: string[] = [];

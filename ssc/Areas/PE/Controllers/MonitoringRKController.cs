@@ -908,7 +908,29 @@ namespace ssc.Areas.PE.Controllers
         private ActionResult GetExcel(List<MonitoringRK> items)
         {
             var workbook = new ExcelPackage();
-            var ws = workbook.Workbook.Worksheets.Add("MonitoringRK");
+
+            var nonRiglessItems = items
+                .Where(t => string.IsNullOrEmpty(t.rig) || !t.rig.ToLower().Contains("rigless"))
+                .ToList();
+
+            var riglessItems = items
+                .Where(t => !string.IsNullOrEmpty(t.rig) && t.rig.ToLower().Contains("rigless"))
+                .ToList();
+
+            //pisahkan sheet
+            var wsNonRigless = workbook.Workbook.Worksheets.Add("Non-Rigless");
+            WriteMonitoringRKSheet(wsNonRigless, nonRiglessItems);
+
+            var wsRigless = workbook.Workbook.Worksheets.Add("Rigless");
+            WriteMonitoringRKSheet(wsRigless, riglessItems);
+
+            var memoryStream = new MemoryStream(workbook.GetAsByteArray());
+            memoryStream.Position = 0;
+            return File(memoryStream, "application/vnd.ms-excel", "MonitoringRK.xlsx");
+        }
+
+        private void WriteMonitoringRKSheet(ExcelWorksheet ws, List<MonitoringRK> items)
+        {
 
             // Header row 1 — main categories
             ws.Cells[1, 1].Value = "Well";
@@ -954,11 +976,10 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[3 + i, 9].Value = t.remarks;
             }
 
-            ws.Cells.AutoFitColumns();
-
-            var memoryStream = new MemoryStream(workbook.GetAsByteArray());
-            memoryStream.Position = 0;
-            return File(memoryStream, "application/vnd.ms-excel", "MonitoringRK.xlsx");
+            if (items.Count() > 0)
+            {
+                ws.Cells[3, 9, 3 + items.Count(), 9].Style.Numberformat.Format = "#,###.0";
+            }
         }
     }
 }
