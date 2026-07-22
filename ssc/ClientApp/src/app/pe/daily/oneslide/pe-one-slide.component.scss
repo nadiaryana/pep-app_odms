@@ -102,8 +102,8 @@ mat-card-actions {
 /* Label di atas input - Normal state */
 .mat-form-field-label {
   color: #000 !important;        /* agar tidak blur abu-abu */
-  font-weight: 500;
-  font-size: 16px !important;    /* Label normal */
+  font-weight: 600;
+  font-size: 18px !important;    /* Label normal */
 }
 
 /* Label saat floating (naik ke atas) - dengan jarak lebih */
@@ -144,12 +144,12 @@ mat-card-actions {
 .field-well app-xfilter {
   position: absolute;
   right: 0px;
-  top: -5px;
+  top: -5px; 
 }
 
 .daily_chart {
   height : 80vh;
-}
+}x
 
 .clicked_row {
   //background-color: lightgreen;
@@ -184,8 +184,33 @@ ng::host .mat-horizontal-stepper-content {
   padding: 0.4em 0 0.2em 0;
 }
 
-:host ::ng-deep .filter .mat-form-field-label {
+:host ::ng-deep .filter:not(.mat-form-field-should-float) .mat-form-field-label {
+  font-size: 14px;
+}
+
+/* Test Data grid: 5 kolom x 2 baris */
+.test-data-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.test-data-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.test-data-item .info-hint {
   font-size: 11px;
+  color: #555;
+  background: #e8f0fe;
+  border-radius: 4px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  line-height: 1.3;
+  border: 1px solid #c4d8f0;
+  margin-top: 2px;
+  text-align: center;
 }
 
 

@@ -138,10 +138,13 @@
           </div>
 
         <h3>Test Data</h3>
-        
-        <div fxLayout="row wrap" fxLayoutGap="12px">
 
-           <mat-form-field class="field-well">
+        <div class="test-data-grid">
+
+          <!-- ROW 1 -->
+          <!-- Start Date -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Start Date</mat-label>
               <input
                 matInput
@@ -159,8 +162,11 @@
               ></mat-datepicker-toggle>
               <mat-datepicker #start_date_iprPicker disabled="false"></mat-datepicker>
             </mat-form-field>
+          </div>
 
-            <mat-form-field class="field-well">
+          <!-- End Date -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>End Date</mat-label>
               <input
                 matInput
@@ -178,41 +184,69 @@
               ></mat-datepicker-toggle>
               <mat-datepicker #end_date_iprPicker disabled="false"></mat-datepicker>
             </mat-form-field>
+          </div>
 
-            <!-- Gross Average -->
-            <mat-form-field class="field-well">
+          <!-- Gross Average -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Gross Average</mat-label>
               <input
                 matInput
-                [value]="dailyAverages?.length ? dailyAverages[0]?.grossAvg : ''"
-                disabled
+                [formControl]="grossAvgManual"
+                type="number"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="Gross Average"
               />
               <span matSuffix>BFPD</span>
             </mat-form-field>
+            <div class="info-hint" *ngIf="dailyAverages?.length">
+              Avg: {{ dailyAverages[0]?.grossAvg }} BFPD
+            </div>
+          </div>
 
-            <!-- Net Average -->
-            <mat-form-field class="field-well">
+          <!-- Net Average -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Net Average</mat-label>
               <input
                 matInput
-                [value]="dailyAverages?.length ? dailyAverages[0]?.netAvg : ''"
-                disabled
+                [formControl]="netAvgManual"
+                type="number"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="Net Average"
               />
               <span matSuffix>BOPD</span>
             </mat-form-field>
+            <div class="info-hint" *ngIf="dailyAverages?.length">
+              Avg: {{ dailyAverages[0]?.netAvg }} BOPD
+            </div>
+          </div>
 
-            <!-- WC Average -->
-            <mat-form-field class="field-well">
+          <!-- WC Average -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>WC Average</mat-label>
               <input
                 matInput
-                [value]="dailyAverages?.length ? dailyAverages[0]?.wcAvg + '%' : ''"
-                disabled
+                [formControl]="wcAvgManual"
+                type="number"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="WC Average"
               />
               <span matSuffix>%</span>
             </mat-form-field>
+            <div class="info-hint" *ngIf="dailyAverages?.length">
+              Avg: {{ dailyAverages[0]?.wcAvg }}%
+            </div>
+          </div>
 
-            <mat-form-field class="field-well">
+          <!-- ROW 2 -->
+          <!-- Factor Correction -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Factor Correction</mat-label>
               <input
                 matInput
@@ -223,36 +257,61 @@
                 placeholder="Factor Correction"
               />
             </mat-form-field>
+          </div>
 
-            <mat-form-field class="field-well">
+          <!-- Static Fluid Level -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Static Fluid Level</mat-label>
               <input
                 matInput
-                [formControl]="static_fluid_level"
+                [formControl]="static_fluid_level_manual"
                 type="number"
                 step="0.01"
                 inputmode="decimal"
-                placeholder="Static Fluid Level"
+                placeholder="SFL"
                 (change)="testData()"
               />
               <span matSuffix>m</span>
             </mat-form-field>
+            <div class="info-hint" *ngIf="static_fluid_level_manual.value || static_fluid_level.value">
+              <span *ngIf="static_fluid_level_manual.value">
+                SFL: {{static_fluid_level_manual.value}} m
+              </span>
+              <span *ngIf="!static_fluid_level_manual.value && static_fluid_level.value">
+                SFL: {{static_fluid_level.value}} m
+              </span>
+            </div>
+          </div>
 
-            <!-- Bottom Perforation Depth -->
-            <mat-form-field class="field-well">
+          <!--  Dynamic Fluid Level -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Dynamic Fluid Level</mat-label>
               <input
                 matInput
-                [formControl]="dynamic_fluid_level"
+                [formControl]="dynamic_fluid_level_manual"
                 type="number"
                 step="0.01"
                 inputmode="decimal"
-                placeholder="Dynamic Fluid Level"
+                placeholder="DFL"
                 (change)="testData()"
               />
               <span matSuffix>m</span>
             </mat-form-field>
-            <mat-form-field class="field-well">
+            <div class="info-hint" *ngIf="dynamic_fluid_level_manual.value || dynamic_fluid_level.value">
+              <span *ngIf="dynamic_fluid_level_manual.value">
+                DFL: {{dynamic_fluid_level_manual.value}} m
+              </span>
+              <span *ngIf="!dynamic_fluid_level_manual.value && dynamic_fluid_level.value">
+                DFL: {{dynamic_fluid_level.value}} m
+              </span>
+            </div>
+          </div>
+
+          <!-- Static Bottomhole Pressure -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Static Bottomhole Pressure</mat-label>
               <input
                 matInput
@@ -265,7 +324,11 @@
               />
               <span matSuffix>psi</span>
             </mat-form-field>
-            <mat-form-field class="field-well">
+          </div>
+
+          <!-- 10. Flowing Bottomhole Pressure -->
+          <div class="test-data-item">
+            <mat-form-field class="filter">
               <mat-label>Flowing Bottomhole Pressure</mat-label>
               <input
                 matInput
@@ -277,7 +340,9 @@
                 disabled
               />
               <span matSuffix>psi</span>
-            </mat-form-field>          
+            </mat-form-field>
+          </div>
+
         </div>
       </div>
     </mat-card-content>

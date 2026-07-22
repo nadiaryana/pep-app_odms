@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ssc.Areas.PE.Models;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.IO;
@@ -45,7 +46,8 @@ namespace ssc.Areas.PE.Controllers
             string mode = "",
             DateTime? start_date = null,
             DateTime? end_date = null,
-            string chart_type = ""
+            string chart_type = "",
+            string wells = ""
             )
         {
             FilterDefinition<MonitoringRK> xfilter = Builders<MonitoringRK>.Filter.Ne("a", "b");
@@ -249,47 +251,48 @@ namespace ssc.Areas.PE.Controllers
                         StatusCode = StatusCodes.Status200OK
                     };
 
-                // Mode chart: untuk Column Chart 
                 case "chart":
-                    // Filter rig type if specified
-                    FilterDefinition<MonitoringRK> chartFilter;
+                    // Filter rig type (dipakai untuk chartData DAN untuk distinct_wells)
+                    FilterDefinition<MonitoringRK> chartTypeFilter;
                     if (chart_type == "rigless")
                     {
-                        chartFilter = Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"));
+                        chartTypeFilter = Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"));
                     }
-                    else if (chart_type == "non-rigless")
+                    else if (chart_type == "rig")
                     {
-                        chartFilter = Builders<MonitoringRK>.Filter.And(
+                        chartTypeFilter = Builders<MonitoringRK>.Filter.And(
                             Builders<MonitoringRK>.Filter.Exists(t => t.rig),
                             Builders<MonitoringRK>.Filter.Not(Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i")))
                         );
                     }
                     else
                     {
-                        chartFilter = Builders<MonitoringRK>.Filter.Ne("a", "b");
+                        chartTypeFilter = Builders<MonitoringRK>.Filter.Ne("a", "b");
                     }
 
-                    // Filter date range 
+                    // chartFilter = chartTypeFilter + wells (khusus untuk ambil data chart)
+                    var chartFilter = chartTypeFilter;
+
+                    if (!string.IsNullOrWhiteSpace(wells))
+                    {
+                        var wellList = wells.Split(',').Select(w => w.Trim()).Where(w => !string.IsNullOrEmpty(w)).ToArray();
+                        if (wellList.Length > 0)
+                        {
+                            var wellFilter = Builders<MonitoringRK>.Filter.Or(
+                                wellList.Select(w => Builders<MonitoringRK>.Filter.Regex(t => t.well, new BsonRegularExpression("^" + Regex.Escape(w) + "$", "i"))).ToArray()
+                            );
+                            chartFilter = chartFilter & wellFilter;
+                        }
+                    }
+
+                    // Filter date range by pop field 
                     var combinedChartFilter = chartFilter;
                     if (start_date.HasValue && end_date.HasValue)
                     {
                         FilterDefinition<MonitoringRK> dateFilter =
-                            Builders<MonitoringRK>.Filter.Or(
-                                // masih dalam range
-                                Builders<MonitoringRK>.Filter.And(
-                                    Builders<MonitoringRK>.Filter.Gte(r => r.plan_start, start_date),
-                                    Builders<MonitoringRK>.Filter.Lte(r => r.plan_end, end_date)
-                                ),
-                                // plan_start < start_date && plan_end >= start_date
-                                Builders<MonitoringRK>.Filter.And(
-                                    Builders<MonitoringRK>.Filter.Lte(r => r.plan_start, start_date),
-                                    Builders<MonitoringRK>.Filter.Gte(r => r.plan_end, start_date)
-                                ),
-                                // plan_end > end_date && plan_start <= end_date
-                                Builders<MonitoringRK>.Filter.And(
-                                    Builders<MonitoringRK>.Filter.Gte(r => r.plan_end, end_date),
-                                    Builders<MonitoringRK>.Filter.Lte(r => r.plan_start, end_date)
-                                )
+                            Builders<MonitoringRK>.Filter.And(
+                                Builders<MonitoringRK>.Filter.Gte(r => r.pop, start_date),
+                                Builders<MonitoringRK>.Filter.Lte(r => r.pop, end_date)
                             );
                         combinedChartFilter = chartFilter & dateFilter;
                     }
@@ -308,7 +311,54 @@ namespace ssc.Areas.PE.Controllers
                             realisasi_oil = s.realisasi_oil,
                             realisasi_gas = s.realisasi_gas
                         });
-                    return Ok(new { data = chartData });
+
+                    var barchartCollectionForChart = _database.GetCollection<Barchart>("barchart");
+                    FilterDefinition<Barchart> bcChartTypeFilter;
+                    if (chart_type == "rigless")
+                    {
+                        bcChartTypeFilter = Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"));
+                    }
+                    else if (chart_type == "rig")
+                    {
+                        bcChartTypeFilter = Builders<Barchart>.Filter.And(
+                            Builders<Barchart>.Filter.Exists(t => t.rig),
+                            Builders<Barchart>.Filter.Not(Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i")))
+                        );
+                    }
+                    else
+                    {
+                        bcChartTypeFilter = Builders<Barchart>.Filter.Ne("a", "b");
+                    }
+
+                    var rkWellsForType = _monitoring_rk
+                        .Find(chartTypeFilter)
+                        .ToList()
+                        .Where(s => !string.IsNullOrEmpty(s.well))
+                        .Select(s => s.well);
+
+                    var bcWellsForType = barchartCollectionForChart
+                        .Find(bcChartTypeFilter)
+                        .ToList()
+                        .Where(b => !string.IsNullOrEmpty(b.well))
+                        .Select(b => b.well);
+
+                    var distinctWellsChart = rkWellsForType
+                        .Union(bcWellsForType)
+                        .Distinct()
+                        .OrderBy(w => w)
+                        .ToList();
+
+                    var distinctPopDates = _monitoring_rk
+                        .Find(chartTypeFilter)
+                        .ToList()
+                        .Select(s => s.pop)
+                        .Where(d => d.HasValue)
+                        .Select(d => d.Value)
+                        .Distinct()
+                        .OrderBy(d => d)
+                        .ToList();
+
+                    return Ok(new { data = chartData, distinct_wells = distinctWellsChart, distinct_pop_dates = distinctPopDates });
 
                 case "excel":
                     return GetExcel(_items.ToList());
@@ -909,7 +959,7 @@ namespace ssc.Areas.PE.Controllers
         {
             var workbook = new ExcelPackage();
 
-            var nonRiglessItems = items
+            var rigItems = items
                 .Where(t => string.IsNullOrEmpty(t.rig) || !t.rig.ToLower().Contains("rigless"))
                 .ToList();
 
@@ -918,8 +968,8 @@ namespace ssc.Areas.PE.Controllers
                 .ToList();
 
             //pisahkan sheet
-            var wsNonRigless = workbook.Workbook.Worksheets.Add("Non-Rigless");
-            WriteMonitoringRKSheet(wsNonRigless, nonRiglessItems);
+            var wsRig = workbook.Workbook.Worksheets.Add("Rig");
+            WriteMonitoringRKSheet(wsRig, rigItems);
 
             var wsRigless = workbook.Workbook.Worksheets.Add("Rigless");
             WriteMonitoringRKSheet(wsRigless, riglessItems);

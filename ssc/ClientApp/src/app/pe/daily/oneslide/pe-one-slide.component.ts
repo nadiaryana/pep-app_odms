@@ -125,11 +125,19 @@ export class OneSlideComponent implements OnInit {
   gross = new FormControl("");  
   wc = new FormControl("");  
   gas = new FormControl("");  
+
+  // Manual input controls (user can override)
+  perforation_depth_reference_manual = new FormControl("");
+  grossAvgManual = new FormControl("");
+  netAvgManual = new FormControl("");
+  wcAvgManual = new FormControl("");
   
 
   perforation_depth_reference = new FormControl("");
   static_fluid_level = new FormControl("");
+  static_fluid_level_manual = new FormControl("");
   dynamic_fluid_level = new FormControl("");
+  dynamic_fluid_level_manual = new FormControl("");
   static_botthomhole_pressure = new FormControl("");
   flowing_bottomhole_pressure = new FormControl("");
   flowing_bottomhole_pressure2 = new FormControl("");
@@ -609,7 +617,40 @@ export class OneSlideComponent implements OnInit {
         }
       );
 
-      
+      // STEP 4 - get latest sfl
+      var params_sfl = new HttpParams()
+        .append("type", "sfl_latest");
+        
+      for (const w of this.well_xSelected) {
+        params_sfl = params_sfl.append("well", w);
+      }
+      this.http
+        .get<any>("/api/pe/daily/GetAreaChart", { params: params_sfl })
+        .subscribe(
+          (res) => {
+            // console.log("res sfl:", res);
+            const sfl = res.data && res.data.sfl != null ? Number(res.data.sfl) : 0;
+            this.static_fluid_level.setValue(sfl);
+            // Setelah SFL terisi, coba hitung otomatis
+            this.tryCalculateSBHP_FBHP();
+          });
+  
+      var params_dfl = new HttpParams()
+        .append("type", "dfl_latest");
+        
+      for (const w of this.well_xSelected) {
+        params_dfl = params_dfl.append("well", w);
+      }
+      this.http
+        .get<any>("/api/pe/daily/GetAreaChart", { params: params_dfl })
+        .subscribe(
+          (res) => {
+            // console.log("res dfl:", res);
+            const dfl = res.data && res.data.dfl != null ? Number(res.data.dfl) : 0;
+            this.dynamic_fluid_level.setValue(dfl);
+            // Setelah DFL terisi, coba hitung otomatis
+            this.tryCalculateSBHP_FBHP();
+          });
 
   }
 
@@ -681,6 +722,31 @@ export class OneSlideComponent implements OnInit {
     // console.log("Perforation Change:", topDepth, bottomDepth, reference);
   }
 
+  tryCalculateSBHP_FBHP() {
+    const sflVal = this.static_fluid_level_manual.value || this.static_fluid_level.value;
+    const dflVal = this.dynamic_fluid_level_manual.value || this.dynamic_fluid_level.value;
+    const bottomRaw = this.bottom_perforation_depth.value;
+    const topRaw = this.top_perforation_depth.value;
+    const dailyAverages = this.dailyAverages;
+
+    if (!sflVal || !dflVal || !bottomRaw || !topRaw || !dailyAverages || !dailyAverages.length) {
+      return; // silent — data belum lengkap
+    }
+
+    const wcAvg = dailyAverages[0].wcAvg;
+    const bottomDepth = Number(bottomRaw);
+    const static_fl = Number(sflVal);
+    const dynamic_fl = Number(dflVal);
+
+    if (isNaN(wcAvg) || isNaN(bottomDepth) || isNaN(static_fl) || isNaN(dynamic_fl)) return;
+
+    const ps = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomDepth - static_fl) * 3.281;
+    const pwf = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomDepth - dynamic_fl) * 3.281;
+
+    if (isFinite(ps)) this.static_botthomhole_pressure.setValue(ps.toFixed(2));
+    if (isFinite(pwf)) this.flowing_bottomhole_pressure.setValue(pwf.toFixed(2));
+  }
+
   testData() {
 
     if (!this.start_date_iprControl.value || !this.end_date_iprControl.value) {
@@ -692,7 +758,9 @@ export class OneSlideComponent implements OnInit {
       return;
     }
 
-    if (!this.static_fluid_level.value || !this.dynamic_fluid_level.value) {
+    const sflValue = this.static_fluid_level_manual.value || this.static_fluid_level.value;
+    const dflValue = this.dynamic_fluid_level_manual.value || this.dynamic_fluid_level.value;
+    if (!sflValue || !dflValue) {
       this.snackbarService.status.next(
         new SnackbarApi(
           true,

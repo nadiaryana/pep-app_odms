@@ -1,7 +1,12 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TitleService } from '../../navigation/title/title.service';
+import { Subscription } from 'rxjs';
+import { xFilterService } from '../../xfilter/xfilter.component';
 import * as Highcharts from 'highcharts';
+import PatternFill from 'highcharts/modules/pattern-fill';
+PatternFill(Highcharts);
+
 
 @Component({
   selector: 'app-monitoring-rk-chart',
@@ -12,23 +17,38 @@ export class MonitoringRKChartComponent implements OnInit {
 
   @ViewChild('columnChart', { static: true }) columnChartEl: ElementRef;
   @ViewChild('selisihChart', { static: true }) selisihChartEl: ElementRef;
+  
 
   isLoading: boolean = false;
+  chartReady: boolean = false;
 
   chartData: any[] = [];
+  pop_xSelected: any[] = [];
   chart: any;
   selisihChart: any;
+  filterMessage: string = 'Silakan pilih Chart Type, Well, Start Date, dan End Date';
 
   // Dropdown chart type
   chartTypes: { value: string; label: string }[] = [
-    { value: 'non-rigless', label: 'Non-Rigless' },
+    { value: 'rig', label: 'Rig' },
     { value: 'rigless',     label: 'Rigless' },
   ];
-  selectedChartType: string = 'non-rigless';
+  selectedChartType: string = 'rig';
+
+  // Filter Well (via xFilter)
+  wellList: string[] = [];
+  well_xSelected: any[] = [];
+  private wellSelectedSub: Subscription;
+  private wellFilterSub: Subscription;
+
+  // Filter Date Range (pop field)
+  startDate: Date | null = null;
+  endDate: Date | null = null;
 
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
+    private xfilterService: xFilterService,
   ) { }
 
   ngOnInit() {
@@ -42,11 +62,89 @@ export class MonitoringRKChartComponent implements OnInit {
       ]
     });
 
-    this.loadData();
+    // Subscribe ke xFilter selected untuk well
+    this.wellSelectedSub = this.xfilterService.selected.subscribe(res => {
+      if (res && res["column"] === "well") {
+        this.well_xSelected = res["selected"] || [];
+        this.checkAndRefreshChart();
+      }
+    });
+
+    // Subscribe ke xFilter filter — saat dialog well dibuka, kirim items
+    this.wellFilterSub = this.xfilterService.filter.subscribe(res => {
+      if (res && res["column"] === "well") {
+        // Kirim well list yg sudah di-cache dulu agar dialog langsung terisi
+        if (this.wellList.length > 0) {
+          this.xfilterService.updateItems({ column: "well", items: this.wellList });
+        }
+        // Refresh dari API agar selalu sinkron
+        this.fetchWellList();
+      }
+    });
+
+    // Fetch well list saja — chart belum muncul sampai semua filter terisi
+    this.fetchWellList();
+    this.checkAndRefreshChart();
+  }
+
+  ngOnDestroy() {
+    if (this.wellSelectedSub) this.wellSelectedSub.unsubscribe();
+    if (this.wellFilterSub) this.wellFilterSub.unsubscribe();
+  }
+
+  /** Ambil daftar well dari API (sesuai chart_type rig/rigless) dan kirim ke xFilter */
+  fetchWellList() {
+    let params = new HttpParams()
+      .append('mode', 'chart')
+      .append('chart_type', this.selectedChartType);
+
+    this.http.get<any>('/api/pe/MonitoringRK', { params: params }).subscribe(
+      (res: any) => {
+        const wells = res.distinct_wells || [];
+        this.wellList = wells;
+        this.xfilterService.updateItems({ column: "well", items: wells });
+      },
+      (err: any) => console.error('Error fetching well list:', err)
+    );
   }
 
   onChartTypeChange() {
-    this.refreshChart();
+    // Reset well selection
+    this.well_xSelected = [];
+    this.xfilterService.updateSelected({ column: "well", selected: [] });
+    this.fetchWellList();
+    this.checkAndRefreshChart();
+  }
+
+  onFilterChange() {
+    this.checkAndRefreshChart();
+  }
+
+  /** Cek apakah semua filter sudah terisi, baru render chart */
+  checkAndRefreshChart() {
+    const hasChartType = !!this.selectedChartType;
+    const hasWells = this.well_xSelected && this.well_xSelected.length > 0;
+    const hasStartDate = !!this.startDate;
+    const hasEndDate = !!this.endDate;
+
+    if (hasChartType && hasWells && hasStartDate && hasEndDate) {
+      this.filterMessage = '';
+      this.loadData();
+    } else {
+      // Destroy chart jika ada
+      if (this.chart) { this.chart.destroy(); this.chart = null; }
+      if (this.selisihChart) { this.selisihChart.destroy(); this.selisihChart = null; }
+      this.chartData = [];
+      this.chartReady = false;
+
+      // Set pesan sesuai filter yang kurang
+      const missing: string[] = [];
+      if (!hasChartType) missing.push('Chart Type');
+      if (!hasWells) missing.push('Well');
+      if (!hasStartDate) missing.push('Start Date');
+      if (!hasEndDate) missing.push('End Date');
+      this.filterMessage = 'Silakan pilih ' + missing.join(', ');
+    }
   }
 
   loadData() {
@@ -56,11 +154,30 @@ export class MonitoringRKChartComponent implements OnInit {
     params = params.append('mode', 'chart');
     params = params.append('chart_type', this.selectedChartType);
 
+    // Filter well (dari xFilter)
+    if (this.well_xSelected && this.well_xSelected.length > 0) {
+      params = params.append('wells', this.well_xSelected.join(','));
+    }
+
+    // Filter date range by pop
+    if (this.startDate) {
+      params = params.append('start_date', this.startDate.toISOString());
+    }
+    if (this.endDate) {
+      params = params.append('end_date', this.endDate.toISOString());
+    }
+
     this.http.get<any>('/api/pe/MonitoringRK', {
       params: params
     }).subscribe(
       (res) => {
         this.chartData = res.data || [];
+        // Update well list untuk xFilter
+        if (res.distinct_wells) {
+          this.wellList = res.distinct_wells;
+          this.xfilterService.updateItems({ column: "well", items: res.distinct_wells });
+        }
+        this.chartReady = true;
         this.renderColumnChart();
         this.isLoading = false;
       },
@@ -101,7 +218,7 @@ export class MonitoringRKChartComponent implements OnInit {
     const realisasiOilData = wells.map(w => wellAgg[w].realisasi_oil);
     const realisasiGasData = wells.map(w => wellAgg[w].realisasi_gas);
 
-    const chartTypeLabel = this.selectedChartType === 'rigless' ? 'Rigless' : 'Non-Rigless';
+    const chartTypeLabel = this.selectedChartType === 'rigless' ? 'Rigless' : 'Rig';
 
     this.chart = Highcharts.chart({
       chart: {
@@ -126,10 +243,10 @@ export class MonitoringRKChartComponent implements OnInit {
         min: 0,
         title: { text: '' }
       },
-      tooltip: {
-        shared: true,
-        valueDecimals: 2
-      },
+      // tooltip: {
+      //   shared: true,
+      //   valueDecimals: 2
+      // },
       plotOptions: {
         column: {
           grouping: true,
@@ -144,10 +261,10 @@ export class MonitoringRKChartComponent implements OnInit {
           data: targetOilData, 
           color: 
           {
-            linearGradient: [0, 0, 0, 300],
+            linearGradient: [0, 0, 0, 500],
             stops: [
-              [0, '#81D4FA'],
-              [1, '#406AAF']
+              [0, '#C8AAAA'],
+              [1, '#9F8383']
             ]
           },
           dataLabels: { 
@@ -161,10 +278,30 @@ export class MonitoringRKChartComponent implements OnInit {
         {
           name: 'Target Gas', 
           data: targetGasData, 
-          color: '#03A9F4',
+          color: {
+            linearGradient: [0, 0, 0, 500],
+            stops: [
+              [0, '#FF9D9D'],
+              [1, '#92003A']
+            ]
+          },
+        //   color: {
+        //   pattern: {
+        //     path: {
+        //       d: 'M 0 0 L 16 16 M -4 4 L 12 20 M 4 -4 L 20 12 M 0 8 L 8 16 M 8 0 L 16 8',
+        //       stroke: '#8B1E1E',
+        //       strokeWidth: 1.2,
+        //       fill: 'none'
+        //     },
+        //     width: 16,
+        //     height: 16,
+        //     color: '#D25353',
+        //     backgroundColor: '#D25353'
+        //   }
+        // },
           dataLabels: { 
             enabled: true, 
-            format: '⛽<br>{y} mmscfd', 
+            format: '{y} mmscfd', 
             style: { fontSize: '10px' }, 
             // rotation: 90, 
             y: -5 
@@ -173,7 +310,7 @@ export class MonitoringRKChartComponent implements OnInit {
         {
           name: 'Realisasi Oil', 
           data: realisasiOilData, 
-          color: '#659287',
+          color: '#735557',
           dataLabels: { 
             enabled: true, 
             format: '{y} bopd', 
@@ -185,10 +322,30 @@ export class MonitoringRKChartComponent implements OnInit {
         { 
           name: 'Realisasi Gas', 
           data: realisasiGasData, 
-          color: '#8BC34A',
+          // color: {
+          //   linearGradient: [0, 0, 0, 500],
+          //   stops: [
+          //     [0, '#FF9D9D'],
+          //     [1, '#92003A']
+          //   ]
+          // },
+          color: {
+          pattern: {
+            path: {
+              d: 'M 0 0 L 16 16 M -4 4 L 12 20 M 4 -4 L 20 12 M 0 8 L 8 16 M 8 0 L 16 8',
+              stroke: '#8B1E1E',
+              strokeWidth: 1.2,
+              fill: 'none'
+            },
+            width: 16,
+            height: 16,
+            color: '#D25353',
+            backgroundColor: '#D25353'
+          }
+        },
           dataLabels: { 
             enabled: true, 
-            format: '⛽<br>{y} mmscfd', 
+            format: '{y} mmscfd', 
             style: { fontSize: '10px' }, 
             // rotation: 90, 
             y: -5 
@@ -243,11 +400,11 @@ export class MonitoringRKChartComponent implements OnInit {
         title: { text: 'Persentase' },
         labels: { format: '{value}%' }
       },
-      tooltip: {
-        shared: true,
-        valueDecimals: 2,
-        valueSuffix: '%'
-      },
+      // tooltip: {
+      //   shared: true,
+      //   valueDecimals: 2,
+      //   valueSuffix: '%'
+      // },
       plotOptions: {
         column: {
           grouping: true,
@@ -260,7 +417,7 @@ export class MonitoringRKChartComponent implements OnInit {
         {
           name: 'Oil',
           data: oilSelisih.map(v => Math.round(v * 10000) / 100),
-          color: '#26A69A',
+          color: '#735557',
           // negativeColor: '#EF5350',
           borderRadius: 8,
           dataLabels: {
@@ -273,7 +430,7 @@ export class MonitoringRKChartComponent implements OnInit {
         {
           name: 'Gas',
           data: gasSelisih.map(v => Math.round(v * 10000) / 100),
-          color: '#7132CA',
+          color: '#b53f3f',
           // negativeColor: '#EF5350',
           borderRadius: 8,
           dataLabels: {
@@ -289,7 +446,7 @@ export class MonitoringRKChartComponent implements OnInit {
   }
 
   refreshChart() {
-    this.loadData();
+    this.checkAndRefreshChart();
   }
 
 }

@@ -2,6 +2,20 @@
 
 .container-top-bar {
   margin-right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.field-well {
+  width: 200px;
+}
+
+.field-well app-xfilter {
+  position: absolute;
+  right: 0px;
+  top: -5px;
 }
 
 mat-card { 
@@ -31,7 +45,12 @@ mat-progress-bar {
 }
 
 mat-form-field {
-   width: 250px;
+   width: 200px;
+}
+
+.container-top-bar .filter {
+  width: 180px;
+  margin-right: 8px;
 }
 
 ::ng-deep .mat-card-header-text {
