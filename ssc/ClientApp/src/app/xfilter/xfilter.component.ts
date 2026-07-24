@@ -112,6 +112,7 @@ export class xFilterDialogComponent {
 	selected: boolean;
 	item: string;
 	filterSubscription:Subscription;
+	itemFilterSubscription: Subscription;
 
 	text_filters = {
 		"eq" : "Equals...",
@@ -166,7 +167,7 @@ export class xFilterDialogComponent {
       this.xfilterService.updateFilter({ column: this.data["column"] });
     //   console.log("sampai sini kah" + this.data["column"])
 
-      this.itemFilter.valueChanges.pipe(debounceTime(300)).subscribe(res => {
+      this.itemFilterSubscription = this.itemFilter.valueChanges.pipe(debounceTime(300)).subscribe(res => {
         // console.log("sampai sini kah 2" + this.data["column"])
           this.isLoadingResults = true;
 			this.xfilterService.updateFilter({column: this.data["column"], filter: res});
@@ -187,6 +188,7 @@ export class xFilterDialogComponent {
 
 	ngOnDestroy() {
 		this.filterSubscription.unsubscribe();
+		if (this.itemFilterSubscription) this.itemFilterSubscription.unsubscribe();
 	}
 
 	toggleItem(item, selected) {
@@ -215,14 +217,7 @@ export class xFilterDialogComponent {
 	}
 
 	onOk() {
-		var res;
-		if(this.list.selectedOptions.selected.length == this.list.options.length && this.data["selected"].length == 0 && this.itemFilter.value == "") {
-			// Semua item terpilih dan tidak ada filter aktif = no filter, kirim []
-			res = [];
-		} else {
-			res = this.list.selectedOptions.selected.map(o => o.value);
-		}
-		
+		var res = this.list.selectedOptions.selected.map(o => o.value);
 		this.dialogRef.close(res);
 	}
 

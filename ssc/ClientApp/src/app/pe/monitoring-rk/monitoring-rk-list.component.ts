@@ -154,8 +154,6 @@ export class MonitoringRKListComponent implements OnInit {
       }
     })
 
-    // Observable utama: reload data saat sort/page/filter/xSelected berubah
-    // Hanya reaksi terhadap xfilter selected non-rl_ (rigless filter dikelola client-side)
     const rkSelected$ = this.xfilterService.selected.pipe(
       map(res => res && res["column"] && res["column"].indexOf("rl_") === 0 ? undefined : res)
     );
@@ -216,7 +214,6 @@ export class MonitoringRKListComponent implements OnInit {
       this.rk_selection.clear();
     });
 
-    // ========== Rigless Table: Load data dari endpoint terpisah ==========
     this.rlSort.sortChange.subscribe(() => this.rlPaginator.pageIndex = 0);
 
     this.rl_listSubscription = merge(

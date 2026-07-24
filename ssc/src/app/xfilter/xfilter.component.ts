@@ -166,7 +166,7 @@ export class xFilterDialogComponent {
       this.xfilterService.updateFilter({ column: this.data["column"] });
 
 
-		this.itemFilter.valueChanges.pipe(debounceTime(300)).subscribe(res => {
+		this.itemFilterSubscription = this.itemFilter.valueChanges.pipe(debounceTime(300)).subscribe(res => {
 			this.isLoadingResults = true;
 			this.xfilterService.updateFilter({column: this.data["column"], filter: res});
 		});
@@ -183,6 +183,7 @@ export class xFilterDialogComponent {
 
 	ngOnDestroy() {
 		this.filterSubscription.unsubscribe();
+		if (this.itemFilterSubscription) this.itemFilterSubscription.unsubscribe();
 	}
 
 	toggleItem(item, selected) {
@@ -211,14 +212,7 @@ export class xFilterDialogComponent {
 	}
 
 	onOk() {
-		var res;
-		//console.log(this.list.options);
-		console.log(this.list.selectedOptions.selected.length + " " +  this.list.options.length + " " + this.data["selected"].length == 0 + " " + this.itemFilter.value);
-		if(this.list.selectedOptions.selected.length == this.list.options.length && this.data["selected"].length == 0 && this.itemFilter.value == "") {
-			res = [];
-		} else {
-			res = this.list.selectedOptions.selected.map(o => o.value);
-		}
+		var res = this.list.selectedOptions.selected.map(o => o.value);
 		this.dialogRef.close(res);
 	}
 

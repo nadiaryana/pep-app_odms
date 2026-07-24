@@ -9,6 +9,7 @@
     </mat-select>
   </mat-form-field>
 
+
   <!-- Filter Well (xFilter seperti area chart) -->
   <mat-form-field class="field-well" floatLabel="never">
     <input matInput
@@ -21,21 +22,18 @@
     </app-xfilter>
   </mat-form-field>
 
-  <!-- Filter Start Date -->
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>Start Date</mat-label>
-    <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="onFilterChange()" placeholder="Pilih tanggal">
-    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-    <mat-datepicker #startPicker></mat-datepicker>
+  <!-- Filter Pop (xFilter seperti well) -->
+  <mat-form-field class="field-well" floatLabel="never">
+    <input matInput
+      [(ngModel)]="pop_xSelected"
+      disabled>
+    <app-xfilter
+      title="Pop"
+      column="pop"
+      [selected]="pop_xSelected">
+    </app-xfilter>
   </mat-form-field>
 
-  <!-- Filter End Date -->
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>End Date</mat-label>
-    <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="onFilterChange()" placeholder="Pilih tanggal">
-    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-    <mat-datepicker #endPicker></mat-datepicker>
-  </mat-form-field>
 
   <button mat-button [routerLink]="['/pe/monitoring-rk/list']">
     <mat-icon>list</mat-icon> Back to List
@@ -49,10 +47,11 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <!-- Filter Message: tampil jika filter belum lengkap -->
-  <div *ngIf="!isLoading && !chartReady && chartData.length === 0 && filterMessage" class="no-data">
+
+  <!-- No Data Message (filter belum lengkap) -->
+  <div *ngIf="!isLoading && !chartReady && chartData.length === 0" class="no-data">
     <mat-icon>info</mat-icon>
-    <p>{{ filterMessage }}</p>
+    <p>Silakan pilih Chart Type, Well, dan Pop</p>
   </div>
 
   <!-- Column Chart: 4 grouped columns per well -->
@@ -70,7 +69,7 @@
   </mat-card>
 
   <!-- No Data Message (chart siap tapi data kosong) -->
-  <div *ngIf="chartReady && !isLoading && chartData.length === 0 && !filterMessage" class="no-data">
+  <div *ngIf="chartReady && !isLoading && chartData.length === 0" class="no-data">
     <mat-icon>info</mat-icon>
     <p>No data available.</p>
   </div>

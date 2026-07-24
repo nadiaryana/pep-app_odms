@@ -108,8 +108,14 @@ namespace ssc.Areas.PE.Controllers
             {
                 case "":
                 case null:
+                    // Filter: hanya non-rigless (tabel RIG tidak boleh menampilkan rigless)
+                    var rigRigFilter = Builders<MonitoringRK>.Filter.Not(
+                        Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"))
+                    );
+                    var rigFilteredXFilter = xfilter & rigRigFilter;
+
                     // Ambil semua MonitoringRK yang terfilter (tanpa pagination) untuk di-merge
-                    var allFilteredRk = _monitoring_rk.Find(xfilter).ToList();
+                    var allFilteredRk = _monitoring_rk.Find(rigFilteredXFilter).ToList();
 
                     // Kumpulkan well yang sudah ada di MonitoringRK (untuk cek duplikat)
                     var rkWells = new HashSet<string>(allFilteredRk
@@ -349,7 +355,7 @@ namespace ssc.Areas.PE.Controllers
                         .ToList();
 
                     var distinctPopDates = _monitoring_rk
-                        .Find(chartTypeFilter)
+                        .Find(chartFilter)
                         .ToList()
                         .Select(s => s.pop)
                         .Where(d => d.HasValue)

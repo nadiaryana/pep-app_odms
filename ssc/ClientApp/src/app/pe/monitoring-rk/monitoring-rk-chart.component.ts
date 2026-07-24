@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TitleService } from '../../navigation/title/title.service';
 import { Subscription } from 'rxjs';
@@ -15,18 +15,17 @@ PatternFill(Highcharts);
 })
 export class MonitoringRKChartComponent implements OnInit {
 
-  @ViewChild('columnChart', { static: true }) columnChartEl: ElementRef;
-  @ViewChild('selisihChart', { static: true }) selisihChartEl: ElementRef;
+  @ViewChild('columnChart', { static: false }) columnChartEl: ElementRef;
+  @ViewChild('selisihChart', { static: false }) selisihChartEl: ElementRef;
   
 
   isLoading: boolean = false;
   chartReady: boolean = false;
 
   chartData: any[] = [];
-  pop_xSelected: any[] = [];
   chart: any;
   selisihChart: any;
-  filterMessage: string = 'Silakan pilih Chart Type, Well, Start Date, dan End Date';
+  // filterMessage: string = 'Silakan pilih Chart Type, Well, Start Date, dan End Date';
 
   // Dropdown chart type
   chartTypes: { value: string; label: string }[] = [
@@ -41,14 +40,17 @@ export class MonitoringRKChartComponent implements OnInit {
   private wellSelectedSub: Subscription;
   private wellFilterSub: Subscription;
 
-  // Filter Date Range (pop field)
-  startDate: Date | null = null;
-  endDate: Date | null = null;
+  // Filter Date Range (pop field via xFilter)
+  pop_xSelected: any[] = [];
+  popList: string[] = [];
+  private popSelectedSub: Subscription;
+  private popFilterSub: Subscription;
 
   constructor(
     private titleService: TitleService,
     private http: HttpClient,
     private xfilterService: xFilterService,
+    private cdr: ChangeDetectorRef,
   ) { }
 
   ngOnInit() {
@@ -62,10 +64,56 @@ export class MonitoringRKChartComponent implements OnInit {
       ]
     });
 
+    // Subscribe ke xFilter selected untuk pop
+    this.popSelectedSub = this.xfilterService.selected.subscribe(res => {
+      if (res && res["column"] === "pop") {
+        this.pop_xSelected = res["selected"] || [];
+        this.checkAndRefreshChart();
+      }
+    });
+
+    // Subscribe ke xFilter filter — saat dialog pop dibuka, kirim items
+    this.popFilterSub = this.xfilterService.filter.subscribe(res => {
+      if (res && res["column"] === "pop") {
+        if (res["clear"]) {
+          if (this.popList.length > 0) {
+            this.xfilterService.updateItems({ column: "pop", items: this.popList });
+          } else {
+            this.fetchPopDates();
+          }
+      return;
+        }
+        const filterText = (res["filter"] || '').toString().trim().toLowerCase();
+        if (!filterText) {
+          if (this.popList.length > 0) {
+            setTimeout(() => {
+              this.xfilterService.updateItems({ column: "pop", items: this.popList });
+            }, 0);
+          } else {
+            this.fetchPopDates();
+          }
+        } else {
+          const filtered = this.popList.filter(p =>
+            p.toLowerCase().includes(filterText)
+          );
+          setTimeout(() => {
+            this.xfilterService.updateItems({ column: "pop", items: filtered });
+          }, 0);
+        }
+      }
+    });
+
     // Subscribe ke xFilter selected untuk well
     this.wellSelectedSub = this.xfilterService.selected.subscribe(res => {
       if (res && res["column"] === "well") {
         this.well_xSelected = res["selected"] || [];
+
+        this.pop_xSelected = [];
+        this.popList = [];
+        this.xfilterService.updateSelected({ column: "pop", selected: [] });
+
+        // Ambil ulang pop dates sesuai well yang baru dipilih
+        this.fetchPopDates();
         this.checkAndRefreshChart();
       }
     });
@@ -73,21 +121,43 @@ export class MonitoringRKChartComponent implements OnInit {
     // Subscribe ke xFilter filter — saat dialog well dibuka, kirim items
     this.wellFilterSub = this.xfilterService.filter.subscribe(res => {
       if (res && res["column"] === "well") {
-        // Kirim well list yg sudah di-cache dulu agar dialog langsung terisi
-        if (this.wellList.length > 0) {
+
+        if (res["clear"]) {
           this.xfilterService.updateItems({ column: "well", items: this.wellList });
+          return;
         }
-        // Refresh dari API agar selalu sinkron
-        this.fetchWellList();
+
+        const filterText = (res["filter"] || '').toString().trim().toLowerCase();
+
+        if (!filterText) {
+          if (this.wellList.length > 0) {
+            setTimeout(() => {
+              this.xfilterService.updateItems({ column: "well", items: this.wellList });
+            }, 0);
+          } else {
+            this.fetchWellList(); 
+          }
+        } else {
+          const filtered = this.wellList.filter(w =>
+            w.toLowerCase().includes(filterText)
+          );
+          // Delay emit to ensure dialog is subscribed first
+          setTimeout(() => {
+            this.xfilterService.updateItems({ column: "well", items: filtered });
+          }, 0);
+        }
       }
     });
 
     // Fetch well list saja — chart belum muncul sampai semua filter terisi
     this.fetchWellList();
+    this.fetchPopDates(); 
     this.checkAndRefreshChart();
   }
 
   ngOnDestroy() {
+    if (this.popSelectedSub) this.popSelectedSub.unsubscribe();
+    if (this.popFilterSub) this.popFilterSub.unsubscribe();
     if (this.wellSelectedSub) this.wellSelectedSub.unsubscribe();
     if (this.wellFilterSub) this.wellFilterSub.unsubscribe();
   }
@@ -112,23 +182,48 @@ export class MonitoringRKChartComponent implements OnInit {
     // Reset well selection
     this.well_xSelected = [];
     this.xfilterService.updateSelected({ column: "well", selected: [] });
+    // Reset pop selection
+    this.pop_xSelected = [];
+    this.xfilterService.updateSelected({ column: "pop", selected: [] });
+    this.popList = [];
     this.fetchWellList();
+    this.fetchPopDates();
     this.checkAndRefreshChart();
   }
 
-  onFilterChange() {
-    this.checkAndRefreshChart();
+  /** Ambil daftar pop dates dari API (sesuai chart_type + wells yang dipilih) */
+  fetchPopDates() {
+    let params = new HttpParams()
+      .append('mode', 'chart')
+      .append('chart_type', this.selectedChartType);
+
+    if (this.well_xSelected && this.well_xSelected.length > 0) {
+      params = params.append('wells', this.well_xSelected.join(','));
+    }
+
+    this.http.get<any>('/api/pe/MonitoringRK', { params: params }).subscribe(
+      (res: any) => {
+        // Simpan dalam format ISO date saja (YYYY-MM-DD) agar konsisten untuk parsing
+        const dates = (res.distinct_pop_dates || []).map((d: string) => {
+          const dt = new Date(d);
+          if (isNaN(dt.getTime())) return d;
+          return dt.toISOString().split('T')[0];
+        });
+        this.popList = dates;
+        this.xfilterService.updateItems({ column: "pop", items: dates });
+      },
+      (err: any) => console.error('Error fetching pop dates:', err)
+    );
   }
 
   /** Cek apakah semua filter sudah terisi, baru render chart */
   checkAndRefreshChart() {
+    console.log('chartType:', this.selectedChartType, 'wells:', this.well_xSelected, 'pop:', this.pop_xSelected)
     const hasChartType = !!this.selectedChartType;
     const hasWells = this.well_xSelected && this.well_xSelected.length > 0;
-    const hasStartDate = !!this.startDate;
-    const hasEndDate = !!this.endDate;
+    const hasPop = this.pop_xSelected && this.pop_xSelected.length > 0;
 
-    if (hasChartType && hasWells && hasStartDate && hasEndDate) {
-      this.filterMessage = '';
+    if (hasChartType && hasWells && hasPop) {
       this.loadData();
     } else {
       // Destroy chart jika ada
@@ -136,14 +231,6 @@ export class MonitoringRKChartComponent implements OnInit {
       if (this.selisihChart) { this.selisihChart.destroy(); this.selisihChart = null; }
       this.chartData = [];
       this.chartReady = false;
-
-      // Set pesan sesuai filter yang kurang
-      const missing: string[] = [];
-      if (!hasChartType) missing.push('Chart Type');
-      if (!hasWells) missing.push('Well');
-      if (!hasStartDate) missing.push('Start Date');
-      if (!hasEndDate) missing.push('End Date');
-      this.filterMessage = 'Silakan pilih ' + missing.join(', ');
     }
   }
 
@@ -159,27 +246,48 @@ export class MonitoringRKChartComponent implements OnInit {
       params = params.append('wells', this.well_xSelected.join(','));
     }
 
-    // Filter date range by pop
-    if (this.startDate) {
-      params = params.append('start_date', this.startDate.toISOString());
-    }
-    if (this.endDate) {
-      params = params.append('end_date', this.endDate.toISOString());
+    // Filter date range by pop — kirim start_date (00:00:00) dan end_date (23:59:59.999) UTC
+    if (this.pop_xSelected && this.pop_xSelected.length > 0) {
+      const sortedDates = this.pop_xSelected
+        .map((p: string) => new Date(p))
+        .filter((d: Date) => !isNaN(d.getTime()))
+        .sort((a: Date, b: Date) => a.getTime() - b.getTime());
+      if (sortedDates.length > 0) {
+        const start = sortedDates[0];
+        start.setUTCHours(0, 0, 0, 0);
+        params = params.append('start_date', start.toISOString());
+
+        const end = sortedDates[sortedDates.length - 1];
+        end.setUTCHours(23, 59, 59, 999);
+        params = params.append('end_date', end.toISOString());
+      }
     }
 
     this.http.get<any>('/api/pe/MonitoringRK', {
       params: params
     }).subscribe(
       (res) => {
-        this.chartData = res.data || [];
-        // Update well list untuk xFilter
-        if (res.distinct_wells) {
-          this.wellList = res.distinct_wells;
-          this.xfilterService.updateItems({ column: "well", items: res.distinct_wells });
+        try {
+          this.chartData = res.data || [];
+          if (res.distinct_wells) {
+            this.wellList = res.distinct_wells;
+            this.xfilterService.updateItems({ column: "well", items: res.distinct_wells });
+          }
+          this.chartReady = true;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+          // Gunakan setTimeout untuk memastikan DOM dan ViewChild sudah tersedia
+          setTimeout(() => {
+            try {
+              this.renderColumnChart();
+            } catch (e) {
+              console.error('Error rendering chart (async):', e);
+            }
+          });
+        } catch (e) {
+          console.error('Error rendering chart:', e);
+          this.isLoading = false;
         }
-        this.chartReady = true;
-        this.renderColumnChart();
-        this.isLoading = false;
       },
       (error) => {
         console.error('Error loading data:', error);
