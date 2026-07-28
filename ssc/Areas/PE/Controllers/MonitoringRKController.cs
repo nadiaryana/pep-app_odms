@@ -397,11 +397,22 @@ namespace ssc.Areas.PE.Controllers
                     {
                         case "well":
                         case "job":
-                        case "rig":
                         case "remarks":
                             var rkDistinct = _monitoring_rk.Distinct<string>(mode, xfilter).ToEnumerable().ToList();
                             var bcDistinct = bcCollection.Distinct<string>(mode, xfBcFilter).ToEnumerable().ToList();
                             res = rkDistinct.Union(bcDistinct).OrderBy(t => t).ToList();
+                            break;
+                        case "rig":
+                            // Filter khusus RIG: exclude rigless agar tidak muncul di xFilter kolom RIG
+                            var rigExcludeFilter = xfilter & Builders<MonitoringRK>.Filter.Not(
+                                Builders<MonitoringRK>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"))
+                            );
+                            var rkRigDistinct = _monitoring_rk.Distinct<string>("rig", rigExcludeFilter).ToEnumerable().ToList();
+                            var bcRigExcludeFilter = xfBcFilter & Builders<Barchart>.Filter.Not(
+                                Builders<Barchart>.Filter.Regex(t => t.rig, new BsonRegularExpression("rigless", "i"))
+                            );
+                            var bcRigDistinct = bcCollection.Distinct<string>("rig", bcRigExcludeFilter).ToEnumerable().ToList();
+                            res = rkRigDistinct.Union(bcRigDistinct).OrderBy(t => t).ToList();
                             break;
                         case "plan_start":
                         case "plan_end":
