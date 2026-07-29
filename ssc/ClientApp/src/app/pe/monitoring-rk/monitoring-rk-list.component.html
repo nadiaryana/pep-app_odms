@@ -1,4 +1,19 @@
-<div class="container-top-bar wp-topbar">
+<div class="container-top-bar wp-topbar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+
+  <div class="wp-filter-row justify-content-end">
+    <button mat-button color="warn" (click)="rkDeleteSelected()" [disabled]="!rk_selection.selected.length" *ngIf="activeTab === 'rig' && pePermissionService.passPermission('pe/monitoring-rk/delete')">
+      <mat-icon>delete</mat-icon> Delete Selected
+    </button>
+    <button mat-button color="warn" (click)="rlDeleteSelected()" [disabled]="!rl_selection.selected.length" *ngIf="activeTab === 'rigless' && pePermissionService.passPermission('pe/monitoring-rk/delete')">
+      <mat-icon>delete</mat-icon> Delete Selected
+    </button>
+    <button mat-button color="secondary" (click)="rkExportExcel()" [disabled]="rk_isLoadingResults">
+      <mat-icon>file_download</mat-icon> Export to Excel
+    </button>
+    <button mat-button color="tertiary" [disabled]="rk_isLoadingResults" [routerLink]="['/pe/monitoring-rk/chart']">
+      <mat-icon>bar_chart</mat-icon>Chart
+    </button>
+  </div>
 
   <!-- TABS -->
   <div class="wp-tabs">
@@ -15,21 +30,6 @@
       [class.active]="activeTab === 'rigless'"
       (click)="setActiveTab('rigless')">
       Rigless
-    </button>
-  </div>
-
-  <div class="wp-filter-row">
-    <button mat-button color="warn" (click)="rkDeleteSelected()" [disabled]="!rk_selection.selected.length" *ngIf="activeTab === 'rig' && pePermissionService.passPermission('pe/monitoring-rk/delete')">
-      <mat-icon>delete</mat-icon> Delete Selected
-    </button>
-    <button mat-button color="warn" (click)="rlDeleteSelected()" [disabled]="!rl_selection.selected.length" *ngIf="activeTab === 'rigless' && pePermissionService.passPermission('pe/monitoring-rk/delete')">
-      <mat-icon>delete</mat-icon> Delete Selected
-    </button>
-    <button mat-button color="secondary" (click)="rkExportExcel()" [disabled]="rk_isLoadingResults" *ngIf="activeTab === 'rig'">
-      <mat-icon>file_download</mat-icon> Export to Excel
-    </button>
-    <button mat-button color="tertiary" [disabled]="rk_isLoadingResults" [routerLink]="['/pe/monitoring-rk/chart']" *ngIf="activeTab === 'rig'">
-      <mat-icon>bar_chart</mat-icon>Chart
     </button>
   </div>
 
