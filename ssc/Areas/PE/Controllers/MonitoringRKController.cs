@@ -526,6 +526,81 @@ namespace ssc.Areas.PE.Controllers
                             bcFilter = bcFilter & bcRemarksFilter;
                         }
                     }
+                    if (cf["pop"] != null && cf["pop"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["pop"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkPopFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v =>
+                            {
+                                var cleaned = v.TrimStart('^').TrimEnd('$');
+                                if (DateTime.TryParse(cleaned, out var dt))
+                                    return Builders<MonitoringRK>.Filter.Eq(t => t.pop, dt);
+                                return Builders<MonitoringRK>.Filter.Regex(t => t.pop.ToString(), new BsonRegularExpression(cleaned, "i"));
+                            }).ToArray());
+                            rkFilter = rkFilter & rkPopFilter;
+                        }
+                    }
+                    if (cf["target_oil"] != null && cf["target_oil"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["target_oil"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkTargetOilFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v =>
+                            {
+                                var cleaned = v.TrimStart('^').TrimEnd('$');
+                                if (decimal.TryParse(cleaned, out var d))
+                                    return Builders<MonitoringRK>.Filter.Eq(t => t.target_oil, d);
+                                return Builders<MonitoringRK>.Filter.Eq(t => t.target_oil, null);
+                            }).ToArray());
+                            rkFilter = rkFilter & rkTargetOilFilter;
+                        }
+                    }
+                    if (cf["target_gas"] != null && cf["target_gas"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["target_gas"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkTargetGasFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v =>
+                            {
+                                var cleaned = v.TrimStart('^').TrimEnd('$');
+                                if (decimal.TryParse(cleaned, out var d))
+                                    return Builders<MonitoringRK>.Filter.Eq(t => t.target_gas, d);
+                                return Builders<MonitoringRK>.Filter.Eq(t => t.target_gas, null);
+                            }).ToArray());
+                            rkFilter = rkFilter & rkTargetGasFilter;
+                        }
+                    }
+                    if (cf["realisasi_oil"] != null && cf["realisasi_oil"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["realisasi_oil"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkRealisasiOilFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v =>
+                            {
+                                var cleaned = v.TrimStart('^').TrimEnd('$');
+                                if (decimal.TryParse(cleaned, out var d))
+                                    return Builders<MonitoringRK>.Filter.Eq(t => t.realisasi_oil, d);
+                                return Builders<MonitoringRK>.Filter.Eq(t => t.realisasi_oil, null);
+                            }).ToArray());
+                            rkFilter = rkFilter & rkRealisasiOilFilter;
+                        }
+                    }
+                    if (cf["realisasi_gas"] != null && cf["realisasi_gas"].Type == JTokenType.Array)
+                    {
+                        var vals = cf["realisasi_gas"].ToObject<string[]>().Where(v => !string.IsNullOrEmpty(v)).ToArray();
+                        if (vals.Length > 0)
+                        {
+                            var rkRealisasiGasFilter = Builders<MonitoringRK>.Filter.Or(vals.Select(v =>
+                            {
+                                var cleaned = v.TrimStart('^').TrimEnd('$');
+                                if (decimal.TryParse(cleaned, out var d))
+                                    return Builders<MonitoringRK>.Filter.Eq(t => t.realisasi_gas, d);
+                                return Builders<MonitoringRK>.Filter.Eq(t => t.realisasi_gas, null);
+                            }).ToArray());
+                            rkFilter = rkFilter & rkRealisasiGasFilter;
+                        }
+                    }
                 }
                 catch { }
             }
@@ -591,7 +666,13 @@ namespace ssc.Areas.PE.Controllers
                         job = b.job,
                         rig = b.rig,
                         plan_start = b.plan_start,
-                        plan_end = b.plan_end
+                        plan_end = b.plan_end,
+                        remarks = null,
+                        pop = null,
+                        target_oil = null,
+                        target_gas = null,
+                        realisasi_oil = null,
+                        realisasi_gas = null
                     })
             ).ToList();
 
@@ -606,6 +687,12 @@ namespace ssc.Areas.PE.Controllers
                 case "rig": sortedList = (order == "asc") ? allItems.OrderBy(t => t.rig) : allItems.OrderByDescending(t => t.rig); break;
                 case "plan_start": sortedList = (order == "asc") ? allItems.OrderBy(t => t.plan_start) : allItems.OrderByDescending(t => t.plan_start); break;
                 case "plan_end": sortedList = (order == "asc") ? allItems.OrderBy(t => t.plan_end) : allItems.OrderByDescending(t => t.plan_end); break;
+                case "pop": sortedList = (order == "asc") ? allItems.OrderBy(t => t.pop) : allItems.OrderByDescending(t => t.pop); break;
+                case "target_oil": sortedList = (order == "asc") ? allItems.OrderBy(t => t.target_oil) : allItems.OrderByDescending(t => t.target_oil); break;
+                case "target_gas": sortedList = (order == "asc") ? allItems.OrderBy(t => t.target_gas) : allItems.OrderByDescending(t => t.target_gas); break;
+                case "realisasi_oil": sortedList = (order == "asc") ? allItems.OrderBy(t => t.realisasi_oil) : allItems.OrderByDescending(t => t.realisasi_oil); break;
+                case "realisasi_gas": sortedList = (order == "asc") ? allItems.OrderBy(t => t.realisasi_gas) : allItems.OrderByDescending(t => t.realisasi_gas); break;
+                case "remarks": sortedList = (order == "asc") ? allItems.OrderBy(t => t.remarks) : allItems.OrderByDescending(t => t.remarks); break;
                 default: sortedList = allItems.OrderByDescending(t => t.plan_start); break;
             }
 

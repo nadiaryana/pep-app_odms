@@ -8,6 +8,68 @@
   align-items: center;
 }
 
+/* ===== Tab styling (seperti aggregate) ===== */
+.wp-topbar {
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  padding: 8px 16px !important;
+}
+
+.wp-filter-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.wp-tabs {
+  position: relative;
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  width: 100%;
+  gap: 4px;
+  padding: 4px;
+}
+
+.wp-tabs button {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 400;
+  color: #444;
+  border-radius: 8px;
+  background: transparent;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.wp-tabs button.active {
+  border-radius: 8px;
+  border: none;
+  border-bottom: 2px solid transparent;
+}
+
+.wp-tabs button.tab-rig.active {
+  background-color: #c0e1fc;
+  color: #406AAF;
+  font-weight: 500;
+}
+
+.wp-tabs button.tab-rigless.active {
+  background-color: #E4DFFB;
+  color: #6C5CE7;
+  font-weight: 500;
+}
+
+.wp-tabs button.tab-rig:not(.active):hover {
+  background-color: #c0e1fc;
+  color: #406AAF;
+}
+
+.wp-tabs button.tab-rigless:not(.active):hover {
+  background-color: #F2EFFC;
+  color: #6C5CE7;
+}
+
 .field-well {
   width: 200px;
 }

@@ -25,10 +25,14 @@ import { CommonService } from '../../common.service';
 })
 export class MonitoringRKListComponent implements OnInit {
 
-  rk_displayedColumns: string[] = ["select", "well", "job", "rig","pop","target_oil","target_gas","realisasi_oil","realisasi_gas", "remarks", "action"];
-  headerColumns1: string[] = ["select",  "well", "job", "rig","pop","target","realisasi", "remarks","action"];
-  headerColumns2: string[] = ["target_oil","target_gas","realisasi_oil","realisasi_gas"];
+  activeTab = 'rig';
+  viewMode: string = 'well';
+  //kolom dinamis
+  displayedColumns: string[] = [];
+  headerColumns1: string[] = [];
+  headerColumns2: string[] = [];
 
+  
   rkExampleDatabase: MonitoringRKHttpDao | null;
   rk_data: MonitoringRK[] = [];
   rk_dataSource = new MatTableDataSource<any>(this.rk_data);
@@ -39,8 +43,9 @@ export class MonitoringRKListComponent implements OnInit {
   rk_isRateLimitReached = false;
   rk_submitting = false;
 
-  @ViewChild('rkPaginator', { static: true }) rkPaginator: MatPaginator;
-  @ViewChild('rkSort', { static: true }) rkSort: MatSort;
+
+  @ViewChild('rkPaginator', { static: false }) rkPaginator: MatPaginator;
+  @ViewChild('rkSort', { static: false }) rkSort: MatSort;
   rk_filterControl = new FormControl('');
 
   rk_wellFilter = new FormControl('');
@@ -73,9 +78,6 @@ export class MonitoringRKListComponent implements OnInit {
   barchartRigList: string[] = [];
 
   // === Rigless Table ===
-  rl_displayedColumns: string[] = ["select", "well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
-  rl_headerColumns1: string[] = ["select", "well", "job", "rig", "pop", "target", "realisasi", "remarks", "action"];
-  rl_headerColumns2: string[] = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
   rl_data: any[] = [];
   rl_dataSource = new MatTableDataSource<any>(this.rl_data);
   rl_selection = new SelectionModel<any>(true, []);
@@ -94,8 +96,8 @@ export class MonitoringRKListComponent implements OnInit {
   rl_realisasi_gas_xSelected = [];
   rl_remarks_xSelected = [];
 
-  @ViewChild('rlSort', { static: true }) rlSort: MatSort;
-  @ViewChild('rlPaginator', { static: true }) rlPaginator: MatPaginator;
+  @ViewChild('rlSort', { static: false }) rlSort: MatSort;
+  @ViewChild('rlPaginator', { static: false }) rlPaginator: MatPaginator;
 
   private rk_filterSubscription: any = null;
   rk_selectedSubscription: Subscription;
@@ -130,7 +132,7 @@ export class MonitoringRKListComponent implements OnInit {
     });
 
     this.rkExampleDatabase = new MonitoringRKHttpDao(this.http);
-    this.rkSort.sortChange.subscribe(() => this.rkPaginator.pageIndex = 0);
+    this.updateDisplayedColumns();
 
     // Filter xFilter
     this.rk_filterSubscription = this.xfilterService.filter.subscribe(res => {
@@ -148,108 +150,179 @@ export class MonitoringRKListComponent implements OnInit {
       if (res["column"]) {
         (this as any)[res["column"] + "_xSelected"] = res["selected"];
         // Jika rigless filter berubah, reload data rigless
-        if (res["column"].indexOf("rl_") === 0) {
+        if (res["column"].indexOf("rl_") === 0 && this.rlPaginator) {
           this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
         }
       }
     })
 
-    const rkSelected$ = this.xfilterService.selected.pipe(
-      map(res => res && res["column"] && res["column"].indexOf("rl_") === 0 ? undefined : res)
-    );
-    this.rk_listSubscription = merge(
-      this.rkSort.sortChange,
-      this.rkPaginator.page,
-      this.rk_filterControl.valueChanges.pipe(debounceTime(300)),
-      this.rk_wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_jobFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_rigFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_plan_startFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_plan_endFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_popFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_target_oilFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_target_gasFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_realisasi_oilFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_realisasi_gasFilter.valueChanges.pipe(debounceTime(300)),
-      this.rk_remarksFilter.valueChanges.pipe(debounceTime(300)),
-      rkSelected$,
-    ).pipe(
-      startWith({}),
-      switchMap(() => {
-        this.rk_isLoadingResults = true;
-        var columnfilter = this.rkGetColumnFilter();
-        return this.rkExampleDatabase!.getRepoIssues(
-          this.rkSort.active,
-          this.rkSort.direction,
-          this.rkPaginator.pageIndex,
-          this.rkPaginator.pageSize,
-          this.rk_filterControl.value,
-          columnfilter,
-        );
-      }),
-      map(data => {
-        this.rk_isLoadingResults = false;
-        this.rk_isRateLimitReached = false;
-        this.rk_resultsLength = data.total_count;
+    // Muat data Rig setelah DOM siap
+    setTimeout(() => this.rkLoadData());
 
-        // Set distinct values untuk autocomplete dari backend
-        if (data.distinct_wells) this.barchartWellList = data.distinct_wells;
-        if (data.distinct_jobs) this.barchartJobList = data.distinct_jobs;
-        if (data.distinct_rigs) this.barchartRigList = data.distinct_rigs;
+  }
 
-        // Gabungkan items monitoring_rk + merge_items dari barchart
-        return data.items || [];
-      }),
-      catchError(() => {
-        this.rk_isLoadingResults = false;
-        this.rk_isRateLimitReached = true;
-        return observableOf([]);
-      })
-    ).subscribe((data: MonitoringRK[]) => {
-      this.rk_data = data.map(d => ({
-        ...d,
-        isEdit: false
-      }));
-      this.rk_dataSource.data = this.rk_data;
-      this.rk_selection.clear();
-    });
+  /** Load data Rig — dipanggil saat tab rig diaktifkan */
+  private rkLoadData() {
+    setTimeout(() => {
+      if (!this.rkSort || !this.rkPaginator) return;
 
-    this.rlSort.sortChange.subscribe(() => this.rlPaginator.pageIndex = 0);
+      if (this.rk_listSubscription) {
+        this.rk_listSubscription.unsubscribe();
+      }
 
-    this.rl_listSubscription = merge(
-      this.rlSort.sortChange,
-      this.rlPaginator.page,
-    ).pipe(
-      startWith({}),
-      switchMap(() => {
-        this.rl_isLoadingResults = true;
-        var columnfilter = this.rlGetColumnFilter();
-        return this.service.getRigless(
-          this.rlSort.active,
-          this.rlSort.direction,
-          this.rlPaginator.pageIndex,
-          this.rlPaginator.pageSize,
-          '',
-          columnfilter,
-        );
-      }),
-      map(data => {
-        this.rl_isLoadingResults = false;
-        this.rl_resultsLength = data.total_count;
-        return data.items || [];
-      }),
-      catchError(() => {
-        this.rl_isLoadingResults = false;
-        return observableOf([]);
-      })
-    ).subscribe((data: any[]) => {
-      this.rl_data = data.map((d: any) => ({ ...d, isEdit: false }));
-      this.rl_dataSource.data = this.rl_data;
-      this.rl_dataSource.sort = this.rlSort;
-      this.rl_dataSource.paginator = this.rlPaginator;
-      this.rl_selection.clear();
+      this.rkSort.sortChange.subscribe(() => this.rkPaginator.pageIndex = 0);
+
+      const rkSelected$ = this.xfilterService.selected.pipe(
+        map(res => res && res["column"] && res["column"].indexOf("rl_") === 0 ? undefined : res)
+      );
+
+      this.rk_listSubscription = merge(
+        this.rkSort.sortChange,
+        this.rkPaginator.page,
+        this.rk_filterControl.valueChanges.pipe(debounceTime(300)),
+        this.rk_wellFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_jobFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_rigFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_plan_startFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_plan_endFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_popFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_target_oilFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_target_gasFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_realisasi_oilFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_realisasi_gasFilter.valueChanges.pipe(debounceTime(300)),
+        this.rk_remarksFilter.valueChanges.pipe(debounceTime(300)),
+        rkSelected$,
+      ).pipe(
+        startWith({}),
+        switchMap(() => {
+          this.rk_isLoadingResults = true;
+          var columnfilter = this.rkGetColumnFilter();
+          return this.rkExampleDatabase!.getRepoIssues(
+            this.rkSort.active,
+            this.rkSort.direction,
+            this.rkPaginator.pageIndex,
+            this.rkPaginator.pageSize,
+            this.rk_filterControl.value,
+            columnfilter,
+          );
+        }),
+        map(data => {
+          this.rk_isLoadingResults = false;
+          this.rk_isRateLimitReached = false;
+          this.rk_resultsLength = data.total_count;
+          if (data.distinct_wells) this.barchartWellList = data.distinct_wells;
+          if (data.distinct_jobs) this.barchartJobList = data.distinct_jobs;
+          if (data.distinct_rigs) this.barchartRigList = data.distinct_rigs;
+          return data.items || [];
+        }),
+        catchError(() => {
+          this.rk_isLoadingResults = false;
+          this.rk_isRateLimitReached = true;
+          return observableOf([]);
+        })
+      ).subscribe((data: MonitoringRK[]) => {
+        this.rk_data = data.map(d => ({
+          ...d,
+          isEdit: false
+        }));
+        this.rk_dataSource.data = this.rk_data;
+        this.rk_selection.clear();
+      });
     });
   }
+
+  /** Load data rigless — dipanggil saat tab rigless diaktifkan */
+  private rlLoadData() {
+    // Tunggu DOM selesai render (rlSort/rlPaginator baru tersedia setelah *ngIf)
+    setTimeout(() => {
+      if (!this.rlSort || !this.rlPaginator) return;
+
+      // Bersihkan subscription lama
+      if (this.rl_listSubscription) {
+        this.rl_listSubscription.unsubscribe();
+      }
+
+      this.rlSort.sortChange.subscribe(() => this.rlPaginator.pageIndex = 0);
+
+      this.rl_listSubscription = merge(
+        this.rlSort.sortChange,
+        this.rlPaginator.page,
+      ).pipe(
+        startWith({}),
+        switchMap(() => {
+          this.rl_isLoadingResults = true;
+          var columnfilter = this.rlGetColumnFilter();
+          return this.service.getRigless(
+            this.rlSort.active,
+            this.rlSort.direction,
+            this.rlPaginator.pageIndex,
+            this.rlPaginator.pageSize,
+            '',
+            columnfilter,
+          );
+        }),
+        map(data => {
+          this.rl_isLoadingResults = false;
+          this.rl_resultsLength = data.total_count;
+          return data.items || [];
+        }),
+        catchError(() => {
+          this.rl_isLoadingResults = false;
+          return observableOf([]);
+        })
+      ).subscribe((data: any[]) => {
+        this.rl_data = data.map((d: any) => ({ ...d, isEdit: false }));
+        this.rl_dataSource.data = this.rl_data;
+        this.rl_dataSource.sort = this.rlSort;
+        this.rl_dataSource.paginator = this.rlPaginator;
+        this.rl_selection.clear();
+      });
+    });
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+    this.updateDisplayedColumns();
+    if (tab === 'rig') {
+      this.rkLoadData();
+    } else if (tab === 'rigless') {
+      this.rlLoadData();
+    }
+  }
+
+  //animasi UI
+  getIndicatorTransform(): string {
+
+    switch (this.activeTab) {
+        case 'rig':
+            return 'translateX(0%)';
+
+        case 'rigless':
+            return 'translateX(100%)';
+
+        default:
+            return 'translateX(0%)';
+    }
+  }
+
+  // DYNAMIC COLUMNS
+  updateDisplayedColumns() {
+    if (this.activeTab === 'rig') {
+      this.displayedColumns = ["select", "well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
+      this.headerColumns1 = ["select", "well", "job", "rig", "pop", "target", "realisasi", "remarks", "action"];
+      this.headerColumns2 = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
+    } else {
+      this.displayedColumns = ["select", "well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
+      this.headerColumns1 = ["select", "well", "job", "rig", "pop", "target", "realisasi", "remarks", "action"];
+      this.headerColumns2 = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
+    }
+  }
+
+  setViewMode(mode: string) {
+    this.viewMode = mode;
+    this.updateDisplayedColumns();
+  }
+
 
   /** Cleanup: unsubscribe semua subscription saat komponen di-destroy */
   ngOnDestroy() {
@@ -377,11 +450,15 @@ export class MonitoringRKListComponent implements OnInit {
     if (selected && selected.length > 0) columnfilter[realCol] = selected.map((s: any) => "^" + s + "$");
     if (clear) delete columnfilter[realCol];
 
+    var sortActive = this.rlSort ? this.rlSort.active : 'plan_start';
+    var sortDir = this.rlSort ? this.rlSort.direction : 'desc';
+    var pageIdx = this.rlPaginator ? this.rlPaginator.pageIndex : 0;
+    var pageSz = this.rlPaginator ? this.rlPaginator.pageSize : 50;
     return this.service.getRigless(
-      this.rlSort.active,
-      this.rlSort.direction,
-      this.rlPaginator.pageIndex,
-      this.rlPaginator.pageSize,
+      sortActive,
+      sortDir,
+      pageIdx,
+      pageSz,
       '',
       columnfilter,
       realCol
@@ -574,7 +651,7 @@ export class MonitoringRKListComponent implements OnInit {
 
         if (isNew) {
           // Reload data rigless setelah create
-          this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
+          if (this.rlPaginator) this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
         } else {
           const idx = this.rl_dataSource.data.findIndex(d => d._id === row._id);
           if (idx !== -1) {
@@ -654,7 +731,7 @@ export class MonitoringRKListComponent implements OnInit {
         const ids = this.rl_selection.selected.map(s => s._id).filter((id: string) => id);
         if (ids.length === 0) {
           // Hanya item tanpa _id, reload rigless data
-          this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
+          if (this.rlPaginator) this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
           this.rl_selection.clear();
           this.rl_isLoadingResults = false;
           this.snackbarService.status.next(new SnackbarApi(true, "Item(s) removed from view.", "dismiss"));
@@ -665,7 +742,7 @@ export class MonitoringRKListComponent implements OnInit {
         }).subscribe((res: any) => {
           this.rl_isLoadingResults = false;
           this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
-          this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
+          if (this.rlPaginator) this.rlPaginator._changePageSize(this.rlPaginator.pageSize);
         },
           error => {
             this.rl_isLoadingResults = false;

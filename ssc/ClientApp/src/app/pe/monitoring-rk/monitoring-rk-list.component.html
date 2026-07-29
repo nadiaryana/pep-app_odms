@@ -1,20 +1,42 @@
-  <div class="section-badge">
-      RIG
+<div class="container-top-bar wp-topbar">
+
+  <!-- TABS -->
+  <div class="wp-tabs">
+    <button
+      mat-button
+      class="tab-rig"
+      [class.active]="activeTab === 'rig'"
+      (click)="setActiveTab('rig')">
+      Rig
+    </button>
+    <button
+      mat-button
+      class="tab-rigless"
+      [class.active]="activeTab === 'rigless'"
+      (click)="setActiveTab('rigless')">
+      Rigless
+    </button>
   </div>
 
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-  
-  <button mat-button color="warn" (click)="rkDeleteSelected()" [disabled]="!rk_selection.selected.length" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/delete')">
-    <mat-icon>delete</mat-icon> Delete Selected
-  </button>
-  <button mat-button color="secondary" (click)="rkExportExcel()" [disabled]="rk_isLoadingResults">
-    <mat-icon>file_download</mat-icon> Export to Excel
-  </button>
-	<button mat-button color="tertiary" [disabled]="rk_isLoadingResults" [routerLink]="['/pe/monitoring-rk/chart']"><mat-icon>bar_chart</mat-icon>Chart</button>
+  <div class="wp-filter-row">
+    <button mat-button color="warn" (click)="rkDeleteSelected()" [disabled]="!rk_selection.selected.length" *ngIf="activeTab === 'rig' && pePermissionService.passPermission('pe/monitoring-rk/delete')">
+      <mat-icon>delete</mat-icon> Delete Selected
+    </button>
+    <button mat-button color="warn" (click)="rlDeleteSelected()" [disabled]="!rl_selection.selected.length" *ngIf="activeTab === 'rigless' && pePermissionService.passPermission('pe/monitoring-rk/delete')">
+      <mat-icon>delete</mat-icon> Delete Selected
+    </button>
+    <button mat-button color="secondary" (click)="rkExportExcel()" [disabled]="rk_isLoadingResults" *ngIf="activeTab === 'rig'">
+      <mat-icon>file_download</mat-icon> Export to Excel
+    </button>
+    <button mat-button color="tertiary" [disabled]="rk_isLoadingResults" [routerLink]="['/pe/monitoring-rk/chart']" *ngIf="activeTab === 'rig'">
+      <mat-icon>bar_chart</mat-icon>Chart
+    </button>
+  </div>
+
 </div>
 
 
-<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" *ngIf="activeTab === 'rig'">
   <div class="loading-shade" *ngIf="rk_isLoadingResults || rk_isRateLimitReached">
     <mat-spinner *ngIf="rk_isLoadingResults"></mat-spinner>
   </div>
@@ -245,24 +267,14 @@
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="headerColumns1; sticky: true"></tr>
         <tr mat-header-row *matHeaderRowDef="headerColumns2; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: rk_displayedColumns;" (click)="rk_selection.toggle(row)"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="rk_selection.toggle(row)"></tr>
       </table>
     </div>
     <mat-paginator [length]="rk_resultsLength" [pageSize]="50" [pageSizeOptions]="[10, 25, 50, 100]" #rkPaginator></mat-paginator>
 </div>
 
   <!-- ====== Rigless Table ====== -->
-  <div class="section-badge">
-      RIGLESS
-  </div>
-
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-  <button mat-button color="warn" (click)="rlDeleteSelected()" [disabled]="!rl_selection.selected.length" *ngIf="pePermissionService.passPermission('pe/monitoring-rk/delete')">
-    <mat-icon>delete</mat-icon> Delete Selected
-  </button>
-</div>
-
-<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'" *ngIf="activeTab === 'rigless'">
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 180, 250))+'px'">
     <table mat-table [dataSource]="rl_dataSource" class="pe-table" matSort matSortDisableClear #rlSort="matSort">
 
@@ -487,9 +499,9 @@
         </td>
       </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="rl_headerColumns1; sticky: true"></tr>
-      <tr mat-header-row *matHeaderRowDef="rl_headerColumns2; sticky: true"></tr>
-      <tr mat-row *matRowDef="let row; columns: rl_displayedColumns;" (click)="rl_selection.toggle(row)"></tr>
+      <tr mat-header-row *matHeaderRowDef="headerColumns1; sticky: true"></tr>
+      <tr mat-header-row *matHeaderRowDef="headerColumns2; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="rl_selection.toggle(row)"></tr>
     </table>
   </div>
   <mat-paginator [length]="rl_resultsLength" [pageSize]="50" [pageSizeOptions]="[10, 25, 50, 100]" #rlPaginator></mat-paginator>
