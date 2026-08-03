@@ -2,7 +2,7 @@ import { HttpClient, HttpParams, HttpResponse, HttpHeaders } from '@angular/comm
 import { Component, OnInit, ViewChild, Inject, OnDestroy, ElementRef, AfterViewInit } from '@angular/core';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA, MatDatepicker } from '@angular/material';
 import { MatTableDataSource } from '@angular/material/table';
-import { merge, Observable, of as observableOf, Subscription, forkJoin } from 'rxjs';
+import { merge, Observable, of as observableOf, Subscription, forkJoin, Subject } from 'rxjs';
 import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
@@ -27,6 +27,8 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
   activeTab = 'weekly';
   indicatorLeft = 0;
   indicatorWidth = 0;
+
+  private activeTabChange = new Subject<string>();
 
   viewMode: string = 'well';
 
@@ -201,6 +203,7 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
       this.sort.sortChange,
       this.paginator.page,
       this.filterControl.valueChanges.pipe(debounceTime(300)),
+      this.activeTabChange,
       // Weekly
       this.start_dateControl.valueChanges.pipe(debounceTime(300)),
       this.end_dateControl.valueChanges.pipe(debounceTime(300)),
@@ -293,6 +296,10 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   setActiveTab(tab: string): void {
     this.activeTab = tab;
+    this.updateDisplayedColumns();      // kolom beda per tab, refresh juga
+    this.paginator.pageIndex = 0;       // reset halaman
+    this.updateDateInputs();            // pastikan label tanggal tersinkron
+    this.activeTabChange.next(tab);
   }
 
   //animasi UI

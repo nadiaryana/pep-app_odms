@@ -203,11 +203,14 @@ export class MonitoringRKChartComponent implements OnInit {
 
     this.http.get<any>('/api/pe/MonitoringRK', { params: params }).subscribe(
       (res: any) => {
-        // Simpan dalam format ISO date saja (YYYY-MM-DD) agar konsisten untuk parsing
+        // Simpan dalam format YYYY-MM-DD berdasarkan timezone LOKAL browser.
+        // Jangan pakai toISOString() karena itu mengembalikan tanggal UTC, padahal pop
+        // di database tersimpan sebagai UTC (mis. 2026-08-07T17:00:00Z = 8 Agu WIB).
+        // Akibatnya dropdown jadi mundur 1 hari dari tampilan list (Angular date pipe lokal).
         const dates = (res.distinct_pop_dates || []).map((d: string) => {
           const dt = new Date(d);
           if (isNaN(dt.getTime())) return d;
-          return dt.toISOString().split('T')[0];
+          return this.toLocalDateString(dt);
         });
         this.popList = dates;
         this.xfilterService.updateItems({ column: "pop", items: dates });
@@ -246,19 +249,21 @@ export class MonitoringRKChartComponent implements OnInit {
       params = params.append('wells', this.well_xSelected.join(','));
     }
 
-    // Filter date range by pop — kirim start_date (00:00:00) dan end_date (23:59:59.999) UTC
+    // Filter date range by pop — interpretasikan tanggal pilihan sebagai kalender LOKAL
+    // (awal & akhir hari waktu lokal), lalu kirim sebagai ISO UTC ke backend.
+    // Ini agar cocok dengan pop di database yang tersimpan sebagai UTC.
     if (this.pop_xSelected && this.pop_xSelected.length > 0) {
       const sortedDates = this.pop_xSelected
-        .map((p: string) => new Date(p))
-        .filter((d: Date) => !isNaN(d.getTime()))
+        .map((p: string) => this.parseLocalDate(p))
+        .filter((d: Date | null): d is Date => !!d && !isNaN(d.getTime()))
         .sort((a: Date, b: Date) => a.getTime() - b.getTime());
       if (sortedDates.length > 0) {
         const start = sortedDates[0];
-        start.setUTCHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
         params = params.append('start_date', start.toISOString());
 
         const end = sortedDates[sortedDates.length - 1];
-        end.setUTCHours(23, 59, 59, 999);
+        end.setHours(23, 59, 59, 999);
         params = params.append('end_date', end.toISOString());
       }
     }
@@ -551,6 +556,21 @@ export class MonitoringRKChartComponent implements OnInit {
       ],
       credits: { enabled: false }
     } as Highcharts.Options);
+  }
+
+  /** Format Date ke YYYY-MM-DD berdasarkan timezone lokal browser (konsisten dgn list) */
+  private toLocalDateString(dt: Date): string {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const day = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  /** Parse string YYYY-MM-DD sebagai tengah malam waktu lokal (bukan UTC) */
+  private parseLocalDate(s: string): Date | null {
+    const parts = s.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(n => isNaN(n))) return null;
+    return new Date(parts[0], parts[1] - 1, parts[2]);
   }
 
   refreshChart() {
