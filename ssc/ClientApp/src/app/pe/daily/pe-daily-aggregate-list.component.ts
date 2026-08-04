@@ -65,19 +65,23 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   // DATE PICKERS — Daily
   @ViewChild('daily1StartPicker', { static: true }) daily1StartPicker: MatDatepicker<any> = null!;
-  daily1StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 2)));
+  daily1StartControl = new FormControl(
+    new Date(new Date(new Date().setDate(new Date().getDate() - 2)).setHours(0, 0, 0, 0)));
   daily1StartInput: string = '';
 
   @ViewChild('daily1EndPicker', { static: true }) daily1EndPicker: MatDatepicker<any> = null!;
-  daily1EndControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 2)));
+  daily1EndControl = new FormControl(
+    new Date(new Date(new Date().setDate(new Date().getDate() - 2)).setHours(0, 0, 0, 0)));
   daily1EndInput: string = '';
 
   @ViewChild('daily2StartPicker', { static: true }) daily2StartPicker: MatDatepicker<any> = null!;
-  daily2StartControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  daily2StartControl = new FormControl(
+    new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
   daily2StartInput: string = '';
 
   @ViewChild('daily2EndPicker', { static: true }) daily2EndPicker: MatDatepicker<any> = null!;
-  daily2EndControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
+  daily2EndControl = new FormControl(
+    new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
   daily2EndInput: string = '';
 
   // DATE PICKERS — Annual
