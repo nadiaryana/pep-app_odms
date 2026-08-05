@@ -300,9 +300,9 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   setActiveTab(tab: string): void {
     this.activeTab = tab;
-    this.updateDisplayedColumns();      // kolom beda per tab, refresh juga
+    this.updateDisplayedColumns();      
     this.paginator.pageIndex = 0;       // reset halaman
-    this.updateDateInputs();            // pastikan label tanggal tersinkron
+    this.updateDateInputs();            
     this.activeTabChange.next(tab);
   }
 

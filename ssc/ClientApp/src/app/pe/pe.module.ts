@@ -302,9 +302,9 @@ export class PeModule {
             new PanelSubItem("Chan Plot", "pe/chan-plot", "scatter_plot"),
             new PanelSubItem("Aggregate", "pe/aggregate", "change_history"),
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
-            new PanelSubItem("Optimasi", "pe/optimasi", "analytics"),
+            new PanelSubItem("Optimasi", "pe/optimasi", "tune"),
             ...(this.isActualAdmin(res) ? [new PanelSubItem("Actual", "pe/actual", "data_usage")] : []),
-            new PanelSubItem("Monitoring RK", "pe/monitoring-rk", "analytics", this.pePermission.passPermission("pe/monitoring-rk")),
+            new PanelSubItem("Monitoring RK", "pe/monitoring-rk", "fact_check", this.pePermission.passPermission("pe/monitoring-rk")),
             
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),

@@ -104,7 +104,7 @@ export class PeOptimasiListComponent implements OnInit {
   ngOnInit() {
     this.titleService.titleSource.next({
       title: "Optimasi",
-      icon: "analytics",
+      icon: "tune",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
         { label: 'Daily Optimasi', routerLink: '' }

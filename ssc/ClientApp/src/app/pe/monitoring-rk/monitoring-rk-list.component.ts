@@ -124,7 +124,7 @@ export class MonitoringRKListComponent implements OnInit {
     // Set judul & breadcrumbs halaman
     this.titleService.titleSource.next({
       title: "Monitoring RK",
-      icon: "bar_chart",
+      icon: "fact_check",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
         { label: 'Monitoring RK', routerLink: '' }

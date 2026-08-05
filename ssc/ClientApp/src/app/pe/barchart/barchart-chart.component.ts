@@ -685,106 +685,237 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   //   }, 300);
   // }
 
+  // screenshotChart() {
+  //   const chartEl = this.ganttChartEl.nativeElement as HTMLElement;
+  //   this.isCapturing = true;
+    
+
+  //   setTimeout(() => {
+  //     //Ukur area chart
+  //     const scrollingEl    = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
+  //     const fullWidth      = scrollingEl ? scrollingEl.scrollWidth : chartEl.scrollWidth;
+  //     const fullHeight     = chartEl.scrollHeight;
+  //     // Posisi kiri area scrollable (= lebar kolom fixed yAxis di sisi kiri)
+  //     const innerOffset    = scrollingEl ? (scrollingEl.offsetLeft || 0) : 0;
+
+      
+  //     const axes      = chartEl.querySelectorAll('.highcharts-axis.highcharts-xaxis');
+  //     const monthAxis = axes && axes.length > 1 ? axes[1] as HTMLElement : null;
+  //     let headerTop   = 120;
+  //     if (monthAxis) {
+  //       const rectParent = chartEl.getBoundingClientRect();
+  //       const rectAxis   = axes[1].getBoundingClientRect();
+  //       headerTop        = rectAxis.top - rectParent.top;
+  //     }
+
+  //     const cropHeight = fullHeight - headerTop;
+
+  //     // Lebar kolom RIG (yAxis grid column kiri)
+  //     const yAxisGrid  = chartEl.querySelector('.highcharts-yaxis-grid') as SVGElement;
+  //     const rigColEl   = chartEl.querySelector('.highcharts-grid-line') as SVGElement;
+
+  //     // Cari lebar kolom RIG dari elemen yAxis label
+  //     let rigColumnWidth = 150; // fallback default
+  //     // const yAxisEl = chartEl.querySelector('.highcharts-yaxis') as SVGElement;
+  //     // if (yAxisEl) {
+  //     //   const yBBox = typeof (yAxisEl as any).getBBox === 'function' 
+  //     //   ? (yAxisEl as any).getBBox() 
+  //     //   : null;
+  //     //   if (yBBox && yBBox.width > 0) rigColumnWidth = Math.ceil(yBBox.width) + 2;
+  //     // }
+  //     const yAxisLabels = chartEl.querySelectorAll('.highcharts-yaxis-labels text');
+  //     if (yAxisLabels && yAxisLabels.length > 0) {
+  //       try {
+  //         const firstLabel = yAxisLabels[0] as SVGTextElement;
+  //         const bbox = firstLabel.getBoundingClientRect();
+  //         const chartRect = chartEl.getBoundingClientRect();
+  //         // Lebar kolom = posisi kanan label + padding
+  //         rigColumnWidth = Math.ceil(bbox.right - chartRect.left) + 10;
+  //       } catch (e) {}
+  //     }
+
+  //     const gridColumnTitle = chartEl.querySelector('.highcharts-grid-line') as SVGElement;
+  //     if (rigColumnWidth <= 150) {
+  //       try {
+  //         const yAxisEl = chartEl.querySelector('.highcharts-yaxis') as SVGElement;
+  //         const yBBox = typeof (yAxisEl as any).getBBox === 'function'
+  //           ? (yAxisEl as any).getBBox()
+  //           : null;
+  //         if (yBBox && yBBox.width > 0) rigColumnWidth = Math.ceil(yBBox.width) + 20;
+  //       } catch (e) {}
+  //     }
+
+  //     // Canvas 1: Kolom RIG (fixed left)
+  //     const rigOptions = {
+  //       backgroundColor: '#ffffff',
+  //       useCORS: true,
+  //       allowTaint: true,
+  //       scale: 2,
+  //       width:  rigColumnWidth,
+  //       height: cropHeight,
+  //       x: 0,
+  //       y: headerTop,
+  //       windowWidth: fullWidth,
+  //       windowHeight: fullHeight,
+  //       scrollX: 0,
+  //       scrollY: -window.scrollY,
+  //       onclone: (_doc: Document, clonedEl: HTMLElement) => {
+  //         // Pastikan SVG cukup lebar untuk dirender
+  //         const svg = clonedEl.querySelector('.highcharts-root') as SVGElement;
+  //         if (svg) svg.setAttribute('width', String(fullWidth));
+  //         const container = clonedEl.querySelector('.highcharts-container') as HTMLElement;
+  //         if (container) { container.style.width = fullWidth + 'px'; container.style.overflow = 'visible'; }
+  //         const scrolling = clonedEl.querySelector('.highcharts-scrolling') as HTMLElement;
+  //         if (scrolling) { scrolling.style.overflow = 'visible'; scrolling.style.width = fullWidth + 'px'; }
+  //         // Reset scroll ke posisi 0 (kolom RIG ada di kiri)
+  //         if (scrolling) scrolling.scrollLeft = 0;
+  //       }
+  //     };
+
+  //     // Canvas 2: Full chart (seluruh lebar scroll) — tanpa yAxis
+  //     const chartOptions = {
+  //       backgroundColor: '#ffffff',
+  //       useCORS: true,
+  //       allowTaint: true,
+  //       scale: 2,
+  //       width:  fullWidth,
+  //       height: cropHeight,
+  //       x: 0,
+  //       y: headerTop,
+  //       windowWidth: fullWidth,
+  //       windowHeight: fullHeight,
+  //       scrollX: 0,
+  //       scrollY: -window.scrollY,
+  //       onclone: (_doc: Document, clonedEl: HTMLElement) => {
+  //         const expand = (el: HTMLElement | SVGElement | null, isSvg = false) => {
+  //           if (!el) return;
+  //           (el as HTMLElement).style.overflow  = 'visible';
+  //           (el as HTMLElement).style.width     = fullWidth + 'px';
+  //           (el as HTMLElement).style.minWidth  = fullWidth + 'px';
+  //           (el as HTMLElement).style.maxWidth  = 'none';
+  //           if (isSvg) (el as SVGElement).setAttribute('width', String(fullWidth));
+  //         };
+  //         expand(clonedEl.querySelector('.highcharts-scrolling'));
+  //         expand(clonedEl.querySelector('.highcharts-scrolling-parent'));
+  //         expand(clonedEl.querySelector('.highcharts-container'));
+  //         expand(clonedEl.querySelector('.highcharts-root'), true);
+  //         expand(clonedEl);
+
+  //         const axisTitles = clonedEl.querySelectorAll('.highcharts-axis-title');
+  //         axisTitles.forEach((el) => {
+  //           const svgEl     = el as SVGTextElement;
+  //           const currentY  = parseFloat(svgEl.getAttribute('y') || '0');
+  //           svgEl.setAttribute('y', String(currentY - headerTop));
+  //         });
+
+  //         //hide y
+  //         clonedEl.querySelectorAll(
+  //           '.highcharts-yaxis-labels, .highcharts-yaxis-grid, .highcharts-yaxis, .highcharts-yaxis-title'
+  //         ).forEach((el: Element) => {
+  //           (el as SVGElement).setAttribute('display', 'none');
+  //           (el as HTMLElement).style.display = 'none';
+  //         });
+
+  //         // Reset scrollLeft agar inner SVG tidak ter-offset saat dirender
+  //         const sc = clonedEl.querySelector('.highcharts-scrolling') as HTMLElement;
+  //         if (sc) sc.scrollLeft = 0;
+  //       }
+  //     };
+
+  //     Promise.all([
+  //       html2canvas(chartEl, rigOptions as any),
+  //       html2canvas(chartEl, chartOptions as any),
+  //     ]).then(([rigCanvas, chartCanvas]) => {
+
+  //       const scale        = 2;
+  //       const totalWidth   = fullWidth * scale;
+  //       const totalHeight  = cropHeight * scale;
+
+  //       // Canvas final gabungan
+  //       const finalCanvas  = document.createElement('canvas');
+  //       finalCanvas.width  = totalWidth;
+  //       finalCanvas.height = totalHeight;
+  //       const ctx          = finalCanvas.getContext('2d')!;
+
+  //       ctx.drawImage(chartCanvas, 0, 0);
+
+  //       // Tutup area kolom RIG dengan warna putih (hapus konten lama yang mungkin bergeser)
+  //       // const coverWidth = (rigColumnWidth + 20) * scale;
+  //       ctx.fillStyle = '#ffffff';
+  //       ctx.clearRect(0, 0, rigColumnWidth * scale, totalHeight);
+
+  //       // Gambar ulang kolom RIG di atas (dari canvas terpisah yang scroll=0)
+  //       ctx.drawImage(
+  //         rigCanvas,
+  //         0, 0, rigColumnWidth * scale, totalHeight, // source rect dari rigCanvas
+  //         0, 0, rigColumnWidth * scale, totalHeight  // dest rect di finalCanvas
+  //       );
+
+  //       const link        = document.createElement('a');
+  //       link.download     = `barchart-gantt-${new Date().toISOString().slice(0, 10)}.png`;
+  //       link.href         = finalCanvas.toDataURL('image/png');
+  //       link.click();
+
+  //     }).catch((err: any) => {
+  //       console.error('Screenshot error:', err);
+  //     }).finally(() => {
+  //       this.isCapturing = false;
+  //     });
+
+  //   }, 300);
+  // }
+
   screenshotChart() {
     const chartEl = this.ganttChartEl.nativeElement as HTMLElement;
     this.isCapturing = true;
 
-    setTimeout(() => {
-      //Ukur area chart
-      const scrollingEl    = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
-      const fullWidth      = scrollingEl ? scrollingEl.scrollWidth : chartEl.scrollWidth;
-      const fullHeight     = chartEl.scrollHeight;
-      // Posisi kiri area scrollable (= lebar kolom fixed yAxis di sisi kiri)
-      const innerOffset    = scrollingEl ? (scrollingEl.offsetLeft || 0) : 0;
+    // ✅ FIX: reset scroll pada DOM ASLI (live), bukan hanya di dalam clone.
+    // Well/Remarks dataLabels pakai useHTML:true, jadi posisinya dihitung
+    // Highcharts berdasarkan scrollLeft aktual saat capture berjalan.
+    // Kalau scroll belum di-reset di elemen live, hasil clone bisa beda
+    // dengan yang diharapkan.
+    const scrollingElLive = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
+    if (scrollingElLive) {
+      scrollingElLive.scrollLeft = 0;
+    }
 
-      
+    setTimeout(() => {
+      // Ukur area chart
+      const scrollingEl = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
+      const fullWidth   = scrollingEl ? scrollingEl.scrollWidth : chartEl.scrollWidth;
+      const fullHeight  = chartEl.scrollHeight;
+
       const axes      = chartEl.querySelectorAll('.highcharts-axis.highcharts-xaxis');
       const monthAxis = axes && axes.length > 1 ? axes[1] as HTMLElement : null;
-      let headerTop   = 120;
+
+      let headerTop = 120;
       if (monthAxis) {
         const rectParent = chartEl.getBoundingClientRect();
         const rectAxis   = axes[1].getBoundingClientRect();
-        headerTop        = rectAxis.top - rectParent.top;
+        headerTop = rectAxis.top - rectParent.top;
       }
 
       const cropHeight = fullHeight - headerTop;
 
-      // Lebar kolom RIG (yAxis grid column kiri)
-      const yAxisGrid  = chartEl.querySelector('.highcharts-yaxis-grid') as SVGElement;
-      const rigColEl   = chartEl.querySelector('.highcharts-grid-line') as SVGElement;
-
-      // Cari lebar kolom RIG dari elemen yAxis label
-      let rigColumnWidth = 150; // fallback default
-      // const yAxisEl = chartEl.querySelector('.highcharts-yaxis') as SVGElement;
-      // if (yAxisEl) {
-      //   const yBBox = typeof (yAxisEl as any).getBBox === 'function' 
-      //   ? (yAxisEl as any).getBBox() 
-      //   : null;
-      //   if (yBBox && yBBox.width > 0) rigColumnWidth = Math.ceil(yBBox.width) + 2;
-      // }
-      const yAxisLabels = chartEl.querySelectorAll('.highcharts-yaxis-labels text');
-      if (yAxisLabels && yAxisLabels.length > 0) {
-        try {
-          const firstLabel = yAxisLabels[0] as SVGTextElement;
-          const bbox = firstLabel.getBoundingClientRect();
-          const chartRect = chartEl.getBoundingClientRect();
-          // Lebar kolom = posisi kanan label + padding
-          rigColumnWidth = Math.ceil(bbox.right - chartRect.left) + 10;
-        } catch (e) {}
-      }
-
-      const gridColumnTitle = chartEl.querySelector('.highcharts-grid-line') as SVGElement;
-      if (rigColumnWidth <= 150) {
-        try {
-          const yAxisEl = chartEl.querySelector('.highcharts-yaxis') as SVGElement;
-          const yBBox = typeof (yAxisEl as any).getBBox === 'function'
-            ? (yAxisEl as any).getBBox()
-            : null;
-          if (yBBox && yBBox.width > 0) rigColumnWidth = Math.ceil(yBBox.width) + 20;
-        } catch (e) {}
-      }
-
-      // Canvas 1: Kolom RIG (fixed left)
-      const rigOptions = {
+      // ✅ Satu kali capture penuh — tidak ada composite/overlap antar canvas,
+      // sehingga tidak ada risiko ghosting/bayangan seperti versi dua-canvas.
+      html2canvas(chartEl, {
         backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        width:  rigColumnWidth,
-        height: cropHeight,
+        useCORS:      true,
+        allowTaint:   true,
+        scale:        2,
+        width:        fullWidth,
+        height:       cropHeight,
         x: 0,
         y: headerTop,
-        windowWidth: fullWidth,
+        windowWidth:  fullWidth,
         windowHeight: fullHeight,
         scrollX: 0,
         scrollY: -window.scrollY,
-        onclone: (_doc: Document, clonedEl: HTMLElement) => {
-          // Pastikan SVG cukup lebar untuk dirender
-          const svg = clonedEl.querySelector('.highcharts-root') as SVGElement;
-          if (svg) svg.setAttribute('width', String(fullWidth));
-          const container = clonedEl.querySelector('.highcharts-container') as HTMLElement;
-          if (container) { container.style.width = fullWidth + 'px'; container.style.overflow = 'visible'; }
-          const scrolling = clonedEl.querySelector('.highcharts-scrolling') as HTMLElement;
-          if (scrolling) { scrolling.style.overflow = 'visible'; scrolling.style.width = fullWidth + 'px'; }
-          // Reset scroll ke posisi 0 (kolom RIG ada di kiri)
-          if (scrolling) scrolling.scrollLeft = 0;
-        }
-      };
 
-      // Canvas 2: Full chart (seluruh lebar scroll) — tanpa yAxis
-      const chartOptions = {
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        width:  fullWidth,
-        height: cropHeight,
-        x: 0,
-        y: headerTop,
-        windowWidth: fullWidth,
-        windowHeight: fullHeight,
-        scrollX: 0,
-        scrollY: -window.scrollY,
+        // onclone: expand container Highcharts di dokumen tiruan
+        // supaya html2canvas merender seluruh lebar chart (bukan cuma
+        // bagian yang terlihat di viewport/scroll saat ini)
         onclone: (_doc: Document, clonedEl: HTMLElement) => {
           const expand = (el: HTMLElement | SVGElement | null, isSvg = false) => {
             if (!el) return;
@@ -794,69 +925,38 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             (el as HTMLElement).style.maxWidth  = 'none';
             if (isSvg) (el as SVGElement).setAttribute('width', String(fullWidth));
           };
+
           expand(clonedEl.querySelector('.highcharts-scrolling'));
           expand(clonedEl.querySelector('.highcharts-scrolling-parent'));
           expand(clonedEl.querySelector('.highcharts-container'));
           expand(clonedEl.querySelector('.highcharts-root'), true);
           expand(clonedEl);
 
+          // Geser posisi axis title ke atas sesuai crop headerTop
           const axisTitles = clonedEl.querySelectorAll('.highcharts-axis-title');
           axisTitles.forEach((el) => {
-            const svgEl     = el as SVGTextElement;
-            const currentY  = parseFloat(svgEl.getAttribute('y') || '0');
+            const svgEl    = el as SVGTextElement;
+            const currentY = parseFloat(svgEl.getAttribute('y') || '0');
             svgEl.setAttribute('y', String(currentY - headerTop));
           });
 
-          //hide y
-          clonedEl.querySelectorAll(
-            '.highcharts-yaxis-labels, .highcharts-yaxis-grid, .highcharts-yaxis, .highcharts-yaxis-title'
-          ).forEach((el: Element) => {
-            (el as SVGElement).setAttribute('display', 'none');
-            (el as HTMLElement).style.display = 'none';
-          });
-
-          // Reset scrollLeft agar inner SVG tidak ter-offset saat dirender
-          const sc = clonedEl.querySelector('.highcharts-scrolling') as HTMLElement;
-          if (sc) sc.scrollLeft = 0;
+          // ✅ Pastikan scroll di dalam clone juga 0, konsisten dengan DOM live
+          // yang sudah di-reset di atas — supaya kolom RIG (sticky/fixed di
+          // kiri) muncul utuh di posisi awal, bukan bergeser mengikuti sisa
+          // state scroll sebelumnya.
+          const scrolling = clonedEl.querySelector('.highcharts-scrolling') as HTMLElement;
+          if (scrolling) scrolling.scrollLeft = 0;
         }
-      };
 
-      Promise.all([
-        html2canvas(chartEl, rigOptions as any),
-        html2canvas(chartEl, chartOptions as any),
-      ]).then(([rigCanvas, chartCanvas]) => {
-
-        const scale        = 2;
-        const totalWidth   = fullWidth * scale;
-        const totalHeight  = cropHeight * scale;
-
-        // Canvas final gabungan
-        const finalCanvas  = document.createElement('canvas');
-        finalCanvas.width  = totalWidth;
-        finalCanvas.height = totalHeight;
-        const ctx          = finalCanvas.getContext('2d')!;
-
-        ctx.drawImage(chartCanvas, 0, 0);
-
-        // Tutup area kolom RIG dengan warna putih (hapus konten lama yang mungkin bergeser)
-        // const coverWidth = (rigColumnWidth + 20) * scale;
-        ctx.fillStyle = '#ffffff';
-        ctx.clearRect(0, 0, rigColumnWidth * scale, totalHeight);
-
-        // Gambar ulang kolom RIG di atas (dari canvas terpisah yang scroll=0)
-        ctx.drawImage(
-          rigCanvas,
-          0, 0, rigColumnWidth * scale, totalHeight, // source rect dari rigCanvas
-          0, 0, rigColumnWidth * scale, totalHeight  // dest rect di finalCanvas
-        );
-
-        const link        = document.createElement('a');
-        link.download     = `barchart-gantt-${new Date().toISOString().slice(0, 10)}.png`;
-        link.href         = finalCanvas.toDataURL('image/png');
+      }).then((canvas: HTMLCanvasElement) => {
+        const link    = document.createElement('a');
+        link.download = `barchart-gantt-${new Date().toISOString().slice(0, 10)}.png`;
+        link.href     = canvas.toDataURL('image/png');
         link.click();
 
       }).catch((err: any) => {
         console.error('Screenshot error:', err);
+
       }).finally(() => {
         this.isCapturing = false;
       });

@@ -1414,12 +1414,12 @@ export class OneSlideComponent implements OnInit {
           enabled: true,
           align: 'left',
           verticalAlign: 'top',
-          formatter: function (this: any) {
-            if (this.point.index === 1) {
-              return 'Pwf_design: <b>' + this.y.toFixed(2) + '</b>';
-            }
-            return null;
-          },
+          // formatter: function (this: any) {
+          //   if (this.point.index === 1) {
+          //     return 'Pwf_design: <b>' + this.y.toFixed(2) + '</b>';
+          //   }
+          //   return null;
+          // },
           style: { fontSize: '11px', fontWeight: 'bold', color: '#E53935' },
           backgroundColor: 'rgba(255,255,255,0.85)',
           padding: 4,
