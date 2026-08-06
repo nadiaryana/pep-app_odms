@@ -1,14 +1,30 @@
 <div fxLayout="row" fxLayout.lt-lg="column" fxLayoutGap="10px" fxLayoutAlign="start stretch">
 
-    <mat-card fxFlex="30" class="dasboard_card">
-      <mat-card-content>
+    <mat-card fxFlex="30" class="dasboard_card well-card">
+      <mat-card-content class="well-content">
         <h4 class="title_awy" align="center">Daftar Sumur</h4>
         <h5 class="tanggal_awy" align="center">{{ todayDate }}</h5>
         <hr class="garis_aw">
 
+        <!-- Pencarian sumur -->
+        <div class="well-search">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="wellSearch"
+            placeholder="Cari sumur...">
+          <mat-icon
+            *ngIf="wellSearch"
+            class="clear-icon"
+            (click)="wellSearch = ''"
+            title="Bersihkan">close</mat-icon>
+        </div>
+
+        <div class="well-list-scroll">
         <mat-list>
           <mat-list-item 
-            *ngFor="let well of wells" 
+            *ngFor="let well of filteredWells" 
             (click)="selectWell(well)" 
             class="well-item" 
             [class.selected-well]="selectedWell && selectedWell.name === well.name"
@@ -22,17 +38,26 @@
               </span>
             </div>
           </mat-list-item>
+
+          <mat-list-item *ngIf="wells.length === 0">
+            <span style="color: #999;">Belum ada data dari perangkat IoT.</span>
+          </mat-list-item>
+
+          <mat-list-item *ngIf="wells.length > 0 && filteredWells.length === 0">
+            <span style="color: #999;">Sumur "{{ wellSearch }}" tidak ditemukan.</span>
+          </mat-list-item>
         </mat-list>
+        </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-card fxFlex="70" class="dasboard_card">
-      <mat-card-content *ngIf="selectedWell">
+    <mat-card fxFlex="70" class="dasboard_card chart-card">
+      <mat-card-content *ngIf="selectedWell" class="chart-content">
         <highcharts-chart
           *ngIf="chartOptions"
           [Highcharts]="Highcharts"
           [options]="chartOptions"
-          style="width: 100%; height: 500px; display: block;">
+          style="width: 100%; height: 100%; display: block;">
         </highcharts-chart>
       </mat-card-content>
     </mat-card>

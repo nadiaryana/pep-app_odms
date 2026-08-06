@@ -56,9 +56,23 @@ export class SumurComponent implements OnInit, OnDestroy {
     { id: 9, name: "ST-149", status: "UNKNOWN", channelId: "3276849", apiKey: "R418ELYI42WAAARK" },
     { id: 10, name: "ST-206", status: "UNKNOWN", channelId: "3276850", apiKey: "SMCYKUB8AVI6G74Z" },
     { id: 11, name: "ST-082", status: "UNKNOWN", channelId: "3280056", apiKey: "MPR2UKWB9X9YC5B5" },
+    { id: 12, name: "ST-016", status: "UNKNOWN", channelId: "3276852", apiKey: "LPXT26CWZJB35D9V" },
+    { id: 13, name: "ST-045", status: "UNKNOWN", channelId: "3403165", apiKey: "YMG41QBW0LB7XRIP" },
+    { id: 14, name: "ST-168", status: "UNKNOWN", channelId: "3403211", apiKey: "R9V22SKE0TH0X6YN" },
+    { id: 15, name: "ST-047", status: "UNKNOWN", channelId: "3405261", apiKey: "DBRAUGY3VQ1J8XAA" },
+    { id: 16, name: "ST-179", status: "UNKNOWN", channelId: "3405270", apiKey: "ZSIWN55ZUBFJUKCG" },
+
   ];
 
   selectedWell: Well | null = null;
+
+  wellSearch: string = "";
+  
+  get filteredWells(): Well[] {
+    const q = this.wellSearch.trim().toLowerCase();
+    if (!q) return this.wells;
+    return this.wells.filter((w) => w.name.toLowerCase().indexOf(q) !== -1);
+  }
 
   ngOnInit(): void {
     this.titleService.titleSource.next({
