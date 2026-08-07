@@ -64,6 +64,11 @@ export class PeSumurCurrentAddComponent implements OnDestroy {
             { name: 'ST-149', value: 'ST-149' },
             { name: 'ST-206', value: 'ST-206' },
             { name: 'ST-082', value: 'ST-082' },
+            { name: 'ST-016', value: 'ST-016' },
+            { name: 'ST-045', value: 'ST-045' },
+            { name: 'ST-168', value: 'ST-168' },
+            { name: 'ST-047', value: 'ST-047' },
+            { name: 'ST-179', value: 'ST-179' },
         ];
 
         private statusPollSubscription: Subscription;
