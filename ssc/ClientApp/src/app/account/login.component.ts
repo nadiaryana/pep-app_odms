@@ -16,6 +16,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class LoginComponent implements OnInit, OnDestroy {
 	// @Input() companies;
 	submitting = false;
+	hide = true;
 	loginForm: FormGroup;
 	
 	constructor(
@@ -64,20 +65,21 @@ export class LoginComponent implements OnInit, OnDestroy {
 	get f() { return this.loginForm.controls; }
 	
 	ngOnInit() { 
-		this.titleService.titleSource.next(null);
+		this.titleService.titleSource.next({ title: '', icon: '', breadcrumbs: [] });
 
-		// Set background untuk halaman login
+		// Set background gelap full-screen untuk halaman login
 		const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;
 		if (sidenavContent) {
-			sidenavContent.style.background = 'url("assets/image/logo.png") no-repeat';
-			sidenavContent.style.backgroundPositionX = 'right';
-			sidenavContent.style.backgroundPositionY = 'top';
+			sidenavContent.style.background = '#f3f4f6';
+			sidenavContent.style.backgroundAttachment = 'fixed';
+			sidenavContent.style.minHeight = '100vh';
 		}
 
 		this.loginForm = this.formBuilder.group({
 			// company_id: ['', Validators.required],
 			username: ['', Validators.required],
 			password: ['', Validators.required],
+			remember: [false],
 		});
 		// this.http.get<any>('api/account/company').subscribe(res => {
 			// this.companies = res.items;
@@ -90,8 +92,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 		const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;
 		if (sidenavContent) {
 			sidenavContent.style.background = '';
-			sidenavContent.style.backgroundPositionX = '';
-			sidenavContent.style.backgroundPositionY = '';
+			sidenavContent.style.backgroundAttachment = '';
+			sidenavContent.style.minHeight = '';
 		}
 	}
 
