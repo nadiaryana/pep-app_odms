@@ -48,19 +48,19 @@ export class PeDailyAggregateListComponent implements OnInit, OnDestroy {
 
   // DATE PICKERS — Weekly 
   @ViewChild('weekly_start_datePicker', { static: true }) weekly_start_datePicker: MatDatepicker<any> = null!;
-  weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0))); //7 hari lalu
+  weekly_start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 14)).setHours(0, 0, 0, 0))); //14 hari lalu (awal Week 1)
   weekly_start_dateInput = '';
 
   @ViewChild('weekly_end_datePicker', { static: true }) weekly_end_datePicker: MatDatepicker<any> = null!;
-  weekly_end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0)));
+  weekly_end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 8)).setHours(0, 0, 0, 0))); //8 hari lalu (akhir Week 1)
   weekly_end_dateInput = '';
 
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any> = null!;
-  start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0))); //1 hari lalu
+  start_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0))); //7 hari lalu (awal Week 2)
   start_dateInput = '';
 
   @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any> = null!;
-  end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0)));
+  end_dateControl = new FormControl(new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0, 0, 0, 0))); //1 hari lalu / h-1 (akhir Week 2)
   end_dateInput = '';
 
   // DATE PICKERS — Daily

@@ -256,7 +256,7 @@ export class PeDailyChartComponent {
       type: 'line',
       yAxis: 1,
       data: [],
-      color: '#443d16',
+      color: '#FB6C00',
       zIndex: 0,
       marker: {
         enabled: false

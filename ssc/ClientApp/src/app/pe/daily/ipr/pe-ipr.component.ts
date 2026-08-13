@@ -819,36 +819,6 @@ export class IprComponent implements OnInit {
     console.log(`Operating Design:
       Pwf_design = ${pwf2}
       q_design   = ${q_design}`);   
-
-    // ===== DEBUG: bandingkan kondisi AKTUAL vs OPERATING DESIGN =====
-    const dfl_aktual = Number(dynamic_fl);
-    const sm_tersirat_dariAktual = bottomRaw - dfl_aktual; // KD_aktual dianggap = bottomRaw? cek catatan di bawah
-    const sm_implied_dariKD2 = ds_kd2 - dfl_aktual; // kalau mau pakai KD2 sebagai KD acuan
-
-    console.log("=== DEBUG: Aktual vs Operating Design ===");
-    console.table({
-      "SM (dari tabel produksi, avg)": Number(this.sm.value),
-      "SM2 (input Operating Design)": sm2,
-      "KD aktual (ds_kd, dari data terakhir)": Number(this.ds_kd.value),
-      "KD2 (input Operating Design)": ds_kd2,
-      "DFL aktual (sonolog)": dfl_aktual,
-      "DFL tersirat dari KD2 - SM2": dfl2,
-      "Selisih DFL (aktual vs tersirat)": (dfl_aktual - dfl2).toFixed(2),
-      "SM tersirat dari (KD2 - DFL aktual)": sm_implied_dariKD2.toFixed(2),
-      "Selisih SM (tabel vs tersirat)": (Number(this.sm.value) - sm_implied_dariKD2).toFixed(2),
-    });
-
-    console.log(`Pwf aktual   = ${pwf.toFixed(2)}  |  Pwf_design = ${pwf2.toFixed(2)}  |  selisih = ${(pwf - pwf2).toFixed(2)}`);
-    console.log(`Q (Gross Avg aktual) = ${grossAvg.toFixed(2)}  |  Q_design = ${q_design.toFixed(2)}  |  selisih = ${(grossAvg - q_design).toFixed(2)}`);
-
-    if (Math.abs(dfl_aktual - dfl2) > 1) {
-      console.warn(
-        `⚠️ DFL tersirat dari SM2/KD2 (${dfl2.toFixed(2)} m) berbeda dari DFL aktual sonolog (${dfl_aktual} m). ` +
-        `Ini penyebab Q_design (${q_design.toFixed(2)}) tidak sama dengan Gross Average aktual (${grossAvg.toFixed(2)}). ` +
-        `Kemungkinan SM2/KD2 yang diinput tidak konsisten dengan data SM/KD/DFL sumber (beda tanggal ukur / beda tabel).`
-      );
-    }
-    // ===== END DEBUG =====
   }
 
   getPwf(sbhp: any, iteration = 1) {
