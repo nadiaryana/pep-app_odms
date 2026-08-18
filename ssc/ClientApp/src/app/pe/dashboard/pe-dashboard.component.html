@@ -43,7 +43,7 @@
         <div class="diff-badge" *ngIf="valueOperationActualDiff !== null"
           [ngClass]="valueOperationActualDiff > 0 ? 'diff-positive' : valueOperationActualDiff < 0 ? 'diff-negative' : 'diff-neutral'">
           <mat-icon class="diff-icon">{{valueOperationActualDiff > 0 ? 'arrow_upward' : valueOperationActualDiff < 0 ? 'arrow_downward' : 'remove'}}</mat-icon>
-          {{valueOperationActualDiff > 0 ? '+' : ''}}{{valueOperationActualDiff | number:'1.0-2'}}
+          {{valueOperationActualDiff > 0 ? '+' : ''}}{{valueOperationActualDiff | number:'1.0-0'}}
         </div>
       </mat-card-content>
     </mat-card>

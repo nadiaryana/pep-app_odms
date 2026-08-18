@@ -18,6 +18,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 	submitting = false;
 	hide = true;
 	loginForm: FormGroup;
+	loginMode: string = 'admin'; // 'admin' | 'viewer' — determined from the current route
+	expectedRole: string = 'ssa-pe';
 	
 	constructor(
 		private authService: AuthService,
@@ -29,6 +31,14 @@ export class LoginComponent implements OnInit, OnDestroy {
 		private route: ActivatedRoute,
 	) { }
 	  
+	get loginBadge(): string {
+		return this.loginMode === 'viewer' ? 'Viewer Panel' : 'Admin Panel';
+	}
+
+	get loginTitle(): string {
+		return this.loginMode === 'viewer' ? 'Masuk sebagai Viewer' : 'Masuk sebagai Admin';
+	}
+	  
 	onSubmit() { 
 		this.submitting = true;
 		this.snackBar.dismiss();
@@ -37,7 +47,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 			// company_id:this.loginForm.controls.company_id.value, 
 			username: this.loginForm.controls.username.value,
 			password: this.loginForm.controls.password.value
-		}).subscribe(res => {
+		}, this.expectedRole).subscribe(res => {
 			
 			if(res["errMsg"]) {
 				this.snackBar.open(res["errMsg"], 'dismiss');
@@ -66,6 +76,11 @@ export class LoginComponent implements OnInit, OnDestroy {
 	
 	ngOnInit() { 
 		this.titleService.titleSource.next({ title: '', icon: '', breadcrumbs: [] });
+
+		// Deteksi halaman login: /admin/login → Admin, /viewer/login → Viewer
+		const path = this.route.snapshot.url.map(s => s.path).join('/');
+		this.loginMode = path.indexOf('viewer') !== -1 ? 'viewer' : 'admin';
+		this.expectedRole = this.loginMode === 'viewer' ? 'ssa-viewer' : 'ssa-pe';
 
 		// Set background gelap full-screen untuk halaman login
 		const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;

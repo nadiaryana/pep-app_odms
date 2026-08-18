@@ -267,7 +267,7 @@ namespace ssc.Areas.PE.Controllers
       List<Actual> items = new List<Actual>();
       int error_count = 0;
 
-      for (var r = 3; r <= rowCount; r++)
+      for (var r = 2; r <= rowCount; r++)
       {
         if (!string.IsNullOrWhiteSpace(ws.Cells[r, 1].Value?.ToString()))
         {

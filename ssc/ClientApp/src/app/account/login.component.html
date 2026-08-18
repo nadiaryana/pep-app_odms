@@ -4,8 +4,8 @@
 
     <!-- HEADER -->
     <div class="login-header">
-      <span class="panel-badge">Admin Panel</span>
-      <h1 class="login-title">Selamat datang kembali</h1>
+      <span class="panel-badge">{{ loginBadge }}</span>
+      <h1 class="login-title">{{ loginTitle }}</h1>
       <p class="login-subtitle">Masuk untuk mengakses dashboard</p>
     </div>
 
@@ -38,11 +38,11 @@
 
       <div class="login-options">
         <mat-checkbox class="remember-check" formControlName="remember" color="primary">Ingat saya</mat-checkbox>
-        <a class="forgot-link" href="javascript:void(0)">Lupa password?</a>
+        <!-- <a class="forgot-link" href="javascript:void(0)">Lupa password?</a> -->
       </div>
 
       <button type="submit" class="login-submit" [disabled]="!loginForm.valid || submitting">
-        <span>Masuk ke Sistem</span>
+        <span>LOG IN</span>
         <mat-icon>arrow_forward</mat-icon>
       </button>
 

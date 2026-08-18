@@ -31,12 +31,18 @@ export class AuthService {
 		return this.currentUserSubject.asObservable();
 	}
 
-    login(login) {
+    login(login, expectedRole: string = null) {
 		
 		return this.http.post<any>('api/account/login', login)
 		.pipe(map(res => {
 			// login successful if there's a jwt token in the response
 			if (res.user) { // && user.token
+				// Role-based access control: if the login page expects a specific role,
+				// reject users whose role does not match (e.g. admin logging in as viewer).
+				if (expectedRole && res.user.Role && res.user.Role !== expectedRole) {
+					var roleName = expectedRole === 'ssa-viewer' ? 'Viewer' : 'Admin';
+					return Object.assign({}, res, { errMsg: 'Akun ini tidak memiliki akses sebagai ' + roleName + '. Silakan gunakan halaman login yang sesuai.' });
+				}
 				// store user details and jwt token in local storage to keep user logged in between page refreshes
 				sessionStorage.setItem('currentUser', JSON.stringify(res.user));
 				// console.log("what is : "+JSON.stringify(res.user.DisplayName));

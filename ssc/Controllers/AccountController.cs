@@ -87,6 +87,7 @@ namespace ssc.Controllers
             Name = user.username,
             DisplayName = user.display_name,
             Email = user.email,
+            Role = user.role,
             Permission = identity.Claims.Where(x => x.Issuer == "PEP").Select(c => c.Value).ToArray(),
             token = token
           },

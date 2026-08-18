@@ -89,6 +89,8 @@
   caret-color: #E4032E;
 }
 
+
+
 ::ng-deep .login-field .mat-form-field-label {
   color: rgba(255, 255, 255, 0.45) !important;
 }
@@ -125,7 +127,6 @@
   font-size: 12px;
 }
 
-/* ── OPTIONS (ingat saya / lupa password) ── */
 .login-options {
   display: flex;
   justify-content: space-between;
@@ -157,7 +158,6 @@
   text-decoration: underline;
 }
 
-/* ── SUBMIT BUTTON ──────────────────────── */
 .login-submit {
   margin-top: 6px;
   width: 100%;
@@ -198,7 +198,7 @@
   cursor: not-allowed;
 }
 
-/* ── FOOTER ─────────────────────────────── */
+
 .login-footer {
   margin-top: 30px;
   text-align: center;
