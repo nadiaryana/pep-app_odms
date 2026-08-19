@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview - Map Toolbar</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; font-family: Roboto, 'Segoe UI', sans-serif; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #eef1f6;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    h2 { margin: 0 0 8px; color: #333; font-weight: 600; }
+
+    /* Search */
+    .toolbar-search { position: relative; flex: 0 1 260px; min-width: 200px; }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 25px;
+      background: #f5f5f5;
+      border: 1px solid #c0c0c0;
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #333;
+      font-size: 14px;
+    }
+    .search-box input::placeholder { color: #999; }
+    .search-box .material-icons { color: #666; font-size: 20px; }
+
+    /* Filter chips */
+    .toolbar-filters { display: flex; align-items: center; gap: 8px; }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: 1px solid #d0d0d0;
+      background: #fafafa;
+      color: #333;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-chip:hover { background: #f0f0f0; }
+    .filter-chip.active {
+      background: #1976d2;
+      border-color: #1976d2;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(25, 118, 210, 0.35);
+    }
+    .chip-icon {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #00e676;
+    }
+    .chip-icon--flowline { width: 12px; height: 4px; border-radius: 2px; background: #ffd54f; }
+    .chip-icon--station  { width: 10px; height: 10px; border-radius: 2px; background: #7e57c2; }
+
+    /* Toolbar */
+    .map-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 16px;
+    }
+
+    /* Legend */
+    .toolbar-legend {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      padding-top: 10px;
+      border-top: 1px solid #e8e8e8;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: #555; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 1.5px rgba(0,0,0,0.15); }
+
+    .caption { font-size: 12px; color: #777; }
+  </style>
+</head>
+<body>
+  <div>
+    <h2>Status colors</h2>
+    <p class="caption">Mapping dari statusColors di komponen</p>
+  </div>
+
+  <div class="map-toolbar">
+    <div class="toolbar-row">
+      <!-- Search -->
+      <div class="toolbar-search">
+        <div class="search-box">
+          <input type="text" placeholder="Cari sumur..." />
+          <span class="material-icons">search</span>
+        </div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="toolbar-filters">
+        <button type="button" class="filter-chip active">
+          <span class="chip-icon"></span><span>Well</span>
+        </button>
+        <button type="button" class="filter-chip">
+          <span class="chip-icon chip-icon--flowline"></span><span>Flowline</span>
+        </button>
+        <button type="button" class="filter-chip">
+          <span class="chip-icon chip-icon--station"></span><span>Station</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status legend -->
+    <div class="toolbar-legend">
+      <div class="legend-item"><span class="legend-dot" style="background:#00B050"></span><span>Produksi</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#92D050"></span><span>Off Produksi</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#FF0000"></span><span>Mati</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#366092"></span><span>Injeksi</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ffff00"></span><span>Suspended</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#25310e"></span><span>Kering</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#000000"></span><span>Abandoned</span></div>
+    </div>
+  </div>
+  </div>
+
+  <p class="caption">Legend item dibuat otomatis dari statusColors melalui method <code>buildLegend()</code> pada komponen.</p>
+</body>
+</html>

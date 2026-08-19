@@ -87,10 +87,12 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     'mati':              '#FF0000',
     'injeksi':           '#366092',
     'suspended':         '#ffff00',
-    'kering':            '#25310e',
+    'kering':            '#74490a',
     'abandoned':         '#000000',
 
   };
+
+  legendItems: { label: string; color: string }[] = [];
 
   private svgOverlay: SVGElement | null = null;
   private flowlinePaths: SVGPathElement[] = [];
@@ -120,6 +122,7 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.fixLeafletDefaultIcon();
+    this.buildLegend();
     this.loadSumurFromAPI();
     
     this.filterSubscription = this.xfilterService.filter.subscribe(res => {
@@ -754,6 +757,17 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   getStatusColor(status: string): string {
     if (!status) return '#bfbfbf';
     return this.statusColors[status.trim().toLowerCase()] || '#bfbfbf';
+  }
+
+  private buildLegend(): void {
+    this.legendItems = Object.keys(this.statusColors).map(status => ({
+      label: this.capitalize(status),
+      color: this.statusColors[status],
+    }));
+  }
+
+  private capitalize(text: string): string {
+    return text.replace(/\b\w/g, ch => ch.toUpperCase());
   }
 
   applyFilters(columnfilter: any): Sumur[] {

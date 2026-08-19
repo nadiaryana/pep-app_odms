@@ -1,38 +1,18 @@
 
 
 <div class="map-wrapper">
-  <div class="map-header">
-    <!-- <div class="map-header__title">
-      <mat-icon>map</mat-icon>
-      <span>Peta Sumur</span>
-    </div> -->
-    <div class="container-top-bar" style="display: flex; gap: 16px;" >
-      <mat-checkbox [(ngModel)]="showWell" (change)="updateMapVisibility()" >
-        Well
-      </mat-checkbox>
-
-      <mat-checkbox [(ngModel)]="showFlowline" (change)="updateMapVisibility()">
-        Flowline
-      </mat-checkbox>
-
-      <mat-checkbox [(ngModel)]="showStation" (change)="updateMapVisibility()">
-        Station
-      </mat-checkbox>
-    </div>
-    <!-- <div class="header-info">
-      <span class="legend-item legend-item--total">
-        Total: {{ sumurList.length }} Sumur
-      </span>
-    </div> -->
-    <div class="well-search">
-      <mat-form-field appearance="outline" style="width:200px;">
+  <div class="map-toolbar">
+    <div class="toolbar-row">
+    <!-- Search field -->
+    <div class="toolbar-search well-search">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
         <input
-          matInput
-          placeholder="Cari Sumur..."
+          type="text"
+          placeholder="Cari sumur..."
           [(ngModel)]="searchWell"
           (input)="onSearchWell()">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
+      </div>
       <div
         class="search-result"
         *ngIf="filteredWells.length > 0">
@@ -44,6 +24,45 @@
         </div>
       </div>
     </div>
+
+    <!-- Filter chips -->
+    <div class="toolbar-filters">
+      <button
+        type="button"
+        class="filter-chip"
+        [class.active]="showWell"
+        (click)="toggleLayer('well', !showWell)">
+        <span class="chip-icon chip-icon--well"></span>
+        <span>Well</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-chip"
+        [class.active]="showFlowline"
+        (click)="toggleLayer('flowline', !showFlowline)">
+        <span class="chip-icon chip-icon--flowline"></span>
+        <span>Flowline</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-chip"
+        [class.active]="showStation"
+        (click)="toggleLayer('station', !showStation)">
+        <span class="chip-icon chip-icon--station"></span>
+        <span>Station</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Status legend -->
+  <div class="toolbar-legend">
+    <div class="legend-item" *ngFor="let item of legendItems">
+      <span class="legend-dot" [style.background-color]="item.color"></span>
+      <span class="legend-label">{{ item.label }}</span>
+    </div>
+  </div>
   </div>
 
   <div class="map-container">

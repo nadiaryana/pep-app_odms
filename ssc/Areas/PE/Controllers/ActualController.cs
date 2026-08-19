@@ -413,7 +413,7 @@ namespace ssc.Areas.PE.Controllers
         return BadRequest("Invalid or missing _id parameter");
       }
 
-      // 🔹 Ubah string _id jadi ObjectId
+
       ObjectId objectId;
       try
       {
@@ -424,7 +424,7 @@ namespace ssc.Areas.PE.Controllers
         return BadRequest("Invalid ObjectId format");
       }
 
-      // 🔹 Panggil data pakai Equals()
+
       var _tmp = _actual_tmp.Find(t => t._id.Equals(objectId)).FirstOrDefault();
 
       if (_tmp == null)
@@ -459,7 +459,7 @@ namespace ssc.Areas.PE.Controllers
       if (string.IsNullOrEmpty(tmp_id))
         return BadRequest(new { message = "tmp_id is missing" });
 
-      // 🔹 Convert string ke ObjectId
+
       ObjectId objectId;
       try
       {
@@ -470,7 +470,7 @@ namespace ssc.Areas.PE.Controllers
         return BadRequest(new { message = "Invalid tmp_id format" });
       }
 
-      // 🔹 Ambil data temporary berdasarkan tmp_id
+
       var tmp = _actual_tmp.Find(t => t._id.Equals(objectId)).FirstOrDefault();
       if (tmp == null)
         return BadRequest(new { message = "No data to save." });
@@ -486,7 +486,7 @@ namespace ssc.Areas.PE.Controllers
       {
         if (item.date == null)
           continue;
-        // 🔹 Terapkan pembulatan sebelum update
+
         // var sot = item.sot.HasValue ? Math.Round(item.sot.Value, 0) : (decimal?)null;
         var total_opr = item.total_opr.HasValue ? Math.Round(item.total_opr.Value, 0) : (decimal?)null;
         var sgt_mgs = item.sgt_mgs.HasValue ? Math.Round(item.sgt_mgs.Value, 0) : (decimal?)null;
