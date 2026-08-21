@@ -34,6 +34,16 @@ namespace ssc.Areas.PE.Controllers
             _monitoring_rk_tmp = _database.GetCollection<MonitoringRKTmp>("monitoring_rk_tmp");
         }
 
+        /// <summary>
+        /// Kunci identitas untuk cek duplikat antara monitoring_rk dan barchart.
+        /// Menggabungkan well + plan_start + plan_end sehingga sumur yang sama
+        /// dengan jadwal (plan) berbeda tetap dianggap sebagai data terpisah.
+        /// </summary>
+        private static string DedupKey(string well, DateTime? planStart, DateTime? planEnd)
+        {
+            return (well ?? "") + "|" + (planStart?.Ticks ?? 0) + "|" + (planEnd?.Ticks ?? 0);
+        }
+
         [Authorize("PeMonitoringRK Read")]
         [HttpGet]
         public ActionResult Get(
@@ -117,10 +127,10 @@ namespace ssc.Areas.PE.Controllers
                     // Ambil semua MonitoringRK yang terfilter (tanpa pagination) untuk di-merge
                     var allFilteredRk = _monitoring_rk.Find(rigFilteredXFilter).ToList();
 
-                    // Kumpulkan well yang sudah ada di MonitoringRK (untuk cek duplikat)
-                    var rkWells = new HashSet<string>(allFilteredRk
+                    // Kumpulkan kombinasi well + plan_start + plan_end yang sudah ada di MonitoringRK (untuk cek duplikat)
+                    var rkKeys = new HashSet<string>(allFilteredRk
                         .Where(r => !string.IsNullOrEmpty(r.well))
-                        .Select(r => r.well));
+                        .Select(r => DedupKey(r.well, r.plan_start, r.plan_end)));
 
                     // Ambil data Barchart dengan text filter + column filter yang sama
                     var barchartCollection = _database.GetCollection<Barchart>("barchart");
@@ -171,12 +181,12 @@ namespace ssc.Areas.PE.Controllers
                     }
                     var allBarchart = barchartCollection.Find(bcFilter).ToList();
 
-                    // Merge items: barchart non-rigless yang well-nya belum ada di MonitoringRK
+                    // Merge items: barchart non-rigless yang well+plan_start+plan_end-nya belum ada di MonitoringRK
                     var mergeItems = allBarchart
                         .Where(b => b.rig != null
                                     && !b.rig.ToLower().Contains("rigless")
                                     && !string.IsNullOrEmpty(b.well)
-                                    && !rkWells.Contains(b.well))
+                                    && !rkKeys.Contains(DedupKey(b.well, b.plan_start, b.plan_end)))
                         .Select(b => new MonitoringRK
                         {
                             well = b.well,
@@ -652,14 +662,14 @@ namespace ssc.Areas.PE.Controllers
             var rkRiglessItems = _monitoring_rk.Find(rkFilter).ToList();
             var bcRiglessItems = barchartCollection.Find(bcFilter).ToList();
 
-            // Gabung: ambil barchart rigless yang well-nya belum ada di monitoring_rk
-            var rkWells = new HashSet<string>(rkRiglessItems
+            // Gabung: ambil barchart rigless yang well+plan_start+plan_end-nya belum ada di monitoring_rk
+            var rkKeys = new HashSet<string>(rkRiglessItems
                 .Where(r => !string.IsNullOrEmpty(r.well))
-                .Select(r => r.well));
+                .Select(r => DedupKey(r.well, r.plan_start, r.plan_end)));
 
             var allItems = rkRiglessItems.Concat(
                 bcRiglessItems
-                    .Where(b => !string.IsNullOrEmpty(b.well) && !rkWells.Contains(b.well))
+                    .Where(b => !string.IsNullOrEmpty(b.well) && !rkKeys.Contains(DedupKey(b.well, b.plan_start, b.plan_end)))
                     .Select(b => new MonitoringRK
                     {
                         well = b.well,

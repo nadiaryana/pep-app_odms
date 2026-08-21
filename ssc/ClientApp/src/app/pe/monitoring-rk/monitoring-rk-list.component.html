@@ -124,6 +124,42 @@
             </ng-template>
           </td>
         </ng-container>
+        <ng-container matColumnDef="plan_start">
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan Start</span>
+              <app-xfilter title="Plan Start" column="plan_start" [selected]="plan_start_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editPlanStart">
+              {{row.plan_start ? (row.plan_start | date: 'dd MMM y') : '-'}}
+            </ng-container>
+            <ng-template #editPlanStart>
+              <input matInput [matDatepicker]="planStartDatepicker" [(ngModel)]="row.plan_start" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+              <mat-datepicker-toggle matSuffix [for]="planStartDatepicker"></mat-datepicker-toggle>
+              <mat-datepicker #planStartDatepicker></mat-datepicker>
+            </ng-template>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="plan_end">
+          <th mat-header-cell *matHeaderCellDef rowspan="2">
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan End</span>
+              <app-xfilter title="Plan End" column="plan_end" [selected]="plan_end_xSelected"></app-xfilter>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rk_selection.isSelected(row)">
+            <ng-container *ngIf="!row.isEdit; else editPlanEnd">
+              {{row.plan_end ? (row.plan_end | date: 'dd MMM y') : '-'}}
+            </ng-container>
+            <ng-template #editPlanEnd>
+              <input matInput [matDatepicker]="planEndDatepicker" [(ngModel)]="row.plan_end" (keydown.enter)="rkSave(row)" (keydown.escape)="rkCancel(row)" autofocus>
+              <mat-datepicker-toggle matSuffix [for]="planEndDatepicker"></mat-datepicker-toggle>
+              <mat-datepicker #planEndDatepicker></mat-datepicker>
+            </ng-template>
+          </td>
+        </ng-container>
         <ng-container matColumnDef="pop">
           <th mat-header-cell *matHeaderCellDef rowspan="2">
             <div fxLayout="row" fxLayoutAlign="start center">
@@ -355,6 +391,44 @@
         </td>
       </ng-container>
 
+      <ng-container matColumnDef="plan_start">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan Start</span>
+            <app-xfilter title="Plan Start" column="rl_plan_start" [selected]="rl_plan_start_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rl_selection.isSelected(row)">
+          <ng-container *ngIf="!row.isEdit; else editPlanStart">
+            {{row.plan_start ? (row.plan_start | date: 'dd MMM y') : '-'}}
+          </ng-container>
+          <ng-template #editPlanStart>
+            <input matInput [matDatepicker]="rlPlanStartDatepicker" [(ngModel)]="row.plan_start" (keydown.enter)="rlSave(row)" (keydown.escape)="rlCancel(row)" autofocus>
+            <mat-datepicker-toggle matSuffix [for]="rlPlanStartDatepicker"></mat-datepicker-toggle>
+            <mat-datepicker #rlPlanStartDatepicker></mat-datepicker>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="plan_end">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plan End</span>
+            <app-xfilter title="Plan End" column="rl_plan_end" [selected]="rl_plan_end_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rl_selection.isSelected(row)">
+          <ng-container *ngIf="!row.isEdit; else editPlanEnd">
+            {{row.plan_end ? (row.plan_end | date: 'dd MMM y') : '-'}}
+          </ng-container>
+          <ng-template #editPlanEnd>
+            <input matInput [matDatepicker]="rlPlanEndDatepicker" [(ngModel)]="row.plan_end" (keydown.enter)="rlSave(row)" (keydown.escape)="rlCancel(row)" autofocus>
+            <mat-datepicker-toggle matSuffix [for]="rlPlanEndDatepicker"></mat-datepicker-toggle>
+            <mat-datepicker #rlPlanEndDatepicker></mat-datepicker>
+          </ng-template>
+        </td>
+      </ng-container>
+      
       <ng-container matColumnDef="pop">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
           <div fxLayout="row" fxLayoutAlign="start center">

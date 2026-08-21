@@ -89,6 +89,8 @@ export class MonitoringRKListComponent implements OnInit {
   rl_well_xSelected = [];
   rl_job_xSelected = [];
   rl_rig_xSelected = [];
+  rl_plan_start_xSelected = [];
+  rl_plan_end_xSelected = [];
   rl_pop_xSelected = [];
   rl_target_oil_xSelected = [];
   rl_target_gas_xSelected = [];
@@ -308,12 +310,12 @@ export class MonitoringRKListComponent implements OnInit {
   // DYNAMIC COLUMNS
   updateDisplayedColumns() {
     if (this.activeTab === 'rig') {
-      this.displayedColumns = ["select", "well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
-      this.headerColumns1 = ["select", "well", "job", "rig", "pop", "target", "realisasi", "remarks", "action"];
+      this.displayedColumns = ["select", "well", "job", "rig", "plan_start", "plan_end", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
+      this.headerColumns1 = ["select", "well", "job", "rig", "plan_start", "plan_end",  "pop", "target", "realisasi", "remarks", "action"];
       this.headerColumns2 = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
     } else {
-      this.displayedColumns = ["select", "well", "job", "rig", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
-      this.headerColumns1 = ["select", "well", "job", "rig", "pop", "target", "realisasi", "remarks", "action"];
+      this.displayedColumns = ["select", "well", "job", "rig", "plan_start", "plan_end", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
+      this.headerColumns1 = ["select", "well", "job", "rig", "plan_start", "plan_end", "pop", "target", "realisasi", "remarks", "action"];
       this.headerColumns2 = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
     }
   }
@@ -434,6 +436,8 @@ export class MonitoringRKListComponent implements OnInit {
     if (this.rl_well_xSelected.length) columnfilter["well"] = this.rl_well_xSelected;
     if (this.rl_job_xSelected.length) columnfilter["job"] = this.rl_job_xSelected;
     if (this.rl_rig_xSelected.length) columnfilter["rig"] = this.rl_rig_xSelected;
+    if (this.rl_plan_start_xSelected.length) columnfilter["plan_start"] = this.rl_plan_start_xSelected;
+    if (this.rl_plan_end_xSelected.length) columnfilter["plan_end"] = this.rl_plan_end_xSelected;
     if (this.rl_pop_xSelected.length) columnfilter["pop"] = this.rl_pop_xSelected;
     if (this.rl_remarks_xSelected.length) columnfilter["remarks"] = this.rl_remarks_xSelected;
     return columnfilter;

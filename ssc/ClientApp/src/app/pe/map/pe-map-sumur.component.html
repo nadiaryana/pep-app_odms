@@ -153,8 +153,8 @@
             </button>
           </td>
         </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <!-- <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr> -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
             (click)="flyToSumur(row)"
             class="table-row--clickable">

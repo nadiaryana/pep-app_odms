@@ -54,7 +54,8 @@ export class MapSumurComponent implements OnInit, AfterViewInit, OnDestroy {
   selection = new SelectionModel<any>(true, []);
   isEditing:boolean = false;
 
-  displayedColumns: string[] = ['select','wellName', 'lat', 'lng', 'status','station','actions'];
+  displayedColumns: string[] = ['select','wellName', 'status','station','actions'];
+  // headerColumns1: string[] = ['select','wellName', 'lat', 'lng', 'status','station','actions'];
 
   stationCoordinates: { [key: string]: { lat: number; lng: number } } = {
     'GS-1': { lat: 0.458472, lng: 117.508200 },  
