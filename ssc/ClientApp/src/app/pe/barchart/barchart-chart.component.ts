@@ -42,9 +42,18 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   activeRange: string = '1m';
 
 
-  chartData: any[] = [];   
+  chartData: any[] = [];
   chart:     any;          // instance Highcharts Gantt
-  jobLegend: any[] = [];  
+  jobLegend: any[] = [];
+
+  // --- state khusus mode screenshot ---
+  // Dipakai renderGanttChart(captureTarget) saat membangun chart untuk
+  // screenshot: lebar dipatok eksplisit dan scrollablePlotArea dimatikan.
+  // Tanpa scrollablePlotArea, Highcharts tidak membuat overlay
+  // div.highcharts-fixed (position:absolute, z-index:2) — overlay itulah yang
+  // dulu bikin kolom RIG kadang hilang / kadang menimpa gantt di hasil capture.
+  private captureWidth:     number | null = null;
+  private captureExtremes:  { min: number, max: number } | null = null;
 
 
   jobColors: { [key: string]: string } = {
@@ -166,15 +175,32 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   }
 
 
-  renderGanttChart() {
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
+  // captureTarget != null  -> render chart untuk screenshot ke container
+  // offscreen berukuran tetap (chart di layar tidak diganggu sama sekali).
+  // Mengembalikan instance chart yang dibuat.
+  renderGanttChart(captureTarget?: HTMLElement) {
+    const isCaptureRender = !!captureTarget;
+    const renderTo: HTMLElement = captureTarget || this.ganttChartEl.nativeElement;
+
+    if (!isCaptureRender) {
+      if (this.chart) {
+        this.chart.destroy();
+        this.chart = null;
+      }
+
+      // Highcharts.destroy() hanya membuang div.highcharts-container. Wrapper
+      // div.highcharts-scrolling-parent (berisi overlay div.highcharts-fixed
+      // tempat kolom RIG dipindahkan) ditinggal sebagai orphan di renderTo.
+      // Tanpa pembersihan ini, tiap Refresh/ganti tanggal menumpuk satu layer
+      // basi, dan querySelector() akan mengambil layer render yang lama.
+      renderTo.innerHTML = '';
     }
 
     if (!this.chartData || this.chartData.length === 0) {
-      this.jobLegend = [];
-      return;
+      if (!isCaptureRender) {
+        this.jobLegend = [];
+      }
+      return null;
     }
     const { wellSeries, remarkSeries, categories, cellHeight } = this.reformatDataGantt();
 
@@ -202,23 +228,36 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
       this.end_dateControl.value.getDate(),
     ) + (24 * 60 * 60 * 1000) : maxDate;
 
-
-    this.chart = HighchartsGantt.ganttChart(this.ganttChartEl.nativeElement, {
-
-      chart: {
-        // chart.height = jumlah kategori × tinggi baris + overhead untuk header/axis
-        height: Math.max(400, categories.length * cellHeight + 300),
-        width: null,
-        scrollablePlotArea: {
-          minWidth: scrollableWidth,
-          scrollPositionX: 0
-        },
-        style: {
-          fontFamily: 'Roboto, "Helvetica Neue", sans-serif'
-        },
-        spacingTop: 0,
-        // marginTop: 90
+    // Mode normal : lebar mengikuti container, kelebihannya di-scroll horizontal.
+    // Mode capture: lebar dipatok penuh dan scrollablePlotArea DIMATIKAN, supaya
+    //               Highcharts tidak membuat overlay div.highcharts-fixed dan
+    //               kolom RIG ikut dirender di dalam <svg> gantt yang sama.
+    const chartOptions: any = {
+      // chart.height = jumlah kategori × tinggi baris + overhead untuk header/axis
+      height: Math.max(400, categories.length * cellHeight + 300),
+      width: isCaptureRender ? this.captureWidth : null,
+      style: {
+        fontFamily: 'Roboto, "Helvetica Neue", sans-serif'
       },
+      spacingTop: 0,
+      animation: !isCaptureRender,
+      // marginTop: 90
+    };
+
+    if (!isCaptureRender) {
+      chartOptions.scrollablePlotArea = {
+        minWidth: scrollableWidth,
+        scrollPositionX: 0
+      };
+    }
+
+    // Saat capture, pertahankan zoom yang sedang dilihat user
+    const xAxisMin = isCaptureRender && this.captureExtremes ? this.captureExtremes.min : filterStartDate;
+    const xAxisMax = isCaptureRender && this.captureExtremes ? this.captureExtremes.max : filterEndDate;
+
+    const chart = HighchartsGantt.ganttChart(renderTo, {
+
+      chart: chartOptions,
       title: {
         text: 'BARCHART RIG SANGATTA FIELD',
         style: {
@@ -230,8 +269,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         {
           type: 'datetime',
           top: 150,
-          min: filterStartDate,
-          max: filterEndDate,
+          min: xAxisMin,
+          max: xAxisMax,
 
           tickInterval: 24 * 3600 * 1000, // 1 hari = 1 kolom
 
@@ -334,6 +373,16 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
             </div>
           `;
         },
+      },
+
+      // Pada render pertama Highcharts memasang opacity:0 pada grup dataLabels
+      // lalu menganimasikannya ke 1 selama ~1s (Series.drawDataLabels).
+      // Chart capture SELALU render pertama, jadi kalau animasi tidak dimatikan
+      // labelnya masih transparan saat html2canvas mengambil gambar.
+      plotOptions: {
+        series: {
+          animation: !isCaptureRender
+        }
       },
 
           series: [
@@ -508,6 +557,8 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         enabled: true,
         buttons: {
           contextButton: {
+            // sembunyikan tombol hamburger saat render untuk screenshot
+            enabled: !isCaptureRender,
             menuItems: [
               'downloadPNG',   
               'downloadJPEG',  
@@ -518,7 +569,13 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
         }
       }
     });
-    this.createJobLegend();
+
+    if (!isCaptureRender) {
+      this.chart = chart;
+      this.createJobLegend();
+    }
+
+    return chart;
   }
 
   private utcToLocalMidnight(dateStr: string): number {
@@ -866,87 +923,112 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
   // }
 
   screenshotChart() {
-    const chartEl = this.ganttChartEl.nativeElement as HTMLElement;
-    this.isCapturing = true;
-
-    // ✅ FIX: reset scroll pada DOM ASLI (live), bukan hanya di dalam clone.
-    // Well/Remarks dataLabels pakai useHTML:true, jadi posisinya dihitung
-    // Highcharts berdasarkan scrollLeft aktual saat capture berjalan.
-    // Kalau scroll belum di-reset di elemen live, hasil clone bisa beda
-    // dengan yang diharapkan.
-    const scrollingElLive = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
-    if (scrollingElLive) {
-      scrollingElLive.scrollLeft = 0;
+    if (!this.chart || this.isCapturing) {
+      return;
     }
 
-    setTimeout(() => {
-      // Ukur area chart
-      const scrollingEl = chartEl.querySelector('.highcharts-scrolling') as HTMLElement;
-      const fullWidth   = scrollingEl ? scrollingEl.scrollWidth : chartEl.scrollWidth;
-      const fullHeight  = chartEl.scrollHeight;
+    // Zoom yang sedang aktif -> hasil screenshot = rentang yang dilihat user.
+    const extremes = this.chart.xAxis[0].getExtremes();
+    this.captureExtremes = { min: extremes.min, max: extremes.max };
 
-      const axes      = chartEl.querySelectorAll('.highcharts-axis.highcharts-xaxis');
-      const monthAxis = axes && axes.length > 1 ? axes[1] as HTMLElement : null;
+    // Lebar capture = lebar konten yang bisa di-scroll user saat ini.
+    // chartWidth + scrollablePixelsX identik dengan .highcharts-scrolling.scrollWidth,
+    // jadi kepadatan kolom per hari sama dengan yang tampil di layar dan
+    // Highcharts tidak membuang label karena bertumpuk.
+    this.captureWidth = Math.round(
+      this.chart.chartWidth + (this.chart.scrollablePixelsX || 0)
+    );
 
-      let headerTop = 120;
-      if (monthAxis) {
-        const rectParent = chartEl.getBoundingClientRect();
-        const rectAxis   = axes[1].getBoundingClientRect();
-        headerTop = rectAxis.top - rectParent.top;
+    this.isCapturing = true;
+
+    // --- Container offscreen ---------------------------------------------
+    // Chart untuk screenshot TIDAK di-render ke .gantt-chart, karena Highcharts
+    // memasang overflow:hidden pada elemen renderTo (Chart.getContainer) dan
+    // elemen itu lebarnya width:100% -> isi chart yang lebih lebar terpotong.
+    // Di mode normal hal ini tidak terasa karena applyFixed() mengembalikannya
+    // ke overflow:visible, tapi di mode capture applyFixed() tidak pernah jalan.
+    //
+    // clipper 0x0 + overflow:hidden supaya host selebar apa pun tidak menggeser
+    // layout halaman atau memunculkan scrollbar.
+    const clipper = document.createElement('div');
+    clipper.setAttribute('aria-hidden', 'true');
+    clipper.style.cssText =
+      'position:absolute;top:0;left:0;width:0;height:0;overflow:hidden;z-index:-1;';
+
+    const host = document.createElement('div');
+    host.style.cssText = `width:${this.captureWidth}px;background:#ffffff;`;
+
+    // Tiru attribute _nghost-* komponen supaya rule `:host ::ng-deep` ikut berlaku
+    const compHost = this.ganttChartEl.nativeElement.closest('app-barchart-chart') as HTMLElement;
+    if (compHost) {
+      Array.prototype.forEach.call(compHost.attributes, (a: Attr) => {
+        if (a.name.indexOf('_nghost') === 0) {
+          clipper.setAttribute(a.name, '');
+        }
+      });
+    }
+
+    clipper.appendChild(host);
+    document.body.appendChild(clipper);
+
+    const captureChart = this.renderGanttChart(host);
+
+    const cleanup = () => {
+      if (captureChart) {
+        captureChart.destroy();
       }
+      if (clipper.parentNode) {
+        clipper.parentNode.removeChild(clipper);
+      }
+      this.captureWidth    = null;
+      this.captureExtremes = null;
+      this.isCapturing     = false;
+    };
 
-      const cropHeight = fullHeight - headerTop;
+    if (!captureChart) {
+      cleanup();
+      return;
+    }
 
-      // ✅ Satu kali capture penuh — tidak ada composite/overlap antar canvas,
-      // sehingga tidak ada risiko ghosting/bayangan seperti versi dua-canvas.
-      html2canvas(chartEl, {
+    this.afterChartPainted(() => {
+      const width  = captureChart.chartWidth;
+      const height = captureChart.chartHeight;
+
+      // Batas atas crop = sisi atas baris header bulan/tanggal, supaya judul
+      // chart terpotong tapi headernya utuh.
+      // Catatan: xAxis Gantt default `opposite: true` (axis di sisi ATAS), jadi
+      // labelnya digambar DI ATAS nilai axis.top — memakai axis.top sebagai
+      // batas crop justru memotong headernya.
+      const hostTop = host.getBoundingClientRect().top;
+
+      let labelsTop = Number.POSITIVE_INFINITY;
+      host.querySelectorAll('.highcharts-xaxis-labels').forEach((g: Element) => {
+        const rect = g.getBoundingClientRect();
+        if (rect.height > 0) {
+          labelsTop = Math.min(labelsTop, rect.top);
+        }
+      });
+
+      // Kalau header tidak ketemu, ambil seluruh chart daripada memotong di
+      // posisi tebakan.
+      const headerTop = isFinite(labelsTop)
+        ? Math.max(0, Math.round(labelsTop - hostTop) - 10)
+        : 0;
+
+      html2canvas(host, {
         backgroundColor: '#ffffff',
         useCORS:      true,
         allowTaint:   true,
+        logging:      false,
         scale:        2,
-        width:        fullWidth,
-        height:       cropHeight,
-        x: 0,
-        y: headerTop,
-        windowWidth:  fullWidth,
-        windowHeight: fullHeight,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-
-        // onclone: expand container Highcharts di dokumen tiruan
-        // supaya html2canvas merender seluruh lebar chart (bukan cuma
-        // bagian yang terlihat di viewport/scroll saat ini)
-        onclone: (_doc: Document, clonedEl: HTMLElement) => {
-          const expand = (el: HTMLElement | SVGElement | null, isSvg = false) => {
-            if (!el) return;
-            (el as HTMLElement).style.overflow  = 'visible';
-            (el as HTMLElement).style.width     = fullWidth + 'px';
-            (el as HTMLElement).style.minWidth  = fullWidth + 'px';
-            (el as HTMLElement).style.maxWidth  = 'none';
-            if (isSvg) (el as SVGElement).setAttribute('width', String(fullWidth));
-          };
-
-          expand(clonedEl.querySelector('.highcharts-scrolling'));
-          expand(clonedEl.querySelector('.highcharts-scrolling-parent'));
-          expand(clonedEl.querySelector('.highcharts-container'));
-          expand(clonedEl.querySelector('.highcharts-root'), true);
-          expand(clonedEl);
-
-          // Geser posisi axis title ke atas sesuai crop headerTop
-          const axisTitles = clonedEl.querySelectorAll('.highcharts-axis-title');
-          axisTitles.forEach((el) => {
-            const svgEl    = el as SVGTextElement;
-            const currentY = parseFloat(svgEl.getAttribute('y') || '0');
-            svgEl.setAttribute('y', String(currentY - headerTop));
-          });
-
-          // ✅ Pastikan scroll di dalam clone juga 0, konsisten dengan DOM live
-          // yang sudah di-reset di atas — supaya kolom RIG (sticky/fixed di
-          // kiri) muncul utuh di posisi awal, bukan bergeser mengikuti sisa
-          // state scroll sebelumnya.
-          const scrolling = clonedEl.querySelector('.highcharts-scrolling') as HTMLElement;
-          if (scrolling) scrolling.scrollLeft = 0;
-        }
+        x:            0,
+        y:            headerTop,
+        width:        width,
+        height:       height - headerTop,
+        // Viewport dokumen tiruan dibuat cukup besar supaya elemen di luar
+        // viewport asli tetap ter-layout dengan benar saat dirender.
+        windowWidth:  Math.max(window.innerWidth,  width  + 100),
+        windowHeight: Math.max(window.innerHeight, height + 100),
 
       }).then((canvas: HTMLCanvasElement) => {
         const link    = document.createElement('a');
@@ -956,12 +1038,27 @@ export class BarchartChartComponent implements OnInit, AfterViewInit {
 
       }).catch((err: any) => {
         console.error('Screenshot error:', err);
+        this.snackbarService.status.next(
+          new SnackbarApi(true, 'Gagal membuat screenshot chart', 'dismiss', { duration: 3000 })
+        );
 
-      }).finally(() => {
-        this.isCapturing = false;
-      });
+      }).finally(cleanup);
+    });
+  }
 
-    }, 300);
+  // Tunggu sampai chart benar-benar selesai dilukis: font siap, dua frame
+  // render, lalu jeda pendek untuk dataLabels useHTML yang diposisikan Highcharts.
+  private afterChartPainted(cb: () => void) {
+    const run = () => requestAnimationFrame(() =>
+      requestAnimationFrame(() => setTimeout(cb, 150))
+    );
+
+    const fonts: any = (document as any).fonts;
+    if (fonts && fonts.ready && typeof fonts.ready.then === 'function') {
+      fonts.ready.then(run).catch(run);
+    } else {
+      run();
+    }
   }
 
   private reformatDataGantt() {
