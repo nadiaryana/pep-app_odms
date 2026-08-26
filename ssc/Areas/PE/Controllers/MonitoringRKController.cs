@@ -226,7 +226,12 @@ namespace ssc.Areas.PE.Controllers
 
                     // Apply pagination ke combined list
                     var combinedTotal = mergedList.Count;
+
+                    //add filter current date 
+                    var currentDate = DateTime.Now.Date;
+
                     var pageItems = sortedList
+                        .Where(t => t.plan_start.HasValue && t.plan_start.Value.Date <= currentDate)
                         .Skip(page * pagesize)
                         .Take(pagesize)
                         .ToList();
