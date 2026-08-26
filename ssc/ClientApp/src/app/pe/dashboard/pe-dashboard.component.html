@@ -38,7 +38,7 @@
     <mat-card fxFlex="20%" class="oil_dasboard_card oil_dasboard_card_operation" *ngIf="currentUser?.Name === 'pe.admin'">
       <mat-card-title class="title_dasboard">Operation Actual</mat-card-title>
       <mat-card-content class="card-content-relative">
-        <div class="value">{{(valueOperationActual | number : '1.0-2') || '-'}} </div>
+        <div class="value">{{(valueOperationActual | number : '1.0-0') || '-'}} </div>
         <div class="uom"><b>BOPD</b></div>
         <div class="diff-badge" *ngIf="valueOperationActualDiff !== null"
           [ngClass]="valueOperationActualDiff > 0 ? 'diff-positive' : valueOperationActualDiff < 0 ? 'diff-negative' : 'diff-neutral'">

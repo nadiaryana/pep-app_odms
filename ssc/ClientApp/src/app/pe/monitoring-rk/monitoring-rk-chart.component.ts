@@ -30,7 +30,7 @@ export class MonitoringRKChartComponent implements OnInit {
   // Dropdown chart type
   chartTypes: { value: string; label: string }[] = [
     { value: 'rig', label: 'Rig' },
-    { value: 'rigless',     label: 'Rigless' },
+    { value: 'rigless',     label: 'Non-Rig' },
   ];
   selectedChartType: string = 'rig';
 
