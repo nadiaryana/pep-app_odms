@@ -40,8 +40,43 @@
   margin-bottom: 16px;
 }
 
+.login-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.back-button:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.back-button:active {
+  transform: scale(0.94);
+}
+
+.back-button .mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
 .login-title {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 26px;
   font-weight: 600;
   line-height: 1.25;

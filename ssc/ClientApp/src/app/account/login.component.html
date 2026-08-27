@@ -5,7 +5,12 @@
     <!-- HEADER -->
     <div class="login-header">
       <span class="panel-badge">{{ loginBadge }}</span>
-      <h1 class="login-title">{{ loginTitle }}</h1>
+      <div class="login-title-row">
+        <button type="button" class="back-button" (click)="goToLanding()" aria-label="Kembali ke Landing Page">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1 class="login-title">{{ loginTitle }}</h1>
+      </div>
       <p class="login-subtitle">Masuk untuk mengakses dashboard</p>
     </div>
 

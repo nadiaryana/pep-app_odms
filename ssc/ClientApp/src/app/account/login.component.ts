@@ -38,6 +38,10 @@ export class LoginComponent implements OnInit, OnDestroy {
 	get loginTitle(): string {
 		return this.loginMode === 'viewer' ? 'Masuk sebagai Viewer' : 'Masuk sebagai Admin';
 	}
+	
+	goToLanding() {
+		this.router.navigateByUrl('/landing');
+	}
 	  
 	onSubmit() { 
 		this.submitting = true;
