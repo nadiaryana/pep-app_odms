@@ -324,7 +324,7 @@ namespace ssc.Areas.PE.Controllers
                     // Check for existing data
                     if (_row_error.well == null && _row.plan_start != null && _row.plan_end != null)
                     {
-                        if (_barchart.Find(t => t.well == _row.well && t.plan_start == _row.plan_start && t.plan_end == _row.plan_end).CountDocuments() > 0)
+                        if (_barchart.Find(t => t.well == _row.well && t.plan_start == _row.plan_start && t.plan_end == _row.plan_end && t.remarks == _row.remarks).CountDocuments() > 0)
                         {
                             _row_error._row = new ErrorItem { value = "warning", message = "Existing row found, data will be replaced" };
                         }

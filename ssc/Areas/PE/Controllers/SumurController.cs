@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,9 @@ namespace ssc.Areas.PE.Controllers
         private readonly HttpClient _httpClient;
         private readonly IBackgroundTaskQueue _taskQueue;
 
+        // Flag agar index xfilter hanya dibuat satu kali per proses.
+        private static int _xfilterIndexEnsured = 0;
+
         public SumurController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue)
         {
             var client = new MongoClient(settings.ConnectionString);
@@ -51,6 +55,33 @@ namespace ssc.Areas.PE.Controllers
                 .Include(t => t.entry_id)
                 .Include(t => t.field_1)
                 .Include(t => t.field_2);
+
+            EnsureXFilterIndexes();
+        }
+
+        /// <summary>
+        /// Membuat index pada field yang sering dipakai xfilter (wellName, date) sekali saja,
+        /// supaya Distinct("wellName") / filter nama sumur tidak melakukan full collection scan.
+        /// Dijalankan di background agar tidak memblokir request pertama.
+        /// </summary>
+        private void EnsureXFilterIndexes()
+        {
+            if (Interlocked.Exchange(ref _xfilterIndexEnsured, 1) == 1) return;
+            Task.Run(() =>
+            {
+                try
+                {
+                    _sumur.Indexes.CreateOne(new CreateIndexModel<Sumur>(
+                        Builders<Sumur>.IndexKeys.Ascending(t => t.wellName)));
+                    _sumur.Indexes.CreateOne(new CreateIndexModel<Sumur>(
+                        Builders<Sumur>.IndexKeys.Ascending(t => t.date)));
+                }
+                catch
+                {
+                    // Gagal -> reset flag supaya dicoba lagi pada request berikutnya.
+                    Interlocked.Exchange(ref _xfilterIndexEnsured, 0);
+                }
+            });
         }
 
         // GET: api/pe/well/latest?limit=100
@@ -181,7 +212,6 @@ namespace ssc.Areas.PE.Controllers
             }
 
             var _items = _sumur.Find(xfilter, new FindOptions() { Collation = new Collation("en_US", numericOrdering: true) });
-            var total_count = _items.CountDocuments();
 
             switch (sort)
             {
@@ -196,6 +226,10 @@ namespace ssc.Areas.PE.Controllers
             {
                 case "":
                 case null:
+                    // total_count hanya dibutuhkan untuk mode tabel. Untuk mode xfilter
+                    // (distinct) di bawah, hitungan ini tidak dipakai sehingga dilewati
+                    // agar filter nama sumur tidak melakukan full collection scan.
+                    var total_count = _items.CountDocuments();
                     List<Sumur> items = _items
                     .Skip(page * pagesize)
                     .Limit(pagesize)
@@ -441,8 +475,8 @@ namespace ssc.Areas.PE.Controllers
 
                     // --- Decimals (col 2,3,4) ---
                     _row.entry_id = ParseDecimal(cellValues[r - 1, 1], ref _row_error, nameof(_row_error.entry_id), ref error_count);
-                    _row.field_1  = ParseDecimal(cellValues[r - 1, 2], ref _row_error, nameof(_row_error.field_1),  ref error_count);
-                    _row.field_2  = ParseDecimal(cellValues[r - 1, 3], ref _row_error, nameof(_row_error.field_2),  ref error_count);
+                    _row.field_1 = ParseDecimal(cellValues[r - 1, 2], ref _row_error, nameof(_row_error.field_1), ref error_count);
+                    _row.field_2 = ParseDecimal(cellValues[r - 1, 3], ref _row_error, nameof(_row_error.field_2), ref error_count);
 
                     if (error_count > last_error_count)
                         _row_error._row = new ErrorItem { value = "error", message = "Error found" };
@@ -477,14 +511,14 @@ namespace ssc.Areas.PE.Controllers
 
                 // ── InsertMany ke collection terpisah per batch ──
                 // Update status tiap 50k agar tidak terlalu banyak round-trip ke MongoDB
-                const int BATCH        = 10000;
+                const int BATCH = 10000;
                 const int UPDATE_EVERY = 50000;
-                int processed  = 0;
+                int processed = 0;
                 int nextUpdate = UPDATE_EVERY;
 
                 for (int i = 0; i < items.Count; i += BATCH)
                 {
-                    int len   = Math.Min(BATCH, items.Count - i);
+                    int len = Math.Min(BATCH, items.Count - i);
                     sumur_tmp_items.InsertMany(items.GetRange(i, len));
                     processed += len;
 
@@ -613,11 +647,17 @@ namespace ssc.Areas.PE.Controllers
                     }
                     toInsert.Add(new Sumur
                     {
-                        date = item.date, entry_id = item.entry_id,
-                        field_1 = item.field_1, field_2 = item.field_2,
-                        wellName = wellName, Current = item.Current, Timestamp = item.Timestamp,
-                        created_by = currentUser, created_date = now,
-                        updated_by = currentUser, updated_date = now,
+                        date = item.date,
+                        entry_id = item.entry_id,
+                        field_1 = item.field_1,
+                        field_2 = item.field_2,
+                        wellName = wellName,
+                        Current = item.Current,
+                        Timestamp = item.Timestamp,
+                        created_by = currentUser,
+                        created_date = now,
+                        updated_by = currentUser,
+                        updated_date = now,
                     });
                 }
 
@@ -637,9 +677,9 @@ namespace ssc.Areas.PE.Controllers
 
                 return Ok(new
                 {
-                    created_count  = allItems.Count - modified_count,
+                    created_count = allItems.Count - modified_count,
                     modified_count = modified_count,
-                    total_count    = allItems.Count
+                    total_count = allItems.Count
                 });
             }
             catch (Exception e)

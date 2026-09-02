@@ -225,13 +225,20 @@ namespace ssc.Areas.PE.Controllers
                     }
 
                     // Apply pagination ke combined list
-                    var combinedTotal = mergedList.Count;
+                    // var combinedTotal = mergedList.Count;
 
                     //add filter current date 
                     var currentDate = DateTime.Now.Date;
 
-                    var pageItems = sortedList
+                    // Filter tanggal diterapkan dulu ke sortedList
+                    var filteredList = sortedList
                         .Where(t => t.plan_start.HasValue && t.plan_start.Value.Date <= currentDate)
+                        .ToList();
+
+                    // total_count sekarang konsisten dengan data yang bisa ditampilkan
+                    var combinedTotal = filteredList.Count;
+
+                    var pageItems = filteredList
                         .Skip(page * pagesize)
                         .Take(pagesize)
                         .ToList();
