@@ -275,8 +275,8 @@ export class MonitoringRKListComponent implements OnInit {
       ).subscribe((data: any[]) => {
         this.rl_data = data.map((d: any) => ({ ...d, isEdit: false }));
         this.rl_dataSource.data = this.rl_data;
-        this.rl_dataSource.sort = this.rlSort;
-        this.rl_dataSource.paginator = this.rlPaginator;
+        // this.rl_dataSource.sort = this.rlSort;
+        // this.rl_dataSource.paginator = this.rlPaginator;
         this.rl_selection.clear();
       });
     });
