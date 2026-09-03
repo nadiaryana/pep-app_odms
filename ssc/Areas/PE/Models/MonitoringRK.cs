@@ -25,6 +25,8 @@ namespace ssc.Areas.PE.Models
         public decimal? target_gas { get; set; }
         public decimal? realisasi_oil { get; set; }
         public decimal? realisasi_gas { get; set; }
+        public decimal? before { get; set; }
+        public decimal? after { get; set; }
         public string remarks { get; set; }
         public string created_by { get; set; }
         public DateTime? created_date { get; set; }
@@ -57,6 +59,8 @@ namespace ssc.Areas.PE.Models
         public ErrorItem target_gas { get; set; }
         public ErrorItem realisasi_oil { get; set; }
         public ErrorItem realisasi_gas { get; set; }
+        public ErrorItem before { get; set; }
+        public ErrorItem after { get; set; }
         public ErrorItem remarks { get; set; }
     }
 

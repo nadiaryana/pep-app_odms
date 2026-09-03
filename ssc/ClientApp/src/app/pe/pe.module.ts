@@ -108,6 +108,7 @@ import { MonitoringRKComponent } from './monitoring-rk/monitoring-rk.component';
 import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
 import { MonitoringRKDeleteDialogComponent, MonitoringRKListComponent } from './monitoring-rk/monitoring-rk-list.component';
 import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.component';
+import { MonitoringRKAddOprComponent } from './monitoring-rk/monitoring-rk-add-opr.component';
 import { PeIotComponent } from './iot/pe-iot.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
@@ -216,7 +217,7 @@ import { PeIotComponent } from './iot/pe-iot.component';
   MonitoringRKComponent,
   MonitoringRKListComponent,
   MonitoringRKAddComponent,
-  // MonitoringRKAddOprComponent,
+  MonitoringRKAddOprComponent,
   MonitoringRKDeleteDialogComponent,
   MonitoringRKChartComponent,
 

@@ -23,8 +23,8 @@ export class PeActualAddComponent {
 	@Input() locations: Location[];
 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
 	loading = false;
-  dailyForm: FormGroup;
-  opsogForm: FormGroup;
+	dailyForm: FormGroup;
+	opsogForm: FormGroup;
   
 	isUploading = false;
 	isLoading = false;

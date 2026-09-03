@@ -1,0 +1,71 @@
+<!-- Form manual input Monitoring RK Rigless — layout meniru "Add Actual Operation" (pe-actual-add-opr) -->
+<div class="container-content form-report">
+  <h3>Add Monitoring RK Rigless</h3>
+
+  <div [formGroup]="rkForm">
+    <ng-container formArrayName="items">
+      <!-- Loop tiap baris item -->
+      <mat-grid-list cols="16" *ngFor="let item of items?.controls; let index=index">
+
+        <mat-grid-tile [colspan]="3" [rowspan]="1">
+          <mat-form-field floatLabel="never" [formGroupName]="index">
+            <mat-label>Well</mat-label>
+            <input matInput formControlName="well" placeholder="Well name" required />
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <mat-grid-tile [colspan]="3" [rowspan]="1">
+          <mat-form-field floatLabel="never" [formGroupName]="index">
+            <mat-label>POP</mat-label>
+            <input matInput [matDatepicker]="popPicker" formControlName="pop">
+            <mat-datepicker-toggle matSuffix [for]="popPicker"></mat-datepicker-toggle>
+            <mat-datepicker #popPicker></mat-datepicker>
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <mat-form-field floatLabel="never" [formGroupName]="index">
+            <mat-label>Before</mat-label>
+            <input matInput formControlName="before" type="number" placeholder="Before" />
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <mat-form-field floatLabel="never" [formGroupName]="index">
+            <mat-label>After</mat-label>
+            <input matInput formControlName="after" type="number" placeholder="After" />
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <mat-grid-tile [colspan]="3" [rowspan]="1">
+          <mat-form-field floatLabel="never" [formGroupName]="index">
+            <mat-label>Remarks</mat-label>
+            <input matInput formControlName="remarks" placeholder="Remarks" />
+          </mat-form-field>
+        </mat-grid-tile>
+
+        <!-- Tombol tambah/hapus baris -->
+        <mat-grid-tile [colspan]="1" [rowspan]="1">
+          <button mat-button color="basic" (click)="addRow()"><mat-icon>add</mat-icon></button>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="1" [rowspan]="1" *ngIf="index > 0">
+          <button mat-button color="basic" (click)="removeRow(index)"><mat-icon>delete</mat-icon></button>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </ng-container>
+
+    <!-- Loading spinner saat menyimpan -->
+    <div class="loading-shade" *ngIf="isLoading">
+      <mat-spinner></mat-spinner>
+    </div>
+
+    <!-- Tombol aksi -->
+    <button mat-raised-button color="secondary" (click)="onSave()" [disabled]="!rkForm.valid || isLoading">
+      <mat-icon>save</mat-icon> Save
+    </button>
+    <span class="margin-10"></span>
+    <button mat-raised-button (click)="backToList()">
+      <mat-icon>list</mat-icon> Back to List
+    </button>
+  </div>
+</div>

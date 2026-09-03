@@ -4,17 +4,22 @@ import { Router } from "@angular/router";
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
-import { MonitoringRK } from './monitoring-rk';
 import { SnackbarService, SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
 
+/**
+ * Halaman tambah data Monitoring RK Rigless.
+ * Model/layout-nya meniru halaman "Add Actual Operation" (pe-actual-add-opr):
+ * baris input yang bisa ditambah/hapus + tombol save, lalu POST array ke backend.
+ * Data rigless disimpan terpisah (rig = "Rigless"), tidak berhubungan dengan tabel Rig/barchart.
+ */
 @Component({
-  selector: 'app-monitoring-rk-add',
-  templateUrl: './monitoring-rk-add.component.html',
+  selector: 'app-monitoring-rk-add-opr',
+  templateUrl: './monitoring-rk-add-opr.component.html',
   styleUrls: ['./monitoring-rk.scss']
 })
-export class MonitoringRKAddComponent {
+export class MonitoringRKAddOprComponent {
 
   isLoading = false;
   rkForm: FormGroup;
@@ -41,8 +46,8 @@ export class MonitoringRKAddComponent {
       icon: "add",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
-        { label: 'Monitoring RK', routerLink: 'pe/monitoring-rk' },
-        { label: 'Add', routerLink: '' },
+        { label: 'Monitoring RK', routerLink: 'pe/monitoring-rk/list' },
+        { label: 'Add Rigless', routerLink: '' },
       ]
     });
 
@@ -52,19 +57,13 @@ export class MonitoringRKAddComponent {
     });
   }
 
-  /** Buat satu FormGroup untuk satu item Monitoring RK */
+  /** Buat satu FormGroup untuk satu item rigless (well, pop, before, after, remarks) */
   createItemForm(): FormGroup {
     return this.formBuilder.group({
       well: ['', Validators.required],
-      job: ['', Validators.required],
-      rig: ['', Validators.required],
-      plan_start: [''],
-      plan_end: [''],
       pop: [''],
-      target_oil: [''],
-      target_gas: [''],
-      realisasi_oil: [''],
-      realisasi_gas: [''],
+      before: [''],
+      after: [''],
       remarks: ['']
     });
   }
@@ -81,9 +80,9 @@ export class MonitoringRKAddComponent {
     }
   }
 
-  /** Kembali ke halaman list */
+  /** Kembali ke halaman list (buka tab rigless) */
   backToList() {
-    this.router.navigate(['pe', 'monitoring-rk', 'list']);
+    this.router.navigate(['pe', 'monitoring-rk', 'list'], { state: { tab: 'rigless' } });
   }
 
   /** Cek apakah form boleh ditinggalkan (pristine = aman) */
@@ -94,16 +93,25 @@ export class MonitoringRKAddComponent {
     return this.dialogService.confirm('Discard changes?');
   }
 
-  /** Simpan semua item ke database via POST /api/pe/monitoring-rk */
+  /** Simpan semua item ke koleksi monitoring_rk_rigless via POST /api/pe/MonitoringRK/rigless */
   onSave() {
     this.isLoading = true;
-    var payload = this.rkForm.value.items;
 
-    this.http.post('/api/pe/MonitoringRK', payload).subscribe(
+    // Tetap memakai model MonitoringRK (rig = "Rigless"), tapi disimpan ke koleksi khusus monitoring_rk_rigless
+    var payload = this.rkForm.value.items.map((item: any) => ({
+      rig: 'Rigless',
+      well: item.well,
+      pop: (item.pop && item.pop !== '') ? item.pop : null,
+      before: (item.before === '' || item.before == null) ? null : Number(item.before),
+      after: (item.after === '' || item.after == null) ? null : Number(item.after),
+      remarks: item.remarks || null
+    }));
+
+    this.http.post('/api/pe/MonitoringRK/rigless', payload).subscribe(
       res => {
         this.isLoading = false;
-        this.snackbarService.status.next(new SnackbarApi(true, "Data berhasil disimpan!", 'dismiss'));
-        this.router.navigateByUrl('/pe/monitoring-rk/list');
+        this.snackbarService.status.next(new SnackbarApi(true, "Data rigless berhasil disimpan!", 'dismiss'));
+        this.router.navigate(['pe', 'monitoring-rk', 'list'], { state: { tab: 'rigless' } });
       },
       error => {
         this.isLoading = false;

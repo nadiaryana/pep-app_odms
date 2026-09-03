@@ -45,4 +45,17 @@ export class MonitoringRKService {
     httpOption["params"] = params;
     return this.http.get<any>('/api/pe/MonitoringRK/rigless', httpOption);
   }
+
+  // === Rigless create/update/delete (koleksi monitoring_rk_rigless, model sama MonitoringRK) ===
+  createRigless(items: any[]): Observable<any> {
+    return this.http.post<any>('/api/pe/MonitoringRK/rigless', items);
+  }
+
+  updateRigless(id: string, item: any): Observable<any> {
+    return this.http.put<any>(`/api/pe/MonitoringRK/rigless/${id}`, item);
+  }
+
+  deleteRigless(ids: string[]): Observable<any> {
+    return this.http.delete('/api/pe/MonitoringRK/rigless', { params: { _ids: ids } });
+  }
 }

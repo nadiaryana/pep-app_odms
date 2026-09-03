@@ -92,6 +92,7 @@ import { MonitoringRKComponent } from './monitoring-rk/monitoring-rk.component';
 import { MonitoringRKListComponent } from './monitoring-rk/monitoring-rk-list.component';
 import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.component';
 import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
+import { MonitoringRKAddOprComponent } from './monitoring-rk/monitoring-rk-add-opr.component';
 import { PeIotComponent } from './iot/pe-iot.component';
 
 const peRoutes: Routes = [
@@ -202,8 +203,8 @@ const peRoutes: Routes = [
       { path: 'list', component: MonitoringRKListComponent, canActivate: [PePermissionGuard]},
       { path: 'add', component: MonitoringRKAddComponent, canActivate: [PePermissionGuard] },
       { path: 'chart', component: MonitoringRKChartComponent, canActivate: [PePermissionGuard] },
+      { path: 'add-opr', component: MonitoringRKAddOprComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},
-      // { path: 'add-opr', component: MonitoringRKAddOprComponent, canActivate: [PePermissionGuard] },
       // { path: 'edit-opr/:id', component: PeActualEditOprComponent, canActivate: [PePermissionGuard] },
     ]},
   ]},

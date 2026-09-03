@@ -87,15 +87,9 @@ export class MonitoringRKListComponent implements OnInit {
 
   // Rigless xFilter selected values
   rl_well_xSelected = [];
-  rl_job_xSelected = [];
-  rl_rig_xSelected = [];
-  rl_plan_start_xSelected = [];
-  rl_plan_end_xSelected = [];
   rl_pop_xSelected = [];
-  rl_target_oil_xSelected = [];
-  rl_target_gas_xSelected = [];
-  rl_realisasi_oil_xSelected = [];
-  rl_realisasi_gas_xSelected = [];
+  rl_before_xSelected = [];
+  rl_after_xSelected = [];
   rl_remarks_xSelected = [];
 
   @ViewChild('rlSort', { static: false }) rlSort: MatSort;
@@ -160,6 +154,12 @@ export class MonitoringRKListComponent implements OnInit {
 
     // Muat data Rig setelah DOM siap
     setTimeout(() => this.rkLoadData());
+
+    // Jika kembali dari halaman add (setelah save / back), buka langsung tab rigless
+    const nav = this.router.getCurrentNavigation();
+    if (nav && nav.extras && nav.extras.state && nav.extras.state['tab'] === 'rigless') {
+      setTimeout(() => this.setActiveTab('rigless'), 100);
+    }
 
   }
 
@@ -314,9 +314,10 @@ export class MonitoringRKListComponent implements OnInit {
       this.headerColumns1 = ["select", "well", "job", "rig", "plan_start", "plan_end",  "pop", "target", "realisasi", "remarks", "action"];
       this.headerColumns2 = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
     } else {
-      this.displayedColumns = ["select", "well", "job", "rig", "plan_start", "plan_end", "pop", "target_oil", "target_gas", "realisasi_oil", "realisasi_gas", "remarks", "action"];
-      this.headerColumns1 = ["select", "well", "job", "rig", "plan_start", "plan_end", "pop", "target", "realisasi", "remarks", "action"];
-      this.headerColumns2 = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
+      // Tabel Rigless: well, pop, before, after, remarks
+      this.displayedColumns = ["select", "well", "pop", "before", "after", "remarks", "action"];
+      this.headerColumns1 = ["select", "well", "pop", "before", "after", "remarks", "action"];
+      this.headerColumns2 = [];
     }
   }
 
@@ -434,11 +435,9 @@ export class MonitoringRKListComponent implements OnInit {
   rlGetColumnFilter() {
     var columnfilter: any = {};
     if (this.rl_well_xSelected.length) columnfilter["well"] = this.rl_well_xSelected;
-    if (this.rl_job_xSelected.length) columnfilter["job"] = this.rl_job_xSelected;
-    if (this.rl_rig_xSelected.length) columnfilter["rig"] = this.rl_rig_xSelected;
-    if (this.rl_plan_start_xSelected.length) columnfilter["plan_start"] = this.rl_plan_start_xSelected;
-    if (this.rl_plan_end_xSelected.length) columnfilter["plan_end"] = this.rl_plan_end_xSelected;
     if (this.rl_pop_xSelected.length) columnfilter["pop"] = this.rl_pop_xSelected;
+    if (this.rl_before_xSelected.length) columnfilter["before"] = this.rl_before_xSelected;
+    if (this.rl_after_xSelected.length) columnfilter["after"] = this.rl_after_xSelected;
     if (this.rl_remarks_xSelected.length) columnfilter["remarks"] = this.rl_remarks_xSelected;
     return columnfilter;
   }
@@ -644,8 +643,8 @@ export class MonitoringRKListComponent implements OnInit {
     const isNew = !row._id;
 
     const request$ = isNew
-      ? this.service.create([payload])
-      : this.service.update(row._id, payload);
+      ? this.service.createRigless([payload])
+      : this.service.updateRigless(row._id, payload);
 
     request$.subscribe({
       next: (res: any) => {
@@ -690,7 +689,7 @@ export class MonitoringRKListComponent implements OnInit {
     delete payload._backup;
     delete payload._error;
 
-    this.service.update(id, payload).subscribe({
+    this.service.updateRigless(id, payload).subscribe({
       next: (res) => {
         const dataIdx = this.rl_dataSource.data.findIndex(d => d._id === id);
         if (dataIdx !== -1) {
@@ -741,7 +740,7 @@ export class MonitoringRKListComponent implements OnInit {
           this.snackbarService.status.next(new SnackbarApi(true, "Item(s) removed from view.", "dismiss"));
           return;
         }
-        this.http.delete('/api/pe/MonitoringRK', {
+        this.http.delete('/api/pe/MonitoringRK/rigless', {
           params: { _ids: ids }
         }).subscribe((res: any) => {
           this.rl_isLoadingResults = false;
