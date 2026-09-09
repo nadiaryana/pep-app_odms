@@ -36,14 +36,17 @@ namespace ssc.Areas.PE.Controllers
             _monitoring_rk_rigless = _database.GetCollection<MonitoringRK>("monitoring_rk_rigless");
         }
 
-        /// <summary>
         /// Kunci identitas untuk cek duplikat antara monitoring_rk dan barchart.
         /// Menggabungkan well + plan_start + plan_end sehingga sumur yang sama
         /// dengan jadwal (plan) berbeda tetap dianggap sebagai data terpisah.
-        /// </summary>
         private static string DedupKey(string well, DateTime? planStart, DateTime? planEnd)
         {
             return (well ?? "") + "|" + (planStart?.Ticks ?? 0) + "|" + (planEnd?.Ticks ?? 0);
+        }
+
+        private static decimal? RiglessDelta(decimal? before, decimal? after)
+        {
+            return (before.HasValue && after.HasValue) ? (decimal?)(after - before) : null;
         }
 
         [Authorize("PeMonitoringRK Read")]
@@ -572,6 +575,14 @@ namespace ssc.Areas.PE.Controllers
                             .Where(d => d.HasValue).Select(d => d.Value.ToString())
                             .OrderByDescending(d => d).ToList();
                         break;
+                    case "delta":
+                        // Delta turunan (After - Before), jadi distinct dihitung dari isi data
+                        distinctRes = _monitoring_rk_rigless.Find(xfilter).ToList()
+                            .Select(it => RiglessDelta(it.before, it.after))
+                            .Where(d => d.HasValue).Select(d => d.Value.ToString())
+                            .Distinct()
+                            .OrderByDescending(d => d).ToList();
+                        break;
                     default:
                         distinctRes = new List<string>();
                         break;
@@ -585,9 +596,81 @@ namespace ssc.Areas.PE.Controllers
                 { StatusCode = StatusCodes.Status200OK };
             }
 
-            // Mode data: ambil data rigless murni dari koleksi monitoring_rk_rigless + pagination
+            // Mode data: ambil data rigless murni dari koleksi monitoring_rk_rigless.
+            // Delta = After - Before (nilai turunan). Sort/filter kolom delta butuh
+            // hasil hitung, jadi diproses in-memory; selain itu pakai jalur cepat DB.
+
+            // Deteksi apakah ada column filter "delta"
+            bool deltaFilterActive = false;
+            List<decimal> deltaFilterVals = null;
+            if (!String.IsNullOrWhiteSpace(columnfilter))
+            {
+                try
+                {
+                    var cf = JObject.Parse(columnfilter);
+                    if (cf["delta"] != null && cf["delta"].Type == JTokenType.Array)
+                    {
+                        deltaFilterVals = cf["delta"].ToObject<string[]>()
+                            .Where(v => !String.IsNullOrWhiteSpace(v))
+                            .Select(v =>
+                            {
+                                var cleaned = v.TrimStart('^').TrimEnd('$');
+                                return decimal.TryParse(cleaned, out var d) ? (decimal?)d : null;
+                            })
+                            .Where(d => d.HasValue)
+                            .Select(d => d.Value)
+                            .ToList();
+                        deltaFilterActive = true;
+                    }
+                }
+                catch { /* abaikan columnfilter delta tidak valid */ }
+            }
+
+            // Proses in-memory hanya saat butuh nilai turunan delta (sort/filter delta)
+            if (sort == "delta" || deltaFilterActive)
+            {
+                var allItems = _monitoring_rk_rigless.Find(xfilter).ToList();
+
+                foreach (var it in allItems)
+                {
+                    it.delta = RiglessDelta(it.before, it.after);
+                }
+
+                if (deltaFilterActive)
+                {
+                    allItems = (deltaFilterVals.Count > 0)
+                        ? allItems.Where(it => it.delta.HasValue && deltaFilterVals.Contains(it.delta.Value)).ToList()
+                        : allItems.Where(it => !it.delta.HasValue).ToList();
+                }
+
+                var total_count = allItems.Count;
+
+                IEnumerable<MonitoringRK> sortedItems;
+                switch (sort)
+                {
+                    case "well": sortedItems = (order == "asc") ? allItems.OrderBy(t => t.well) : allItems.OrderByDescending(t => t.well); break;
+                    case "pop": sortedItems = (order == "asc") ? allItems.OrderBy(t => t.pop) : allItems.OrderByDescending(t => t.pop); break;
+                    case "before": sortedItems = (order == "asc") ? allItems.OrderBy(t => t.before) : allItems.OrderByDescending(t => t.before); break;
+                    case "after": sortedItems = (order == "asc") ? allItems.OrderBy(t => t.after) : allItems.OrderByDescending(t => t.after); break;
+                    case "delta": sortedItems = (order == "asc") ? allItems.OrderBy(t => t.delta) : allItems.OrderByDescending(t => t.delta); break;
+                    case "remarks": sortedItems = (order == "asc") ? allItems.OrderBy(t => t.remarks) : allItems.OrderByDescending(t => t.remarks); break;
+                    default: sortedItems = allItems.OrderByDescending(t => t.pop); break;
+                }
+
+                var items = sortedItems.Skip(page * pagesize).Take(pagesize).ToList();
+
+                return new JsonResult(new
+                {
+                    total_count = total_count,
+                    incomplete_result = false,
+                    items = items
+                })
+                { StatusCode = StatusCodes.Status200OK };
+            }
+
+            // Jalur cepat: tanpa keterlibatan delta, sort & pagination tetap di DB
             var query = _monitoring_rk_rigless.Find(xfilter);
-            var total_count = query.CountDocuments();
+            var totalCountDb = query.CountDocuments();
 
             switch (sort)
             {
@@ -599,13 +682,19 @@ namespace ssc.Areas.PE.Controllers
                 default: query = query.SortByDescending(t => t.pop); break;
             }
 
-            var items = query.Skip(page * pagesize).Limit(pagesize).ToList();
+            var dbItems = query.Skip(page * pagesize).Limit(pagesize).ToList();
+
+            // Delta selalu dihitung dari After - Before saat dibaca supaya tampil benar
+            foreach (var it in dbItems)
+            {
+                it.delta = RiglessDelta(it.before, it.after);
+            }
 
             return new JsonResult(new
             {
-                total_count = total_count,
+                total_count = totalCountDb,
                 incomplete_result = false,
-                items = items
+                items = dbItems
             })
             { StatusCode = StatusCodes.Status200OK };
         }
@@ -624,6 +713,7 @@ namespace ssc.Areas.PE.Controllers
             foreach (var item in items)
             {
                 item.created_date = DateTime.Now;
+                item.delta = RiglessDelta(item.before, item.after);
                 _monitoring_rk_rigless.InsertOne(item);
             }
 
@@ -647,6 +737,7 @@ namespace ssc.Areas.PE.Controllers
                 .Set(t => t.pop, item.pop)
                 .Set(t => t.before, item.before)
                 .Set(t => t.after, item.after)
+                .Set(t => t.delta, RiglessDelta(item.before, item.after))
                 .Set(t => t.remarks, item.remarks)
                 .Set(t => t.updated_date, DateTime.Now);
 

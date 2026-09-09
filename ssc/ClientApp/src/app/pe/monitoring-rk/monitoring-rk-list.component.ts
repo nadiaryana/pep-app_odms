@@ -90,6 +90,7 @@ export class MonitoringRKListComponent implements OnInit {
   rl_pop_xSelected = [];
   rl_before_xSelected = [];
   rl_after_xSelected = [];
+  rl_delta_xSelected = [];
   rl_remarks_xSelected = [];
 
   @ViewChild('rlSort', { static: false }) rlSort: MatSort;
@@ -315,8 +316,8 @@ export class MonitoringRKListComponent implements OnInit {
       this.headerColumns2 = ["target_oil", "target_gas", "realisasi_oil", "realisasi_gas"];
     } else {
       // Tabel Rigless: well, pop, before, after, remarks
-      this.displayedColumns = ["select", "well", "pop", "before", "after", "remarks", "action"];
-      this.headerColumns1 = ["select", "well", "pop", "before", "after", "remarks", "action"];
+      this.displayedColumns = ["select", "well", "pop", "before", "after", "delta","remarks", "action"];
+      this.headerColumns1 = ["select", "well", "pop", "before", "after", "delta","remarks", "action"];
       this.headerColumns2 = [];
     }
   }
@@ -438,6 +439,7 @@ export class MonitoringRKListComponent implements OnInit {
     if (this.rl_pop_xSelected.length) columnfilter["pop"] = this.rl_pop_xSelected;
     if (this.rl_before_xSelected.length) columnfilter["before"] = this.rl_before_xSelected;
     if (this.rl_after_xSelected.length) columnfilter["after"] = this.rl_after_xSelected;
+    if (this.rl_delta_xSelected.length) columnfilter["delta"] = this.rl_delta_xSelected;
     if (this.rl_remarks_xSelected.length) columnfilter["remarks"] = this.rl_remarks_xSelected;
     return columnfilter;
   }
@@ -630,6 +632,16 @@ export class MonitoringRKListComponent implements OnInit {
     }
     row.isEdit = false;
     this.rl_isEditing = false;
+  }
+
+  /** Delta rigless = After - Before (nilai turunan, tidak diinput manual) */
+  rlDelta(row: any): any {
+    if (!row) return '-';
+    const before = (row.before === '' || row.before == null) ? null : Number(row.before);
+    const after = (row.after === '' || row.after == null) ? null : Number(row.after);
+    if (before == null || after == null) return '-';
+    const d = after - before;
+    return Number.isInteger(d) ? d : Math.round(d * 100) / 100;
   }
 
   rlSave(row: any) {

@@ -27,6 +27,7 @@ namespace ssc.Areas.PE.Models
         public decimal? realisasi_gas { get; set; }
         public decimal? before { get; set; }
         public decimal? after { get; set; }
+        public decimal? delta { get; set; }
         public string remarks { get; set; }
         public string created_by { get; set; }
         public DateTime? created_date { get; set; }

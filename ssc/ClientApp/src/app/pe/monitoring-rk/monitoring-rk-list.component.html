@@ -412,6 +412,18 @@
         </td>
       </ng-container>
 
+      <ng-container matColumnDef="delta">
+        <th mat-header-cell *matHeaderCellDef>
+          <div fxLayout="row" fxLayoutAlign="start center">
+            <span mat-sort-header arrowPosition="before" class="mat-sort-header">Delta</span>
+            <app-xfilter title="Delta" column="rl_delta" [selected]="rl_delta_xSelected"></app-xfilter>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="rl_selection.isSelected(row)">
+          {{ rlDelta(row) }}
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="remarks">
         <th mat-header-cell *matHeaderCellDef>
           <div fxLayout="row" fxLayoutAlign="start center">
