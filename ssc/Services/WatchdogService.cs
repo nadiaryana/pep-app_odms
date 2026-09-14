@@ -41,7 +41,7 @@ namespace ssc.Services
             _httpClientFactory = httpClientFactory;
             _logger = logger;
 
-            // Inisialisasi koleksi MongoDB untuk persistent state
+            // Inisialisasi koleksi MongoDB 
             var connectionString = config["PESumurSettings:ConnectionString"];
             var databaseName = config["PESumurSettings:DatabaseName"];
             var client = new MongoClient(connectionString);
@@ -121,7 +121,7 @@ namespace ssc.Services
                             _logger.LogWarning("[WATCHDOG] " + wellId + " OFFLINE!");
 
                             string msg = "🔴 " + wellId + " OFFLINE\n" +
-                                         "⚠ Alat tidak mengirim data > 2 menit\n" +
+                                         "⚠ Alat tidak mengirim data\n" +
                                          "⏰ Terakhir aktif: " +
                                          lastSeen.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
 

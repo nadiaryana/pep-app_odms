@@ -79,3 +79,31 @@ body {
   border-right: solid 1px rgb(255 0 0 / 32%);
   border-radius: 15px;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   LANDING PAGE (/landing)
+   Class `landing-active` di-toggle pada <body> oleh LandingComponent.
+   Hero landing tampil full-bleed & pas satu layar di dalam kerangka
+   aplikasi (toolbar fixed 65px + sidenav), tanpa scroll horizontal.
+   ════════════════════════════════════════════════════════════════════ */
+body.landing-active {
+  /* .container di app.component.scss punya margin 1em 2em. Margin itulah
+     yang "memotong" lebar hero sehingga tidak sampai ke tepi area konten
+     (dan, digabung hack 100vw, bikin scrollbar horizontal). */
+  .container {
+    margin: 0 !important;
+  }
+
+  /* <main> didorong 80px untuk memberi ruang judul halaman, sedangkan
+     toolbar tingginya hanya 65px -> tersisa pita putih 15px di bawah
+     toolbar. Samakan saja dengan tinggi toolbar. */
+  main {
+    margin-top: 65px !important;
+  }
+
+  /* app-title selalu merender <h1 class="mat-h1"> walau judulnya kosong
+     (lihat title.component.html) -> jadi celah kosong ~40px di atas hero. */
+  app-title {
+    display: none;
+  }
+}

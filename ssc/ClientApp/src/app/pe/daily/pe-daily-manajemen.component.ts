@@ -84,7 +84,7 @@ export class PeDailyManajemenComponent implements OnInit {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Daily Manajemen",
+      title: "Operation, SOT, Oil, and Gas Production",
       icon: "list",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },

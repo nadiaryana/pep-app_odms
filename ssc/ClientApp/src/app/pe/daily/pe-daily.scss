@@ -183,12 +183,58 @@ ng::host .mat-horizontal-stepper-content {
 
 .table-action-header {
   display : flex;
-  justify-content : space-between;
+  // justify-content : right;
   padding : 10px;
 }
 
-.table-action-header > button {
+.table-action-header > button,
+.table-action-bar > button {
   margin : 10px;
+}
+
+/* Baris tombol aksi — dipakai di luar container-content agar tidak sebaris dengan container-top-bar */
+.table-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  /* Jarak ke judul (app-title) di atasnya */
+  padding: 5px 10px 10px;
+}
+
+/* Grup tombol di sisi kanan baris aksi (Delete Selected & Chart) */
+.table-action-bar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 10px;
+
+  button {
+    margin: 0;
+  }
+
+  @media (max-width: 959px) {
+    button {
+      font-size: 12px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+}
+
+/* Lengkungan sisi tombol (manajemen list) */
+$btn-radius-manajemen: 12px;
+
+.table-action-header > button.mat-stroked-button,
+.table-action-bar > button.mat-stroked-button,
+button.action-button.mat-stroked-button {
+  border-radius: $btn-radius-manajemen;
+  height: auto;
 }
 
 .form-report {

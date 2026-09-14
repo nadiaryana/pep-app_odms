@@ -8,14 +8,12 @@ body {
 }
 
 .hero .header h1 {
-  // padding: 10px;
-  font-size: 60px;
-  font-weight: bold;
+  font-size: clamp(26px, 3.6vw, 38px);
+  font-weight: 700;
   color: #134E8E;
-  // color: black;
-  margin-bottom: 600px;
-  margin-left: 800px;
   text-align: center;
+  margin: 0;
+  padding: 0 24px;
 }
 
 .hero {
@@ -48,21 +46,17 @@ body {
   background-repeat: no-repeat;
   z-index: -1;
 
-  // Gradient overlay gelap dari bawah ke atas
-  // Setengah atas: transparan penuh (background image terlihat bersih)
-  // Setengah bawah: makin gelap menuju hitam 70% di paling bawah
-  // z-index tetap -1 sehingga berada di belakang semua konten
-  &::after {
+  &::before {
     content: '';
     position: absolute;
     inset: 0;
     background: linear-gradient(
-      to bottom,
-      transparent 0%,        /* atas: sama sekali tidak ada gelap */
-      transparent 40%,       /* sampai 40% dari atas tetap bersih */
-      rgba(0, 0, 0, 0.30) 65%,  /* mulai gelap di tengah-bawah */
-      rgba(0, 0, 0, 0.60) 80%  /* paling bawah: gelap 80% */
+      180deg,
+      rgba(10, 15, 20, 0) 0%,
+      rgba(10, 15, 20, 0.15) 45%,
+      rgba(10, 15, 20, 0.78) 100%
     );
+    z-index: 0;
   }
 }
 
@@ -70,6 +64,16 @@ body {
   font-size: 40px;
   color: #3b3f5c;
   margin-bottom: 40px;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #f0997b;
+  margin-bottom: 14px;
 }
 
 .card-container {
@@ -159,8 +163,8 @@ footer {
   padding: 20px;
   // Tambah padding bawah untuk iPhone home indicator
   padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  background: #f5f5f5;
-  color: #555;
+  background: #14181d;;
+  color: rgba(255, 255, 255, 0.5);
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   position: fixed;
