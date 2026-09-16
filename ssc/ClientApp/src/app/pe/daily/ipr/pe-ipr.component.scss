@@ -1,8 +1,223 @@
+// .container-top-bar {
+//   margin-right: 21.5%;
+// }
+
+// mat-card { 
+//   display: flex;
+//   justify-content: flex-start;
+//   align-items: flex-start;
+//   flex-direction: column;
+// }
+
+// .container-content {
+//   width: 100%;
+// }
+
+// .chart-card {
+//   width: 100%;
+//   display: block;
+// }
+
+// mat-progress-bar {
+//   width: 332px;
+// }
+
+// mat-form-field {
+//    width: 250px;
+// }
+
+// ::ng-deep .mat-card-header-text {
+//   margin-left: 0 !important;
+//   margin-right: 0 !important;
+// }
+
+// mat-card-actions {
+//   margin-left: 0;
+//   margin-right: 0;
+// }
+
+// /* list */
+
+// .rate-limit-reached {
+//   color: #980000;
+//   max-width: 360px;
+//   text-align: center;
+// }
+
+// /* Column Widths */
+// .mat-column-number,
+// .mat-column-state {
+//   max-width: 64px;
+// }
+
+// .mat-column-created {
+//   max-width: 124px;
+// }
+
+// /* verify table */
+
+// ::ng-deep .mat-form-field-infix {
+//   width: auto !important;
+// }
+
+// .select-well {
+//   padding-top: 0.625em;
+//   width: 100px
+// }
+
+// .input-hidden {
+//     position: absolute;
+//     width: 0px;
+//     border: none;
+//     height: 100%;
+// }
+
+// #daily_chart_el,
+// #weekly_chart_el,
+// #monthly_chart_el {
+//   min-height: 400px;
+// }
+
+// ::ng-deep .mat-form-field-wrapper {
+//   padding-bottom: 5px !important;
+// }
+
+// ::ng-deep .mat-form-field {
+//   padding-right: 10px !important;
+// }
+
+// .mat-input-element {
+//   color: #000 !important;        /* warna teks hitam */
+//   font-size: 15px !important;    /* Diperbesar dari 14px */
+// }
+
+// .mat-form-field-ripple {
+//   background-color: #000 !important;
+// }
+
+// /* Label di atas input - Normal state */
+// .mat-form-field-label {
+//   color: #000 !important;        /* agar tidak blur abu-abu */
+//   font-weight: 500;
+//   font-size: 16px !important;    /* Label normal */
+// }
+
+// /* Label saat floating (naik ke atas) - dengan jarak lebih */
+// ::ng-deep .mat-form-field-can-float.mat-form-field-should-float .mat-form-field-label,
+// ::ng-deep .mat-form-field-can-float .mat-form-field-autofill-control:-webkit-autofill + .mat-form-field-label-wrapper .mat-form-field-label {
+//   transform: translateY(-1.5em) scale(0.85) !important; /* translateY lebih besar untuk jarak, scale 0.85 */
+//   font-size: 16px !important;
+//   font-weight: 600 !important;
+// }
+
+// /* Menambah jarak antara label dan input */
+// ::ng-deep .mat-form-field-infix {
+//   padding-top: 8px !important; /* Tambah padding atas untuk jarak */
+// }
+
+// /* Placeholder */
+// .mat-form-field-placeholder {
+//   color: #000 !important;
+//   font-size: 15px !important;
+// }
+
+// ::ng-deep .mat-form-field{
+//   line-height: 1.5 !important; /* Menambah line-height untuk jarak */
+// }
+
+
+// ::ng-deep .mat-form-field-wrapper .mat-form-field-underline {
+//   bottom: 5px !important;
+//   background-color: #000 !important;
+// }
+
+// ::ng-deep .mat-form-field-wrapper .mat-form-field-infix {
+//   padding: 5px !important;
+// }
+
+// .field-well app-xfilter {
+//   position: absolute;
+//   right: 0px;
+//   top: -5px;
+// }
+
+// .daily_chart {
+//   height : 80vh;
+// }
+
+// .clicked_row {
+//   //background-color: lightgreen;
+//   background-color: #f57070;
+// }
+
+
+// .container-content {
+//   padding: 5px;
+//   box-shadow: 0 2px 1px -1px rgb(255, 0, 0), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%);
+//   background-color: white;
+//   border-radius: 8px;
+// }
+
+// ng::host .mat-horizontal-stepper-content {
+//   display: flex !important;
+//   align-items: center !important;
+// }
+
+// .margin-10 {
+//   margin-right : 10px;
+// }
+
+// .progress-bar {
+//   margin-top : 20px;
+// }
+
+// .table-action-header {
+//   display : flex;
+//   justify-content : space-between;
+//   padding : 10px;
+// }
+
+// .table-action-header > button {
+//   margin : 10px;
+// }
+
+// .form-report {
+//   padding: 20px 30px !important;
+//   margin-top: -8px;
+// }
+
+// .w_interval {
+//   resize: horizontal;
+//   min-width: 300px;
+// }
+
+// .w_art_lift_type {
+//   resize: horizontal;
+//   min-width: 200px;
+// }
+
+// .w_100 {
+//   resize: horizontal;
+//   min-width: 100px;
+// }
+
+// /* Info hint di samping input manual */
+// .info-hint {
+//   font-size: 12px;
+//   color: #555;
+//   background: #e8f0fe;
+//   border-radius: 6px;
+//   padding: 6px 10px;
+//   white-space: nowrap;
+//   line-height: 1.4;
+//   border: 1px solid #c4d8f0;
+// }
+
 .container-top-bar {
   margin-right: 21.5%;
 }
 
-mat-card { 
+mat-card {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
@@ -23,7 +238,7 @@ mat-progress-bar {
 }
 
 mat-form-field {
-   width: 250px;
+  width: 250px;
 }
 
 ::ng-deep .mat-card-header-text {
@@ -36,15 +251,12 @@ mat-card-actions {
   margin-right: 0;
 }
 
-/* list */
-
 .rate-limit-reached {
   color: #980000;
   max-width: 360px;
   text-align: center;
 }
 
-/* Column Widths */
 .mat-column-number,
 .mat-column-state {
   max-width: 64px;
@@ -54,22 +266,20 @@ mat-card-actions {
   max-width: 124px;
 }
 
-/* verify table */
-
 ::ng-deep .mat-form-field-infix {
   width: auto !important;
 }
 
 .select-well {
   padding-top: 0.625em;
-  width: 100px
+  width: 100px;
 }
 
 .input-hidden {
-    position: absolute;
-    width: 0px;
-    border: none;
-    height: 100%;
+  position: absolute;
+  width: 0px;
+  border: none;
+  height: 100%;
 }
 
 #daily_chart_el,
@@ -78,61 +288,82 @@ mat-card-actions {
   min-height: 400px;
 }
 
+/* ── FIX 1: form field jadi kotak dengan border jelas, bukan
+   cuma garis bawah — konsisten dengan sistem input di halaman lain */
 ::ng-deep .mat-form-field-wrapper {
   padding-bottom: 5px !important;
+  padding-top: 12px !important; // beri ruang di atas kotak untuk label mengambang
 }
 
 ::ng-deep .mat-form-field {
   padding-right: 10px !important;
 }
 
+::ng-deep .mat-form-field-flex {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  padding: 4px 10px !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative; // referensi posisi untuk label yang mengambang keluar kotak
+}
+
+::ng-deep .mat-form-field.mat-focused .mat-form-field-flex {
+  border-color: #0c447c !important;
+  box-shadow: 0 0 0 3px rgba(12, 68, 124, 0.1) !important;
+}
+
+::ng-deep .mat-form-field-underline {
+  display: none !important;
+}
+
+::ng-deep .mat-form-field-ripple {
+  display: none !important;
+}
+
 .mat-input-element {
-  color: #000 !important;        /* warna teks hitam */
-  font-size: 15px !important;    /* Diperbesar dari 14px */
+  color: #111827 !important;
+  font-size: 14px !important;
 }
 
-.mat-form-field-ripple {
-  background-color: #000 !important;
-}
-
-/* Label di atas input - Normal state */
 .mat-form-field-label {
-  color: #000 !important;        /* agar tidak blur abu-abu */
+  color: #6b7280 !important;
   font-weight: 500;
-  font-size: 16px !important;    /* Label normal */
+  font-size: 13px !important;
 }
 
-/* Label saat floating (naik ke atas) - dengan jarak lebih */
+::ng-deep .mat-form-field-label-wrapper {
+  overflow: visible !important;
+  top: -0.6em !important;
+}
+
+/* Label saat mengambang (ada isi/fokus): dinaikkan lebih tinggi
+   supaya BERADA DI ATAS garis border, bukan menabrak garis itu —
+   dan diberi background putih + padding kiri-kanan supaya bagian
+   border yang lewat di belakangnya "terpotong" (efek notch khas
+   outlined field), bukan menembus tulisan label. */
 ::ng-deep .mat-form-field-can-float.mat-form-field-should-float .mat-form-field-label,
 ::ng-deep .mat-form-field-can-float .mat-form-field-autofill-control:-webkit-autofill + .mat-form-field-label-wrapper .mat-form-field-label {
-  transform: translateY(-1.5em) scale(0.85) !important; /* translateY lebih besar untuk jarak, scale 0.85 */
-  font-size: 16px !important;
+  transform: translateY(-2.55em) scale(0.82) !important;
+  color: #0c447c !important;
   font-weight: 600 !important;
+  background: #ffffff !important;
+  padding: 0 4px !important;
+  z-index: 2;
 }
 
-/* Menambah jarak antara label dan input */
 ::ng-deep .mat-form-field-infix {
-  padding-top: 8px !important; /* Tambah padding atas untuk jarak */
+  padding: 6px 0 !important;
+  border-top: none !important;
 }
 
-/* Placeholder */
 .mat-form-field-placeholder {
-  color: #000 !important;
-  font-size: 15px !important;
+  color: #9ca3af !important;
+  font-size: 13px !important;
 }
 
-::ng-deep .mat-form-field{
-  line-height: 1.5 !important; /* Menambah line-height untuk jarak */
-}
-
-
-::ng-deep .mat-form-field-wrapper .mat-form-field-underline {
-  bottom: 5px !important;
-  background-color: #000 !important;
-}
-
-::ng-deep .mat-form-field-wrapper .mat-form-field-infix {
-  padding: 5px !important;
+::ng-deep .mat-form-field {
+  line-height: 1.5 !important;
 }
 
 .field-well app-xfilter {
@@ -142,43 +373,41 @@ mat-card-actions {
 }
 
 .daily_chart {
-  height : 80vh;
+  height: 80vh;
 }
 
 .clicked_row {
-  //background-color: lightgreen;
-  background-color: #f57070;
+  background-color: #fbe4e6;
 }
 
-
+/* ── FIX 2: HAPUS box-shadow merah — ini sumber bug "garis merah"
+   yang muncul di hampir semua card sepanjang aplikasi (Dashboard,
+   Daily Manajemen, IPR). Ganti dengan shadow netral tipis + border
+   abu, konsisten dengan sistem desain di halaman lain. */
 .container-content {
-  padding: 5px;
-  box-shadow: 0 2px 1px -1px rgb(255, 0, 0), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%);
-  background-color: white;
-  border-radius: 8px;
-}
-
-ng::host .mat-horizontal-stepper-content {
-  display: flex !important;
-  align-items: center !important;
+  padding: 16px;
+  box-shadow: none;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  border-radius: 12px;
 }
 
 .margin-10 {
-  margin-right : 10px;
+  margin-right: 10px;
 }
 
 .progress-bar {
-  margin-top : 20px;
+  margin-top: 20px;
 }
 
 .table-action-header {
-  display : flex;
-  justify-content : space-between;
-  padding : 10px;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
 }
 
 .table-action-header > button {
-  margin : 10px;
+  margin: 10px;
 }
 
 .form-report {
@@ -201,14 +430,117 @@ ng::host .mat-horizontal-stepper-content {
   min-width: 100px;
 }
 
-/* Info hint di samping input manual */
+/* ── FIX 3: .dasboard_card sebelumnya DIPAKAI di semua <mat-card>
+   pada HTML tapi TIDAK PERNAH didefinisikan di SCSS ini — jadi
+   selama ini semua card cuma tampil default Material apa adanya,
+   tidak konsisten. Sekarang didefinisikan eksplisit. */
+.dasboard_card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  width: 100%;
+
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    margin: 4px 0 6px;
+  }
+}
+
+/* ── FIX 4: info-hint sebelumnya box biru terang seperti alert/
+   callout — terlalu mencolok untuk sekadar info nilai rata-rata.
+   Sekarang jadi badge kecil netral, muncul di samping field. */
 .info-hint {
-  font-size: 12px;
-  color: #555;
-  background: #e8f0fe;
-  border-radius: 6px;
-  padding: 6px 10px;
+  font-size: 11.5px;
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 100px;
+  padding: 5px 12px;
   white-space: nowrap;
   line-height: 1.4;
-  border: 1px solid #c4d8f0;
+  border: 1px solid #e5e7eb;
 }
+
+/* ── FIX 5: tombol "Compile Chart" pakai color="primary" Angular
+   Material, yang secara default berwarna indigo/ungu tema bawaan
+   — tidak nyambung dengan warna brand (merah Pertamina + biru aksi
+   #0C447C) yang dipakai di seluruh halaman lain. Override khusus
+   di komponen ini supaya konsisten.
+
+   Tulisan + ikon (bar_chart) dipaksa PUTIH supaya kontras di atas
+   background biru, tidak ikut warna tema Material. */
+::ng-deep .dasboard_card button.mat-raised-button.mat-primary {
+  background-color: #3883ce !important;
+  color: #ffffff !important;
+}
+
+::ng-deep .dasboard_card button.mat-raised-button.mat-primary .mat-icon,
+::ng-deep .dasboard_card button.mat-raised-button.mat-primary .material-icons {
+  color: #ffffff !important;
+}
+
+::ng-deep .dasboard_card button.mat-raised-button.mat-primary:hover {
+  background-color: #093457 !important;
+  color: #ffffff !important;
+}
+
+::ng-deep .dasboard_card button.mat-raised-button.mat-primary[disabled] {
+  background-color: rgba(56, 131, 206, 0.5) !important;
+  color: #ffffff !important;
+}
+
+/* ── FIX 6: panel data ringkas (Subsurface / Lifting / Production)
+   — judul di atas, lalu baris label (kiri) + nilai (kanan, rata kanan)
+   dengan garis pemisah tipis antar baris. Field yang masih bisa
+   diedit (Operating design) tetap memakai mat-form-field. */
+.dasboard_card {
+  .data-panel {
+    width: 100%;
+  }
+
+  .data-panel-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 2px;
+  }
+
+  /* sub-judul di dalam kartu yang sama (mis. "Operating design") */
+  .data-panel-title--sub {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .data-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  .data-row + .data-row {
+    border-top: 1px solid #f1f3f5;
+  }
+
+  .data-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: #6b7280;
+  }
+
+  .data-value {
+    flex: 0 0 auto;
+    color: #111827;
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+

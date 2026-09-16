@@ -336,84 +336,37 @@
       <!-- Subsurface Data -->
       <mat-card class="dasboard_card" fxFlex="33%">
         <mat-card-content>
-          <div
-            class="filter-form"
-            fxLayout="column"
-            fxLayoutGap="10px"
-            fxLayoutAlign="start start"
-            fxLayout.lt-md="column"
-          >
-            <h3>Subsurface Data</h3>
+          <div class="data-panel">
+            <h3 class="data-panel-title">Subsurface data</h3>
 
-            <mat-form-field class="filter">
-              <mat-label>Zone</mat-label>
-              <input
-                matInput
-                [formControl]="zone"
-                placeholder="Zone"
-                readonly
-              />
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Interval</mat-label>
-              <input
-                matInput
-                [formControl]="interval"
-                placeholder="Interval"
-                readonly
-              />
-              <span matSuffix>m</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Static Bottomhole Pressure</mat-label>
-              <input
-                matInput
-                [formControl]="static_botthomhole_pressure"
-                placeholder="Static Bottomhole Pressure"
-                readonly
-              />
-              <span matSuffix>psi</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Flowing Bottomhole Pressure</mat-label>
-              <input
-                matInput
-                [formControl]="flowing_bottomhole_pressure"
-                placeholder="Flowing Bottomhole Pressure"
-                readonly
-              />
-              <span matSuffix>psi</span>
-            </mat-form-field>
-             <mat-form-field class="filter">
-            <mat-label>SM</mat-label>
-            <input 
-                  matInput 
-                  [formControl]="sm" 
-                  placeholder="SM" 
-                  readonly />
-                  <span matSuffix>m</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-            <mat-label>Qmax</mat-label>
-            <input
-              matInput
-              [formControl]="qmax"
-              placeholder="Qmax"
-              readonly
-            />
-            <span matSuffix>bfpd</span>
-          </mat-form-field>
-             <mat-form-field class="filter">
-              <mat-label>Production to reservoir potential ratio</mat-label>
-              <input
-                matInput
-                [formControl]="prod_reservoir"
-                placeholder="Production to reservoir potential ratio"
-                readonly
-              />
-              <span matSuffix>%</span>
-            </mat-form-field>
-
+            <div class="data-row">
+              <span class="data-label">Zone</span>
+              <span class="data-value">{{ zone.value ? zone.value : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Interval</span>
+              <span class="data-value">{{ interval.value ? interval.value + ' m' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Static bottomhole pressure</span>
+              <span class="data-value">{{ static_botthomhole_pressure.value ? static_botthomhole_pressure.value + ' psi' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Flowing bottomhole pressure</span>
+              <span class="data-value">{{ flowing_bottomhole_pressure.value ? flowing_bottomhole_pressure.value + ' psi' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">SM</span>
+              <span class="data-value">{{ sm.value ? sm.value + ' m' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Qmax</span>
+              <span class="data-value">{{ qmax.value ? qmax.value + ' bfpd' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Production to reservoir potential ratio</span>
+              <span class="data-value">{{ prod_reservoir.value ? prod_reservoir.value + ' %' : '-' }}</span>
+            </div>
           </div>
         </mat-card-content>
       </mat-card>
@@ -421,84 +374,37 @@
       <!-- Lifting Parameter  -->
       <mat-card class="dasboard_card" fxFlex="33%">
         <mat-card-content>
-          <div
-            class="filter-form"
-            fxLayout="column"
-            fxLayoutGap="10px"
-            fxLayoutAlign="start start"
-            fxLayout.lt-md="column"
-          >
-            <h3>Lifting Parameter</h3>
+          <div class="data-panel">
+            <h3 class="data-panel-title">Lifting parameter</h3>
 
-            <mat-form-field class="filter">
-              <mat-label>Lifting Type</mat-label>
-              <input
-                matInput
-                [formControl]="ls_method"
-                placeholder="Lifting Type"
-                readonly
-              />
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Pump Setting Depth</mat-label>
-              <input
-                matInput
-                [formControl]="ds_kd"
-                placeholder="Pump Setting Depth"
-                readonly
-              />
-              <span matSuffix>m</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Stroke length</mat-label>
-              <input
-                matInput
-                [formControl]="ds_sl"
-                placeholder="Stroke Length"
-                readonly
-              />
-              <span matSuffix>in</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>SPM</mat-label>
-              <input
-                matInput
-                [formControl]="ds_spm"
-                placeholder="SPM"
-                readonly
-              />
-              <span matSuffix>SPM / Hz</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Pump diameter</mat-label>
-              <input
-                matInput
-                [formControl]="size"
-                placeholder="Pump diameter"
-                readonly
-              />
-              <span matSuffix>in</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Lifting Capacity</mat-label>
-              <input
-                matInput
-                [formControl]="lifting_capacity"
-                placeholder="Lifting capacity"
-                readonly
-              />
-              <span matSuffix>bfpd</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Production to lifting capacity ratio</mat-label>
-              <input
-                matInput
-                [formControl]="prod_ratio"
-                placeholder="Production to lifting capacity ratio"
-                readonly
-              />
-              <span matSuffix>%</span>
-            </mat-form-field>
+            <div class="data-row">
+              <span class="data-label">Lifting type</span>
+              <span class="data-value">{{ ls_method.value ? ls_method.value : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Pump setting depth</span>
+              <span class="data-value">{{ ds_kd.value ? ds_kd.value + ' m' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Stroke length</span>
+              <span class="data-value">{{ ds_sl.value ? ds_sl.value + ' in' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">SPM</span>
+              <span class="data-value">{{ ds_spm.value ? ds_spm.value + ' SPM / Hz' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Pump diameter</span>
+              <span class="data-value">{{ size.value ? size.value + ' in' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Lifting capacity</span>
+              <span class="data-value">{{ lifting_capacity.value ? lifting_capacity.value + ' bfpd' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Production to lifting capacity ratio</span>
+              <span class="data-value">{{ prod_ratio.value ? prod_ratio.value + ' %' : '-' }}</span>
+            </div>
           </div>
         </mat-card-content>
       </mat-card>
@@ -506,56 +412,27 @@
       <!-- Production Data -->
       <mat-card class="dasboard_card" fxFlex="33%">
         <mat-card-content>
-          <div
-            class="filter-form"
-            fxLayout="column"
-            fxLayoutGap="10px"
-            fxLayoutAlign="start start"
-            fxLayout.lt-md="column"
-          >
-            <h3>Production Data</h3>
+          <div class="data-panel">
+            <h3 class="data-panel-title">Production data</h3>
 
-            <mat-form-field class="filter">
-              <mat-label>Liquid Rate</mat-label>
-              <input
-                matInput
-                [value]="dailyAverages?.length ? dailyAverages[0]?.grossAvg : ''"
-                placeholder="Liquid Rate"
-                readonly
-              />
-              <span matSuffix>bfpd</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Water Cut</mat-label>
-              <input
-                matInput
-                [formControl]="wc"
-                placeholder="Water Cut"
-                readonly
-              />
-              <span matSuffix>%</span>
-            </mat-form-field>
+            <div class="data-row">
+              <span class="data-label">Liquid rate</span>
+              <span class="data-value">{{ dailyAverages?.length ? dailyAverages[0]?.grossAvg + ' bfpd' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Water cut</span>
+              <span class="data-value">{{ wc.value ? wc.value + '%' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Oil rate</span>
+              <span class="data-value">{{ dailyAverages?.length ? dailyAverages[0]?.netAvg + ' bopd' : '-' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Gas rate</span>
+              <span class="data-value">{{ dailyAverages?.length ? dailyAverages[0]?.gasAvg + ' Mmscfd' : '-' }}</span>
+            </div>
 
-            <mat-form-field class="filter">
-              <mat-label>Oil Rate</mat-label>
-              <input
-                matInput
-                [value]="dailyAverages?.length ? dailyAverages[0]?.netAvg : ''"
-                disabled
-              />
-              <span matSuffix>bopd</span>
-            </mat-form-field>
-            <mat-form-field class="filter">
-              <mat-label>Gas Rate</mat-label>
-              <input
-                matInput
-                [value]="dailyAverages?.length ? dailyAverages[0]?.gasAvg : ''"
-                disabled
-              />
-              <span matSuffix>Mmscfd</span>
-            </mat-form-field>
-
-            <h3>Operating Design</h3>
+            <h3 class="data-panel-title data-panel-title--sub">Operating design</h3>
 
             <mat-form-field class="filter">
               <mat-label>SM 2</mat-label>

@@ -163,8 +163,9 @@ footer {
   padding: 20px;
   // Tambah padding bawah untuk iPhone home indicator
   padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  background: #14181d;;
-  color: rgba(255, 255, 255, 0.5);
+  background: #F8F9FA;
+  // color: rgba(255, 255, 255, 0.5);
+  color: #52606D;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   position: fixed;
