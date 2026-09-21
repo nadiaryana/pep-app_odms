@@ -288,11 +288,10 @@ mat-card-actions {
   min-height: 400px;
 }
 
-/* ── FIX 1: form field jadi kotak dengan border jelas, bukan
-   cuma garis bawah — konsisten dengan sistem input di halaman lain */
+
 ::ng-deep .mat-form-field-wrapper {
   padding-bottom: 5px !important;
-  padding-top: 12px !important; // beri ruang di atas kotak untuk label mengambang
+  padding-top: 12px !important; 
 }
 
 ::ng-deep .mat-form-field {
@@ -305,7 +304,7 @@ mat-card-actions {
   border-radius: 8px !important;
   padding: 4px 10px !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  position: relative; // referensi posisi untuk label yang mengambang keluar kotak
+  position: relative; 
 }
 
 ::ng-deep .mat-form-field.mat-focused .mat-form-field-flex {
@@ -337,11 +336,7 @@ mat-card-actions {
   top: -0.6em !important;
 }
 
-/* Label saat mengambang (ada isi/fokus): dinaikkan lebih tinggi
-   supaya BERADA DI ATAS garis border, bukan menabrak garis itu —
-   dan diberi background putih + padding kiri-kanan supaya bagian
-   border yang lewat di belakangnya "terpotong" (efek notch khas
-   outlined field), bukan menembus tulisan label. */
+
 ::ng-deep .mat-form-field-can-float.mat-form-field-should-float .mat-form-field-label,
 ::ng-deep .mat-form-field-can-float .mat-form-field-autofill-control:-webkit-autofill + .mat-form-field-label-wrapper .mat-form-field-label {
   transform: translateY(-2.55em) scale(0.82) !important;
@@ -380,10 +375,7 @@ mat-card-actions {
   background-color: #fbe4e6;
 }
 
-/* ── FIX 2: HAPUS box-shadow merah — ini sumber bug "garis merah"
-   yang muncul di hampir semua card sepanjang aplikasi (Dashboard,
-   Daily Manajemen, IPR). Ganti dengan shadow netral tipis + border
-   abu, konsisten dengan sistem desain di halaman lain. */
+
 .container-content {
   padding: 16px;
   box-shadow: none;
@@ -430,10 +422,7 @@ mat-card-actions {
   min-width: 100px;
 }
 
-/* ── FIX 3: .dasboard_card sebelumnya DIPAKAI di semua <mat-card>
-   pada HTML tapi TIDAK PERNAH didefinisikan di SCSS ini — jadi
-   selama ini semua card cuma tampil default Material apa adanya,
-   tidak konsisten. Sekarang didefinisikan eksplisit. */
+
 .dasboard_card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -449,9 +438,7 @@ mat-card-actions {
   }
 }
 
-/* ── FIX 4: info-hint sebelumnya box biru terang seperti alert/
-   callout — terlalu mencolok untuk sekadar info nilai rata-rata.
-   Sekarang jadi badge kecil netral, muncul di samping field. */
+
 .info-hint {
   font-size: 11.5px;
   color: #6b7280;
@@ -463,14 +450,7 @@ mat-card-actions {
   border: 1px solid #e5e7eb;
 }
 
-/* ── FIX 5: tombol "Compile Chart" pakai color="primary" Angular
-   Material, yang secara default berwarna indigo/ungu tema bawaan
-   — tidak nyambung dengan warna brand (merah Pertamina + biru aksi
-   #0C447C) yang dipakai di seluruh halaman lain. Override khusus
-   di komponen ini supaya konsisten.
 
-   Tulisan + ikon (bar_chart) dipaksa PUTIH supaya kontras di atas
-   background biru, tidak ikut warna tema Material. */
 ::ng-deep .dasboard_card button.mat-raised-button.mat-primary {
   background-color: #3883ce !important;
   color: #ffffff !important;
@@ -491,10 +471,7 @@ mat-card-actions {
   color: #ffffff !important;
 }
 
-/* ── FIX 6: panel data ringkas (Subsurface / Lifting / Production)
-   — judul di atas, lalu baris label (kiri) + nilai (kanan, rata kanan)
-   dengan garis pemisah tipis antar baris. Field yang masih bisa
-   diedit (Operating design) tetap memakai mat-form-field. */
+
 .dasboard_card {
   .data-panel {
     width: 100%;
@@ -507,7 +484,7 @@ mat-card-actions {
     margin: 0 0 2px;
   }
 
-  /* sub-judul di dalam kartu yang sama (mis. "Operating design") */
+  /* sub-judul di dalam kartu yang sama */
   .data-panel-title--sub {
     margin-top: 14px;
     padding-top: 12px;

@@ -109,7 +109,7 @@
         <ng-container matColumnDef="pmax">
             <th mat-header-cell *matHeaderCellDef>
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Pmax</span>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Pmax (psi)</span>
                 <app-xfilter title="pmax" column="pmax" format="number" [selected]="pmax_xSelected"></app-xfilter>
               </div>
           </th>
@@ -118,7 +118,7 @@
         <ng-container matColumnDef="tmax">
             <th mat-header-cell *matHeaderCellDef>
               <div fxLayout="row" fxLayoutAlign="start center">
-                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Tmax</span>
+                <span mat-sort-header arrowPosition="before" class="mat-sort-header">Tmax (°F)</span>
                 <app-xfilter title="tmax" column="tmax" format="number" [selected]="tmax_xSelected"></app-xfilter>
               </div>
           </th>
