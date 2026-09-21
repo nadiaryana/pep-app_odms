@@ -1065,7 +1065,7 @@ namespace ssc.Areas.PE.Controllers
                     // strings
                     var stringMappings = new[]
                     {
-                        new { key = "location", col = 3, required = true, errorMsg = "Blank location name is not allowed" },
+                        new { key = "location", col = 3, required = false, errorMsg = "" },
                         new { key = "well", col = 4, required = true, errorMsg = "Blank Well String name is not allowed" },
                         new { key = "well_string", col = 5, required = false, errorMsg = "" },
                         new { key = "ls_method", col = 24, required = false, errorMsg = "" },
