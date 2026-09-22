@@ -228,6 +228,10 @@ namespace ssc.Areas.PE.Models
         [BsonElement("item_count")]
         public int item_count { get; set; }
         public int batch_index { get; set; }
+        public long? modified_count { get; set; }
+        public long? created_count { get; set; }
+        public long? expected_count { get; set; }
+        public long? written_count { get; set; }
         public DateTime upload_date { get; set; }
         public Daily[] items { get; set; }
     }

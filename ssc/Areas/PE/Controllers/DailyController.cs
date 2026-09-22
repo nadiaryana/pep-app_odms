@@ -1658,6 +1658,195 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
+        // [Authorize("PeDaily Add")]
+        // [HttpGet("SaveData")]
+        // public ActionResult SaveData(string _id)
+        // {
+        //     try
+        //     {
+        //         DailyTmp _tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
+
+        //         if (_tmp == null)
+        //         {
+        //             return BadRequest(new { message = "Upload data not found" });
+        //         }
+
+        //         // Hanya block jika ada error (bukan warning — warning = existing data, tetap bisa disimpan)
+        //         bool hasError = _tmp.items != null && _tmp.items.Any(i => i._error?._row?.value == "error");
+        //         if (hasError)
+        //         {
+        //             return BadRequest(new { message = "Cannot save data with errors. Please fix errors first." });
+        //         }
+
+        //         List<Daily> items = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
+        //         List<Daily> modified_data = new List<Daily>();
+        //         List<Daily> created_data = new List<Daily>();
+
+        //         var figure = items.GroupBy(g => new
+        //         {
+        //             date = g.date
+        //         }).Select(s => new
+        //         {
+        //             date = s.Key.date,
+        //             figure = s.Sum(p => p.fig_curr_net)
+        //         }).ToList();
+        //         foreach (var item in figure)
+        //         {
+        //             var update = Builders<Production>.Update
+        //           .Set(t => t.figure, item.figure)
+        //           .Set(t => t.date, item.date);
+        //             UpdateResult res = _production.UpdateOne(
+        //                 Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
+        //                 update, new UpdateOptions() { IsUpsert = true });
+
+        //         }
+        //         if (_fields_structure != null)
+        //         {
+        //             List<Structure> structure = _structure.Find(s => true).Project<Structure>(_fields_structure).ToList();
+        //             foreach (Structure str in structure)
+        //             {
+        //                 foreach (string prefix in str.prefix)
+        //                 {
+        //                     List<Daily> _dstr = items.Where(i => i.well.StartsWith(prefix)).ToList();
+        //                     foreach (Daily dstr in _dstr)
+        //                     {
+        //                         dstr.structure = new DailyStructure
+        //                         {
+        //                             name = str.name,
+        //                             shortName = str.shortName,
+        //                         };
+        //                     }
+        //                 }
+        //             }
+        //         }
+
+        //         long modified_count = 0;
+        //         long created_count = items.Count();
+        //         Daily daily;
+        //         var bulkOps = new List<WriteModel<Daily>>();
+        //         foreach (Daily item in items)
+        //         {
+        //             item._error = null;
+
+        //             var filter = Builders<Daily>.Filter.Eq(t => t.date, item.date) &
+        //                         Builders<Daily>.Filter.Eq(t => t.well, item.well) &
+        //                         Builders<Daily>.Filter.Eq(t => t.interval, item.interval);
+        //             // daily = DailyCommon.CalculateFields(item);
+
+        //             var update = Builders<Daily>.Update.Set(t => t.date, item.date)
+        //                 .Set(t => t.nomor, item.nomor)
+        //                 .Set(t => t.location, item.location)
+        //                 .Set(t => t.well, item.well)
+        //                 .Set(t => t.well_string, item.well_string)
+        //                 .Set(t => t.zone, item.zone)
+        //                 .Set(t => t.interval, item.interval)
+        //                 .Set(t => t.potensi_prod_gross, item.potensi_prod_gross)
+        //                 .Set(t => t.potensi_prod_net, item.potensi_prod_net)
+        //                 .Set(t => t.tes_prod_gross, item.tes_prod_gross)
+        //                 .Set(t => t.tes_prod_net, item.tes_prod_net)
+        //                 .Set(t => t.fig_last_gross, item.fig_last_gross)
+        //                 .Set(t => t.fig_last_net, item.fig_last_net)
+        //                 .Set(t => t.fig_curr_gross, item.fig_curr_gross)
+        //                 .Set(t => t.fig_curr_net, item.fig_curr_net)
+        //                 .Set(t => t.thp_last_fig, item.thp_last_fig)
+        //                 .Set(t => t.thp_potensi, item.thp_potensi)
+        //                 .Set(t => t.wc, item.wc)
+        //                 .Set(t => t.prod_hours, item.prod_hours)
+        //                 .Set(t => t.wor, item.wor)
+        //                 .Set(t => t.gas, item.gas)
+        //                 .Set(t => t.gor, item.gor)
+        //                 .Set(t => t.glr, item.glr)
+        //                 .Set(t => t.ls_method, item.ls_method)
+        //                 .Set(t => t.ls_brandtype, item.ls_brandtype)
+        //                 .Set(t => t.ls_prime_mover, item.ls_prime_mover)
+        //                 .Set(t => t.ls_hp, item.ls_hp)
+        //                 .Set(t => t.ds_size, item.ds_size)
+        //                 .Set(t => t.ds_spm, item.ds_spm)
+        //                 .Set(t => t.ds_bean, item.ds_bean)
+        //                 .Set(t => t.ds_whp, item.ds_whp)
+        //                 .Set(t => t.ds_fl, item.ds_fl)
+        //                 .Set(t => t.ds_casing, item.ds_casing)
+        //                 .Set(t => t.ds_separator, item.ds_separator)
+        //                 .Set(t => t.ds_pump_displace, item.ds_pump_displace)
+        //                 .Set(t => t.ds_efficiency, item.ds_efficiency)
+        //                 .Set(t => t.ds_sl, item.ds_sl)
+        //                 .Set(t => t.ds_kd, item.ds_kd)
+        //                 .Set(t => t.sm, item.sm)
+        //                 .Set(t => t.ds_tgl_pengujian, item.ds_tgl_pengujian)
+        //                 .Set(t => t.noted, item.noted)
+
+        //                 .Set(t => t.updated_by, User.Identity.Name)
+        //                 .Set(t => t.updated_date, DateTime.Now)
+        //                 .SetOnInsert(t => t.created_by, User.Identity.Name)
+        //                 .SetOnInsert(t => t.created_date, DateTime.Now);
+
+        //             // UpdateResult res = _daily.UpdateOne(
+        //             //     Builders<Daily>.Filter.Eq(t => t.date, item.date) &
+        //             //     Builders<Daily>.Filter.Eq(t => t.well, item.well) &
+        //             //     Builders<Daily>.Filter.Eq(t => t.interval, item.interval),
+        //             //     update, new UpdateOptions() { IsUpsert = true });
+
+        //             // if (res.ModifiedCount > 0)
+        //             // {
+        //             //     modified_data.Add(item);
+        //             // }
+        //             // else if (res.UpsertedId != null)
+        //             // {
+        //             //     created_data.Add(item);
+        //             // }
+
+        //             bulkOps.Add(new UpdateOneModel<Daily>(filter, update) { IsUpsert = true });
+
+
+        //         }
+        //         BulkWriteResult bulkResult = _daily.BulkWrite(bulkOps);
+        //         modified_count = bulkResult.ModifiedCount;
+        //         created_count = bulkResult.Upserts.Count;
+        //         _daily_tmp.DeleteOne(d => d._id == _id);
+
+        //         //CalculateFigure();
+
+        //         return Ok(new
+        //         {
+        //             modified_count = modified_count,
+        //             created_count = created_count,
+        //             total_count = items.Count(),
+        //             modified_data = modified_data,
+        //             created_data = created_data,
+        //             figure = figure
+        //         });
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         return BadRequest(new { message = e.Message });
+        //     }
+        // }
+
+        // [Authorize("PeDaily Delete")]
+        // [HttpDelete]
+        // public ActionResult Delete(string[] _ids)
+        // {
+        //     try
+        //     {
+        //         long deleted_count = 0;
+        //         long total_count = _ids.Length;
+        //         foreach (string _id in _ids)
+        //         {
+        //             DeleteResult res = _daily.DeleteOne(t => t._id == _id);
+        //             deleted_count += res.DeletedCount;
+        //         }
+        //         return Ok(new
+        //         {
+        //             deleted_count = deleted_count,
+        //             total_count = total_count
+        //         });
+        //     }
+        //     catch (MongoException e)
+        //     {
+        //         return BadRequest();
+        //     }
+        // }
+
         [Authorize("PeDaily Add")]
         [HttpGet("SaveData")]
         public ActionResult SaveData(string _id)
@@ -1678,142 +1867,38 @@ namespace ssc.Areas.PE.Controllers
                     return BadRequest(new { message = "Cannot save data with errors. Please fix errors first." });
                 }
 
-                List<Daily> items = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
-                List<Daily> modified_data = new List<Daily>();
-                List<Daily> created_data = new List<Daily>();
+                string userName = User.Identity.Name;
 
-                var figure = items.GroupBy(g => new
-                {
-                    date = g.date
-                }).Select(s => new
-                {
-                    date = s.Key.date,
-                    figure = s.Sum(p => p.fig_curr_net)
-                }).ToList();
-                foreach (var item in figure)
-                {
-                    var update = Builders<Production>.Update
-                  .Set(t => t.figure, item.figure)
-                  .Set(t => t.date, item.date);
-                    UpdateResult res = _production.UpdateOne(
-                        Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
-                        update, new UpdateOptions() { IsUpsert = true });
+                // Tandai status "saving" supaya frontend bisa mulai polling
+                _daily_tmp.UpdateOne(
+                    t => t._id == _id,
+                    Builders<DailyTmp>.Update
+                        .Set(t => t.status, "saving")
+                        .Set(t => t.message, "Saving started"));
 
-                }
-                if (_fields_structure != null)
+                _taskQueue.QueueBackgroundWorkItem(async token =>
                 {
-                    List<Structure> structure = _structure.Find(s => true).Project<Structure>(_fields_structure).ToList();
-                    foreach (Structure str in structure)
+                    try
                     {
-                        foreach (string prefix in str.prefix)
-                        {
-                            List<Daily> _dstr = items.Where(i => i.well.StartsWith(prefix)).ToList();
-                            foreach (Daily dstr in _dstr)
-                            {
-                                dstr.structure = new DailyStructure
-                                {
-                                    name = str.name,
-                                    shortName = str.shortName,
-                                };
-                            }
-                        }
+                        await Task.Run(() => ProcessSaveData(_id, userName), token);
                     }
-                }
+                    catch (Exception ex)
+                    {
+                        DailyCommon._daily_tmp.UpdateOne(
+                            t => t._id == _id,
+                            Builders<DailyTmp>.Update
+                                .Set(t => t.status, "save_failed")
+                                .Set(t => t.message, ex.Message));
+                    }
+                });
 
-                long modified_count = 0;
-                long created_count = items.Count();
-                Daily daily;
-                var bulkOps = new List<WriteModel<Daily>>();
-                foreach (Daily item in items)
-                {
-                    item._error = null;
-
-                    var filter = Builders<Daily>.Filter.Eq(t => t.date, item.date) &
-                                Builders<Daily>.Filter.Eq(t => t.well, item.well) &
-                                Builders<Daily>.Filter.Eq(t => t.interval, item.interval);
-                    // daily = DailyCommon.CalculateFields(item);
-
-                    var update = Builders<Daily>.Update.Set(t => t.date, item.date)
-                        .Set(t => t.nomor, item.nomor)
-                        .Set(t => t.location, item.location)
-                        .Set(t => t.well, item.well)
-                        .Set(t => t.well_string, item.well_string)
-                        .Set(t => t.zone, item.zone)
-                        .Set(t => t.interval, item.interval)
-                        .Set(t => t.potensi_prod_gross, item.potensi_prod_gross)
-                        .Set(t => t.potensi_prod_net, item.potensi_prod_net)
-                        .Set(t => t.tes_prod_gross, item.tes_prod_gross)
-                        .Set(t => t.tes_prod_net, item.tes_prod_net)
-                        .Set(t => t.fig_last_gross, item.fig_last_gross)
-                        .Set(t => t.fig_last_net, item.fig_last_net)
-                        .Set(t => t.fig_curr_gross, item.fig_curr_gross)
-                        .Set(t => t.fig_curr_net, item.fig_curr_net)
-                        .Set(t => t.thp_last_fig, item.thp_last_fig)
-                        .Set(t => t.thp_potensi, item.thp_potensi)
-                        .Set(t => t.wc, item.wc)
-                        .Set(t => t.prod_hours, item.prod_hours)
-                        .Set(t => t.wor, item.wor)
-                        .Set(t => t.gas, item.gas)
-                        .Set(t => t.gor, item.gor)
-                        .Set(t => t.glr, item.glr)
-                        .Set(t => t.ls_method, item.ls_method)
-                        .Set(t => t.ls_brandtype, item.ls_brandtype)
-                        .Set(t => t.ls_prime_mover, item.ls_prime_mover)
-                        .Set(t => t.ls_hp, item.ls_hp)
-                        .Set(t => t.ds_size, item.ds_size)
-                        .Set(t => t.ds_spm, item.ds_spm)
-                        .Set(t => t.ds_bean, item.ds_bean)
-                        .Set(t => t.ds_whp, item.ds_whp)
-                        .Set(t => t.ds_fl, item.ds_fl)
-                        .Set(t => t.ds_casing, item.ds_casing)
-                        .Set(t => t.ds_separator, item.ds_separator)
-                        .Set(t => t.ds_pump_displace, item.ds_pump_displace)
-                        .Set(t => t.ds_efficiency, item.ds_efficiency)
-                        .Set(t => t.ds_sl, item.ds_sl)
-                        .Set(t => t.ds_kd, item.ds_kd)
-                        .Set(t => t.sm, item.sm)
-                        .Set(t => t.ds_tgl_pengujian, item.ds_tgl_pengujian)
-                        .Set(t => t.noted, item.noted)
-
-                        .Set(t => t.updated_by, User.Identity.Name)
-                        .Set(t => t.updated_date, DateTime.Now)
-                        .SetOnInsert(t => t.created_by, User.Identity.Name)
-                        .SetOnInsert(t => t.created_date, DateTime.Now);
-
-                    // UpdateResult res = _daily.UpdateOne(
-                    //     Builders<Daily>.Filter.Eq(t => t.date, item.date) &
-                    //     Builders<Daily>.Filter.Eq(t => t.well, item.well) &
-                    //     Builders<Daily>.Filter.Eq(t => t.interval, item.interval),
-                    //     update, new UpdateOptions() { IsUpsert = true });
-
-                    // if (res.ModifiedCount > 0)
-                    // {
-                    //     modified_data.Add(item);
-                    // }
-                    // else if (res.UpsertedId != null)
-                    // {
-                    //     created_data.Add(item);
-                    // }
-
-                    bulkOps.Add(new UpdateOneModel<Daily>(filter, update) { IsUpsert = true });
-
-
-                }
-                BulkWriteResult bulkResult = _daily.BulkWrite(bulkOps);
-                modified_count = bulkResult.ModifiedCount;
-                created_count = bulkResult.Upserts.Count;
-                _daily_tmp.DeleteOne(d => d._id == _id);
-
-                //CalculateFigure();
-
+                // Response ini balik CEPAT (bukan menunggu proses selesai),
+                // jadi tidak akan kena timeout reverse proxy / 502.
                 return Ok(new
                 {
-                    modified_count = modified_count,
-                    created_count = created_count,
-                    total_count = items.Count(),
-                    modified_data = modified_data,
-                    created_data = created_data,
-                    figure = figure
+                    _id,
+                    status = "saving",
+                    message = "File is being saved in the background."
                 });
             }
             catch (Exception e)
@@ -1822,31 +1907,205 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-        [Authorize("PeDaily Delete")]
-        [HttpDelete]
-        public ActionResult Delete(string[] _ids)
+        private void ProcessSaveData(string tmpId, string userName)
         {
-            try
+            DailyTmp _tmp = DailyCommon._daily_tmp.Find(t => t._id == tmpId).FirstOrDefault();
+            if (_tmp == null)
             {
-                long deleted_count = 0;
-                long total_count = _ids.Length;
-                foreach (string _id in _ids)
-                {
-                    DeleteResult res = _daily.DeleteOne(t => t._id == _id);
-                    deleted_count += res.DeletedCount;
-                }
-                return Ok(new
-                {
-                    deleted_count = deleted_count,
-                    total_count = total_count
-                });
+                DailyCommon._daily_tmp.UpdateOne(
+                    t => t._id == tmpId,
+                    Builders<DailyTmp>.Update
+                        .Set(t => t.status, "save_failed")
+                        .Set(t => t.message, "Upload data not found"));
+                return;
             }
-            catch (MongoException e)
+
+            List<Daily> items = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
+
+            var figure = items.GroupBy(g => new { date = g.date })
+                .Select(s => new { date = s.Key.date, figure = s.Sum(p => p.fig_curr_net) })
+                .ToList();
+
+            foreach (var item in figure)
             {
-                return BadRequest();
+                var update = Builders<Production>.Update
+                    .Set(t => t.figure, item.figure)
+                    .Set(t => t.date, item.date);
+                DailyCommon._production.UpdateOne(
+                    Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
+                    update, new UpdateOptions() { IsUpsert = true });
+            }
+
+            if (DailyCommon._fields_structure != null)
+            {
+                List<Structure> structure = DailyCommon._structure.Find(s => true).Project<Structure>(DailyCommon._fields_structure).ToList();
+
+                foreach (Structure str in structure)
+                {
+                    foreach (string prefix in str.prefix)
+                    {
+
+                        List<Daily> _dstr = items.Where(i => i.well != null && i.well.StartsWith(prefix)).ToList();
+                        foreach (Daily dstr in _dstr)
+                        {
+                            dstr.structure = new DailyStructure
+                            {
+                                name = str.name,
+                                shortName = str.shortName,
+                            };
+                        }
+                    }
+                }
+            }
+
+            var bulkOps = new List<WriteModel<Daily>>();
+            foreach (Daily item in items)
+            {
+                item._error = null;
+
+                var filter = Builders<Daily>.Filter.Eq(t => t.date, item.date) &
+                            Builders<Daily>.Filter.Eq(t => t.well, item.well) &
+                            Builders<Daily>.Filter.Eq(t => t.interval, item.interval);
+
+                var update = Builders<Daily>.Update.Set(t => t.date, item.date)
+                    .Set(t => t.nomor, item.nomor)
+                    .Set(t => t.location, item.location)
+                    .Set(t => t.well, item.well)
+                    .Set(t => t.well_string, item.well_string)
+                    .Set(t => t.zone, item.zone)
+                    .Set(t => t.interval, item.interval)
+                    .Set(t => t.potensi_prod_gross, item.potensi_prod_gross)
+                    .Set(t => t.potensi_prod_net, item.potensi_prod_net)
+                    .Set(t => t.tes_prod_gross, item.tes_prod_gross)
+                    .Set(t => t.tes_prod_net, item.tes_prod_net)
+                    .Set(t => t.fig_last_gross, item.fig_last_gross)
+                    .Set(t => t.fig_last_net, item.fig_last_net)
+                    .Set(t => t.fig_curr_gross, item.fig_curr_gross)
+                    .Set(t => t.fig_curr_net, item.fig_curr_net)
+                    .Set(t => t.thp_last_fig, item.thp_last_fig)
+                    .Set(t => t.thp_potensi, item.thp_potensi)
+                    .Set(t => t.wc, item.wc)
+                    .Set(t => t.prod_hours, item.prod_hours)
+                    .Set(t => t.wor, item.wor)
+                    .Set(t => t.gas, item.gas)
+                    .Set(t => t.gor, item.gor)
+                    .Set(t => t.glr, item.glr)
+                    .Set(t => t.ls_method, item.ls_method)
+                    .Set(t => t.ls_brandtype, item.ls_brandtype)
+                    .Set(t => t.ls_prime_mover, item.ls_prime_mover)
+                    .Set(t => t.ls_hp, item.ls_hp)
+                    .Set(t => t.ds_size, item.ds_size)
+                    .Set(t => t.ds_spm, item.ds_spm)
+                    .Set(t => t.ds_bean, item.ds_bean)
+                    .Set(t => t.ds_whp, item.ds_whp)
+                    .Set(t => t.ds_fl, item.ds_fl)
+                    .Set(t => t.ds_casing, item.ds_casing)
+                    .Set(t => t.ds_separator, item.ds_separator)
+                    .Set(t => t.ds_pump_displace, item.ds_pump_displace)
+                    .Set(t => t.ds_efficiency, item.ds_efficiency)
+                    .Set(t => t.ds_sl, item.ds_sl)
+                    .Set(t => t.ds_kd, item.ds_kd)
+                    .Set(t => t.sm, item.sm)
+                    .Set(t => t.ds_tgl_pengujian, item.ds_tgl_pengujian)
+                    .Set(t => t.noted, item.noted)
+                    .Set(t => t.updated_by, userName)
+                    .Set(t => t.updated_date, DateTime.Now)
+                    .SetOnInsert(t => t.created_by, userName)
+                    .SetOnInsert(t => t.created_date, DateTime.Now);
+
+                bulkOps.Add(new UpdateOneModel<Daily>(filter, update) { IsUpsert = true });
+            }
+
+            long modified_count = 0;
+            long created_count = 0;
+            long expected_count = items.Count;
+            long written_count = 0;
+
+            // sisi pelaporan count).
+            const int BATCH_SIZE = 500;
+            var batchErrors = new List<string>();
+
+            for (int i = 0; i < bulkOps.Count; i += BATCH_SIZE)
+            {
+                var batch = bulkOps.Skip(i).Take(BATCH_SIZE).ToList();
+                try
+                {
+                    BulkWriteResult bulkResult = DailyCommon._daily.BulkWrite(batch);
+                    modified_count += bulkResult.ModifiedCount;
+                    created_count += bulkResult.Upserts.Count;
+                    written_count += bulkResult.ModifiedCount + bulkResult.Upserts.Count;
+                }
+                catch (Exception exBatch)
+                {
+                    // Batch ini gagal — catat, tapi lanjutkan ke batch berikutnya
+                    // supaya satu batch bermasalah tidak menggagalkan semuanya.
+                    batchErrors.Add($"Batch {i / BATCH_SIZE + 1} (rows {i + 1}-{Math.Min(i + BATCH_SIZE, bulkOps.Count)}): {exBatch.Message}");
+                }
+
+                // Update progress supaya bisa dipantau lewat SaveStatus selagi berjalan.
+                DailyCommon._daily_tmp.UpdateOne(
+                    t => t._id == tmpId,
+                    Builders<DailyTmp>.Update
+                        .Set(t => t.status, "saving")
+                        .Set(t => t.message, $"Saved {Math.Min(i + BATCH_SIZE, bulkOps.Count)} / {bulkOps.Count} rows"));
+            }
+
+            bool countMismatch = written_count != expected_count;
+            bool hasBatchErrors = batchErrors.Count > 0;
+
+            string finalStatus = (countMismatch || hasBatchErrors) ? "saved_with_mismatch" : "saved";
+            string finalMessage = (countMismatch || hasBatchErrors)
+                ? $"Save selesai TAPI jumlah tidak cocok. Expected: {expected_count}, Written: {written_count}. " +
+                (hasBatchErrors ? "Batch errors: " + string.Join(" | ", batchErrors) : "")
+                : "Save completed successfully";
+
+            DailyCommon._daily_tmp.UpdateOne(
+                t => t._id == tmpId,
+                Builders<DailyTmp>.Update
+                    .Set(t => t.status, finalStatus)
+                    .Set(t => t.message, finalMessage)
+                    .Set("modified_count", modified_count)
+                    .Set("created_count", created_count)
+                    .Set("expected_count", expected_count)
+                    .Set("written_count", written_count));
+
+
+            if (!countMismatch && !hasBatchErrors)
+            {
+                DailyCommon._daily_tmp.DeleteOne(d => d._id == tmpId);
             }
         }
 
+        [Authorize("PeDaily Add")]
+        [HttpGet("SaveStatus")]
+        public ActionResult GetSaveStatus(string _id)
+        {
+            try
+            {
+                var tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
+
+                if (tmp == null)
+                {
+                    // Kemungkinan sudah selesai & terhapus (sukses), atau memang tidak ada.
+                    return Ok(new { _id, status = "saved_or_not_found" });
+                }
+
+                return Ok(new
+                {
+                    _id = tmp._id,
+                    status = tmp.status,
+                    message = tmp.message,
+                    modified_count = tmp.modified_count,
+                    created_count = tmp.created_count,
+                    expected_count = tmp.expected_count,
+                    written_count = tmp.written_count
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
         [Authorize("PeDaily Read")]
         [HttpGet("delta")]
