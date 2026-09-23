@@ -26,6 +26,7 @@ import {
 		MatTreeModule,
 		MatStepperModule,
 		MatMenuModule,
+        MatBadgeModule,
 	   } from '@angular/material';
 
 import { MatRadioModule } from '@angular/material/radio';
@@ -60,6 +61,7 @@ import { MatRadioModule } from '@angular/material/radio';
 	MatStepperModule,
 	MatRadioModule,
 	MatMenuModule,
+    MatBadgeModule,
   ],
   exports: [
     MatTabsModule,
@@ -88,6 +90,7 @@ import { MatRadioModule } from '@angular/material/radio';
 	MatStepperModule,
 	MatRadioModule,
 	MatMenuModule,
+    MatBadgeModule,
   ],
 })
 export class MaterialModule { }

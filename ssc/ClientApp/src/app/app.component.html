@@ -10,7 +10,10 @@
     </button> 
   </div>
   <div fxFlex fxLayout fxLayoutAlign="flex-end" fxHide fxShow.gt-xs="true">
-    <ul fxLayout fxLayoutGap="20px" class="navigation-items">
+    <ul fxLayout fxLayoutAlign="start center" fxLayoutGap="20px" class="navigation-items">
+      <li *ngIf="currentUser" class="sync-item">
+        <app-sync-button></app-sync-button>
+      </li>
       <ng-container *ngFor="let menu of root">
         <li *ngIf="menu.permission">
           <a [routerLink]="menu.outlet ? [{outlets:menu.outlet}] : menu.path">
@@ -21,6 +24,9 @@
       </ng-container>
     </ul>
   </div>
+  <!-- layar kecil: menu di atas disembunyikan (fxHide), jadi tombol Sync tampil sendiri di kanan -->
+  <span fxFlex fxHide.gt-xs></span>
+  <app-sync-button *ngIf="currentUser" fxHide.gt-xs></app-sync-button>
 </mat-toolbar>
 <mat-sidenav-container>
   <mat-sidenav #sidenav role="navigation" [mode]="screenWidth > 599? 'side' : 'over'" [opened]="currentUser!=null && !fullWindow && screenWidth > 599">

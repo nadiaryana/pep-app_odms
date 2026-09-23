@@ -18,6 +18,8 @@ using OfficeOpenXml.Style;
 using System.Drawing;
 using System.IO;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using JobStatus = ssc.Models.JobStatus;
+using JobModule = ssc.Models.JobModule;
 
 namespace ssc.Areas.PE.Controllers
 {
@@ -37,8 +39,9 @@ namespace ssc.Areas.PE.Controllers
 
         private readonly IMongoCollection<Production> _production;
         private readonly IBackgroundTaskQueue _taskQueue;
+        private readonly IJobTracker _jobTracker;
 
-        public DailyController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue)
+        public DailyController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue, IJobTracker jobTracker)
         {
 
             _daily = DailyCommon._daily;
@@ -50,6 +53,7 @@ namespace ssc.Areas.PE.Controllers
             _fields_daily = DailyCommon._fields_daily;
             _fields_structure = DailyCommon._fields_structure;
             _taskQueue = taskQueue;
+            _jobTracker = jobTracker;
 
             _quadrantRemarks = DailyCommon.database.GetCollection<PeOptimasiQuadrantRemark>("pe_optimasi_remarks");
         }
@@ -857,18 +861,38 @@ namespace ssc.Areas.PE.Controllers
                 error_count = 0,
                 items = Array.Empty<Daily>(),
                 message = "Processing started",
-                upload_date = DateTime.Now
+                upload_date = DateTime.Now,
+                file_name = files[0].FileName,
+                created_by = User.Identity.Name
             };
 
             _daily_tmp.InsertOne(tmp);
+
+            string jobId = _jobTracker.Create(User.Identity.Name, JobModule.DailyUpload, tmp._id, files[0].FileName);
+            var jobTracker = _jobTracker;
 
             // Queue background task - ini akan dijalankan oleh QueuedHostedService
             // yang tidak tergantung pada request lifecycle
             _taskQueue.QueueBackgroundWorkItem(async token =>
             {
+                jobTracker.MarkRunning(jobId, "Membaca & validasi Excel");
                 try
                 {
                     await Task.Run(() => ProcessExcel(filePath, tmp._id), token);
+
+                    // ProcessExcel set status "done" di daily_tmp → baca hasilnya
+                    var done = DailyCommon._daily_tmp.Find(t => t._id == tmp._id)
+                        .Project<DailyTmp>(Builders<DailyTmp>.Projection.Exclude(t => t.items))
+                        .FirstOrDefault();
+
+                    if (done == null || done.status == "failed")
+                        jobTracker.Fail(jobId, done != null ? done.message : "Upload data not found");
+                    else if (done.error_count > 0)
+                        jobTracker.Complete(jobId, JobStatus.Warning,
+                            $"Selesai dibaca, {done.error_count} error. Buka halaman upload untuk memperbaiki.");
+                    else
+                        jobTracker.Complete(jobId, JobStatus.Success,
+                            $"Selesai dibaca ({done.item_count:N0} baris). Siap di-commit.");
                 }
                 catch (Exception ex)
                 {
@@ -878,12 +902,14 @@ namespace ssc.Areas.PE.Controllers
                             .Set(t => t.status, "failed")
                             .Set(t => t.message, ex.Message)
                     );
+                    jobTracker.Fail(jobId, ex.Message);
                 }
             });
 
             return Ok(new
             {
                 _id = tmp._id,
+                job_id = jobId,
                 status = "processing",
                 message = "File uploaded. Processing in background."
             });
@@ -1847,17 +1873,84 @@ namespace ssc.Areas.PE.Controllers
         //     }
         // }
 
+        // [Authorize("PeDaily Add")]
+        // [HttpGet("SaveData")]
+        // public ActionResult SaveData(string _id)
+        // {
+        //     try
+        //     {
+        //         DailyTmp _tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
+
+        //         if (_tmp == null)
+        //         {
+        //             return BadRequest(new { message = "Upload data not found" });
+        //         }
+
+        //         // Hanya block jika ada error (bukan warning — warning = existing data, tetap bisa disimpan)
+        //         bool hasError = _tmp.items != null && _tmp.items.Any(i => i._error?._row?.value == "error");
+        //         if (hasError)
+        //         {
+        //             return BadRequest(new { message = "Cannot save data with errors. Please fix errors first." });
+        //         }
+
+        //         string userName = User.Identity.Name;
+
+        //         // Tandai status "saving" supaya frontend bisa mulai polling
+        //         _daily_tmp.UpdateOne(
+        //             t => t._id == _id,
+        //             Builders<DailyTmp>.Update
+        //                 .Set(t => t.status, "saving")
+        //                 .Set(t => t.message, "Saving started"));
+
+        //         _taskQueue.QueueBackgroundWorkItem(async token =>
+        //         {
+        //             try
+        //             {
+        //                 await Task.Run(() => ProcessSaveData(_id, userName), token);
+        //             }
+        //             catch (Exception ex)
+        //             {
+        //                 DailyCommon._daily_tmp.UpdateOne(
+        //                     t => t._id == _id,
+        //                     Builders<DailyTmp>.Update
+        //                         .Set(t => t.status, "save_failed")
+        //                         .Set(t => t.message, ex.Message));
+        //             }
+        //         });
+
+        //         // Response ini balik CEPAT (bukan menunggu proses selesai),
+        //         // jadi tidak akan kena timeout reverse proxy / 502.
+        //         return Ok(new
+        //         {
+        //             _id,
+        //             status = "saving",
+        //             message = "File is being saved in the background."
+        //         });
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         return BadRequest(new { message = e.Message });
+        //     }
+        // }
+
         [Authorize("PeDaily Add")]
         [HttpGet("SaveData")]
         public ActionResult SaveData(string _id)
         {
             try
             {
+                // Tidak perlu ambil items di sini — cukup cek keberadaan & error
                 DailyTmp _tmp = _daily_tmp.Find(t => t._id == _id).FirstOrDefault();
 
                 if (_tmp == null)
                 {
                     return BadRequest(new { message = "Upload data not found" });
+                }
+
+                // Cegah double click / commit dua kali untuk file yang sama
+                if (_jobTracker.HasActiveJob(JobModule.DailySave, _id))
+                {
+                    return BadRequest(new { message = "File ini sudah ada di antrean penyimpanan." });
                 }
 
                 // Hanya block jika ada error (bukan warning — warning = existing data, tetap bisa disimpan)
@@ -1868,19 +1961,27 @@ namespace ssc.Areas.PE.Controllers
                 }
 
                 string userName = User.Identity.Name;
+                string fileName = _tmp.file_name ?? ("Daily " + _tmp.upload_date.ToString("dd MMM yyyy HH:mm"));
 
-                // Tandai status "saving" supaya frontend bisa mulai polling
+                // 1) Catat job dengan status QUEUED (belum tentu langsung jalan, bisa menunggu slot)
+                string jobId = _jobTracker.Create(userName, JobModule.DailySave, _id, fileName);
+
                 _daily_tmp.UpdateOne(
                     t => t._id == _id,
                     Builders<DailyTmp>.Update
                         .Set(t => t.status, "saving")
-                        .Set(t => t.message, "Saving started"));
+                        .Set(t => t.message, "Waiting in queue"));
 
+                var jobTracker = _jobTracker;
+
+                // 2) Masuk queue. Lambda ini BARU dieksekusi setelah dapat slot semaphore (max 5)
                 _taskQueue.QueueBackgroundWorkItem(async token =>
                 {
+                    // 3) Sudah dapat slot → RUNNING
+                    jobTracker.MarkRunning(jobId, "Menyiapkan data");
                     try
                     {
-                        await Task.Run(() => ProcessSaveData(_id, userName), token);
+                        await Task.Run(() => ProcessSaveData(_id, userName, jobId), token);
                     }
                     catch (Exception ex)
                     {
@@ -1889,16 +1990,17 @@ namespace ssc.Areas.PE.Controllers
                             Builders<DailyTmp>.Update
                                 .Set(t => t.status, "save_failed")
                                 .Set(t => t.message, ex.Message));
+                        jobTracker.Fail(jobId, ex.Message);
                     }
                 });
 
-                // Response ini balik CEPAT (bukan menunggu proses selesai),
-                // jadi tidak akan kena timeout reverse proxy / 502.
+                // Response balik CEPAT, tidak menunggu proses → aman dari timeout/502
                 return Ok(new
                 {
                     _id,
-                    status = "saving",
-                    message = "File is being saved in the background."
+                    job_id = jobId,
+                    status = "queued",
+                    message = "File masuk antrean penyimpanan."
                 });
             }
             catch (Exception e)
@@ -1907,7 +2009,7 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-        private void ProcessSaveData(string tmpId, string userName)
+        private void ProcessSaveData(string tmpId, string userName, string jobId)
         {
             DailyTmp _tmp = DailyCommon._daily_tmp.Find(t => t._id == tmpId).FirstOrDefault();
             if (_tmp == null)
@@ -1917,6 +2019,7 @@ namespace ssc.Areas.PE.Controllers
                     Builders<DailyTmp>.Update
                         .Set(t => t.status, "save_failed")
                         .Set(t => t.message, "Upload data not found"));
+                 _jobTracker.Fail(jobId, "Upload data not found");
                 return;
             }
 
@@ -2048,6 +2151,9 @@ namespace ssc.Areas.PE.Controllers
                     Builders<DailyTmp>.Update
                         .Set(t => t.status, "saving")
                         .Set(t => t.message, $"Saved {Math.Min(i + BATCH_SIZE, bulkOps.Count)} / {bulkOps.Count} rows"));
+                
+                long done = Math.Min(i + BATCH_SIZE, bulkOps.Count);
+                _jobTracker.UpdateProgress(jobId, done, bulkOps.Count, $"Menyimpan {done:N0} / {bulkOps.Count:N0} baris");
             }
 
             bool countMismatch = written_count != expected_count;
@@ -2069,6 +2175,15 @@ namespace ssc.Areas.PE.Controllers
                     .Set("expected_count", expected_count)
                     .Set("written_count", written_count));
 
+            if (countMismatch || hasBatchErrors)
+            {
+                _jobTracker.Complete(jobId, JobStatus.Warning, finalMessage);
+            }
+            else
+            {
+                _jobTracker.Complete(jobId, JobStatus.Success,
+                    $"Tersimpan {written_count:N0} baris ({created_count:N0} baru, {modified_count:N0} diperbarui)");
+            }
 
             if (!countMismatch && !hasBatchErrors)
             {

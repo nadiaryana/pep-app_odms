@@ -13,6 +13,7 @@ import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
+import { JobStatusService } from '../../navigation/sync/job-status.service';
 
 @Component({
     selector: 'app-current-add',
@@ -80,6 +81,7 @@ export class PeSumurCurrentAddComponent implements OnDestroy {
             private dialogService: DialogService,
             private titleService: TitleService,
             private http: HttpClient,
+            private jobStatusService: JobStatusService,
             ) { }
     
         ngOnDestroy() {
@@ -181,6 +183,7 @@ export class PeSumurCurrentAddComponent implements OnDestroy {
                 } else if (event.type === HttpEventType.Response) {
                     // File uploaded, now start polling for processing status
                     this.tmp_id = event.body['_id'];
+                    this.jobStatusService.track(event.body['job_id']);
                     this.isUploading = false;
                     this.isProcessing = true;
                     this.processingStatus = 'Processing file...';

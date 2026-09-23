@@ -32,12 +32,14 @@ namespace ssc.Areas.PE.Controllers
         private readonly ProjectionDefinition<Sumur> _fields;
         private readonly HttpClient _httpClient;
         private readonly IBackgroundTaskQueue _taskQueue;
+        private readonly IJobTracker _jobTracker;
 
         // Flag agar index xfilter hanya dibuat satu kali per proses.
         private static int _xfilterIndexEnsured = 0;
 
-        public SumurController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue)
+        public SumurController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue, IJobTracker jobTracker)
         {
+            _jobTracker = jobTracker;
             var client = new MongoClient(settings.ConnectionString);
             database = client.GetDatabase("pe");
 
@@ -361,11 +363,26 @@ namespace ssc.Areas.PE.Controllers
             var sumur_tmp = _sumur_tmp;
             var sumur_tmp_items = _sumur_tmp_items;
 
+            string jobId = _jobTracker.Create(User.Identity.Name, ssc.Models.JobModule.SumurUpload, tmpId,
+                files[0].FileName + " (" + wellName + ")");
+            var jobTracker = _jobTracker;
+
             _taskQueue.QueueBackgroundWorkItem(async token =>
             {
+                jobTracker.MarkRunning(jobId, "Membaca Excel");
                 try
                 {
                     await Task.Run(() => ProcessExcel(filePath, tmpId, wellName, sumur, sumur_tmp, sumur_tmp_items), token);
+
+                    var done = sumur_tmp.Find(t => t._id == tmpId).FirstOrDefault();
+                    if (done == null || done.status == "failed")
+                        jobTracker.Fail(jobId, done != null ? done.message : "Upload data not found");
+                    else if (done.error_count > 0)
+                        jobTracker.Complete(jobId, ssc.Models.JobStatus.Warning,
+                            $"Selesai dibaca, {done.error_count} error. Buka halaman upload untuk memperbaiki.");
+                    else
+                        jobTracker.Complete(jobId, ssc.Models.JobStatus.Success,
+                            $"Selesai dibaca ({done.item_count:N0} baris). Siap di-commit.");
                 }
                 catch (Exception ex)
                 {
@@ -375,12 +392,14 @@ namespace ssc.Areas.PE.Controllers
                             .Set(t => t.status, "failed")
                             .Set(t => t.message, ex.Message)
                     );
+                    jobTracker.Fail(jobId, ex.Message);
                 }
             });
 
             return Ok(new
             {
                 _id = tmp._id,
+                job_id = jobId,
                 status = "processing",
                 message = "File uploaded. Processing in background."
             });

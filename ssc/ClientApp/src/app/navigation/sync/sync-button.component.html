@@ -1,0 +1,71 @@
+<button mat-icon-button
+        class="sync-button"
+        matTooltip="Status upload & sinkronisasi"
+        [matMenuTriggerFor]="syncMenu"
+        (menuOpened)="jobService.refresh()"
+        [matBadge]="(activeCount$ | async) || (problemCount$ | async)"
+        [matBadgeHidden]="!(activeCount$ | async) && !(problemCount$ | async)"
+        [matBadgeColor]="(activeCount$ | async) ? 'accent' : 'warn'"
+        matBadgeSize="small">
+  <mat-icon [class.spinning]="(activeCount$ | async) > 0">sync</mat-icon>
+</button>
+
+<mat-menu #syncMenu="matMenu" xPosition="before" class="sync-menu-panel">
+  <!-- stopPropagation: klik di dalam panel tidak menutup menu -->
+  <div class="sync-panel" (click)="$event.stopPropagation()">
+
+    <div class="sync-header">
+      <span class="title">Status Upload</span>
+      <span class="spacer"></span>
+      <button mat-icon-button matTooltip="Refresh" (click)="refresh($event)">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Bersihkan yang sudah selesai" (click)="clearFinished($event)">
+        <mat-icon>clear_all</mat-icon>
+      </button>
+    </div>
+
+    <div class="sync-summary" *ngIf="(jobs$ | async)?.length">
+      <ng-container *ngIf="(activeCount$ | async) as active; else allDone">
+        <mat-icon class="st-running">autorenew</mat-icon>
+        {{ active }} file masih diproses
+      </ng-container>
+      <ng-template #allDone>
+        <ng-container *ngIf="(problemCount$ | async) as problems; else allOk">
+          <mat-icon class="st-failed">error</mat-icon> {{ problems }} file perlu dicek
+        </ng-container>
+        <ng-template #allOk>
+          <mat-icon class="st-success">check_circle</mat-icon> Semua file sudah tersimpan
+        </ng-template>
+      </ng-template>
+    </div>
+
+    <div class="sync-empty" *ngIf="!(jobs$ | async)?.length">
+      <mat-icon>cloud_done</mat-icon>
+      <div>Belum ada aktivitas upload dalam 24 jam terakhir.</div>
+    </div>
+
+    <div class="sync-list">
+      <div class="sync-item" *ngFor="let job of jobs$ | async; trackBy: trackById">
+        <mat-icon class="status-icon" [ngClass]="'st-' + job.status"
+                  [class.spinning]="job.status === 'running'">{{ iconOf(job) }}</mat-icon>
+
+        <div class="item-body">
+          <div class="item-name" [matTooltip]="job.file_name">{{ job.file_name || moduleLabel(job) }}</div>
+          <div class="item-module">{{ moduleLabel(job) }} · {{ job.queued_at | date:'dd MMM HH:mm' }}</div>
+          <div class="item-message" [ngClass]="'st-' + job.status">{{ statusText(job) }}</div>
+
+          <mat-progress-bar *ngIf="job.status === 'running'"
+                            [mode]="job.progress_total ? 'determinate' : 'indeterminate'"
+                            [value]="percent(job)"></mat-progress-bar>
+          <mat-progress-bar *ngIf="job.status === 'queued'" mode="buffer" value="0" bufferValue="0"></mat-progress-bar>
+        </div>
+
+        <button mat-icon-button class="dismiss" *ngIf="!isActive(job)"
+                matTooltip="Hapus dari daftar" (click)="dismiss($event, job)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</mat-menu>

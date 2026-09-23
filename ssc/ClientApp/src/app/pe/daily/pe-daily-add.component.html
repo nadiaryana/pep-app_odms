@@ -257,8 +257,20 @@
     </mat-step>
     <mat-step>
       <ng-template matStepLabel>Done</ng-template>
-      <p *ngIf="modified_count">{{ modified_count + " item(s) updated successfully." }}</p>
-      <p *ngIf="created_count">{{ created_count + " item(s) created successfully." }}</p>
+      <ng-container *ngIf="saveJob$ | async as job; else noJob">
+      <p><b>{{ job.file_name }}</b></p>
+      <p>Status: <b>{{ job.status }}</b> — {{ job.message }}</p>
+      <mat-progress-bar *ngIf="job.status === 'running'"
+                        [mode]="job.progress_total ? 'determinate' : 'indeterminate'"
+                        [value]="job.progress_total ? (job.progress_current / job.progress_total * 100) : 0">
+      </mat-progress-bar>
+      <p *ngIf="job.status === 'queued' || job.status === 'running'" style="color: rgba(0,0,0,.54)">
+        Anda boleh meninggalkan halaman ini. Status tetap bisa dipantau lewat tombol Sync.
+      </p>
+      </ng-container>
+      <ng-template #noJob>
+        <p>File sedang diproses di background. Pantau lewat tombol Sync di kanan atas.</p>
+      </ng-template>
       <div>
         <button mat-raised-button (click)="stepper.reset();resetData()">Reset</button>
       </div>

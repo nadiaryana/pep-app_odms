@@ -10,20 +10,27 @@ namespace ssc.Services
     {
         private readonly ILogger<QueuedHostedService> _logger;
         private readonly IBackgroundTaskQueue _taskQueue;
+        private readonly IJobTracker _jobTracker;
 
         private const int MAX_CONCURRENCY = 5;
 
         private readonly SemaphoreSlim _concurrencyLimiter = new SemaphoreSlim(MAX_CONCURRENCY, MAX_CONCURRENCY);
 
-        public QueuedHostedService(IBackgroundTaskQueue taskQueue, ILogger<QueuedHostedService> logger)
+         public QueuedHostedService(IBackgroundTaskQueue taskQueue, IJobTracker jobTracker, ILogger<QueuedHostedService> logger)
         {
             _taskQueue = taskQueue;
+            _jobTracker = jobTracker;
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Queued Hosted Service is running. Max concurrency = {MaxConcurrency}", MAX_CONCURRENCY);
+
+            // Job dari proses sebelumnya (sebelum restart) sudah hilang dari queue in-memory
+            var interrupted = _jobTracker.MarkInterruptedOnStartup();
+            if (interrupted > 0)
+                _logger.LogWarning("{Count} background job ditandai interrupted karena restart.", interrupted);
 
             await BackgroundProcessing(stoppingToken);
         }

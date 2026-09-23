@@ -107,3 +107,17 @@ body.landing-active {
     display: none;
   }
 }
+
+// Panel pop-up tombol Sync (default mat-menu max-width 280px terlalu sempit)
+.mat-menu-panel.sync-menu-panel {
+  min-width: 340px;
+  max-width: 400px;
+  max-height: 520px;
+}
+
+@media (max-width: 599px) {
+  .mat-menu-panel.sync-menu-panel {
+    min-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+}

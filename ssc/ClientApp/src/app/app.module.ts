@@ -14,6 +14,7 @@ import { AppComponent } from './app.component';
 import { MaterialModule } from './material/material.module';
 import { xFilterModule } from './xfilter/xfilter.module';
 import { PanelComponent } from './navigation/panel/panel.component';
+import { SyncButtonComponent } from './navigation/sync/sync-button.component';
 import { HeaderComponent } from './navigation/header/header.component';
 import { TitleComponent } from './navigation/title/title.component';
 import { SnackbarComponent } from './snackbar.component';
@@ -42,6 +43,7 @@ import { LandingComponent } from './landing/landing.component';
     HeaderComponent,
     TitleComponent,
     SnackbarComponent,
+    SyncButtonComponent,   // BARU
     LoginComponent,
     LogoutComponent,
     DashboardComponent,

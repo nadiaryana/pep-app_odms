@@ -62,6 +62,7 @@ namespace ssc
 
             // Register Background Task Queue and Hosted Service
             services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+            services.AddSingleton<IJobTracker, JobTracker>();
             services.AddHostedService<QueuedHostedService>();
 
             services.AddCors(options =>

@@ -13,6 +13,8 @@ import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
+import { JobStatusService } from '../../navigation/sync/job-status.service';
+import { BackgroundJob } from '../../navigation/sync/background-job';
 
 @Component({
 	selector: 'app-daily-add',
@@ -42,6 +44,7 @@ export class PeDailyAddComponent implements OnDestroy {
 	@ViewChild('stepper', {static: true}) private stepper: MatStepper;
 
 	tmp_id: string;
+	saveJob$: Observable<BackgroundJob>;
 	@ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   	@ViewChild(MatSort, {static: true}) sort: MatSort;
   	data_mode = "all";
@@ -70,6 +73,7 @@ export class PeDailyAddComponent implements OnDestroy {
 		private dialogService: DialogService,
 		private titleService: TitleService,
 		private http: HttpClient,
+        private jobStatusService: JobStatusService,   // BARU
 		) { }
 
 	ngOnDestroy() {
@@ -174,6 +178,7 @@ export class PeDailyAddComponent implements OnDestroy {
 			} else if (event.type === HttpEventType.Response) {
 				// File uploaded, now start polling for processing status
 				this.tmp_id = event.body['_id'];
+				this.jobStatusService.track(event.body['job_id']);
 				this.isUploading = false;
 				this.isProcessing = true;
 				this.processingStatus = 'Processing file...';
@@ -262,25 +267,42 @@ export class PeDailyAddComponent implements OnDestroy {
 		});
 	}
 
+	// saveData() {
+	// 	this.isSaving = true;
+	// 	this.http.get<any>('/api/pe/daily/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+	// 		this.isSaving = false;
+	// 		this.modified_count = res["modified_count"];
+	// 		console.log(this.modified_count);
+	// 		this.created_count = res["created_count"];
+	// 		this.modifiedData = res["modified_data"];
+	// 		console.log(this.modifiedData);
+	// 		this.createdData = res["created_data"];
+	// 		this.stepper.selected.completed = true;
+	// 		this.stepper.next();
+	// 		this.snackbarService.status.next(new SnackbarApi(true, res["total_count"] + " item(s) saved successfully.", 'dismiss'));
+	// 	}, error => {
+	// 		this.isSaving = false;
+	// 		this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
+	// 		console.log(error);
+	// 	});
+	// }
 	saveData() {
-		this.isSaving = true;
-		this.http.get<any>('/api/pe/daily/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
-			this.isSaving = false;
-			this.modified_count = res["modified_count"];
-			console.log(this.modified_count);
-			this.created_count = res["created_count"];
-			this.modifiedData = res["modified_data"];
-			console.log(this.modifiedData);
-			this.createdData = res["created_data"];
-			this.stepper.selected.completed = true;
-			this.stepper.next();
-			this.snackbarService.status.next(new SnackbarApi(true, res["total_count"] + " item(s) saved successfully.", 'dismiss'));
-		}, error => {
-			this.isSaving = false;
-			this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
-			console.log(error);
-		});
-	}
+        this.isSaving = true;
+        this.http.get<any>('/api/pe/daily/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
+            this.isSaving = false;
+            this.jobStatusService.track(res.job_id);
+            this.saveJob$ = this.jobStatusService.job$(res.job_id);
+            this.stepper.selected.completed = true;
+            this.stepper.next();
+            this.snackbarService.status.next(new SnackbarApi(true,
+                "File masuk antrean penyimpanan. Pantau statusnya lewat tombol Sync di kanan atas.", 'dismiss'));
+        }, error => {
+            this.isSaving = false;
+            const msg = (error.error && error.error.message) ? error.error.message : error.message;
+            this.snackbarService.status.next(new SnackbarApi(true, msg, 'dismiss'));
+            console.log(error);
+        });
+    }
 
 	resetData() {
 		if (this.statusPollSubscription) {
@@ -301,6 +323,7 @@ export class PeDailyAddComponent implements OnDestroy {
 		this.tmp_id = null;
 		this.data_mode = "all";
 		this.snackbarService.status.next(new SnackbarApi(false));
+		this.saveJob$ = null;
 	}
 
 	formatInterval(arr) {

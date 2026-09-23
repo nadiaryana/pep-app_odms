@@ -12,6 +12,7 @@ import { SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
 import { formatDate } from '@angular/common';
+import { JobStatusService } from '../../navigation/sync/job-status.service';
 
 @Component({
   selector: 'app-daily-edit-osg',
@@ -55,6 +56,7 @@ export class PeDailyEditOsgComponent implements OnInit {
     private titleService: TitleService,
     private http: HttpClient,
     private route: ActivatedRoute,
+    private jobStatusService: JobStatusService,   // BARU
     @Inject(LOCALE_ID) public locale: string
   ) {
 
@@ -190,14 +192,15 @@ export class PeDailyEditOsgComponent implements OnInit {
     this.isSaving = true;
     this.http.get<any>('/api/pe/daily/SaveData', { params: { _id: this.tmp_id } }).subscribe(res => {
       this.isSaving = false;
-      this.modified_count = res["modified_count"];
-      this.created_count = res["created_count"];
+      this.jobStatusService.track(res.job_id);
       this.stepper.selected.completed = true;
       this.stepper.next();
-      this.snackbarService.status.next(new SnackbarApi(true, res["total_count"] + " item(s) saved successfully.", 'dismiss'));
+      this.snackbarService.status.next(new SnackbarApi(true,
+        "File masuk antrean penyimpanan. Pantau statusnya lewat tombol Sync di kanan atas.", 'dismiss'));
     }, error => {
       this.isSaving = false;
-      this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
+      const msg = (error.error && error.error.message) ? error.error.message : error.message;
+      this.snackbarService.status.next(new SnackbarApi(true, msg, 'dismiss'));
       console.log(error);
     });
   }
