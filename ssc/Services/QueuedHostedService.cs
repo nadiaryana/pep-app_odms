@@ -11,6 +11,10 @@ namespace ssc.Services
         private readonly ILogger<QueuedHostedService> _logger;
         private readonly IBackgroundTaskQueue _taskQueue;
 
+        private const int MAX_CONCURRENCY = 5;
+
+        private readonly SemaphoreSlim _concurrencyLimiter = new SemaphoreSlim(MAX_CONCURRENCY, MAX_CONCURRENCY);
+
         public QueuedHostedService(IBackgroundTaskQueue taskQueue, ILogger<QueuedHostedService> logger)
         {
             _taskQueue = taskQueue;
@@ -19,7 +23,7 @@ namespace ssc.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Queued Hosted Service is running.");
+            _logger.LogInformation("Queued Hosted Service is running. Max concurrency = {MaxConcurrency}", MAX_CONCURRENCY);
 
             await BackgroundProcessing(stoppingToken);
         }
@@ -30,14 +34,30 @@ namespace ssc.Services
             {
                 var workItem = await _taskQueue.DequeueAsync(stoppingToken);
 
-                try
+                if (workItem == null)
                 {
-                    await workItem(stoppingToken);
+                    continue;
                 }
-                catch (Exception ex)
+
+
+                await _concurrencyLimiter.WaitAsync(stoppingToken);
+
+                _ = Task.Run(async () =>
                 {
-                    _logger.LogError(ex, "Error occurred executing background work item.");
-                }
+                    try
+                    {
+
+                        await workItem(CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error occurred executing background work item.");
+                    }
+                    finally
+                    {
+                        _concurrencyLimiter.Release();
+                    }
+                });
             }
         }
 
