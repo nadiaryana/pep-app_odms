@@ -28,11 +28,10 @@ namespace ssc.Areas.PE.Controllers
     public class DailyController : ControllerBase
     {
         private readonly IMongoCollection<Daily> _daily;
-        // STEP 1 - define mongo collection for sonolog
         private readonly IMongoCollection<Sonolog> _sonolog;
         private readonly IMongoCollection<DailyTmp> _daily_tmp;
         private readonly IMongoCollection<Structure> _structure;
-        // Tambah field di atas constructor
+
         private readonly IMongoCollection<PeOptimasiQuadrantRemark> _quadrantRemarks;
         private ProjectionDefinition<Daily> _fields_daily;
         private ProjectionDefinition<Structure> _fields_structure;
@@ -1848,30 +1847,30 @@ namespace ssc.Areas.PE.Controllers
         //     }
         // }
 
-        // [Authorize("PeDaily Delete")]
-        // [HttpDelete]
-        // public ActionResult Delete(string[] _ids)
-        // {
-        //     try
-        //     {
-        //         long deleted_count = 0;
-        //         long total_count = _ids.Length;
-        //         foreach (string _id in _ids)
-        //         {
-        //             DeleteResult res = _daily.DeleteOne(t => t._id == _id);
-        //             deleted_count += res.DeletedCount;
-        //         }
-        //         return Ok(new
-        //         {
-        //             deleted_count = deleted_count,
-        //             total_count = total_count
-        //         });
-        //     }
-        //     catch (MongoException e)
-        //     {
-        //         return BadRequest();
-        //     }
-        // }
+        [Authorize("PeDaily Delete")]
+        [HttpDelete]
+        public ActionResult Delete(string[] _ids)
+        {
+            try
+            {
+                long deleted_count = 0;
+                long total_count = _ids.Length;
+                foreach (string _id in _ids)
+                {
+                    DeleteResult res = _daily.DeleteOne(t => t._id == _id);
+                    deleted_count += res.DeletedCount;
+                }
+                return Ok(new
+                {
+                    deleted_count = deleted_count,
+                    total_count = total_count
+                });
+            }
+            catch (MongoException e)
+            {
+                return BadRequest();
+            }
+        }
 
         // [Authorize("PeDaily Add")]
         // [HttpGet("SaveData")]
@@ -2019,7 +2018,7 @@ namespace ssc.Areas.PE.Controllers
                     Builders<DailyTmp>.Update
                         .Set(t => t.status, "save_failed")
                         .Set(t => t.message, "Upload data not found"));
-                 _jobTracker.Fail(jobId, "Upload data not found");
+                _jobTracker.Fail(jobId, "Upload data not found");
                 return;
             }
 
@@ -2151,7 +2150,7 @@ namespace ssc.Areas.PE.Controllers
                     Builders<DailyTmp>.Update
                         .Set(t => t.status, "saving")
                         .Set(t => t.message, $"Saved {Math.Min(i + BATCH_SIZE, bulkOps.Count)} / {bulkOps.Count} rows"));
-                
+
                 long done = Math.Min(i + BATCH_SIZE, bulkOps.Count);
                 _jobTracker.UpdateProgress(jobId, done, bulkOps.Count, $"Menyimpan {done:N0} / {bulkOps.Count:N0} baris");
             }
