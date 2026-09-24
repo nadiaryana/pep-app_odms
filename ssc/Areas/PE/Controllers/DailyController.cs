@@ -2024,19 +2024,24 @@ namespace ssc.Areas.PE.Controllers
 
             List<Daily> items = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
 
-            var figure = items.GroupBy(g => new { date = g.date })
-                .Select(s => new { date = s.Key.date, figure = s.Sum(p => p.fig_curr_net) })
-                .ToList();
+            // DIMATIKAN: sebelumnya di sini sistem otomatis menghitung "figure" dari hasil upload Daily
+            // (Sum fig_curr_net per tanggal) lalu meng-upsert ke collection "production", sehingga
+            // nilainya ikut tampil di halaman PE / Daily / Manajemen.
+            // Sekarang nilai "figure" HANYA diisi dari halaman Manajemen (Add OSG) / import Production,
+            // jadi blok di bawah sengaja tidak dijalankan.
+            //var figure = items.GroupBy(g => new { date = g.date })
+            //    .Select(s => new { date = s.Key.date, figure = s.Sum(p => p.fig_curr_net) })
+            //    .ToList();
 
-            foreach (var item in figure)
-            {
-                var update = Builders<Production>.Update
-                    .Set(t => t.figure, item.figure)
-                    .Set(t => t.date, item.date);
-                DailyCommon._production.UpdateOne(
-                    Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
-                    update, new UpdateOptions() { IsUpsert = true });
-            }
+            //foreach (var item in figure)
+            //{
+            //    var update = Builders<Production>.Update
+            //        .Set(t => t.figure, item.figure)
+            //        .Set(t => t.date, item.date);
+            //    DailyCommon._production.UpdateOne(
+            //        Builders<Production>.Filter.Eq(t => t.date, item.date.Value.ToLocalTime()),
+            //        update, new UpdateOptions() { IsUpsert = true });
+            //}
 
             if (DailyCommon._fields_structure != null)
             {
