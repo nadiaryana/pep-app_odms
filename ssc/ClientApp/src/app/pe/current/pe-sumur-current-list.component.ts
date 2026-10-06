@@ -299,13 +299,11 @@ export class PeSumurCurrentListComponent implements OnInit {
         if(result) {
           this.isLoadingResults = true; 
           this.snackbarService.status.next(new SnackbarApi(false));
-          this.http.delete<any>('/api/pe/sumur', {
+          this.http.request<any>('delete', '/api/pe/sumur', {
             headers: new HttpHeaders({
               'Content-Type': 'application/json'
             }),
-            params: {
-              _ids: this.selection.selected.map<any>(s => s._id)
-            }
+            body: this.selection.selected.map<any>(s => s._id)
           }).subscribe(res => {
             this.isLoadingResults = false; 
             this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));

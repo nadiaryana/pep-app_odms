@@ -593,36 +593,22 @@ namespace ssc.Areas.PE.Controllers
 
     [Authorize("PeDaily Delete")]
     [HttpDelete]
-    public ActionResult Delete([FromQuery] string[] _ids)
+    public ActionResult Delete([Microsoft.AspNetCore.Mvc.FromBody] string[] _ids)
     {
       try
       {
-        if (_ids == null || _ids.Length == 0)
+        var id_values = BulkDelete.ToIdValues(_ids);
+        if (id_values.Count == 0)
         {
           return BadRequest(new { message = "No IDs provided" });
         }
 
-        long deleted_count = 0;
-        long total_count = _ids.Length;
-
-        foreach (string _id in _ids)
-        {
-          try
-          {
-            ObjectId objectId = ObjectId.Parse(_id);
-            DeleteResult res = _actual.DeleteOne(t => t._id == objectId);
-            deleted_count += res.DeletedCount;
-          }
-          catch (FormatException)
-          {
-            return BadRequest(new { message = $"Invalid ObjectId format: {_id}" });
-          }
-        }
+        DeleteResult res = _actual.DeleteMany(Builders<Actual>.Filter.In("_id", id_values));
 
         return Ok(new
         {
-          deleted_count = deleted_count,
-          total_count = total_count,
+          deleted_count = res.DeletedCount,
+          total_count = id_values.Count,
           message = "Delete successful"
         });
       }

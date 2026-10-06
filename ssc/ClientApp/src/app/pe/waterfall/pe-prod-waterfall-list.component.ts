@@ -8,34 +8,40 @@ import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
 
-import { PeSensorService } from './pe-sensor.service';
-import { PeSensor }    from './pe-sensor';
+import { PeProdWaterfallService} from './pe-prod-waterfall.service';
 import { SnackbarService } from '../../snackbar.service';
 import { SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
 import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
+import { PeProdWaterfall } from './pe-prod-waterfall';
+
+type PeProdWaterfallRow = PeProdWaterfall & {
+  isEdit?: boolean;
+  _backup?: Partial<PeProdWaterfall>;
+};
 
 @Component({
-  selector: 'pe-sensor-list',
-  templateUrl: './pe-sensor-list.component.html',
-  styleUrls: ['./pe-sensor.scss']
+  selector: 'pe-prod-waterfall-list',
+  templateUrl: './pe-prod-waterfall-list.component.html',
+  styleUrls: ['./pe-prod-waterfall.scss']
 })
-export class PeSensorListComponent implements OnInit {
+export class PeProdWaterfallListComponent implements OnInit {
 
-  displayedColumns: string[] = ["select", "date","well","freq","load","pi","ti","esp","capacity"];
+  displayedColumns: string[] = ["select", "nomor","well", "delta_prod", "remarks","action"];
+  headerColumns1: string[] = ["select", "nomor","well","delta_prod", "remarks","action"];
   exampleDatabase: ExampleHttpDao | null;
-  data: PeSensor[] = [];
+  data: PeProdWaterfall[] = [];
 
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
-  isEditing:boolean = false;
 
   resultsLength = 0;
   isLoadingResults = true;
   isRateLimitReached = false;
   submitting = false;
+  isEditing:boolean = false;
 
   start_submitDate: Number;
   end_submitDate: Number;
@@ -46,21 +52,16 @@ export class PeSensorListComponent implements OnInit {
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   filterControl = new FormControl('');
 
-  dateFilter = new FormControl('');
+  nomorFilter = new FormControl('');
   wellFilter = new FormControl('');
-  freqFilter = new FormControl('');
-  loadFilter = new FormControl('');
-  piFilter = new FormControl('');
-  tiFilter = new FormControl('');
+  delta_prodFilter = new FormControl('');
+  remarksFilter = new FormControl('');
 
-  date_xSelected = [];
+  nomor_xSelected = [];
   well_xSelected = [];
-  freq_xSelected = [];
-  load_xSelected = [];
-  pi_xSelected = [];
-  ti_xSelected = [];
-  esp_xSelected = [];
-  capacity_xSelected = [];
+  delta_prod_xSelected = [];
+  remarks_xSelected = [];
+
 
   filterSubscription:Subscription;
   selectedSubscription:Subscription;
@@ -70,24 +71,25 @@ export class PeSensorListComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     public dialog: MatDialog,
-    //public snackBar: MatSnackBar,
-    private pe_sensorService: PeSensorService,
+    public snackBar: MatSnackBar,
+    private pe_prod_waterfallService: PeProdWaterfallService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
     private titleService: TitleService,
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
+    private service: PeProdWaterfallService,
     ) {}
 
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Downhole Sensor",
-      icon: "sensors",
+      title: "Sangatta Production Waterfall",
+      icon: "summarize",
       breadcrumbs: [
         {label: 'Petroleum Engineering', routerLink: ''}, 
-        {label: 'Downhole Sensor', routerLink: ''}
+        {label: 'Waterfall', routerLink: ''}
       ]}
     );
 
@@ -122,12 +124,10 @@ export class PeSensorListComponent implements OnInit {
       this.sort.sortChange, 
       this.paginator.page, 
       this.filterControl.valueChanges.pipe(debounceTime(300)),
-      this.dateFilter.valueChanges.pipe(debounceTime(300)),
+      this.nomorFilter.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
-      this.freqFilter.valueChanges.pipe(debounceTime(300)),
-      this.loadFilter.valueChanges.pipe(debounceTime(300)),
-      this.piFilter.valueChanges.pipe(debounceTime(300)),
-      this.tiFilter.valueChanges.pipe(debounceTime(300)),
+      this.delta_prodFilter.valueChanges.pipe(debounceTime(300)),
+      this.remarksFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
     ).pipe(
       startWith({}),
@@ -157,13 +157,160 @@ export class PeSensorListComponent implements OnInit {
         this.isRateLimitReached = true;
         return observableOf([]);
       })
-      ).subscribe(data => {
-        this.data = data;
-        this.dataSource = new MatTableDataSource<any>(this.data);
+      ).subscribe((data: PeProdWaterfall[]) => {
+        this.data = data.map(d => ({
+          ...d,
+          isEdit: false   
+        }));
+
+        // this.dataSource = new MatTableDataSource<any>(this.data);
+        this.dataSource.data = data.map(item => ({
+          ...item,
+          isEdit: false
+        }));
         this.selection.clear();
       });
-
   }
+
+  edit(row: PeProdWaterfallRow) {
+    row._backup = { ...row };
+    row.isEdit = true;
+  }
+
+  save(row: PeProdWaterfallRow) {
+    this.hitungSemuaStok(row);
+
+    const payload: Partial<PeProdWaterfall> = { ...row };
+    // Simpan backup 
+    const backupData = { ...row._backup };
+
+    // buang properti frontend
+    delete (payload as any).isEdit;
+    delete (payload as any)._backup;
+
+    this.service.updatePeProdWaterfall(row._id, payload).subscribe({
+      next: (res) => {
+        // Update row state
+        row.isEdit = false;
+        delete row._backup;
+
+        // Update dataSource
+        const idx = this.dataSource.data.findIndex(
+          d => d._id === row._id
+        );
+        if (idx !== -1) {
+          this.dataSource.data[idx] = {
+            ...this.dataSource.data[idx],
+            ...payload,
+            isEdit: false
+          };
+          this.dataSource.data = [...this.dataSource.data];
+        }
+
+        // Show success notification with undo option (5 seconds)
+        const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', {
+          duration: 5000
+        });
+
+        snackBarRef.onAction().subscribe(() => {
+          // User clicked UNDO - revert to backup
+          this.undoUpdate(row._id, backupData);
+        });
+      },
+      error: (error) => {
+        // rollback kalau gagal
+        this.cancel(row);
+        this.snackBar.open(error.message ? error.message : 'Gagal mengupdate data', 'Tutup', {
+          duration: 5000
+        });
+      }
+    });
+  }
+
+  undoUpdate(id: string, backupData: any) {
+    const payload = { ...backupData };
+    delete payload.isEdit;
+    delete payload._backup;
+
+    this.service.updatePeProdWaterfall(id, payload).subscribe({
+      next: (res) => {
+        // Update this.data array
+        const dataIdx = this.data.findIndex(d => d._id === id);
+        if (dataIdx !== -1) {
+          // Update the object in place and create new reference
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup') {
+              (this.data[dataIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.data[dataIdx] as any).isEdit = false;
+          delete (this.data[dataIdx] as any)._backup;
+        }
+
+        // Update dataSource.data array
+        const dsIdx = this.dataSource.data.findIndex(d => d._id === id);
+        if (dsIdx !== -1) {
+          Object.keys(backupData).forEach(key => {
+            if (key !== 'isEdit' && key !== '_backup') {
+              (this.dataSource.data[dsIdx] as any)[key] = backupData[key];
+            }
+          });
+          (this.dataSource.data[dsIdx] as any).isEdit = false;
+          delete (this.dataSource.data[dsIdx] as any)._backup;
+        }
+        
+        // Force Angular to detect changes by creating new array reference
+        this.data = [...this.data];
+        this.dataSource.data = [...this.data];
+        
+        this.snackBar.open('Perubahan dibatalkan', 'Tutup', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snackBar.open('Gagal membatalkan perubahan', 'Tutup', { duration: 5000 });
+      }
+    });
+  }
+
+  toNumber(val: any): number {
+    if (val === null || val === undefined || val === '') {
+      return 0;
+    }
+    return Number(val);
+  }
+
+  hitungStokAwal(row: any) {
+    const baru = this.toNumber(row.baru);
+    const lama = this.toNumber(row.lama);
+    const rusak = this.toNumber(row.rusak);
+    
+
+    row.stok_awal = baru + lama + rusak;
+  }
+
+  hitungStokAkhir(row: any) {
+    const stokAwal = this.toNumber(row.stok_awal);
+    const barangMasuk = this.toNumber(row.barang_masuk);
+    const barangKeluar = this.toNumber(row.barang_keluar);
+    
+    row.stok_akhir = stokAwal + barangMasuk - barangKeluar;
+  }
+
+  hitungSemuaStok(row: any) {
+    this.hitungStokAwal(row);
+    this.hitungStokAkhir(row);
+  }
+
+  onValueChange(row: any) {
+    this.hitungSemuaStok(row);
+  }
+
+
+  cancel(row: PeProdWaterfallRow) {
+    Object.assign(row, row._backup);
+    row.isEdit = false;
+  }
+
+  
 
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
@@ -199,7 +346,7 @@ export class PeSensorListComponent implements OnInit {
     ).pipe(map((res) => {
       this.isLoadingResults = false;
       return {
-        filename: 'Sensor.xlsx',
+        filename: 'Waterfall.xlsx',
         data: new Blob(
           [res['body']],
           { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
@@ -257,14 +404,10 @@ export class PeSensorListComponent implements OnInit {
 
   getColumnFilter() {
     var columnfilter = {};
-    if(this.date_xSelected.length) columnfilter["date"] = this.date_xSelected;
+    if(this.nomor_xSelected.length) columnfilter["nomor"] = this.nomor_xSelected;
     if(this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if(this.freq_xSelected.length) columnfilter["freq"] = this.freq_xSelected;
-    if(this.load_xSelected.length) columnfilter["load"] = this.load_xSelected;
-    if(this.pi_xSelected.length) columnfilter["pi"] = this.pi_xSelected;
-    if(this.ti_xSelected.length) columnfilter["ti"] = this.ti_xSelected;
-    if(this.esp_xSelected.length) columnfilter["esp"] = this.esp_xSelected;
-    if(this.capacity_xSelected.length) columnfilter["capacity"] = this.capacity_xSelected;
+    if(this.delta_prod_xSelected.length) columnfilter["delta_prod"] = this.delta_prod_xSelected;
+    if(this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
 
     //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
     //if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
@@ -302,7 +445,7 @@ export class PeSensorListComponent implements OnInit {
   deleteSelected() {
     this.snackbarService.status.next(new SnackbarApi(false));
 
-    const dialogRef = this.dialog.open(PeSensorDeleteDialogComponent, {
+    const dialogRef = this.dialog.open(PeProdWaterfallDeleteDialogComponent, {
       width: '250px',
       data: this.selection.selected.length
     });
@@ -311,7 +454,7 @@ export class PeSensorListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.request<any>('delete', '/api/pe/sensor', {
+        this.http.request<any>('delete', '/api/pe/ProdWaterfall', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
@@ -327,12 +470,11 @@ export class PeSensorListComponent implements OnInit {
         })
       }
     });
+  }
 }
 
-}
-
-export interface PeSensorApi {
-  items: PeSensor[];
+export interface PeProdWaterfallApi {
+  items: PeProdWaterfall[];
   total_count: number;
 }
 
@@ -356,7 +498,7 @@ export class MatTableApi {
 export class ExampleHttpDao {
   constructor(private http: HttpClient) {}
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeSensorApi> {
+  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeProdWaterfallApi> {
 
     var params = {};
     if(sort!=null) params["sort"] = sort;
@@ -369,19 +511,19 @@ export class ExampleHttpDao {
 
     httpOption["params"] = params;
 
-    return this.http.get<PeSensorApi>('/api/pe/sensor', httpOption);
+    return this.http.get<PeProdWaterfallApi>('/api/pe/ProdWaterfall', httpOption);
   }
 }
 
 @Component({
-  selector: 'app-sensor-delete-dialog',
+  selector: 'app-prod-waterfall-delete-dialog',
   template: '<h1 mat-dialog-title>Confirm Delete</h1><div mat-dialog-content>  <p>Confirm delete {{data}} selected item ?</p></div><div mat-dialog-actions>  <button mat-button [mat-dialog-close]="1" >Yes</button> <button mat-button [mat-dialog-close]="0" cdkFocusInitial>No</button> </div>',
-  styleUrls: ['./pe-sensor.scss']
+  styleUrls: ['./pe-prod-waterfall.scss']
 })
-export class PeSensorDeleteDialogComponent {
+export class PeProdWaterfallDeleteDialogComponent {
 
   constructor(
-    public dialogRef: MatDialogRef<PeSensorDeleteDialogComponent>,
+    public dialogRef: MatDialogRef<PeProdWaterfallDeleteDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: number) {}
 
   onNoClick(): void {

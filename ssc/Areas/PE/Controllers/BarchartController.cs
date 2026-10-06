@@ -177,9 +177,10 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeBarchart Delete")]
         [HttpDelete]
-        public ActionResult Delete([FromQuery] string[] _ids)
+        public ActionResult Delete([Microsoft.AspNetCore.Mvc.FromBody] string[] _ids)
         {
-            var result = _barchart.DeleteMany(t => _ids.Contains(t._id));
+            var id_values = BulkDelete.ToIdValues(_ids);
+            var result = _barchart.DeleteMany(Builders<Barchart>.Filter.In("_id", id_values));
             return new JsonResult(new
             {
                 deleted_count = result.DeletedCount

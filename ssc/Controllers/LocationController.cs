@@ -36,7 +36,7 @@ namespace ssc.Controllers
             _fields_location = Common._fields_location;
         }
 
-      //  [Authorize("Location Read")]
+        //  [Authorize("Location Read")]
         [HttpGet]
         public ActionResult Get(String sort = "date", String order = "desc", int page = 0, int pagesize = 50, String filter = "", String columnfilter = "", string mode = "")
         {
@@ -83,7 +83,8 @@ namespace ssc.Controllers
                 }
 
                 xfilter = xfilter & xcolfilter;
-            } else
+            }
+            else
             {
                 xpandfilter = xpandfilter & Builders<Location>.Filter.Eq(t => t.parent_id, null);// always include root
             }
@@ -159,7 +160,7 @@ namespace ssc.Controllers
             ws.Cells[1, 1, 1, type_col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             ws.Cells[1, 1, 1, type_col].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
 
-            for (int c = 2; c < type_col-1; c++)
+            for (int c = 2; c < type_col - 1; c++)
             {
                 ws.Column(c).Width = 3;
             }
@@ -181,7 +182,7 @@ namespace ssc.Controllers
             return File(memoryStream, "application/vnd.ms-excel", "Location.xlsx");
         }
 
-       // [Authorize("Location Add")]
+        // [Authorize("Location Add")]
         [HttpPost("UploadFiles")]
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
@@ -215,7 +216,8 @@ namespace ssc.Controllers
 
             for (var c = 3; c < 10; c++)
             {
-                if(ws.Cells[1, c].Value?.ToString().ToLower() == "type") {
+                if (ws.Cells[1, c].Value?.ToString().ToLower() == "type")
+                {
                     type_col = c;
                     break;
                 }
@@ -245,13 +247,15 @@ namespace ssc.Controllers
                         if (!_row.id.HasValue)
                         {
                             _row.id = tmp_id;
-                        } else
+                        }
+                        else
                         {
                             _existrow = _location.Find(t => t.id == _row.id).FirstOrDefault();
-                            if(_existrow == null)
+                            if (_existrow == null)
                             {
                                 _row_error._row = new ErrorItem { value = "error", message = "ID not found" };
-                            } else
+                            }
+                            else
                             {
                                 _row_error._row = new ErrorItem { value = "warning", message = "Existing ID found, data will be replaced" };
                             }
@@ -265,7 +269,8 @@ namespace ssc.Controllers
                             _row.parent_id = _existrow.parent_id;
                             id_path.AddRange(_existrow.path);
                             base_depth = _existrow.path.Count();
-                        } else
+                        }
+                        else
                         {
                             if (id_path.Count > base_depth + c - 2)
                             {
@@ -413,7 +418,7 @@ namespace ssc.Controllers
                 }
 
                 List<int?> parent_ids = _location.Distinct<int?>("parent_id", Builders<Location>.Filter.Ne("a", "b")).ToList();
-                if(parent_ids.Count() > 0)
+                if (parent_ids.Count() > 0)
                 {
                     _location.UpdateMany(t => !parent_ids.Contains(t.id), Builders<Location>.Update.Set(t => t.has_children, false));
                     _location.UpdateMany(t => parent_ids.Contains(t.id), Builders<Location>.Update.Set(t => t.has_children, true));
@@ -433,17 +438,18 @@ namespace ssc.Controllers
             }
         }
 
-       // [Authorize("Location Delete")]
+        // [Authorize("Location Delete")]
         [HttpDelete]
-        public ActionResult Delete(string[] _ids)
+        public ActionResult Delete([Microsoft.AspNetCore.Mvc.FromBody] string[] _ids)
         {
             try
             {
+                var id_values = ssc.Areas.PE.Models.BulkDelete.ToIdValues(_ids);
                 long deleted_count = 0;
-                long total_count = _ids.Length;
-                foreach (string _id in _ids)
+                long total_count = id_values.Count;
+                if (id_values.Count > 0)
                 {
-                    DeleteResult res = _location.DeleteOne(t => t._id == _id);
+                    DeleteResult res = _location.DeleteMany(Builders<Location>.Filter.In("_id", id_values));
                     deleted_count += res.DeletedCount;
                 }
 

@@ -507,13 +507,11 @@ export class MonitoringRKListComponent implements OnInit {
       if (result) {
         this.rk_isLoadingResults = true;
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/MonitoringRK', {
+        this.http.request<any>('delete', '/api/pe/MonitoringRK', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
-          params: {
-            _ids: this.rk_selection.selected.map<any>(s => s._id)
-          }
+          body: this.rk_selection.selected.map<any>(s => s._id)
         }).subscribe(res => {
           this.rk_isLoadingResults = false;
           this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
@@ -752,8 +750,8 @@ export class MonitoringRKListComponent implements OnInit {
           this.snackbarService.status.next(new SnackbarApi(true, "Item(s) removed from view.", "dismiss"));
           return;
         }
-        this.http.delete('/api/pe/MonitoringRK/rigless', {
-          params: { _ids: ids }
+        this.http.request<any>('delete', '/api/pe/MonitoringRK/rigless', {
+          body: ids
         }).subscribe((res: any) => {
           this.rl_isLoadingResults = false;
           this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));

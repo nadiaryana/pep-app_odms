@@ -751,9 +751,10 @@ namespace ssc.Areas.PE.Controllers
         /// </summary>
         [Authorize("PeMonitoringRK Delete")]
         [HttpDelete("rigless")]
-        public ActionResult DeleteRigless([FromQuery] string[] _ids)
+        public ActionResult DeleteRigless([Microsoft.AspNetCore.Mvc.FromBody] string[] _ids)
         {
-            var result = _monitoring_rk_rigless.DeleteMany(t => _ids.Contains(t._id));
+            var id_values = BulkDelete.ToIdValues(_ids);
+            var result = _monitoring_rk_rigless.DeleteMany(Builders<MonitoringRK>.Filter.In("_id", id_values));
             return new JsonResult(new
             {
                 deleted_count = result.DeletedCount
@@ -765,9 +766,10 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeMonitoringRK Delete")]
         [HttpDelete]
-        public ActionResult Delete([FromQuery] string[] _ids)
+        public ActionResult Delete([Microsoft.AspNetCore.Mvc.FromBody] string[] _ids)
         {
-            var result = _monitoring_rk.DeleteMany(t => _ids.Contains(t._id));
+            var id_values = BulkDelete.ToIdValues(_ids);
+            var result = _monitoring_rk.DeleteMany(Builders<MonitoringRK>.Filter.In("_id", id_values));
             return new JsonResult(new
             {
                 deleted_count = result.DeletedCount

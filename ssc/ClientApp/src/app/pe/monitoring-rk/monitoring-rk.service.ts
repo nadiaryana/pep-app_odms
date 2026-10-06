@@ -56,6 +56,8 @@ export class MonitoringRKService {
   }
 
   deleteRigless(ids: string[]): Observable<any> {
-    return this.http.delete('/api/pe/MonitoringRK/rigless', { params: { _ids: ids } });
+    return this.http.request<any>('delete', '/api/pe/MonitoringRK/rigless', {
+      body: ids
+    });
   }
 }

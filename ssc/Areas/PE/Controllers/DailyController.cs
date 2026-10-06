@@ -1849,21 +1849,21 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeDaily Delete")]
         [HttpDelete]
-        public ActionResult Delete(string[] _ids)
+        public ActionResult Delete([Microsoft.AspNetCore.Mvc.FromBody] string[] _ids)
         {
             try
             {
-                long deleted_count = 0;
-                long total_count = _ids.Length;
-                foreach (string _id in _ids)
+                var id_values = BulkDelete.ToIdValues(_ids);
+                if (id_values.Count == 0)
                 {
-                    DeleteResult res = _daily.DeleteOne(t => t._id == _id);
-                    deleted_count += res.DeletedCount;
+                    return Ok(new { deleted_count = 0, total_count = 0 });
                 }
+
+                DeleteResult res = _daily.DeleteMany(Builders<Daily>.Filter.In("_id", id_values));
                 return Ok(new
                 {
-                    deleted_count = deleted_count,
-                    total_count = total_count
+                    deleted_count = res.DeletedCount,
+                    total_count = id_values.Count
                 });
             }
             catch (MongoException e)
@@ -2024,11 +2024,6 @@ namespace ssc.Areas.PE.Controllers
 
             List<Daily> items = _tmp.items != null ? _tmp.items.ToList() : new List<Daily>();
 
-            // DIMATIKAN: sebelumnya di sini sistem otomatis menghitung "figure" dari hasil upload Daily
-            // (Sum fig_curr_net per tanggal) lalu meng-upsert ke collection "production", sehingga
-            // nilainya ikut tampil di halaman PE / Daily / Manajemen.
-            // Sekarang nilai "figure" HANYA diisi dari halaman Manajemen (Add OSG) / import Production,
-            // jadi blok di bawah sengaja tidak dijalankan.
             //var figure = items.GroupBy(g => new { date = g.date })
             //    .Select(s => new { date = s.Key.date, figure = s.Sum(p => p.fig_curr_net) })
             //    .ToList();

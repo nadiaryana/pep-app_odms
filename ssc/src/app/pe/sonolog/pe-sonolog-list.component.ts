@@ -320,13 +320,11 @@ export class PeSonologListComponent implements OnInit {
       if(result) {
         this.isLoadingResults = true; 
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.delete<any>('/api/pe/sonolog', {
+        this.http.request<any>('delete', '/api/pe/sonolog', {
           headers: new HttpHeaders({
             'Content-Type': 'application/json'
           }),
-          params: {
-            _ids: this.selection.selected.map<any>(s => s._id)
-          }
+          body: this.selection.selected.map<any>(s => s._id)
         }).subscribe(res => {
           this.isLoadingResults = false; 
           this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));

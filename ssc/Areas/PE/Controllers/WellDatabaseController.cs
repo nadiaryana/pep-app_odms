@@ -1122,21 +1122,21 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeWellDatabase Delete")]
         [HttpDelete]
-        public ActionResult Delete(string[] _ids)
+        public ActionResult Delete([Microsoft.AspNetCore.Mvc.FromBody] string[] _ids)
         {
             try
             {
-                long deleted_count = 0;
-                long total_count = _ids.Length;
-                foreach (string _id in _ids)
+                var id_values = BulkDelete.ToIdValues(_ids);
+                if (id_values.Count == 0)
                 {
-                    DeleteResult res = _welldatabase.DeleteOne(t => t._id == _id);
-                    deleted_count += res.DeletedCount;
+                    return Ok(new { deleted_count = 0, total_count = 0 });
                 }
+
+                DeleteResult res = _welldatabase.DeleteMany(Builders<WellDatabase>.Filter.In("_id", id_values));
                 return Ok(new
                 {
-                    deleted_count = deleted_count,
-                    total_count = total_count
+                    deleted_count = res.DeletedCount,
+                    total_count = id_values.Count
                 });
             }
             catch (MongoException e)
