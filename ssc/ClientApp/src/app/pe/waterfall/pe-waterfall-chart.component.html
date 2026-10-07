@@ -1,30 +1,110 @@
-<div class="container-top-bar top-flow" fxLayoutGap="10px">
-	
-	<mat-form-field class="field-well" floatLabel="never">
-		<!--mat-label class="select-well">Select Well</mat-label-->
-		<input matInput [(ngModel)]="well_xSelected" disabled>
-		<app-xfilter title="Well" column="well" [selected]="well_xSelected"></app-xfilter>
-	</mat-form-field>
+<div class="container-top-bar" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
 
-	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>Start Date</mat-label>
-		<input matInput class="input-hidden" [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)" disabled>
-		<input matInput [(ngModel)]="start_dateInput" disabled>
-		<mat-datepicker-toggle matSuffix [for]="start_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-		<mat-datepicker #start_datePicker disabled="false"></mat-datepicker>
-	</mat-form-field>
-	<mat-form-field class="filter" floatLabel="never">
-		<mat-label>End Date</mat-label>
-		<input matInput class="input-hidden" [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)" disabled>
-		<input matInput [(ngModel)]="end_dateInput" disabled>
-		<mat-datepicker-toggle matSuffix [for]="end_datePicker" [disabled]="isLoadingResults"></mat-datepicker-toggle>
-		<mat-datepicker #end_datePicker disabled="false"></mat-datepicker>
-	</mat-form-field>
+  <mat-form-field class="filter" floatLabel="never">
+    <mat-label>Start Date</mat-label>
+    <input matInput [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)">
+    <mat-datepicker-toggle matSuffix [for]="start_datePicker"></mat-datepicker-toggle>
+    <mat-datepicker #start_datePicker></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field class="filter" floatLabel="never">
+    <mat-label>End Date</mat-label>
+    <input matInput [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)">
+    <mat-datepicker-toggle matSuffix [for]="end_datePicker"></mat-datepicker-toggle>
+    <mat-datepicker #end_datePicker></mat-datepicker>
+  </mat-form-field>
+
 </div>
 
-<div class="container-content top-flow">
-	<div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start left">
-		
-	</div>
-	<div #bhp_chart_el class="bhp_chart"></div>
+<div class="container-content">
+
+  <div class="loading-shade" *ngIf="isLoadingResults">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div class="waterfall-cards">
+    <div class="summary-item">
+      <span class="summary-label">Start ({{start_dateInput}})</span>
+      <span class="summary-value">{{total_start | number:'1.0-3'}}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">End ({{end_dateInput}})</span>
+      <span class="summary-value">{{total_end | number:'1.0-3'}}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Total Delta</span>
+      <span class="summary-value" [class.negative]="total_delta < 0">{{total_delta | number:'1.0-3'}}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Kategori</span>
+      <span class="summary-value" [class.negative]="total_kategori < 0">{{total_kategori | number:'1.0-3'}}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Others</span>
+      <span class="summary-value" [class.negative]="others < 0">{{others | number:'1.0-3'}}</span>
+    </div>
+    <span class="uom">BOPD</span>
+  </div>
+
+  <div #waterfall_chart_el class="waterfall_chart"></div>
+
+  <div class="waterfall-table">
+    <h3>Breakdown Waterfall Chart</h3>
+
+    <table class="pe-table waterfall-breakdown">
+      <thead>
+        <tr>
+          <th class="col-no">No</th>
+          <th>Kategori</th>
+          <th class="col-delta cell-right">Delta Prod (BOPD)</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let row of tabel_breakdown">
+
+          <tr class="category-row" *ngIf="row.type == 'category'">
+            <td colspan="4">{{row.label}}</td>
+          </tr>
+
+          <tr *ngIf="row.type == 'well'">
+            <td class="cell-center">{{row.no}}</td>
+            <td>{{row.label}}</td>
+            <td class="cell-right" [class.negative]="row.delta < 0">{{row.delta | number:'1.0-3'}}</td>
+            <td>{{row.remarks || '-'}}</td>
+          </tr>
+
+          <tr class="subtotal-row" *ngIf="row.type == 'subtotal'">
+            <td></td>
+            <td>{{row.label}}</td>
+            <td class="cell-right" [class.negative]="row.delta < 0">{{row.delta | number:'1.0-3'}}</td>
+            <td></td>
+          </tr>
+
+          <tr class="total-row" *ngIf="row.type == 'grandtotal'">
+            <td></td>
+            <td>{{row.label}}</td>
+            <td class="cell-right" [class.negative]="row.delta < 0">{{row.delta | number:'1.0-3'}}</td>
+            <td></td>
+          </tr>
+
+          <tr class="others-row" *ngIf="row.type == 'others'">
+            <td></td>
+            <td>{{row.label}}</td>
+            <td class="cell-right" [class.negative]="row.delta < 0">{{row.delta | number:'1.0-3'}}</td>
+            <td>selisih total daily dengan total kategori</td>
+          </tr>
+
+        </ng-container>
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td></td>
+          <td>End ({{end_dateInput}})</td>
+          <td class="cell-right">{{total_end | number:'1.0-3'}}</td>
+          <td>total produksi daily seluruh sumur</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 </div>

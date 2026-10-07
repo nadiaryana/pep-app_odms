@@ -1,17 +1,22 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { HttpClient, HttpEventType, HttpParams, HttpResponse, HttpHeaders } from '@angular/common/http';
-import { formatDate } from '@angular/common';
-import { MatDatepicker } from '@angular/material';
 import { FormControl } from '@angular/forms';
-import { merge, Observable, of as observableOf, forkJoin } from 'rxjs';
-import { catchError, map, startWith, switchMap, debounceTime, take, mergeAll } from 'rxjs/operators';
-import { Chart } from 'angular-highcharts';
+import { ActivatedRoute } from '@angular/router';
+import { formatDate } from '@angular/common';
 import * as Highcharts from 'highcharts';
 
-import { MatSnackBar } from '@angular/material';
-
+import { PeProdWaterfallChart } from './pe-prod-waterfall';
+import { PeProdWaterfallService } from './pe-prod-waterfall.service';
+import { SnackbarService, SnackbarApi } from '../../snackbar.service';
 import { TitleService } from '../../navigation/title/title.service';
-import { xFilterService } from '../../xfilter/xfilter.component';
+
+/** Baris pada tabel breakdown di bawah chart. */
+interface WaterfallTableRow {
+  type: 'category' | 'well' | 'subtotal' | 'grandtotal' | 'others';
+  label: string;
+  no?: number;
+  delta?: number;
+  remarks?: string;
+}
 
 @Component({
   selector: 'app-pe-waterfall-chart',
@@ -19,326 +24,262 @@ import { xFilterService } from '../../xfilter/xfilter.component';
   styleUrls: ['./pe-prod-waterfall.scss']
 })
 
-export class PeWaterfallChartComponent implements OnInit{
+export class PeWaterfallChartComponent implements OnInit {
 
   @ViewChild('waterfall_chart_el', { static: true }) public waterfall_chart_el: ElementRef;
-  waterfall_table_data = [];
-  waterfall_table_columns: string[] = ["status", "count"];
 
-  waterfall_chart_options: object = {
-    chart: {
-      zoomType: 'xy',
-      style: {
-        fontFamily: 'Roboto, Helvetica Neue, sans-serif'
-      },
-    },
-    title: {
-      text: null,
-      align: 'center',
-      verticalAlign: 'top'
-    },
-    caption: {
-      text: null,
-      align: 'center',
-      verticalAlign: 'top'
-    },
-    xAxis: [{
-      categories: [],
-      crosshair: true,
-      autoRotation: true,
-      // offset: -275,
-      labels: {
-        // step: 7
-      }
-    }],
-    yAxis: [{ // Primary yAxis
-      title: {
-        text: 'Pmax (psi)',
-        style: {
-          color: '#666666'
-        }
-      },
-      reversed: false,
-      showFirstLabel: true,
-      showLastLabel: true,
-      labels: {
-        format: '{value}',
-        style: {
-          color: '#999999'
-        }
-      }
-    },
-    // { // Primary yAxis
-    //   title: {
-    //     text: 'Tmax (psi)',
-    //     style: {
-    //       color: '#000000'
-    //     }
-    //   },
-    //   reversed: false,
-    //   showFirstLabel: true,
-    //   showLastLabel: true,
-    //   labels: {
-    //     format: '{value}',
-    //     style: {
-    //       color: '#999999'
-    //     }
-    //   }
-    // }
-  ],
-    tooltip: {
-      headerFormat: '<b>{series.name}</b><br />',
-      pointFormat: '{point.y}',
-      shared: true
-    },
-    legend: {
-      layout: 'horizontal',
-      align: 'center',
-      verticalAlign: 'top',
-      backgroundColor:
-         // theme
-          'rgba(255,255,255,0.25)'
-            },
-            series: [{
-              name: 'Pmax',
-              type: 'scatter',
-              yAxis: 0,
-              data: [],
-              color: '#008000',
-              zIndex: 3,
-              tooltip: {
-          valueSuffix: ' psi',
-          valueDecimals: 2
-              },
-              marker: {
-          enabled: true,
-          radius: 4,
-          symbol: 'circle',
-          lineWidth: 1,
-          lineColor: '#ffffff'
-              },
-              lineWidth: 0
-            },
-          //   {
-          //     name: 'Tmax',
-          //     type: 'scatter',
-          //     data: [],
-          //     yAxis: 1,
-          //     color: '#ff3300',
-          //     tooltip: {
-          // valueSuffix: ' psi',
-          // valueDecimals: 2
-          //     },
-          //     marker: {
-          // enabled: true,
-          // radius: 4,
-          // symbol: 'circle',
-          // lineWidth: 1,
-          // lineColor: '#ffffff'
-          //     },
-          //     lineWidth: 0
-          //   }
-          ],
+  isLoadingResults = false;
 
-            responsive: {
-              rules: [{
-          condition: {
-            maxWidth: 500
-          },
-          chartOptions: {
-            legend: {
-              floating: false,
-              layout: 'horizontal',
-              align: 'center',
-              verticalAlign: 'bottom',
-              x: 0,
-              y: 0
-            },
-            yAxis: [
-              { // yAxis[0] → Pmax
-              title: {
-                text: 'Pmax (psi)'
-              },
-              labels: {
-                align: 'right',
-                x: 0,
-                y: -6
-              },
-              showLastLabel: false
-            },
-            // { // yAxis[1] → Tmax
-            //   title: {
-            //     text: 'Tmax (°C)'
-            //   },
-            //   labels: {
-            //     align: 'left',
-            //     x: 0,
-            //     y: -6
-            //   },
-            //   opposite: true,
-            //   showLastLabel: false
-            // }
-          ]
-        }
-      }]
-    }
-  }
+  start_dateControl = new FormControl(new Date());
+  start_dateInput = "";
 
-  @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;
-  start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 4)));
-  start_dateInput = this.start_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  end_dateControl = new FormControl(new Date());
+  end_dateInput = "";
 
-  @ViewChild('end_datePicker', { static: true }) end_datePicker: MatDatepicker<any>;
-  end_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate() - 1)));
-  end_dateInput = this.end_dateControl.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+  chart_title = "";
+  chart_subtitle = "";
+  tabel_breakdown: WaterfallTableRow[] = [];
 
-  exampleDatabase: ExampleHttpDao | null;
-  well_xSelected = [];
-
-  isLoadingResults: boolean = false;
+  total_start = 0;
+  total_end = 0;
+  total_delta = 0;
+  others = 0;
+  total_kategori = 0;
 
   constructor(
-    private http: HttpClient,
+    private service: PeProdWaterfallService,
     private titleService: TitleService,
-    private xfilterService: xFilterService,
+    private snackbarService: SnackbarService,
+    private route: ActivatedRoute,
   ) { }
 
   ngOnInit() {
 
-    this.exampleDatabase = new ExampleHttpDao(this.http);
-
     this.titleService.titleSource.next({
       title: "Waterfall Chart",
-      icon: "bar_chart",
+      icon: "waterfall_chart",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
         { label: 'Waterfall', routerLink: 'pe/waterfall' },
         { label: 'Chart', routerLink: '' }
       ]
-    }
-    );
+    });
 
-    this.xfilterService.filter.subscribe(res => {
-      this.getColumnValues(res);
-    })
-    this.xfilterService.selected.subscribe(res => {
-      this[res["column"] + "_xSelected"] = res["selected"];
-      this.refresh_Daily();
-    })
+    this.initDate();
 
-    this.start_dateControl.valueChanges.subscribe(r => {
-      this.refresh_Daily();
-    })
-    this.end_dateControl.valueChanges.subscribe(r => {
-      this.refresh_Daily();
-    })
+    this.start_dateControl.valueChanges.subscribe(() => this.refresh());
+    this.end_dateControl.valueChanges.subscribe(() => this.refresh());
+
+    this.refresh();
   }
 
-  getColumnValues(param: any) {
-    var column = param["column"];
-    var filter = param["filter"];
-    var selected = param["selected"]
-    var clear = param["clear"];
-    var columnfilter = { well: this.well_xSelected.map(s => "^" + s + "$") };
-    if (filter) columnfilter[column] = [filter];
-    if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
-    if (clear) delete columnfilter[column];
+  private initDate() {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var defStart = new Date(today);
+    defStart.setDate(defStart.getDate() - 7);
 
-    return this.exampleDatabase!.getRepoIssues(
-      "well",
-      "asc",
-      0,
-      0,
-      "",
-      columnfilter,
-      "well"
-    ).pipe(map((res) => {
-      return res;
-    })).subscribe(res => {
-      this.xfilterService.updateItems({ column: "well", items: res.items });
-    }, () => {
+    this.start_dateControl.setValue(defStart, { emitEvent: false });
+    this.end_dateControl.setValue(today, { emitEvent: false });
 
-    });
+    var p_start = this.route.snapshot.queryParamMap.get('start_date');
+    var p_end = this.route.snapshot.queryParamMap.get('end_date');
+    if (p_start && !isNaN(Date.parse(p_start))) this.start_dateControl.setValue(new Date(p_start), { emitEvent: false });
+    if (p_end && !isNaN(Date.parse(p_end))) this.end_dateControl.setValue(new Date(p_end), { emitEvent: false });
+
+    this.start_dateInput = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US');
+    this.end_dateInput = formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
   }
 
   start_dateChange(evt) {
-    this.start_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+    this.start_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
   }
 
   end_dateChange(evt) {
-    this.end_dateInput = evt.value.toLocaleDateString("en-US", { month: "short", year: "numeric", day: "numeric" });
+    this.end_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
   }
 
-  refresh_Daily() {
-
-    // if (!this.well_xSelected || this.well_xSelected.length === 0) {
-    // return;
-    // }
-
-    // let start = new Date(this.start_dateControl.value);
-    // start.setHours(0, 0, 0, 0);
-
-    // let end = new Date(this.end_dateControl.value);
-    // end.setHours(23, 59, 59, 999);
-    let params = new HttpParams();
-        params = params.append("type", "waterfall")
-          .append("date", this.start_dateControl.value.toISOString())
-          .append("end_date", this.end_dateControl.value.toISOString());
-        for (const w of this.well_xSelected) {
-          params = params.append("well", w);
-          console.log(w);
-        }
-    
-        this.http.get('/api/pe/data', { params: params }).subscribe(res => {
-    
-          this.waterfall_chart_options["title"]["text"] = this.well_xSelected.join(",");
-          this.waterfall_chart_options["caption"]["text"] = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US') + " - " + formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
-          this.waterfall_chart_options["xAxis"][0]["categories"] = res["data"].map(d => formatDate(d["date"], "dd-MMM-yy", "en-US"));
-          this.waterfall_chart_options["series"][0]["data"] = res["data"].map(d => d["pmax"]);
-          console.log(res["data"].length)
-          Highcharts.chart(this.waterfall_chart_el.nativeElement, this.waterfall_chart_options);
-    
-
+  refresh() {
+    this.isLoadingResults = true;
+    this.service.getChart(this.start_dateControl.value, this.end_dateControl.value).subscribe(res => {
+      this.isLoadingResults = false;
+      this.render(res);
     }, error => {
-
-    }, () => {
-
+      this.isLoadingResults = false;
+      this.snackbarService.status.next(new SnackbarApi(true, error['message'] || 'Gagal memuat data waterfall', 'dismiss'));
     });
   }
 
-}
+  private render(data: PeProdWaterfallChart) {
 
-export interface PeWellApi {
-  items: any[];
-  total_count: number;
-}
+    this.total_start = this.toNumber(data.total_start);
+    this.total_end = this.toNumber(data.total_end);
+    this.others = this.round(this.toNumber(data.others));
+    this.total_delta = this.round(this.total_end - this.total_start);
+    this.total_kategori = this.round(data.categories.reduce((sum, c) => sum + this.toNumber(c.delta_prod), 0));
 
-export class ExampleHttpDao {
-  constructor(private http: HttpClient) { }
+    this.chart_title = "Waterfall Chart";
+    this.chart_subtitle = this.start_dateInput + " - " + this.end_dateInput;
 
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeWellApi> {
-
-    var params = {};
-    if (sort != null) params["sort"] = sort;
-    if (order != null) params["order"] = order;
-    if (page != null) params["page"] = page.toString();
-    if (pagesize != null) params["pagesize"] = pagesize.toString();
-    if (filter != null) params["filter"] = filter;
-    if (Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
-    if (mode != null) params["mode"] = mode;
-
-    httpOption["params"] = params;
-
-    return this.http.get<PeWellApi>('/api/pe/waterfall', httpOption);
+    this.buildTable(data);
+    this.buildChart(data);
   }
-}
 
-interface ProdWaterfallItem {
-  date: string;
-  pmax: number;
-  tmax: number;
-}
+  private buildTable(data: PeProdWaterfallChart) {
 
-interface ProdWaterfallResponse {
-  items: ProdWaterfallItem[];
+    var rows: WaterfallTableRow[] = [];
+
+    data.categories.forEach(cat => {
+      rows.push({ type: 'category', label: cat.label, delta: this.toNumber(cat.delta_prod) });
+
+      var wells = data.items.filter(i => i.kategori == cat.kategori).slice().sort((a, b) => a.well.localeCompare(b.well));
+      wells.forEach((w, i) => rows.push({
+        type: 'well',
+        no: i + 1,
+        label: w.well,
+        delta: this.toNumber(w.delta_prod),
+        remarks: w.remarks
+      }));
+
+      if (wells.length == 0) {
+        rows.push({ type: 'well', label: "(belum ada sumur)", remarks: "" });
+      } else {
+        rows.push({ type: 'subtotal', label: "Total " + cat.label, delta: this.toNumber(cat.delta_prod) });
+      }
+    });
+
+    rows.push({ type: 'grandtotal', label: "TOTAL", delta: this.total_kategori });
+
+    if (this.others != 0) {
+      rows.push({ type: 'others', label: "Others (tidak terjelaskan)", delta: this.others });
+    }
+
+    this.tabel_breakdown = rows;
+  }
+
+  private buildChart(data: PeProdWaterfallChart) {
+
+    // Waterfall dibangun dari dua seri column bertumpuk: seri pertama berisi
+    // tinggi dasar (transparan) dan seri kedua berisi delta yang tampak. Modul
+    // 'waterfall' tidak tersedia pada build highcharts di repo ini.
+    var categories: string[] = ["Start"];
+    var base: any[] = [0];
+    var values: any[] = [];
+
+    var total_start = this.toNumber(data.total_start);
+    var total_end = this.toNumber(data.total_end);
+
+    values.push({
+      y: total_start,
+      color: '#3aa84c',
+      custom: { delta: total_start, is_total: true }
+    });
+
+    var running = total_start;
+
+    data.categories.forEach(cat => {
+      var delta = this.round(this.toNumber(cat.delta_prod));
+      categories.push(cat.label);
+      base.push(Math.min(running, this.round(running + delta)));
+      values.push({
+        y: Math.abs(delta),
+        color: delta >= 0 ? '#2f7ed8' : '#e53935',
+        custom: { delta: delta }
+      });
+      running = this.round(running + delta);
+    });
+
+    if (this.others != 0) {
+      categories.push("Others");
+      base.push(Math.min(running, this.round(running + this.others)));
+      values.push({
+        y: Math.abs(this.others),
+        color: '#9e9e9e',
+        custom: { delta: this.others }
+      });
+      running = this.round(running + this.others);
+    }
+
+    categories.push("End");
+    base.push(0);
+    values.push({
+      y: total_end,
+      color: '#3aa84c',
+      custom: { delta: total_end, is_total: true }
+    });
+
+    var options: any = {
+      chart: {
+        type: 'column',
+        zoomType: 'xy',
+        style: { fontFamily: 'Roboto, Helvetica Neue, sans-serif' }
+      },
+      title: { text: this.chart_title, align: 'center' },
+      subtitle: { text: this.chart_subtitle, align: 'center' },
+      xAxis: {
+        categories: categories,
+        labels: { autoRotation: [-20], style: { fontSize: '11px' } },
+        tickmarkPlacement: 'on'
+      },
+      yAxis: {
+        min: 0,
+        title: { text: 'BOPD' },
+        labels: { format: '{value:,.0f}' }
+      },
+      legend: { enabled: false },
+      tooltip: {
+        formatter: function () {
+          var point: any = this.point;
+          var delta = (point.custom && point.custom.delta !== undefined) ? point.custom.delta : point.y;
+          return '<b>' + point.category + '</b><br/>' + Highcharts.numberFormat(delta, 3) + ' BOPD';
+        }
+      },
+      series: [
+        {
+          // tinggi dasar agar bar delta "mengambang" pada level kumulatif
+          name: 'base',
+          type: 'column',
+          stacking: 'normal',
+          color: 'rgba(0,0,0,0)',
+          borderWidth: 0,
+          enableMouseTracking: false,
+          showInLegend: false,
+          dataLabels: { enabled: false },
+          data: base
+        },
+        {
+          name: 'Delta Prod',
+          type: 'column',
+          stacking: 'normal',
+          borderWidth: 1,
+          borderColor: '#ffffff',
+          data: values,
+          dataLabels: {
+            enabled: true,
+            useHTML: true,
+            formatter: function () {
+              var point: any = this.point;
+              var delta = (point.custom && point.custom.delta !== undefined) ? point.custom.delta : this.y;
+              var isTotal = point.custom && point.custom.is_total;
+              var color = delta < 0 ? '#e53935' : '#333333';
+              var text = isTotal ? Highcharts.numberFormat(delta, 0) : (delta > 0 ? '+' : '') + Highcharts.numberFormat(delta, 0);
+              return '<span style="color:' + color + '">' + text + '</span>';
+            },
+            style: { fontSize: '11px', fontWeight: 'normal', textOutline: 'none' }
+          }
+        }
+      ]
+    };
+
+    Highcharts.chart(this.waterfall_chart_el.nativeElement, options);
+  }
+
+  toNumber(value: any): number {
+    if (value === null || value === undefined || value === "") return 0;
+    return Number(value);
+  }
+
+  round(value: number): number {
+    return Math.round(this.toNumber(value) * 1000) / 1000;
+  }
 }

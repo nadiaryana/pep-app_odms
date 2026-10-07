@@ -1,21 +1,21 @@
-import { HttpClient, HttpParams, HttpResponse, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
+import { HttpHeaders } from '@angular/common/http';
+import { Component, OnInit, OnDestroy, ViewChild, Inject } from '@angular/core';
 import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatTableDataSource } from '@angular/material/table';
-import { merge, Observable, of as observableOf, Subscription } from 'rxjs';
+import { merge, Observable, of as observableOf, Subscription, Subject } from 'rxjs';
 import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from "@angular/router";
 import { SelectionModel } from '@angular/cdk/collections';
+import { formatDate } from '@angular/common';
 
-import { PeProdWaterfallService} from './pe-prod-waterfall.service';
-import { SnackbarService } from '../../snackbar.service';
-import { SnackbarApi } from '../../snackbar.service';
+import { PeProdWaterfall, PeProdWaterfallKategori } from './pe-prod-waterfall';
+import { PeProdWaterfallService } from './pe-prod-waterfall.service';
+import { SnackbarService, SnackbarApi } from '../../snackbar.service';
 import { PePermissionService } from '../pe-permission.service';
 import { TitleService } from '../../navigation/title/title.service';
 import { xFilterService } from '../../xfilter/xfilter.component';
 import { CommonService } from '../../common.service';
-import { PeProdWaterfall } from './pe-prod-waterfall';
 
 type PeProdWaterfallRow = PeProdWaterfall & {
   isEdit?: boolean;
@@ -27,202 +27,237 @@ type PeProdWaterfallRow = PeProdWaterfall & {
   templateUrl: './pe-prod-waterfall-list.component.html',
   styleUrls: ['./pe-prod-waterfall.scss']
 })
-export class PeProdWaterfallListComponent implements OnInit {
+export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
 
-  displayedColumns: string[] = ["select", "nomor","well", "delta_prod", "remarks","action"];
-  headerColumns1: string[] = ["select", "nomor","well","delta_prod", "remarks","action"];
-  exampleDatabase: ExampleHttpDao | null;
-  data: PeProdWaterfall[] = [];
+  displayedColumns: string[] = ["select", "kategori", "well", "delta_prod", "remarks", "action"];
+  headerColumns1: string[] = ["select", "kategori", "well", "delta_prod", "remarks", "action"];
 
-  dataSource = new MatTableDataSource<any>(this.data);
-  selection = new SelectionModel<any>(true, []);
+  data: PeProdWaterfallRow[] = [];
+  dataSource = new MatTableDataSource<PeProdWaterfallRow>(this.data);
+  selection = new SelectionModel<PeProdWaterfallRow>(true, []);
+
+  kategoriList: PeProdWaterfallKategori[] = [];
+  private kategoriLabel: Map<string, string> = new Map();
+
+  start_dateControl = new FormControl(new Date());
+  start_dateInput = "";
+
+  end_dateControl = new FormControl(new Date());
+  end_dateInput = "";
 
   resultsLength = 0;
   isLoadingResults = true;
   isRateLimitReached = false;
-  submitting = false;
-  isEditing:boolean = false;
+  isEditing: boolean = false;
 
-  start_submitDate: Number;
-  end_submitDate: Number;
-  group: string;
-  status: string;
+  totalDelta: number = 0;
 
-  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+  @ViewChild(MatSort, { static: true }) sort: MatSort;
   filterControl = new FormControl('');
 
-  nomorFilter = new FormControl('');
+  kategoriFilter = new FormControl('');
   wellFilter = new FormControl('');
   delta_prodFilter = new FormControl('');
   remarksFilter = new FormControl('');
 
-  nomor_xSelected = [];
+  kategori_xSelected = [];
   well_xSelected = [];
   delta_prod_xSelected = [];
   remarks_xSelected = [];
 
-
-  filterSubscription:Subscription;
-  selectedSubscription:Subscription;
-  listSubscription:Subscription;
+  private refresh = new Subject<void>();
+  filterSubscription: Subscription;
+  selectedSubscription: Subscription;
+  listSubscription: Subscription;
 
   constructor(
-    private http: HttpClient,
     private router: Router,
     public dialog: MatDialog,
     public snackBar: MatSnackBar,
-    private pe_prod_waterfallService: PeProdWaterfallService,
+    private service: PeProdWaterfallService,
     public snackbarService: SnackbarService,
     public pePermissionService: PePermissionService,
     private titleService: TitleService,
     private route: ActivatedRoute,
     private xfilterService: xFilterService,
     public commonService: CommonService,
-    private service: PeProdWaterfallService,
-    ) {}
+  ) { }
 
   ngOnInit() {
 
     this.titleService.titleSource.next({
       title: "Sangatta Production Waterfall",
-      icon: "summarize",
+      icon: "waterfall_chart",
       breadcrumbs: [
-        {label: 'Petroleum Engineering', routerLink: ''}, 
-        {label: 'Waterfall', routerLink: ''}
-      ]}
-    );
+        { label: 'Petroleum Engineering', routerLink: '' },
+        { label: 'Waterfall', routerLink: '' }
+      ]
+    });
 
-    var p_start_submitDate = this.route.snapshot.paramMap.get('start_submitDate');
-    if(p_start_submitDate != null && p_start_submitDate.length > 0) {
-      //this.start_submitDate = isNaN(Number(p_start_submitDate)) ? new Date(Date.parse(p_start_submitDate)) : new Date(Number(p_start_submitDate));
-      this.start_submitDate = Number(p_start_submitDate);
-      console.log(this.start_submitDate);
-    }
-    var p_end_submitDate = this.route.snapshot.paramMap.get('end_submitDate');
-    if(p_end_submitDate != null && p_end_submitDate.length > 0) {
-      //this.end_submitDate = isNaN(Number(p_end_submitDate)) ? new Date(Date.parse(p_end_submitDate)) : new Date(Number(p_end_submitDate));
-      this.end_submitDate = Number(p_end_submitDate);
-      console.log(this.end_submitDate);
-    }
-    this.group = this.route.snapshot.paramMap.get('group');
-    this.status = this.route.snapshot.paramMap.get('status');
+    this.initDate();
+    this.loadKategori();
 
-    this.exampleDatabase = new ExampleHttpDao(this.http);
-
-    // If the user changes the sort order, reset back to the first page.
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
     this.filterSubscription = this.xfilterService.filter.subscribe(res => {
-      if(res) this.getColumnValues(res);
+      if (res) this.getColumnValues(res);
     })
     this.selectedSubscription = this.xfilterService.selected.subscribe(res => {
+      if (!res) return;
       this[res["column"] + "_xSelected"] = res["selected"];
     })
-    
+
     this.listSubscription = merge(
-      this.sort.sortChange, 
-      this.paginator.page, 
+      this.sort.sortChange,
+      this.paginator.page,
       this.filterControl.valueChanges.pipe(debounceTime(300)),
-      this.nomorFilter.valueChanges.pipe(debounceTime(300)),
+      this.kategoriFilter.valueChanges.pipe(debounceTime(300)),
       this.wellFilter.valueChanges.pipe(debounceTime(300)),
       this.delta_prodFilter.valueChanges.pipe(debounceTime(300)),
       this.remarksFilter.valueChanges.pipe(debounceTime(300)),
       this.xfilterService.selected,
+      this.refresh,
     ).pipe(
       startWith({}),
       switchMap(() => {
         this.isLoadingResults = true;
         var columnfilter = this.getColumnFilter();
-        return this.exampleDatabase!.getRepoIssues(
-          this.sort.active, 
-          this.sort.direction, 
-          this.paginator.pageIndex, 
-          this.paginator.pageSize, 
+        return this.service.getRepoIssues(
+          this.sort.active,
+          this.sort.direction,
+          this.paginator.pageIndex,
+          this.paginator.pageSize,
           this.filterControl.value,
           columnfilter,
-          );
+          "",
+          this.start_dateControl.value,
+          this.end_dateControl.value,
+        );
       }),
       map(data => {
-        // Flip flag to show that loading has finished.
         this.isLoadingResults = false;
         this.isRateLimitReached = false;
         this.resultsLength = data.total_count;
-
         return data.items;
       }),
       catchError(() => {
         this.isLoadingResults = false;
-        // Catch if the GitHub API has reached its rate limit. Return empty data.
         this.isRateLimitReached = true;
         return observableOf([]);
       })
-      ).subscribe((data: PeProdWaterfall[]) => {
-        this.data = data.map(d => ({
-          ...d,
-          isEdit: false   
-        }));
+    ).subscribe((data: PeProdWaterfall[]) => {
+      this.data = data.map(d => ({ ...d, isEdit: false }));
+      this.dataSource.data = this.data;
+      this.totalDelta = this.data.reduce((sum, d) => sum + this.toNumber(d.delta_prod), 0);
+      this.selection.clear();
+    });
+  }
 
-        // this.dataSource = new MatTableDataSource<any>(this.data);
-        this.dataSource.data = data.map(item => ({
-          ...item,
-          isEdit: false
-        }));
-        this.selection.clear();
-      });
+  loadKategori() {
+    this.service.getKategori().subscribe(res => {
+      this.kategoriList = res;
+      this.kategoriLabel.clear();
+      res.forEach(k => this.kategoriLabel.set(k.code, k.label));
+    });
+  }
+
+  /** Periode aktif; diwarisi dari halaman add bila ada. */
+  /** Tanggal hari ini pada pukul 00:00 waktu lokal; dipakai agar cocok dengan tanggal data daily. */
+  private startOfToday(): Date {
+    var now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now;
+  }
+
+  private initDate() {
+    var today = this.startOfToday();
+    var defStart = new Date(today);
+    defStart.setDate(defStart.getDate() - 7);
+
+    this.start_dateControl = new FormControl(defStart);
+    this.end_dateControl = new FormControl(today);
+
+    var p_start = this.route.snapshot.queryParamMap.get('start_date');
+    var p_end = this.route.snapshot.queryParamMap.get('end_date');
+    if (p_start && !isNaN(Date.parse(p_start))) this.start_dateControl.setValue(new Date(p_start));
+    if (p_end && !isNaN(Date.parse(p_end))) this.end_dateControl.setValue(new Date(p_end));
+
+    this.start_dateInput = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US');
+    this.end_dateInput = formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+  }
+
+  start_dateChange(evt) {
+    this.start_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.paginator.pageIndex = 0;
+    this.refresh.next();
+  }
+
+  end_dateChange(evt) {
+    this.end_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.paginator.pageIndex = 0;
+    this.refresh.next();
+  }
+
+  /** Label kategori dari master, fallback ke kode apa adanya. */
+  kategoriText(code: string): string {
+    if (!code) return "(tanpa kategori)";
+    return this.kategoriLabel.has(code) ? this.kategoriLabel.get(code) : code;
+  }
+
+  addRow() {
+    this.router.navigate(['pe', 'waterfall', 'add'], {
+      queryParams: {
+        start_date: this.start_dateControl.value.toISOString(),
+        end_date: this.end_dateControl.value.toISOString()
+      }
+    });
+  }
+
+  openChart() {
+    this.router.navigate(['pe', 'waterfall', 'chart'], {
+      queryParams: {
+        start_date: this.start_dateControl.value.toISOString(),
+        end_date: this.end_dateControl.value.toISOString()
+      }
+    });
   }
 
   edit(row: PeProdWaterfallRow) {
     row._backup = { ...row };
     row.isEdit = true;
+    this.isEditing = true;
   }
 
   save(row: PeProdWaterfallRow) {
-    this.hitungSemuaStok(row);
-
-    const payload: Partial<PeProdWaterfall> = { ...row };
-    // Simpan backup 
+    const payload: Partial<PeProdWaterfall> = {
+      kategori: row.kategori,
+      well: row.well,
+      delta_prod: this.toNumber(row.delta_prod),
+      remarks: row.remarks
+    };
+    // Simpan backup untuk fitur undo
     const backupData = { ...row._backup };
 
-    // buang properti frontend
-    delete (payload as any).isEdit;
-    delete (payload as any)._backup;
-
-    this.service.updatePeProdWaterfall(row._id, payload).subscribe({
+    this.service.update(row._id, payload).subscribe({
       next: (res) => {
-        // Update row state
         row.isEdit = false;
+        this.isEditing = false;
         delete row._backup;
 
-        // Update dataSource
-        const idx = this.dataSource.data.findIndex(
-          d => d._id === row._id
-        );
+        const idx = this.dataSource.data.findIndex(d => d._id === row._id);
         if (idx !== -1) {
-          this.dataSource.data[idx] = {
-            ...this.dataSource.data[idx],
-            ...payload,
-            isEdit: false
-          };
+          this.dataSource.data[idx] = { ...this.dataSource.data[idx], ...payload, isEdit: false };
           this.dataSource.data = [...this.dataSource.data];
         }
+        this.totalDelta = this.dataSource.data.reduce((sum, d) => sum + this.toNumber(d.delta_prod), 0);
 
-        // Show success notification with undo option (5 seconds)
-        const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', {
-          duration: 5000
-        });
-
-        snackBarRef.onAction().subscribe(() => {
-          // User clicked UNDO - revert to backup
-          this.undoUpdate(row._id, backupData);
-        });
+        const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', { duration: 5000 });
+        snackBarRef.onAction().subscribe(() => this.undoUpdate(row._id, backupData));
       },
       error: (error) => {
-        // rollback kalau gagal
         this.cancel(row);
-        this.snackBar.open(error.message ? error.message : 'Gagal mengupdate data', 'Tutup', {
-          duration: 5000
-        });
+        this.snackBar.open(error.message ? error.message : 'Gagal mengupdate data', 'Tutup', { duration: 5000 });
       }
     });
   }
@@ -232,37 +267,9 @@ export class PeProdWaterfallListComponent implements OnInit {
     delete payload.isEdit;
     delete payload._backup;
 
-    this.service.updatePeProdWaterfall(id, payload).subscribe({
+    this.service.update(id, payload).subscribe({
       next: (res) => {
-        // Update this.data array
-        const dataIdx = this.data.findIndex(d => d._id === id);
-        if (dataIdx !== -1) {
-          // Update the object in place and create new reference
-          Object.keys(backupData).forEach(key => {
-            if (key !== 'isEdit' && key !== '_backup') {
-              (this.data[dataIdx] as any)[key] = backupData[key];
-            }
-          });
-          (this.data[dataIdx] as any).isEdit = false;
-          delete (this.data[dataIdx] as any)._backup;
-        }
-
-        // Update dataSource.data array
-        const dsIdx = this.dataSource.data.findIndex(d => d._id === id);
-        if (dsIdx !== -1) {
-          Object.keys(backupData).forEach(key => {
-            if (key !== 'isEdit' && key !== '_backup') {
-              (this.dataSource.data[dsIdx] as any)[key] = backupData[key];
-            }
-          });
-          (this.dataSource.data[dsIdx] as any).isEdit = false;
-          delete (this.dataSource.data[dsIdx] as any)._backup;
-        }
-        
-        // Force Angular to detect changes by creating new array reference
-        this.data = [...this.data];
-        this.dataSource.data = [...this.data];
-        
+        this.refresh.next();
         this.snackBar.open('Perubahan dibatalkan', 'Tutup', { duration: 3000 });
       },
       error: (error) => {
@@ -271,54 +278,25 @@ export class PeProdWaterfallListComponent implements OnInit {
     });
   }
 
-  toNumber(val: any): number {
-    if (val === null || val === undefined || val === '') {
-      return 0;
-    }
-    return Number(val);
-  }
-
-  hitungStokAwal(row: any) {
-    const baru = this.toNumber(row.baru);
-    const lama = this.toNumber(row.lama);
-    const rusak = this.toNumber(row.rusak);
-    
-
-    row.stok_awal = baru + lama + rusak;
-  }
-
-  hitungStokAkhir(row: any) {
-    const stokAwal = this.toNumber(row.stok_awal);
-    const barangMasuk = this.toNumber(row.barang_masuk);
-    const barangKeluar = this.toNumber(row.barang_keluar);
-    
-    row.stok_akhir = stokAwal + barangMasuk - barangKeluar;
-  }
-
-  hitungSemuaStok(row: any) {
-    this.hitungStokAwal(row);
-    this.hitungStokAkhir(row);
-  }
-
-  onValueChange(row: any) {
-    this.hitungSemuaStok(row);
-  }
-
-
   cancel(row: PeProdWaterfallRow) {
     Object.assign(row, row._backup);
     row.isEdit = false;
+    this.isEditing = false;
   }
 
-  
+  toNumber(val: any): number {
+    if (val === null || val === undefined || val === '') return 0;
+    return Number(val);
+  }
 
   ngOnDestroy() {
     this.filterSubscription.unsubscribe();
     this.selectedSubscription.unsubscribe();
     this.listSubscription.unsubscribe();
+    this.refresh.complete();
   }
 
-  passPermission(path:String) {
+  passPermission(path: String) {
     return this.pePermissionService.passPermission(path);
   }
 
@@ -326,22 +304,22 @@ export class PeProdWaterfallListComponent implements OnInit {
 
     const httpOption: Object = {
       observe: 'response',
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json'
-      }),
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
       responseType: 'arraybuffer'
     };
     this.isLoadingResults = true;
     var columnfilter = this.getColumnFilter();
 
-    this.exampleDatabase!.getRepoIssues(
-      this.sort.active, 
-      this.sort.direction, 
-      this.paginator.pageIndex, 
-      this.paginator.pageSize, 
+    this.service.getRepoIssues(
+      this.sort.active,
+      this.sort.direction,
+      this.paginator.pageIndex,
+      this.paginator.pageSize,
       this.filterControl.value,
       columnfilter,
       "excel",
+      this.start_dateControl.value,
+      this.end_dateControl.value,
       httpOption
     ).pipe(map((res) => {
       this.isLoadingResults = false;
@@ -349,7 +327,7 @@ export class PeProdWaterfallListComponent implements OnInit {
         filename: 'Waterfall.xlsx',
         data: new Blob(
           [res['body']],
-          { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
+          { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
         ),
       };
     })).subscribe(res => {
@@ -375,49 +353,42 @@ export class PeProdWaterfallListComponent implements OnInit {
     });
   }
 
-  getColumnValues(param:any) {
+  getColumnValues(param: any) {
     var column = param["column"];
     var filter = param["filter"];
     var selected = param["selected"]
     var clear = param["clear"];
     var columnfilter = this.getColumnFilter();
-    if(filter) columnfilter[column] = [filter];
-    if(selected && selected.length > 0) columnfilter[column] = selected.map(s => "^"+s+"$");
-    if(clear) delete columnfilter[column];
+    if (filter) columnfilter[column] = [filter];
+    if (selected && selected.length > 0) columnfilter[column] = selected.map(s => "^" + s + "$");
+    if (clear) delete columnfilter[column];
 
-    return this.exampleDatabase!.getRepoIssues(
-      this.sort.active, 
-      this.sort.direction, 
-      this.paginator.pageIndex, 
-      this.paginator.pageSize, 
+    return this.service.getRepoIssues(
+      this.sort.active,
+      this.sort.direction,
+      this.paginator.pageIndex,
+      this.paginator.pageSize,
       this.filterControl.value,
       columnfilter,
-      column
+      column,
+      this.start_dateControl.value,
+      this.end_dateControl.value,
     ).pipe(map((res) => {
       return res;
     })).subscribe(res => {
-      this.xfilterService.updateItems({column: column, items: res.items});
+      this.xfilterService.updateItems({ column: column, items: res.items });
     }, () => {
-      
+
     });
   }
 
   getColumnFilter() {
     var columnfilter = {};
-    if(this.nomor_xSelected.length) columnfilter["nomor"] = this.nomor_xSelected;
-    if(this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;//.map(s => "^"+s+"$");
-    if(this.delta_prod_xSelected.length) columnfilter["delta_prod"] = this.delta_prod_xSelected;
-    if(this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
-
-    //if(this.start_submitDate) columnfilter['start_submitDate'] = this.start_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
-    //if(this.end_submitDate) columnfilter['end_submitDate'] = this.end_submitDate;// - date.getTimezoneOffset()*60*1000;//.getTime();
-    //if(this.group) columnfilter['group'] = this.group;
-    //if(this.status) columnfilter['status'] = this.status;
+    if (this.kategori_xSelected.length) columnfilter["kategori"] = this.kategori_xSelected;
+    if (this.well_xSelected.length) columnfilter["well"] = this.well_xSelected;
+    if (this.delta_prod_xSelected.length) columnfilter["delta_prod"] = this.delta_prod_xSelected;
+    if (this.remarks_xSelected.length) columnfilter["remarks"] = this.remarks_xSelected;
     return columnfilter;
-  }
-
-  formatInterval(arr) {
-    return arr.map(a => a.join("-")).join(", ");
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -427,19 +398,21 @@ export class PeProdWaterfallListComponent implements OnInit {
     return numSelected === numRows;
   }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
     this.isAllSelected() ?
-        this.selection.clear() :
-        this.dataSource.data.forEach(row => this.selection.select(row));
+      this.selection.clear() :
+      this.dataSource.data.forEach(row => this.selection.select(row));
   }
 
-  /** The label for the checkbox on the passed row */
   checkboxLabel(row?: any): string {
     if (!row) {
-        return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
+      return `${this.isAllSelected() ? 'select' : 'deselect'} all`;
     }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.presence_user_workday_cycle_id}`;
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.well}`;
+  }
+
+  get totalSelectedDelta(): number {
+    return this.selection.selected.reduce((sum, d) => sum + this.toNumber(d.delta_prod), 0);
   }
 
   deleteSelected() {
@@ -451,67 +424,19 @@ export class PeProdWaterfallListComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if(result) {
-        this.isLoadingResults = true; 
+      if (result) {
+        this.isLoadingResults = true;
         this.snackbarService.status.next(new SnackbarApi(false));
-        this.http.request<any>('delete', '/api/pe/ProdWaterfall', {
-          headers: new HttpHeaders({
-            'Content-Type': 'application/json'
-          }),
-          body: this.selection.selected.map<any>(s => s._id)
-        }).subscribe(res => {
-          this.isLoadingResults = false; 
+        this.service.deleteSelected(this.selection.selected.map(s => s._id)).subscribe(res => {
+          this.isLoadingResults = false;
           this.snackbarService.status.next(new SnackbarApi(true, res["deleted_count"] + " item(s) deleted successfully.", "dismiss"));
           this.paginator._changePageSize(this.paginator.pageSize);
-        },
-        error => {
-          this.isLoadingResults = false; 
+        }, error => {
+          this.isLoadingResults = false;
           this.snackbarService.status.next(new SnackbarApi(true, error['message'], "dismiss"));
         })
       }
     });
-  }
-}
-
-export interface PeProdWaterfallApi {
-  items: PeProdWaterfall[];
-  total_count: number;
-}
-
-/*export interface PeSensor {
-  PE_TICKET_ID: number;
-  ASSET_ID: number;
-  ASSET_NAME: string;
-}*/
-
-export class MatTableApi {
-	constructor(
-		public sort: string,
-		public order: string,
-		public page: number,
-		public pagesize: number,
-		public filter: string,
-    ) {}
-}
-
-/** An example database that the data source uses to retrieve data for the table. */
-export class ExampleHttpDao {
-  constructor(private http: HttpClient) {}
-
-  getRepoIssues(sort: string, order: string, page: number, pagesize: number = 50, filter: string, columnfilter: object, mode: string = "", httpOption: object = {}): Observable<PeProdWaterfallApi> {
-
-    var params = {};
-    if(sort!=null) params["sort"] = sort;
-    if(order!=null) params["order"] = order;
-    if(page!=null) params["page"] = page.toString();
-    if(pagesize!=null) params["pagesize"] = pagesize.toString();
-    if(filter!=null) params["filter"] = filter;
-    if(Object.keys(columnfilter).length > 0) params["columnfilter"] = JSON.stringify(columnfilter);
-    if(mode != null) params["mode"] = mode;
-
-    httpOption["params"] = params;
-
-    return this.http.get<PeProdWaterfallApi>('/api/pe/ProdWaterfall', httpOption);
   }
 }
 
@@ -524,14 +449,13 @@ export class PeProdWaterfallDeleteDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<PeProdWaterfallDeleteDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: number) {}
+    @Inject(MAT_DIALOG_DATA) public data: number) { }
 
   onNoClick(): void {
     this.dialogRef.close();
   }
-  
+
   onYesClick(): void {
     this.dialogRef.close();
   }
-
 }

@@ -112,6 +112,8 @@ import { MonitoringRKAddOprComponent } from './monitoring-rk/monitoring-rk-add-o
 import { PeIotComponent } from './iot/pe-iot.component';
 import { PeProdWaterfallComponent} from './waterfall/pe-prod-waterfall.component';
 import { PeProdWaterfallDeleteDialogComponent, PeProdWaterfallListComponent } from './waterfall/pe-prod-waterfall-list.component';
+import { PeProdWaterfallAddComponent } from './waterfall/pe-prod-waterfall-add.component';
+import { PeWaterfallChartComponent } from './waterfall/pe-waterfall-chart.component';
 // import { PeGrafikComponent } from './grafik/pe-grafik.component';
 
 
@@ -226,6 +228,8 @@ import { PeProdWaterfallDeleteDialogComponent, PeProdWaterfallListComponent } fr
   PeProdWaterfallComponent,
   PeProdWaterfallListComponent,
   PeProdWaterfallDeleteDialogComponent,
+  PeProdWaterfallAddComponent,
+  PeWaterfallChartComponent,
   
   
 
@@ -277,6 +281,7 @@ import { PeProdWaterfallDeleteDialogComponent, PeProdWaterfallListComponent } fr
   PeWellDatabaseDeleteDialogComponent,
   PeActualDeleteDialogComponent,
   MonitoringRKDeleteDialogComponent,
+  PeProdWaterfallDeleteDialogComponent,
   
   // PeSumurDeleteDialogComponent,
   // PeDailyZoneChartDeleteDialogComponent,
@@ -314,6 +319,7 @@ export class PeModule {
             new PanelSubItem("Optimasi", "pe/optimasi", "tune"),
             ...(this.isActualAdmin(res) ? [new PanelSubItem("Actual", "pe/actual", "data_usage")] : []),
             new PanelSubItem("Monitoring RK", "pe/monitoring-rk", "fact_check", this.pePermission.passPermission("pe/monitoring-rk")),
+            new PanelSubItem("Waterfall", "pe/waterfall", "waterfall_chart", this.pePermission.passPermission("pe/waterfall")),
             
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),

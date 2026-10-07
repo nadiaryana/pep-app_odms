@@ -135,6 +135,13 @@ export class PePermissionService {
 	new Menu("monitoring-rk/delete", true,null, ["PeMonitoringRK Delete"]),
 	new Menu("monitoring-rk/chart", true, null, ["PeMonitoringRK Read"]),
 
+	new Menu("waterfall", true,null, ["PeProdWaterfall Read"]),
+	new Menu("waterfall/list", true,null, ["PeProdWaterfall Read"]),
+	new Menu("waterfall/chart", true, null, ["PeProdWaterfall Read"]),
+	new Menu("waterfall/add", true,null, ["PeProdWaterfall Add"]),
+	new Menu("waterfall/edit", true, /[a-z]/i, ["PeProdWaterfall Edit"]),
+	new Menu("waterfall/delete", true,null, ["PeProdWaterfall Delete"]),
+
 	new Menu("iot", true, null, ["PeIot Read"]),
 	];
 	
@@ -150,6 +157,13 @@ export class PePermissionService {
 	}
 
   passPermission(path: String) {
+
+    // buang query string / fragment: guard dipanggil dengan state.url yang
+    // menyertakan query param (mis. /pe/waterfall/list?start_date=...)
+    var query = path.indexOf("?");
+    if (query != -1) path = path.substring(0, query);
+    var fragment = path.indexOf("#");
+    if (fragment != -1) path = path.substring(0, fragment);
 
     //if (path.indexOf('/') == -1) path = path.substring(1, path.lastIndexOf('/'))
     if (path.charAt(0) == "/") path = path.substring(1);

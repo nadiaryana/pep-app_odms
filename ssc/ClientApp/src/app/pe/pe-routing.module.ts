@@ -94,6 +94,10 @@ import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.comp
 import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
 import { MonitoringRKAddOprComponent } from './monitoring-rk/monitoring-rk-add-opr.component';
 import { PeIotComponent } from './iot/pe-iot.component';
+import { PeProdWaterfallComponent } from './waterfall/pe-prod-waterfall.component';
+import { PeProdWaterfallListComponent} from './waterfall/pe-prod-waterfall-list.component';
+import { PeProdWaterfallAddComponent } from './waterfall/pe-prod-waterfall-add.component';
+import { PeWaterfallChartComponent } from './waterfall/pe-waterfall-chart.component';
 
 const peRoutes: Routes = [
   { path: '', component: PeComponent, children: [
@@ -204,11 +208,18 @@ const peRoutes: Routes = [
       { path: 'add', component: MonitoringRKAddComponent, canActivate: [PePermissionGuard] },
       { path: 'chart', component: MonitoringRKChartComponent, canActivate: [PePermissionGuard] },
       { path: 'add-opr', component: MonitoringRKAddOprComponent, canActivate: [PePermissionGuard] },
-      { path: '', redirectTo: 'list', pathMatch:"full"},
       // { path: 'edit-opr/:id', component: PeActualEditOprComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full"},
+    ]},
+
+    { path: 'waterfall', component: PeProdWaterfallComponent, children:[
+      { path: 'list', component: PeProdWaterfallListComponent, canActivate: [PePermissionGuard]},
+      { path: 'add', component: PeProdWaterfallAddComponent, canActivate: [PePermissionGuard], canDeactivate: [CanDeactivateGuard] },
+      { path: 'chart', component: PeWaterfallChartComponent, canActivate: [PePermissionGuard] },
+      { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
   ]},
-]; 
+];
 
 @NgModule({
   imports: [

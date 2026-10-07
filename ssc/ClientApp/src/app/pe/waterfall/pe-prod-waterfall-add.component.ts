@@ -1,201 +1,226 @@
-// import { Component, Input, HostListener, ViewChild } from '@angular/core';
-// import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
-// import { MatPaginator, MatSort, MatDialog, MatSnackBar, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-// import { MatStepper } from '@angular/material/stepper';
-// import { Router } from "@angular/router";
-// import { Observable, of } from 'rxjs';
-// import { HttpClient, HttpEventType } from '@angular/common/http';
+import { Component, HostListener, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { formatDate } from '@angular/common';
+import { Observable } from 'rxjs';
 
-// //import { Sensor }    from './sensor';
-// import { PePumpingUnit}    from './pe-waterfall';
-// import { SnackbarService } from '../../snackbar.service';
-// import { SnackbarApi } from '../../snackbar.service';
-// import { DialogService } from '../../dialog.service';
-// import { TitleService } from '../../navigation/title/title.service';
+import { PeProdWaterfall, PeProdWaterfallKategori, PeProdWaterfallWell } from './pe-prod-waterfall';
+import { PeProdWaterfallService } from './pe-prod-waterfall.service';
+import { SnackbarService, SnackbarApi } from '../../snackbar.service';
+import { DialogService } from '../../dialog.service';
+import { TitleService } from '../../navigation/title/title.service';
 
-// @Component({
-// 	selector: 'app-pumping-add',
-// 	templateUrl: './pe-pumping-unit-add.component.html',
-// 	styleUrls: ['./pe-pumping-unit.scss']
-// })
+/** Baris sumur pada halaman add; delta & remarks masih dapat diubah sebelum disimpan. */
+type WaterfallWellRow = PeProdWaterfallWell & {
+  selected: boolean;
+  delta_input: number;
+  remarks: string;
+};
 
-// export class PePumpingUnitAddComponent {
-// 	@Input() locations: Location[];
-// 	//company = ['PT Pertamina EP', 'PT Pertamina (Persero)'];
-// 	loading = false;
-// 	pumpingForm: FormGroup;
-	
-// 	isUploading = false;
-// 	isLoading = false;
-// 	isSaving = false;
-// 	modified_count = 0;
-// 	created_count = 0;
-// 	progressPercent: number;
-// 	fileName: string;
-// 	@ViewChild('fileInput', {static: true}) fileInput;
-// 	@ViewChild('stepper', {static: true}) private stepper: MatStepper;
+@Component({
+  selector: 'app-pe-prod-waterfall-add',
+  templateUrl: './pe-prod-waterfall-add.component.html',
+  styleUrls: ['./pe-prod-waterfall.scss']
+})
+export class PeProdWaterfallAddComponent implements OnInit {
 
-// 	tmp_id: string;
-// 	@ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
-//   	@ViewChild(MatSort, {static: true}) sort: MatSort;
-//   	data_mode = "all";
-//   	resultsLength = 0;
+  isLoading = false;
+  isSaving = false;
 
-// 	data: PePumpingUnit[] = [];
-// 	data_error_count: number = 0;
-// 	displayedColumns: string[] = ["info", "nomor","well", "status", "primemover", "merk", "tipe", "min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl","noted"];
-// 	headerColumns1: string[] = ["info", "nomor","well","status","primemover", "merk", "tipe","crankhole","panjang_sl","noted"];
-// 	headerColumns2: string[] = ["min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl"];
+  displayedColumns: string[] = ["select", "well", "before", "after", "delta_prod", "remarks"];
 
-// 	constructor(
-// 		private formBuilder: FormBuilder,
-// 		private router: Router,
-// 		private snackbarService: SnackbarService,
-// 		private dialogService: DialogService,
-// 		private titleService: TitleService,
-// 		private http: HttpClient,
-// 		) { }
+  kategoriList: PeProdWaterfallKategori[] = [];
+  selectedKategori = "";
 
-// 	onSubmit() { 
-// 		this.loading = true;
-// 		//this.snackBar.dismiss();
-// 		this.snackbarService.status.next(new SnackbarApi(false));
-// 		this.pumpingForm.disable();
-// 	}
+  start_dateControl = new FormControl(new Date());
+  start_dateInput = "";
 
-// 	get f() { return this.pumpingForm.controls; }
+  end_dateControl = new FormControl(new Date());
+  end_dateInput = "";
 
-// 	ngOnInit() { 
+  wells: WaterfallWellRow[] = [];
+  wellFilter = new FormControl('');
+  hideAdded = false;
 
-// 		this.titleService.titleSource.next({
-//           title: "Add Pumping Unit",
-//           icon:"add",
-// 	      breadcrumbs: [
-// 	        {label: 'Petroleum Engineering', routerLink: ''}, 
-// 	        {label: 'PU', routerLink: 'pe/pump'},
-// 	        {label: 'Add', routerLink: ''}, 
-// 	      ]}
-// 	    );
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private service: PeProdWaterfallService,
+    private snackbarService: SnackbarService,
+    private dialogService: DialogService,
+    private titleService: TitleService,
+  ) { }
 
-// 		this.pumpingForm = this.formBuilder.group({
-// 			//sensor_id: ['', Validators.required],
-// 			location_id: [''],
-// 			is_anchor: [''],
-// 		});
+  ngOnInit() {
 
-// 		this.paginator.page.subscribe(() => this.loadData());
-// 		//this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
-// 	};
+    this.titleService.titleSource.next({
+      title: "Add Production Waterfall",
+      icon: "add",
+      breadcrumbs: [
+        { label: 'Petroleum Engineering', routerLink: '' },
+        { label: 'Waterfall', routerLink: 'pe/waterfall' },
+        { label: 'Add', routerLink: '' }
+      ]
+    });
 
-// 	listPumpingUnit() {
-// 		this.router.navigate(['pe', 'pump', 'list']);
-// 	}
+    this.initDate();
+    this.loadKategori();
+    this.loadWells();
+  }
 
-// 	canDeactivate(): Observable<boolean> | boolean {
-// 		if (this.pumpingForm.pristine) {
-// 			return true;
-// 		}
-// 		return this.dialogService.confirm('Discard changes?');
-// 	}
+  /** Periode diwarisi dari halaman list (query param), default seminggu terakhir. */
+  private initDate() {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var defStart = new Date(today);
+    defStart.setDate(defStart.getDate() - 7);
 
-// 	handleFile(event) {
-// 		this.progressPercent = null;
-// 		this.fileName = event.target.files[0].name;
-// 		const reader = new FileReader();
-// 		// tslint:disable-next-line:no-shadowed-variable
-// 		reader.onload = (event: any) => {
-// 			//this.image = event.target.result;
-// 		};
-// 		reader.readAsDataURL(event.target.files[0]);
-// 	}
+    this.start_dateControl = new FormControl(defStart);
+    this.end_dateControl = new FormControl(today);
 
-// 	onUpload() {
-// 		const fd = new FormData();
-// 		this.isUploading = true;
-// 		fd.append('files', this.fileInput.nativeElement.files[0]);
-// 		this.http.post('/api/pe/PumpingUnit/UploadFiles', fd, {
-// 			reportProgress: true,
-// 			observe: 'events'
-// 		})
-// 		.subscribe(event => {
-// 			if (event.type === HttpEventType.UploadProgress) {
-// 				this.progressPercent = Math.round((event.loaded / event.total) * 100);
-// 			} else if (event.type === HttpEventType.Response) {
-// 				this.isUploading = false;
-// 				//this.data = event.body['items'];
-// 				this.data_error_count = event.body['error_count'];
-// 				this.tmp_id = event.body['_id'];
-// 				this.stepper.selected.completed = true;
-// 				this.stepper.next();
-// 				this.loadData();
-// 				if(this.data_error_count > 0) this.snackbarService.status.next(new SnackbarApi(true, "There are "+this.data_error_count+" error(s) in your data.", 'dismiss'));
-// 			}
-// 		});
-// 	}
+    var p_start = this.route.snapshot.queryParamMap.get('start_date');
+    var p_end = this.route.snapshot.queryParamMap.get('end_date');
+    if (p_start && !isNaN(Date.parse(p_start))) this.start_dateControl.setValue(new Date(p_start));
+    if (p_end && !isNaN(Date.parse(p_end))) this.end_dateControl.setValue(new Date(p_end));
 
-// 	loadData() {
-// 		this.isLoading = true;
-// 		var httpOption = {
-// 			params: {
-// 				_id: this.tmp_id,
-// 				page: this.paginator.pageIndex.toString(),
-// 				pageSize: this.paginator.pageSize.toString(), 
-// 				mode: this.data_mode
-// 			}
-// 		}
-		
-// 		this.http.get<any>('/api/pe/PumpingUnit/Tmp', httpOption).subscribe(res => {
-// 			this.isLoading = false;
-// 			this.data = res['items'];
-// 			this.data_error_count = res['error_count'];
-// 			this.resultsLength = res['total_count'];
-// 			//if(this.data_error_count > 0) this.snackbarService.status.next(new SnackbarApi(true, "There are "+this.data_error_count+" error(s) in your data.", 'dismiss'));
-// 		}, error => {
-// 			this.isLoading = false;
-// 			this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
-// 			console.log(error);
-// 		});
-// 	}
+    this.start_dateInput = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US');
+    this.end_dateInput = formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+  }
 
-// 	saveData() {
-// 		this.isSaving = true;
-// 		this.http.get<any>('/api/pe/PumpingUnit/SaveData', {params: {_id: this.tmp_id}}).subscribe(res => {
-// 			this.isSaving = false;
-// 			this.modified_count = res["modified_count"];
-// 			this.created_count = res["created_count"];
-// 			this.stepper.selected.completed = true;
-// 			this.stepper.next();
-// 			this.snackbarService.status.next(new SnackbarApi(true, res["total_count"] + " item(s) saved successfully.", 'dismiss'));
-// 		}, error => {
-// 			this.isSaving = false;
-// 			this.snackbarService.status.next(new SnackbarApi(true, error['message'], 'dismiss'));
-// 			console.log(error);
-// 		});
-// 	}
+  loadKategori() {
+    this.service.getKategori().subscribe(res => {
+      this.kategoriList = res;
+      if (!this.selectedKategori && res.length > 0) this.selectedKategori = res[0].code;
+    });
+  }
 
-// 	resetData() {
-// 		this.isUploading = false;
-// 		this.isLoading = false;
-// 		this.isSaving = false;
-// 		this.modified_count = 0;
-// 		this.created_count = 0;
-// 		this.progressPercent = 0;
-// 		this.fileName = "";
-// 		this.data = [];
-// 		this.data_error_count = 0;
-// 		this.resultsLength = 0;
-// 		this.tmp_id = null;
-// 		this.data_mode = "all";
-// 		this.snackbarService.status.next(new SnackbarApi(false));
-// 	}
+  loadWells() {
+    if (!this.start_dateControl.value || !this.end_dateControl.value) return;
 
-// 	formatInterval(arr) {
-// 		return arr.map(a => a.join("-")).join(", ");
-// 	}
+    this.isLoading = true;
+    this.service.getWells(this.start_dateControl.value, this.end_dateControl.value).subscribe(res => {
+      this.isLoading = false;
+      this.wells = res.map(w => ({
+        ...w,
+        selected: false,
+        delta_input: w.delta_prod,
+        remarks: ""
+      }));
+    }, error => {
+      this.isLoading = false;
+      this.snackbarService.status.next(new SnackbarApi(true, error['message'] || 'Gagal memuat data sumur', 'dismiss'));
+    });
+  }
 
-// 	@HostListener('window:beforeunload', ['$event'])
-// 	unloadNotification($event: any) {
-// 		return this.pumpingForm.pristine;
-// 	}
+  start_dateChange(evt) {
+    this.start_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.loadWells();
+  }
 
-// }
+  end_dateChange(evt) {
+    this.end_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.loadWells();
+  }
+
+  get filteredWells(): WaterfallWellRow[] {
+    var filter = (this.wellFilter.value || "").toLowerCase();
+    return this.wells.filter(w =>
+      (!this.hideAdded || !w.added) &&
+      (!filter || w.well.toLowerCase().indexOf(filter) != -1)
+    );
+  }
+
+  get selectedWells(): WaterfallWellRow[] {
+    return this.wells.filter(w => w.selected);
+  }
+
+  get selectedDelta(): number {
+    return this.selectedWells.reduce((sum, w) => sum + this.toNumber(w.delta_input), 0);
+  }
+
+  /** Delta dibulatkan 3 desimal agar nilai tersimpan sama dengan yang tampil. */
+  roundDelta(value: number): number {
+    return Math.round(this.toNumber(value) * 1000) / 1000;
+  }
+
+  toNumber(value: any): number {
+    if (value === null || value === undefined || value === "") return 0;
+    return Number(value);
+  }
+
+  toggle(row: WaterfallWellRow) {
+    if (row.added) return;
+    row.selected = !row.selected;
+  }
+
+  selectAllVisible(selected: boolean) {
+    this.filteredWells.forEach(w => {
+      if (!w.added) w.selected = selected;
+    });
+  }
+
+  get allVisibleSelected(): boolean {
+    var selectable = this.filteredWells.filter(w => !w.added);
+    return selectable.length > 0 && selectable.every(w => w.selected);
+  }
+
+  resetDelta() {
+    this.selectedWells.forEach(w => w.delta_input = w.delta_prod);
+  }
+
+  onSave() {
+    if (!this.selectedKategori) {
+      this.snackbarService.status.next(new SnackbarApi(true, "Pilih kategori terlebih dahulu.", 'dismiss'));
+      return;
+    }
+    if (this.selectedWells.length == 0) {
+      this.snackbarService.status.next(new SnackbarApi(true, "Pilih minimal satu sumur.", 'dismiss'));
+      return;
+    }
+
+    var payload = this.selectedWells.map(w => new PeProdWaterfall(
+      null,
+      this.start_dateControl.value,
+      this.end_dateControl.value,
+      this.selectedKategori,
+      w.well,
+      this.roundDelta(w.delta_input),
+      w.remarks
+    ));
+
+    this.isSaving = true;
+    this.service.add(payload).subscribe(res => {
+      this.isSaving = false;
+      var message = res["created_count"] + " sumur berhasil ditambahkan.";
+      if (res["skipped"] && res["skipped"].length > 0) {
+        message += " Dilewati (sudah ada): " + res["skipped"].join(", ") + ".";
+      }
+      this.snackbarService.status.next(new SnackbarApi(true, message, 'dismiss'));
+      // data sudah tersimpan: bersihkan pilihan agar tidak ada konfirmasi saat pindah halaman
+      this.wells.forEach(w => w.selected = false);
+      this.backToList();
+    }, error => {
+      this.isSaving = false;
+      this.snackbarService.status.next(new SnackbarApi(true, error['message'] || 'Gagal menyimpan data', 'dismiss'));
+    });
+  }
+
+  backToList() {
+    this.router.navigate(['pe', 'waterfall', 'list'], {
+      queryParams: {
+        start_date: this.start_dateControl.value.toISOString(),
+        end_date: this.end_dateControl.value.toISOString()
+      }
+    });
+  }
+
+  canDeactivate(): Observable<boolean> | boolean {
+    if (this.selectedWells.length == 0) return true;
+    return this.dialogService.confirm('Data yang dipilih belum disimpan. Tinggalkan halaman?');
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    return this.selectedWells.length == 0;
+  }
+}
