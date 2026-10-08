@@ -149,7 +149,39 @@ ng::host .mat-horizontal-stepper-content {
   padding: 12px 4px;
 }
 
+/* form add: field mengikuti lebar kolom grid */
+
+mat-grid-list {
+  margin-bottom: 4px;
+}
+
+mat-grid-tile mat-form-field {
+  width: 100%;
+}
+
+::ng-deep mat-grid-tile .mat-form-field-infix {
+  width: auto !important;
+}
+
 /* halaman list */
+
+/* baris header kategori (total per kategori) di dalam tabel */
+
+tr.category-group-row td {
+  background: #eceff1;
+  font-weight: 600;
+  border-top: 1px solid #cfd8dc;
+  border-bottom: 1px solid #cfd8dc;
+}
+
+tr.category-group-row .group-label {
+  text-align: left;
+  padding-left: 8px;
+}
+
+tr.category-group-row .group-delta {
+  font-weight: 700;
+}
 
 .waterfall-summary {
   display: flex;

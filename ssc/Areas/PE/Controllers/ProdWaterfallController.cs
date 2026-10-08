@@ -14,14 +14,7 @@ using System.IO;
 
 namespace ssc.Areas.PE.Controllers
 {
-    /// <summary>
-    /// Production Waterfall.
-    ///
-    /// Menyimpan breakdown per sumur per periode (start_date - end_date) yang
-    /// dikelompokkan ke kategori master. Nilai delta_prod per sumur dihitung dari
-    /// data daily (fig_curr_net akhir periode - awal periode) saat data ditambahkan,
-    /// lalu boleh diedit manual pada halaman list.
-    /// </summary>
+
     [Route("api/pe/[controller]")]
     [ApiController]
     public class ProdWaterfallController : ControllerBase
@@ -30,12 +23,12 @@ namespace ssc.Areas.PE.Controllers
         private readonly IMongoCollection<ProdWaterfallKategori> _kategori;
         private readonly IMongoCollection<Daily> _daily;
 
-        /// <summary>Kategori bawaan, dipakai saat koleksi master masih kosong.</summary>
+
         private static readonly ProdWaterfallKategori[] DefaultKategori = new[]
         {
             new ProdWaterfallKategori { code = "A", name = "ARLIFT ISSUES AND FLUCTUATION", order = 1 },
             new ProdWaterfallKategori { code = "B", name = "WC RELATED", order = 2 },
-            new ProdWaterfallKategori { code = "C", name = "OTHER", order = 3 },
+            new ProdWaterfallKategori { code = "C", name = "OTHER"                      , order = 3 },
         };
 
         public ProdWaterfallController(IPEDatabaseSettings settings)
@@ -47,9 +40,7 @@ namespace ssc.Areas.PE.Controllers
             _daily = DailyCommon._daily;
         }
 
-        // ------------------------------------------------------------------
-        // GET: daftar baris breakdown untuk satu periode
-        // ------------------------------------------------------------------
+
 
         [Authorize("PeProdWaterfall Read")]
         [HttpGet]
@@ -140,10 +131,31 @@ namespace ssc.Areas.PE.Controllers
 
             var items = _items.Skip(page * pagesize).Limit(pagesize).ToList();
 
+            // Total per kategori dari seluruh hasil filter (tanpa paging), dipakai
+            // sebagai baris header kategori di tabel halaman list.
+            var master = EnsureKategori();
+            var categories = _prod_waterfall
+                .Find(xfilter)
+                .Project<ProdWaterfall>(Builders<ProdWaterfall>.Projection
+                    .Include(t => t.kategori)
+                    .Include(t => t.delta_prod))
+                .ToList()
+                .GroupBy(t => t.kategori ?? "")
+                .Select(g => new
+                {
+                    kategori = g.Key,
+                    label = LabelOf(master, g.Key),
+                    delta_prod = g.Sum(t => t.delta_prod ?? 0),
+                    well_count = g.Count(),
+                })
+                .OrderBy(g => OrderOf(master, g.kategori))
+                .ToList();
+
             return new JsonResult(new
             {
                 total_count = total_count,
                 incomplete_result = false,
+                categories = categories,
                 items = items,
             })
             {
@@ -233,7 +245,10 @@ namespace ssc.Areas.PE.Controllers
                     .Select(t => t.well ?? ""),
                 StringComparer.OrdinalIgnoreCase);
 
-            var wells = before.Keys.Union(after.Keys, StringComparer.OrdinalIgnoreCase)
+            // Daftar sumur diambil dari seluruh data daily pada periode (bukan hanya
+            // kedua tanggal batas), supaya sumur yang tidak punya data di tanggal
+            // batas tetap muncul dan bisa dipilih.
+            var wells = PeriodWells(start_date, end_date)
                 .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
                 .Select(w =>
                 {
@@ -401,6 +416,24 @@ namespace ssc.Areas.PE.Controllers
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Nama sumur yang ada di data daily pada rentang tanggal (inklusif).
+        /// Dipakai sebagai daftar pilihan sumur pada halaman add.
+        /// </summary>
+        private List<string> PeriodWells(DateTime? start, DateTime? end)
+        {
+            if (!start.HasValue || !end.HasValue)
+                return new List<string>();
+
+            return _daily.Find(r => r.date >= start && r.date <= end)
+                .Project<Daily>(DailyCommon._fields_daily)
+                .ToList()
+                .Where(t => !String.IsNullOrWhiteSpace(t.well))
+                .Select(t => t.well)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         /// <summary>Ambil kategori master; isi dengan kategori bawaan bila masih kosong.</summary>

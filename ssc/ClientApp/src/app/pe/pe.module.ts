@@ -319,10 +319,11 @@ export class PeModule {
             new PanelSubItem("Optimasi", "pe/optimasi", "tune"),
             ...(this.isActualAdmin(res) ? [new PanelSubItem("Actual", "pe/actual", "data_usage")] : []),
             new PanelSubItem("Monitoring RK", "pe/monitoring-rk", "fact_check", this.pePermission.passPermission("pe/monitoring-rk")),
-            new PanelSubItem("Waterfall", "pe/waterfall", "waterfall_chart", this.pePermission.passPermission("pe/waterfall")),
+            
             
             //new PanelSubItem("Bhp Add", "pe/bhp/add", "playlist_add", this.pePermission.passPermission("pe/bhp/add")),
             ]),
+        new PanelItem("Production Monitoring", "pe/waterfall", "waterfall_chart", this.pePermission.passPermission("pe/waterfall")),
         new PanelItem("iSRP PCM", "", "waves", this.pePermission.passPermission("pe/dashboard"), true, [
           new PanelSubItem("iSRP", "pe/sumur", "waves", this.pePermission.passPermission("pe/sumur")),
           new PanelSubItem("Daily Current", "pe/current", "table_chart"),

@@ -3,6 +3,10 @@ import { FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { formatDate } from '@angular/common';
 import * as Highcharts from 'highcharts';
+import more from 'highcharts/highcharts-more';
+
+// modul tambahan: series tipe 'waterfall' bukan bagian dari highcharts core
+more(Highcharts);
 
 import { PeProdWaterfallChart } from './pe-prod-waterfall';
 import { PeProdWaterfallService } from './pe-prod-waterfall.service';
@@ -121,108 +125,108 @@ export class PeWaterfallChartComponent implements OnInit {
     this.chart_title = "Waterfall Chart";
     this.chart_subtitle = this.start_dateInput + " - " + this.end_dateInput;
 
-    this.buildTable(data);
+    // this.buildTable(data);
     this.buildChart(data);
   }
 
-  private buildTable(data: PeProdWaterfallChart) {
+  // private buildTable(data: PeProdWaterfallChart) {
 
-    var rows: WaterfallTableRow[] = [];
+  //   var rows: WaterfallTableRow[] = [];
 
-    data.categories.forEach(cat => {
-      rows.push({ type: 'category', label: cat.label, delta: this.toNumber(cat.delta_prod) });
+  //   data.categories.forEach(cat => {
+  //     rows.push({ type: 'category', label: cat.label, delta: this.toNumber(cat.delta_prod) });
 
-      var wells = data.items.filter(i => i.kategori == cat.kategori).slice().sort((a, b) => a.well.localeCompare(b.well));
-      wells.forEach((w, i) => rows.push({
-        type: 'well',
-        no: i + 1,
-        label: w.well,
-        delta: this.toNumber(w.delta_prod),
-        remarks: w.remarks
-      }));
+  //     var wells = data.items.filter(i => i.kategori == cat.kategori).slice().sort((a, b) => a.well.localeCompare(b.well));
+  //     wells.forEach((w, i) => rows.push({
+  //       type: 'well',
+  //       no: i + 1,
+  //       label: w.well,
+  //       delta: this.toNumber(w.delta_prod),
+  //       remarks: w.remarks
+  //     }));
 
-      if (wells.length == 0) {
-        rows.push({ type: 'well', label: "(belum ada sumur)", remarks: "" });
-      } else {
-        rows.push({ type: 'subtotal', label: "Total " + cat.label, delta: this.toNumber(cat.delta_prod) });
-      }
-    });
+  //     if (wells.length == 0) {
+  //       rows.push({ type: 'well', label: "(belum ada sumur)", remarks: "" });
+  //     } else {
+  //       rows.push({ type: 'subtotal', label: "Total " + cat.label, delta: this.toNumber(cat.delta_prod) });
+  //     }
+  //   });
 
-    rows.push({ type: 'grandtotal', label: "TOTAL", delta: this.total_kategori });
+  //   rows.push({ type: 'grandtotal', label: "TOTAL", delta: this.total_kategori });
 
-    if (this.others != 0) {
-      rows.push({ type: 'others', label: "Others (tidak terjelaskan)", delta: this.others });
-    }
+  //   if (this.others != 0) {
+  //     rows.push({ type: 'others', label: "Others (tidak terjelaskan)", delta: this.others });
+  //   }
 
-    this.tabel_breakdown = rows;
-  }
+  //   this.tabel_breakdown = rows;
+  // }
 
   private buildChart(data: PeProdWaterfallChart) {
 
-    // Waterfall dibangun dari dua seri column bertumpuk: seri pertama berisi
-    // tinggi dasar (transparan) dan seri kedua berisi delta yang tampak. Modul
-    // 'waterfall' tidak tersedia pada build highcharts di repo ini.
-    var categories: string[] = ["Start"];
-    var base: any[] = [0];
-    var values: any[] = [];
-
     var total_start = this.toNumber(data.total_start);
     var total_end = this.toNumber(data.total_end);
+    var total_color = '#3aa84c';
 
-    values.push({
+    // Titik data series waterfall: nilai delta ditulis apa adanya (boleh negatif),
+    // Highcharts yang mengakumulasi. Titik total memakai isSum.
+    var points: any[] = [];
+    var running = total_start;
+    var y_min = Math.min(0, total_start);
+
+    points.push({
+      name: "Start",
       y: total_start,
-      color: '#3aa84c',
+      color: total_color,
       custom: { delta: total_start, is_total: true }
     });
 
-    var running = total_start;
-
     data.categories.forEach(cat => {
       var delta = this.round(this.toNumber(cat.delta_prod));
-      categories.push(cat.label);
-      base.push(Math.min(running, this.round(running + delta)));
-      values.push({
-        y: Math.abs(delta),
+      points.push({
+        name: cat.label,
+        y: delta,
         color: delta >= 0 ? '#2f7ed8' : '#e53935',
         custom: { delta: delta }
       });
       running = this.round(running + delta);
+      y_min = Math.min(y_min, running);
     });
 
     if (this.others != 0) {
-      categories.push("Others");
-      base.push(Math.min(running, this.round(running + this.others)));
-      values.push({
-        y: Math.abs(this.others),
+      points.push({
+        name: "Others",
+        y: this.others,
         color: '#9e9e9e',
         custom: { delta: this.others }
       });
       running = this.round(running + this.others);
+      y_min = Math.min(y_min, running);
     }
 
-    categories.push("End");
-    base.push(0);
-    values.push({
-      y: total_end,
-      color: '#3aa84c',
+    points.push({
+      name: "End",
+      isSum: true,
+      color: total_color,
       custom: { delta: total_end, is_total: true }
     });
 
     var options: any = {
       chart: {
-        type: 'column',
+        type: 'waterfall',
         zoomType: 'xy',
         style: { fontFamily: 'Roboto, Helvetica Neue, sans-serif' }
       },
       title: { text: this.chart_title, align: 'center' },
       subtitle: { text: this.chart_subtitle, align: 'center' },
       xAxis: {
-        categories: categories,
+        type: 'category',
         labels: { autoRotation: [-20], style: { fontSize: '11px' } },
         tickmarkPlacement: 'on'
       },
       yAxis: {
-        min: 0,
+        // batas bawah mengikuti nilai kumulatif terendah, agar bar yang turun
+        // di bawah nol tidak terpotong
+        min: y_min,
         title: { text: 'BOPD' },
         labels: { format: '{value:,.0f}' }
       },
@@ -230,30 +234,19 @@ export class PeWaterfallChartComponent implements OnInit {
       tooltip: {
         formatter: function () {
           var point: any = this.point;
-          var delta = (point.custom && point.custom.delta !== undefined) ? point.custom.delta : point.y;
+          var delta = (point.custom && point.custom.delta !== undefined) ? point.custom.delta : this.y;
           return '<b>' + point.category + '</b><br/>' + Highcharts.numberFormat(delta, 3) + ' BOPD';
         }
       },
       series: [
         {
-          // tinggi dasar agar bar delta "mengambang" pada level kumulatif
-          name: 'base',
-          type: 'column',
-          stacking: 'normal',
-          color: 'rgba(0,0,0,0)',
-          borderWidth: 0,
-          enableMouseTracking: false,
-          showInLegend: false,
-          dataLabels: { enabled: false },
-          data: base
-        },
-        {
           name: 'Delta Prod',
-          type: 'column',
-          stacking: 'normal',
+          type: 'waterfall',
+          upColor: '#2f7ed8',
+          color: '#e53935',
           borderWidth: 1,
           borderColor: '#ffffff',
-          data: values,
+          data: points,
           dataLabels: {
             enabled: true,
             useHTML: true,

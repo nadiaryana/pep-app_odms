@@ -1,6 +1,6 @@
 <div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
 
-  <mat-form-field class="filter" floatLabel="never">
+  <!-- <mat-form-field class="filter" floatLabel="never">
     <mat-label>Start Date</mat-label>
     <input matInput [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)">
     <mat-datepicker-toggle matSuffix [for]="start_datePicker"></mat-datepicker-toggle>
@@ -12,10 +12,10 @@
     <input matInput [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)">
     <mat-datepicker-toggle matSuffix [for]="end_datePicker"></mat-datepicker-toggle>
     <mat-datepicker #end_datePicker></mat-datepicker>
-  </mat-form-field>
+  </mat-form-field> -->
 
   <button mat-button color="primary" (click)="addRow()" *ngIf="pePermissionService.passPermission('pe/waterfall/add')">
-    <mat-icon>playlist_add</mat-icon> Add Sumur
+    <mat-icon>add</mat-icon> Add Sumur
   </button>
   <button mat-button color="primary" (click)="openChart()" *ngIf="pePermissionService.passPermission('pe/waterfall/chart')">
     <mat-icon>stacked_bar_chart</mat-icon> Waterfall Chart
@@ -38,7 +38,7 @@
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 230, 250))+'px'">
 
     <table mat-table [dataSource]="dataSource" class="pe-table"
-      matSort matSortActive="kategori" matSortDisableClear matSortDirection="asc">
+      matSort matSortActive="kategori" matSortDisableClear matSortDirection="desc">
 
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef>
@@ -145,8 +145,28 @@
         </td>
       </ng-container>
 
+      <!-- baris header kategori: label kategori + total delta kategori -->
+      <ng-container matColumnDef="group_label">
+        <td mat-cell *matCellDef="let row" [attr.colspan]="3" class="group-label">{{row.label}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="group_delta">
+        <td mat-cell *matCellDef="let row" class="cell-right group-delta"
+          [class.negative]="row.delta_prod < 0">{{row.delta_prod | number:'1.0-3'}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="group_remarks">
+        <td mat-cell *matCellDef="let row"></td>
+      </ng-container>
+
+      <ng-container matColumnDef="group_action">
+        <td mat-cell *matCellDef="let row"></td>
+      </ng-container>
+
       <tr mat-header-row *matHeaderRowDef="headerColumns1"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="isEditing ? null : selection.toggle(row)"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns; when: isDataRow"
+        (click)="isEditing ? null : selection.toggle(row)"></tr>
+      <tr mat-row class="category-group-row" *matRowDef="let row; columns: groupColumns; when: isGroupRow"></tr>
     </table>
   </div>
 

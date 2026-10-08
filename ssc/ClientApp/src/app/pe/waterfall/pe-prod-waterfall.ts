@@ -40,6 +40,8 @@ export interface PeProdWaterfallWell {
 export interface PeProdWaterfallApi {
 	items: PeProdWaterfall[];
 	total_count: number;
+	/** Total delta per kategori dari seluruh hasil filter (tanpa paging). */
+	categories?: PeProdWaterfallChartKategori[];
 }
 
 export interface PeProdWaterfallChartKategori {

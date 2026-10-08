@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormBuilder, FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { formatDate } from '@angular/common';
 import { Observable } from 'rxjs';
@@ -9,13 +9,6 @@ import { PeProdWaterfallService } from './pe-prod-waterfall.service';
 import { SnackbarService, SnackbarApi } from '../../snackbar.service';
 import { DialogService } from '../../dialog.service';
 import { TitleService } from '../../navigation/title/title.service';
-
-/** Baris sumur pada halaman add; delta & remarks masih dapat diubah sebelum disimpan. */
-type WaterfallWellRow = PeProdWaterfallWell & {
-  selected: boolean;
-  delta_input: number;
-  remarks: string;
-};
 
 @Component({
   selector: 'app-pe-prod-waterfall-add',
@@ -27,8 +20,6 @@ export class PeProdWaterfallAddComponent implements OnInit {
   isLoading = false;
   isSaving = false;
 
-  displayedColumns: string[] = ["select", "well", "before", "after", "delta_prod", "remarks"];
-
   kategoriList: PeProdWaterfallKategori[] = [];
   selectedKategori = "";
 
@@ -38,11 +29,15 @@ export class PeProdWaterfallAddComponent implements OnInit {
   end_dateControl = new FormControl(new Date());
   end_dateInput = "";
 
-  wells: WaterfallWellRow[] = [];
-  wellFilter = new FormControl('');
+  /** Sumur + delta harian dari API: sumber pilihan dropdown dan auto-isi delta. */
+  wells: PeProdWaterfallWell[] = [];
   hideAdded = false;
 
+  /** Form add: satu baris per sumur yang akan disimpan. */
+  waterfallForm: FormGroup;
+
   constructor(
+    private formBuilder: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
     private service: PeProdWaterfallService,
@@ -61,6 +56,10 @@ export class PeProdWaterfallAddComponent implements OnInit {
         { label: 'Waterfall', routerLink: 'pe/waterfall' },
         { label: 'Add', routerLink: '' }
       ]
+    });
+
+    this.waterfallForm = this.formBuilder.group({
+      wells: this.formBuilder.array([this.createWellForm()])
     });
 
     this.initDate();
@@ -100,12 +99,7 @@ export class PeProdWaterfallAddComponent implements OnInit {
     this.isLoading = true;
     this.service.getWells(this.start_dateControl.value, this.end_dateControl.value).subscribe(res => {
       this.isLoading = false;
-      this.wells = res.map(w => ({
-        ...w,
-        selected: false,
-        delta_input: w.delta_prod,
-        remarks: ""
-      }));
+      this.wells = res;
     }, error => {
       this.isLoading = false;
       this.snackbarService.status.next(new SnackbarApi(true, error['message'] || 'Gagal memuat data sumur', 'dismiss'));
@@ -114,28 +108,89 @@ export class PeProdWaterfallAddComponent implements OnInit {
 
   start_dateChange(evt) {
     this.start_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.resetRows();
     this.loadWells();
   }
 
   end_dateChange(evt) {
     this.end_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.resetRows();
     this.loadWells();
   }
 
-  get filteredWells(): WaterfallWellRow[] {
-    var filter = (this.wellFilter.value || "").toLowerCase();
-    return this.wells.filter(w =>
-      (!this.hideAdded || !w.added) &&
-      (!filter || w.well.toLowerCase().indexOf(filter) != -1)
-    );
+  get wellsForm(): FormArray {
+    return this.waterfallForm.get('wells') as FormArray;
   }
 
-  get selectedWells(): WaterfallWellRow[] {
-    return this.wells.filter(w => w.selected);
+  private createWellForm(): FormGroup {
+    return this.formBuilder.group({
+      well: ['', Validators.required],
+      delta_prod: [null],
+      remarks: ['']
+    });
   }
 
-  get selectedDelta(): number {
-    return this.selectedWells.reduce((sum, w) => sum + this.toNumber(w.delta_input), 0);
+  /** Baris kosong baru, seperti tombol add pada form lain. */
+  addWellForm() {
+    this.wellsForm.push(this.createWellForm());
+  }
+
+  removeWellForm(index: number) {
+    if (this.wellsForm.length <= 1) return;
+    this.wellsForm.removeAt(index);
+  }
+
+  /** Baris yang sumurnya sudah dipilih. */
+  get filledRows(): FormGroup[] {
+    return this.wellsForm.controls.filter(c => (c as FormGroup).get('well').value) as FormGroup[];
+  }
+
+  get selectedCount(): number {
+    return this.filledRows.length;
+  }
+
+  get deltaTotal(): number {
+    return this.filledRows.reduce((sum, row) => sum + this.toNumber(row.get('delta_prod').value), 0);
+  }
+
+  /** Pilihan dropdown; sumur yang sudah ada di waterfall dapat disembunyikan. */
+  get wellOptions(): PeProdWaterfallWell[] {
+    return this.wells.filter(w => !this.hideAdded || !w.added);
+  }
+
+  private wellValue(index: number): string {
+    return (this.wellsForm.at(index) as FormGroup).get('well').value;
+  }
+
+  wellInfo(index: number): PeProdWaterfallWell {
+    var well = this.wellValue(index);
+    if (!well) return null;
+    return this.wells.find(w => w.well === well) || null;
+  }
+
+  wellBefore(index: number): number {
+    var info = this.wellInfo(index);
+    return info ? info.before : null;
+  }
+
+  wellAfter(index: number): number {
+    var info = this.wellInfo(index);
+    return info ? info.after : null;
+  }
+
+  showWellError(index: number): boolean {
+    var control = (this.wellsForm.at(index) as FormGroup).get('well');
+    return control.hasError('required') && (control.touched || control.dirty);
+  }
+
+  /** Delta harian sumur terpilih dipakai sebagai nilai awal Delta Prod. */
+  wellChange(index: number, evt: any) {
+    var info = this.wells.find(w => w.well === evt.value) || null;
+    (this.wellsForm.at(index) as FormGroup).get('delta_prod').setValue(info ? info.delta_prod : null);
+  }
+
+  private resetRows() {
+    this.waterfallForm.setControl('wells', this.formBuilder.array([this.createWellForm()]));
   }
 
   /** Delta dibulatkan 3 desimal agar nilai tersimpan sama dengan yang tampil. */
@@ -148,24 +203,11 @@ export class PeProdWaterfallAddComponent implements OnInit {
     return Number(value);
   }
 
-  toggle(row: WaterfallWellRow) {
-    if (row.added) return;
-    row.selected = !row.selected;
-  }
-
-  selectAllVisible(selected: boolean) {
-    this.filteredWells.forEach(w => {
-      if (!w.added) w.selected = selected;
-    });
-  }
-
-  get allVisibleSelected(): boolean {
-    var selectable = this.filteredWells.filter(w => !w.added);
-    return selectable.length > 0 && selectable.every(w => w.selected);
-  }
-
   resetDelta() {
-    this.selectedWells.forEach(w => w.delta_input = w.delta_prod);
+    this.filledRows.forEach(row => {
+      var info = this.wells.find(w => w.well === row.get('well').value);
+      if (info) row.get('delta_prod').setValue(info.delta_prod);
+    });
   }
 
   onSave() {
@@ -173,19 +215,26 @@ export class PeProdWaterfallAddComponent implements OnInit {
       this.snackbarService.status.next(new SnackbarApi(true, "Pilih kategori terlebih dahulu.", 'dismiss'));
       return;
     }
-    if (this.selectedWells.length == 0) {
+    if (this.filledRows.length == 0) {
       this.snackbarService.status.next(new SnackbarApi(true, "Pilih minimal satu sumur.", 'dismiss'));
       return;
     }
 
-    var payload = this.selectedWells.map(w => new PeProdWaterfall(
+    var selected = this.filledRows.map(row => row.get('well').value);
+    var duplicate = selected.filter((well, i) => selected.indexOf(well) != i);
+    if (duplicate.length > 0) {
+      this.snackbarService.status.next(new SnackbarApi(true, "Sumur " + duplicate.join(", ") + " dipilih lebih dari sekali.", 'dismiss'));
+      return;
+    }
+
+    var payload = this.filledRows.map(row => new PeProdWaterfall(
       null,
       this.start_dateControl.value,
       this.end_dateControl.value,
       this.selectedKategori,
-      w.well,
-      this.roundDelta(w.delta_input),
-      w.remarks
+      row.get('well').value,
+      this.roundDelta(row.get('delta_prod').value),
+      row.get('remarks').value || ""
     ));
 
     this.isSaving = true;
@@ -196,8 +245,8 @@ export class PeProdWaterfallAddComponent implements OnInit {
         message += " Dilewati (sudah ada): " + res["skipped"].join(", ") + ".";
       }
       this.snackbarService.status.next(new SnackbarApi(true, message, 'dismiss'));
-      // data sudah tersimpan: bersihkan pilihan agar tidak ada konfirmasi saat pindah halaman
-      this.wells.forEach(w => w.selected = false);
+      // data sudah tersimpan: kosongkan baris agar tidak ada konfirmasi saat pindah halaman
+      this.resetRows();
       this.backToList();
     }, error => {
       this.isSaving = false;
@@ -215,12 +264,12 @@ export class PeProdWaterfallAddComponent implements OnInit {
   }
 
   canDeactivate(): Observable<boolean> | boolean {
-    if (this.selectedWells.length == 0) return true;
+    if (this.filledRows.length == 0) return true;
     return this.dialogService.confirm('Data yang dipilih belum disimpan. Tinggalkan halaman?');
   }
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    return this.selectedWells.length == 0;
+    return this.filledRows.length == 0;
   }
 }

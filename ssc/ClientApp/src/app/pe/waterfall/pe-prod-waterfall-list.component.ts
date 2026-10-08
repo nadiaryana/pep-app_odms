@@ -22,6 +22,13 @@ type PeProdWaterfallRow = PeProdWaterfall & {
   _backup?: Partial<PeProdWaterfall>;
 };
 
+
+type PeProdWaterfallTableRow = PeProdWaterfallRow & {
+  isGroup?: boolean;
+  label?: string;
+  well_count?: number;
+};
+
 @Component({
   selector: 'pe-prod-waterfall-list',
   templateUrl: './pe-prod-waterfall-list.component.html',
@@ -31,10 +38,15 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
 
   displayedColumns: string[] = ["select", "kategori", "well", "delta_prod", "remarks", "action"];
   headerColumns1: string[] = ["select", "kategori", "well", "delta_prod", "remarks", "action"];
+  /** Kolom baris header kategori: label (menggabungkan select+kategori+well) + total delta. */
+  groupColumns: string[] = ["group_label", "group_delta", "group_remarks", "group_action"];
 
   data: PeProdWaterfallRow[] = [];
-  dataSource = new MatTableDataSource<PeProdWaterfallRow>(this.data);
+  dataSource = new MatTableDataSource<PeProdWaterfallTableRow>([]);
   selection = new SelectionModel<PeProdWaterfallRow>(true, []);
+
+  /** Total delta per kategori dari API (seluruh hasil filter, bukan hanya halaman aktif). */
+  private categoryTotals: Map<string, number> = new Map();
 
   kategoriList: PeProdWaterfallKategori[] = [];
   private kategoriLabel: Map<string, string> = new Map();
@@ -87,7 +99,7 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Sangatta Production Waterfall",
+      title: "Sangatta Production Monitoring",
       icon: "waterfall_chart",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
@@ -139,6 +151,8 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
         this.isLoadingResults = false;
         this.isRateLimitReached = false;
         this.resultsLength = data.total_count;
+        this.categoryTotals = new Map<string, number>();
+        (data.categories || []).forEach(c => this.categoryTotals.set(c.kategori || "", this.toNumber(c.delta_prod)));
         return data.items;
       }),
       catchError(() => {
@@ -148,8 +162,7 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
       })
     ).subscribe((data: PeProdWaterfall[]) => {
       this.data = data.map(d => ({ ...d, isEdit: false }));
-      this.dataSource.data = this.data;
-      this.totalDelta = this.data.reduce((sum, d) => sum + this.toNumber(d.delta_prod), 0);
+      this.renderRows();
       this.selection.clear();
     });
   }
@@ -205,6 +218,68 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
     return this.kategoriLabel.has(code) ? this.kategoriLabel.get(code) : code;
   }
 
+  /** Baris tabel yang berupa data sumur (tanpa baris header kategori). */
+  get dataRows(): PeProdWaterfallRow[] {
+    return this.dataSource.data.filter(r => !r.isGroup) as PeProdWaterfallRow[];
+  }
+
+  /** Predikat `when` pada matRowDef: baris header kategori. */
+  isGroupRow(index: number, row: PeProdWaterfallTableRow): boolean {
+    return !!row && !!row.isGroup;
+  }
+
+  /** Predikat `when` pada matRowDef: baris data sumur. */
+  isDataRow(index: number, row: PeProdWaterfallTableRow): boolean {
+    return !row || !row.isGroup;
+  }
+
+  /**
+   * Susun baris tabel: satu baris header kategori (berisi total delta kategori)
+   * diikuti baris-baris sumur di bawahnya.
+   */
+  private renderRows() {
+    var display: any[] = [];
+    var groupKeys: string[] = [];
+    var groups: PeProdWaterfallRow[][] = [];
+
+    this.data.forEach(row => {
+      var code = row.kategori || "";
+      var index = groupKeys.indexOf(code);
+      if (index == -1) {
+        groupKeys.push(code);
+        groups.push([]);
+        index = groupKeys.length - 1;
+      }
+      groups[index].push(row);
+    });
+
+    groupKeys.forEach((code, index) => {
+      display.push({
+        isGroup: true,
+        kategori: code,
+        label: this.kategoriText(code),
+        delta_prod: this.categoryTotal(code, groups[index]),
+        well_count: groups[index].length
+      });
+      groups[index].forEach(row => display.push(row));
+    });
+
+    this.dataSource.data = display;
+    this.totalDelta = this.data.reduce((sum, d) => sum + this.toNumber(d.delta_prod), 0);
+  }
+
+  /** Total kategori dari API (seluruh hasil filter); fallback ke total baris yang tampil. */
+  private categoryTotal(code: string, rows: PeProdWaterfallRow[]): number {
+    if (this.categoryTotals.has(code)) return this.categoryTotals.get(code);
+    return rows.reduce((sum, r) => sum + this.toNumber(r.delta_prod), 0);
+  }
+
+  /** Sesuaikan total kategori agar header tetap sinkron setelah baris diedit. */
+  private shiftCategoryTotal(code: string, amount: number) {
+    var key = code || "";
+    this.categoryTotals.set(key, this.toNumber(this.categoryTotals.get(key)) + amount);
+  }
+
   addRow() {
     this.router.navigate(['pe', 'waterfall', 'add'], {
       queryParams: {
@@ -238,6 +313,9 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
     };
     // Simpan backup untuk fitur undo
     const backupData = { ...row._backup };
+    // nilai sebelum edit, untuk menyesuaikan total kategori di header
+    const prevKategori = row.kategori;
+    const prevDelta = this.toNumber(row.delta_prod);
 
     this.service.update(row._id, payload).subscribe({
       next: (res) => {
@@ -245,12 +323,15 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
         this.isEditing = false;
         delete row._backup;
 
-        const idx = this.dataSource.data.findIndex(d => d._id === row._id);
+        const idx = this.data.findIndex(d => d._id === row._id);
         if (idx !== -1) {
-          this.dataSource.data[idx] = { ...this.dataSource.data[idx], ...payload, isEdit: false };
-          this.dataSource.data = [...this.dataSource.data];
+          this.data[idx] = { ...this.data[idx], ...payload, isEdit: false };
+          this.data = [...this.data];
         }
-        this.totalDelta = this.dataSource.data.reduce((sum, d) => sum + this.toNumber(d.delta_prod), 0);
+        // kategori/nilai bisa berubah: pindahkan nilainya lalu susun ulang grup
+        this.shiftCategoryTotal(prevKategori, -prevDelta);
+        this.shiftCategoryTotal(payload.kategori || "", this.toNumber(payload.delta_prod));
+        this.renderRows();
 
         const snackBarRef = this.snackBar.open('Data berhasil diupdate', 'UNDO', { duration: 5000 });
         snackBarRef.onAction().subscribe(() => this.undoUpdate(row._id, backupData));
@@ -394,14 +475,14 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource.data.length;
-    return numSelected === numRows;
+    const numRows = this.dataRows.length;
+    return numRows > 0 && numSelected === numRows;
   }
 
   masterToggle() {
     this.isAllSelected() ?
       this.selection.clear() :
-      this.dataSource.data.forEach(row => this.selection.select(row));
+      this.dataRows.forEach(row => this.selection.select(row));
   }
 
   checkboxLabel(row?: any): string {
