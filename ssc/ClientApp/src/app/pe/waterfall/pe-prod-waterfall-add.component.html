@@ -30,14 +30,14 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <div class="well-summary">
+  <!-- <div class="well-summary">
     <span>Periode: <b>{{start_dateInput}} - {{end_dateInput}}</b></span>
     <span>Terpilih: <b>{{selectedCount}}</b> sumur</span>
     <span>Delta total terpilih: <b [class.negative]="deltaTotal < 0">{{deltaTotal | number:'1.0-3'}} BOPD</b></span>
     <button mat-button color="primary" (click)="resetDelta()" [disabled]="selectedCount == 0">
       <mat-icon>restart_alt</mat-icon> Reset Delta ke Nilai Daily
     </button>
-  </div>
+  </div> -->
 
   <div [formGroup]="waterfallForm">
     <ng-container formArrayName="wells">
@@ -45,10 +45,16 @@
         <mat-grid-tile [colspan]="4" [rowspan]="1">
           <mat-form-field [formGroupName]="index">
             <mat-label>Select Well</mat-label>
-            <mat-select formControlName="well" required (selectionChange)="wellChange(index, $event)">
-              <mat-option *ngFor="let well of wellOptions" [value]="well.well" [disabled]="well.added">
-                {{ well.well }}<span *ngIf="well.added"> (sudah ada)</span>
+            <mat-select #wellSelect formControlName="well" required (selectionChange)="wellChange(index, $event)">
+              <div class="well-search" (click)="$event.stopPropagation()">
+                <input type="text" placeholder="Cari sumur..." [value]="wellSearch[index] || ''"
+                  (input)="onWellSearch(index, $event.target.value)"
+                  (keydown.escape)="wellSelect.close()" (keydown)="$event.stopPropagation()">
+              </div>
+              <mat-option *ngFor="let well of wellOptionsFor(index)" [value]="well.well">
+                {{ well.well }}
               </mat-option>
+              <div class="well-search-empty" *ngIf="wellOptionsFor(index).length == 0">Sumur tidak ditemukan</div>
             </mat-select>
             <mat-error *ngIf="showWellError(index)">Well is required</mat-error>
           </mat-form-field>

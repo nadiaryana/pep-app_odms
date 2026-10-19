@@ -36,8 +36,8 @@ type PeProdWaterfallTableRow = PeProdWaterfallRow & {
 })
 export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
 
-  displayedColumns: string[] = ["select", "kategori", "well", "delta_prod", "remarks", "action"];
-  headerColumns1: string[] = ["select", "kategori", "well", "delta_prod", "remarks", "action"];
+  displayedColumns: string[] = ["select",  "well", "delta_prod", "remarks", "action"];
+  headerColumns1: string[] = ["select", "well", "delta_prod", "remarks", "action"];
   /** Kolom baris header kategori: label (menggabungkan select+kategori+well) + total delta. */
   groupColumns: string[] = ["group_label", "group_delta", "group_remarks", "group_action"];
 
@@ -212,10 +212,10 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
     this.refresh.next();
   }
 
-  /** Label kategori dari master, fallback ke kode apa adanya. */
+  /** Kode kategori singkat untuk ditampilkan pada baris data. */
   kategoriText(code: string): string {
     if (!code) return "(tanpa kategori)";
-    return this.kategoriLabel.has(code) ? this.kategoriLabel.get(code) : code;
+    return code;
   }
 
   /** Baris tabel yang berupa data sumur (tanpa baris header kategori). */
@@ -257,7 +257,7 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
       display.push({
         isGroup: true,
         kategori: code,
-        label: this.kategoriText(code),
+        label: this.kategoriLabel.get(code) || this.kategoriText(code),
         delta_prod: this.categoryTotal(code, groups[index]),
         well_count: groups[index].length
       });
@@ -281,12 +281,7 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
   }
 
   addRow() {
-    this.router.navigate(['pe', 'waterfall', 'add'], {
-      queryParams: {
-        start_date: this.start_dateControl.value.toISOString(),
-        end_date: this.end_dateControl.value.toISOString()
-      }
-    });
+    this.router.navigate(['pe', 'waterfall', 'add']);
   }
 
   openChart() {
@@ -311,11 +306,10 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
       delta_prod: this.toNumber(row.delta_prod),
       remarks: row.remarks
     };
-    // Simpan backup untuk fitur undo
+    // Gunakan nilai sebelum edit untuk menyesuaikan total kategori setelah disimpan.
     const backupData = { ...row._backup };
-    // nilai sebelum edit, untuk menyesuaikan total kategori di header
-    const prevKategori = row.kategori;
-    const prevDelta = this.toNumber(row.delta_prod);
+    const prevKategori = backupData.kategori || "";
+    const prevDelta = this.toNumber(backupData.delta_prod);
 
     this.service.update(row._id, payload).subscribe({
       next: (res) => {
@@ -362,6 +356,7 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
   cancel(row: PeProdWaterfallRow) {
     Object.assign(row, row._backup);
     row.isEdit = false;
+    delete row._backup;
     this.isEditing = false;
   }
 

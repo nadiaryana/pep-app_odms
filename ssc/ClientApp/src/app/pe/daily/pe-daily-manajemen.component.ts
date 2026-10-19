@@ -18,6 +18,31 @@ import { AuthService } from '../../auth.service';
 // import { PeDailyManajemenDeleteDialogComponent } from './daily/pe-daily-manajemen-list.component';
 import { PeDailyDeleteDialogComponent } from './pe-daily-list.component';
 
+type ProductionManajemenRow = {
+  _id: string;
+  date?: Date | string;
+  sot?: number;
+  operation?: number;
+  figure?: number;
+  gas?: number;
+  gas_sales?: number;
+  sgt_sot?: number;
+  sbr_sot?: number;
+  bd_sot?: number;
+  sgt_opr?: number;
+  sbr_opr?: number;
+  bd_opr?: number;
+  sgt_fig?: number;
+  sbr_fig?: number;
+  bd_fig?: number;
+  rkap_oil?: number;
+  wpnb_oil?: number;
+  rkap_gas?: number;
+  wpnb_gas?: number;
+  isEdit?: boolean;
+  _backup?: Partial<ProductionManajemenRow>;
+};
+
 @Component({
   selector: 'pe-daily-manajemen',
   templateUrl: './pe-daily-manajemen.component.html',
@@ -27,12 +52,12 @@ export class PeDailyManajemenComponent implements OnInit {
 
   currentUser: User;
 
-  displayedColumns: string[] = ["select", "settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
-  headerColumns1: string[] = ["select", "settings", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas"];
+  displayedColumns: string[] = ["select", "date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas",  "settings",];
+  headerColumns1: string[] = ["select","date","sot","operation","figure", "gas", "gas_sales", "sgt_sot", "sbr_sot", "bd_sot","sgt_opr", "sbr_opr", "bd_opr", "sgt_fig", "sbr_fig", "bd_fig","rkap_oil", "wpnb_oil", "rkap_gas", "wpnb_gas",  "settings", ];
   // displayedColumns: string[] = ["date","operation","figure", "sot", "gas", "gas_sales", "sgt_opr", "settings"];
   // headerColumns1: string[] = ["date", "operation", "figure", "sot", "gas", "gas_sales", "sgt_opr", "settings"];
   exampleDatabase: ExampleHttpDao | null;
-  data = [];
+  data: ProductionManajemenRow[] = [];
   completedData = [];
   dataSource = new MatTableDataSource<any>(this.data);
   selection = new SelectionModel<any>(true, []);
@@ -140,7 +165,10 @@ export class PeDailyManajemenComponent implements OnInit {
         return observableOf([]);
       })
     ).subscribe(data => {
-      this.data = data;
+      this.data = data.map(item => ({
+        ...item,
+        isEdit: false
+      }));
       this.dataSource = new MatTableDataSource<any>(this.data);
       this.selection.clear();
     });
@@ -160,6 +188,69 @@ export class PeDailyManajemenComponent implements OnInit {
 
   canDeleteManajemen() {
     return this.pePermissionService.passPermission('pe/daily/delete');
+  }
+
+  edit(row: ProductionManajemenRow) {
+    if (this.isEditing) return;
+
+    this.selection.clear();
+    row._backup = { ...row };
+    row.isEdit = true;
+    this.isEditing = true;
+  }
+
+  save(row: ProductionManajemenRow) {
+    this.submitting = true;
+    const payload = {
+      sot: row.sot,
+      operation: row.operation,
+      figure: row.figure,
+      gas: row.gas,
+      gas_sales: row.gas_sales,
+      sgt_opr: row.sgt_opr,
+      sbr_opr: row.sbr_opr,
+      bd_opr: row.bd_opr,
+      sgt_sot: row.sgt_sot,
+      sbr_sot: row.sbr_sot,
+      bd_sot: row.bd_sot,
+      sgt_fig: row.sgt_fig,
+      sbr_fig: row.sbr_fig,
+      bd_fig: row.bd_fig,
+      rkap_oil: row.rkap_oil,
+      wpnb_oil: row.wpnb_oil,
+      rkap_gas: row.rkap_gas,
+      wpnb_gas: row.wpnb_gas
+    };
+
+    this.http.patch<any>('/api/pe/production/' + encodeURIComponent(row._id), payload).subscribe(
+      () => {
+        row.isEdit = false;
+        delete row._backup;
+        this.isEditing = false;
+        this.submitting = false;
+        this.dataSource.data = [...this.data];
+        this.snackbarService.status.next(new SnackbarApi(true, 'Data berhasil diupdate', 'dismiss'));
+      },
+      error => {
+        this.cancel(row);
+        this.submitting = false;
+        this.snackbarService.status.next(new SnackbarApi(
+          true,
+          error && error.error && error.error.message ? error.error.message : 'Gagal mengupdate data',
+          'dismiss'
+        ));
+      }
+    );
+  }
+
+  cancel(row: ProductionManajemenRow) {
+    if (row._backup) {
+      Object.assign(row, row._backup);
+    }
+    row.isEdit = false;
+    delete row._backup;
+    this.isEditing = false;
+    this.dataSource.data = [...this.data];
   }
   
   exportExcel() {

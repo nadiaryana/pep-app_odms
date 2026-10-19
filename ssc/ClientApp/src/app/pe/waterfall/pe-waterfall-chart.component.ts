@@ -15,7 +15,7 @@ import { TitleService } from '../../navigation/title/title.service';
 
 /** Baris pada tabel breakdown di bawah chart. */
 interface WaterfallTableRow {
-  type: 'category' | 'well' | 'subtotal' | 'grandtotal' | 'others';
+  type: 'category' | 'well' | 'subtotal' | 'grandtotal' ;
   label: string;
   no?: number;
   delta?: number;
@@ -47,7 +47,6 @@ export class PeWaterfallChartComponent implements OnInit {
   total_start = 0;
   total_end = 0;
   total_delta = 0;
-  others = 0;
   total_kategori = 0;
 
   constructor(
@@ -60,7 +59,7 @@ export class PeWaterfallChartComponent implements OnInit {
   ngOnInit() {
 
     this.titleService.titleSource.next({
-      title: "Waterfall Chart",
+      title: "Sangatta Production Monitoring",
       icon: "waterfall_chart",
       breadcrumbs: [
         { label: 'Petroleum Engineering', routerLink: '' },
@@ -118,11 +117,11 @@ export class PeWaterfallChartComponent implements OnInit {
 
     this.total_start = this.toNumber(data.total_start);
     this.total_end = this.toNumber(data.total_end);
-    this.others = this.round(this.toNumber(data.others));
+    // this.others = this.round(this.toNumber(data.others));
     this.total_delta = this.round(this.total_end - this.total_start);
     this.total_kategori = this.round(data.categories.reduce((sum, c) => sum + this.toNumber(c.delta_prod), 0));
 
-    this.chart_title = "Waterfall Chart";
+    this.chart_title = "Sangatta Production Monitoring";
     this.chart_subtitle = this.start_dateInput + " - " + this.end_dateInput;
 
     // this.buildTable(data);
@@ -165,13 +164,15 @@ export class PeWaterfallChartComponent implements OnInit {
 
     var total_start = this.toNumber(data.total_start);
     var total_end = this.toNumber(data.total_end);
-    var total_color = '#3aa84c';
+    var total_color = '#7d807e';
+    var categoryColors = ['#a02b93', '#2f7ed8', '#ed7d31', '#70ad47', '#17a2b8', '#8064a2'];
 
     // Titik data series waterfall: nilai delta ditulis apa adanya (boleh negatif),
     // Highcharts yang mengakumulasi. Titik total memakai isSum.
     var points: any[] = [];
     var running = total_start;
-    var y_min = Math.min(0, total_start);
+    var y_min = total_start;
+    var y_max = total_start;
 
     points.push({
       name: "Start",
@@ -180,28 +181,30 @@ export class PeWaterfallChartComponent implements OnInit {
       custom: { delta: total_start, is_total: true }
     });
 
-    data.categories.forEach(cat => {
+    data.categories.forEach((cat, index) => {
       var delta = this.round(this.toNumber(cat.delta_prod));
       points.push({
         name: cat.label,
         y: delta,
-        color: delta >= 0 ? '#2f7ed8' : '#e53935',
+        color: categoryColors[index % categoryColors.length],
         custom: { delta: delta }
       });
       running = this.round(running + delta);
       y_min = Math.min(y_min, running);
+      y_max = Math.max(y_max, running);
     });
 
-    if (this.others != 0) {
-      points.push({
-        name: "Others",
-        y: this.others,
-        color: '#9e9e9e',
-        custom: { delta: this.others }
-      });
-      running = this.round(running + this.others);
-      y_min = Math.min(y_min, running);
-    }
+    // if (this.others != 0) {
+    //   points.push({
+    //     name: "Others",
+    //     y: this.others,
+    //     color: '#9e9e9e',
+    //     custom: { delta: this.others }
+    //   });
+    //   running = this.round(running + this.others);
+    //   y_min = Math.min(y_min, running);
+    //   y_max = Math.max(y_max, running);
+    // }
 
     points.push({
       name: "End",
@@ -209,6 +212,16 @@ export class PeWaterfallChartComponent implements OnInit {
       color: total_color,
       custom: { delta: total_end, is_total: true }
     });
+
+    y_max = Math.max(y_max, total_end);
+    var valueRange = Math.max(y_max - y_min, 1);
+    var rawTickInterval = valueRange / 8;
+    var magnitude = Math.pow(10, Math.floor(Math.log(rawTickInterval) / Math.LN10));
+    var normalizedInterval = rawTickInterval / magnitude;
+    var tickInterval = (normalizedInterval <= 1 ? 1 : normalizedInterval <= 2 ? 2 : normalizedInterval <= 5 ? 5 : 10) * magnitude;
+    var axisMin = Math.floor(y_min / tickInterval) * tickInterval - 2 * tickInterval;
+    var axisMax = Math.ceil(y_max / tickInterval) * tickInterval;
+    if (axisMax <= y_max) axisMax += tickInterval;
 
     var options: any = {
       chart: {
@@ -224,9 +237,9 @@ export class PeWaterfallChartComponent implements OnInit {
         tickmarkPlacement: 'on'
       },
       yAxis: {
-        // batas bawah mengikuti nilai kumulatif terendah, agar bar yang turun
-        // di bawah nol tidak terpotong
-        min: y_min,
+        min: axisMin,
+        max: axisMax,
+        tickInterval: tickInterval,
         title: { text: 'BOPD' },
         labels: { format: '{value:,.0f}' }
       },
@@ -243,7 +256,7 @@ export class PeWaterfallChartComponent implements OnInit {
           name: 'Delta Prod',
           type: 'waterfall',
           upColor: '#2f7ed8',
-          color: '#e53935',
+          color: '#ffffff',
           borderWidth: 1,
           borderColor: '#ffffff',
           data: points,
@@ -254,7 +267,7 @@ export class PeWaterfallChartComponent implements OnInit {
               var point: any = this.point;
               var delta = (point.custom && point.custom.delta !== undefined) ? point.custom.delta : this.y;
               var isTotal = point.custom && point.custom.is_total;
-              var color = delta < 0 ? '#e53935' : '#333333';
+              var color = delta < 0 ? '#f1ebeb' : '#333333';
               var text = isTotal ? Highcharts.numberFormat(delta, 0) : (delta > 0 ? '+' : '') + Highcharts.numberFormat(delta, 0);
               return '<span style="color:' + color + '">' + text + '</span>';
             },

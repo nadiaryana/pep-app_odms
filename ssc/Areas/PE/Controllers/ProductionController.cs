@@ -346,6 +346,49 @@ namespace ssc.Areas.PE.Controllers
       };
     }
 
+    [Authorize("PeProduction Add")]
+    [HttpPatch("{id:length(24)}")]
+    public IActionResult Update(string id, [FromBody] Production payload)
+    {
+      if (payload == null)
+        return BadRequest(new { message = "No production data provided." });
+
+      if (!ObjectId.TryParse(id, out ObjectId objectId))
+        return BadRequest(new { message = "Invalid production ID." });
+
+      var update = Builders<Production>.Update
+          .Set(t => t.sot, payload.sot)
+          .Set(t => t.operation, payload.operation)
+          .Set(t => t.figure, payload.figure)
+          .Set(t => t.gas, payload.gas)
+          .Set(t => t.gas_sales, payload.gas_sales)
+          .Set(t => t.sgt_opr, payload.sgt_opr)
+          .Set(t => t.sbr_opr, payload.sbr_opr)
+          .Set(t => t.bd_opr, payload.bd_opr)
+          .Set(t => t.sgt_sot, payload.sgt_sot)
+          .Set(t => t.sbr_sot, payload.sbr_sot)
+          .Set(t => t.bd_sot, payload.bd_sot)
+          .Set(t => t.sgt_fig, payload.sgt_fig)
+          .Set(t => t.sbr_fig, payload.sbr_fig)
+          .Set(t => t.bd_fig, payload.bd_fig)
+          .Set(t => t.rkap_oil, payload.rkap_oil)
+          .Set(t => t.wpnb_oil, payload.wpnb_oil)
+          .Set(t => t.rkap_gas, payload.rkap_gas)
+          .Set(t => t.wpnb_gas, payload.wpnb_gas)
+          .Set(t => t.updated_by, User.Identity.Name)
+          .Set(t => t.updated_date, DateTime.Now);
+
+      var result = _production.UpdateOne(
+          Builders<Production>.Filter.Eq(t => t._id, objectId),
+          update
+      );
+
+      if (result.MatchedCount == 0)
+        return NotFound(new { message = "Production record not found." });
+
+      return Ok(new { modified_count = result.ModifiedCount });
+    }
+
     [HttpGet("{id:length(24)}", Name = "GetProduction")]
     public ActionResult Get(string id)
     {

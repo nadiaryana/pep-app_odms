@@ -1,6 +1,6 @@
 <div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
 
-  <!-- <mat-form-field class="filter" floatLabel="never">
+  <mat-form-field class="filter" floatLabel="never">
     <mat-label>Start Date</mat-label>
     <input matInput [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)">
     <mat-datepicker-toggle matSuffix [for]="start_datePicker"></mat-datepicker-toggle>
@@ -12,7 +12,7 @@
     <input matInput [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)">
     <mat-datepicker-toggle matSuffix [for]="end_datePicker"></mat-datepicker-toggle>
     <mat-datepicker #end_datePicker></mat-datepicker>
-  </mat-form-field> -->
+  </mat-form-field>
 
   <button mat-button color="primary" (click)="addRow()" *ngIf="pePermissionService.passPermission('pe/waterfall/add')">
     <mat-icon>add</mat-icon> Add Sumur
@@ -23,9 +23,9 @@
   <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/waterfall/delete')">
     <mat-icon>delete</mat-icon> Delete Selected
   </button>
-  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults">
+  <!-- <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults">
     <mat-icon>file_download</mat-icon> Export to Excel
-  </button>
+  </button> -->
 
 </div>
 
@@ -38,7 +38,7 @@
   <div class="container-table" [style.max-height]="(commonService.Math.max(commonService.screenHeight - 230, 250))+'px'">
 
     <table mat-table [dataSource]="dataSource" class="pe-table"
-      matSort matSortActive="kategori" matSortDisableClear matSortDirection="desc">
+      matSort matSortActive="kategori" matSortDisableClear matSortDirection="asc">
 
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef>
@@ -170,11 +170,11 @@
     </table>
   </div>
 
-  <div class="waterfall-summary">
+  <!-- <div class="waterfall-summary">
     <span>Total Delta Prod baris ini: <b [class.negative]="totalDelta < 0">{{totalDelta | number:'1.0-3'}} BOPD</b></span>
     <span *ngIf="selection.selected.length">Terpilih: <b>{{selection.selected.length}}</b> baris / <b [class.negative]="totalSelectedDelta < 0">{{totalSelectedDelta | number:'1.0-3'}} BOPD</b></span>
-    <span class="hint">Periode {{start_dateInput}} - {{end_dateInput}}. Delta dihitung otomatis dari data daily dan dapat diedit di sini.</span>
-  </div>
+    <span class="hint">Periode {{start_dateInput}} - {{end_dateInput}}</span>
+  </div> -->
 
   <mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
 </div>

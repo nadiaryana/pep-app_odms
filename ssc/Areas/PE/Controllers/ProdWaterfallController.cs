@@ -55,7 +55,7 @@ namespace ssc.Areas.PE.Controllers
             String columnfilter = "",
             string mode = "")
         {
-            FilterDefinition<ProdWaterfall> xfilter = PeriodFilter(start_date, end_date);
+            FilterDefinition<ProdWaterfall> xfilter = PeriodFilter(start_date, end_date);  //membatasi data berdasarkan periode
             FilterDefinition<ProdWaterfall> xcolfilter;
 
             if (!String.IsNullOrWhiteSpace(filter))
@@ -224,9 +224,7 @@ namespace ssc.Areas.PE.Controllers
             });
         }
 
-        // ------------------------------------------------------------------
-        // GET: daftar sumur + delta otomatis dari daily (dipakai halaman add)
-        // ------------------------------------------------------------------
+
 
         [Authorize("PeProdWaterfall Read")]
         [HttpGet("Wells")]
@@ -245,10 +243,7 @@ namespace ssc.Areas.PE.Controllers
                     .Select(t => t.well ?? ""),
                 StringComparer.OrdinalIgnoreCase);
 
-            // Daftar sumur diambil dari seluruh data daily pada periode (bukan hanya
-            // kedua tanggal batas), supaya sumur yang tidak punya data di tanggal
-            // batas tetap muncul dan bisa dipilih.
-            var wells = PeriodWells(start_date, end_date)
+            var wells = DailyWells()
                 .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
                 .Select(w =>
                 {
@@ -268,9 +263,7 @@ namespace ssc.Areas.PE.Controllers
             return Ok(new { items = wells });
         }
 
-        // ------------------------------------------------------------------
-        // GET: master kategori
-        // ------------------------------------------------------------------
+
 
         [Authorize("PeProdWaterfall Read")]
         [HttpGet("Kategori")]
@@ -279,9 +272,7 @@ namespace ssc.Areas.PE.Controllers
             return Ok(new { items = EnsureKategori() });
         }
 
-        // ------------------------------------------------------------------
-        // POST / PATCH / DELETE
-        // ------------------------------------------------------------------
+
 
         [Authorize("PeProdWaterfall Add")]
         [HttpPost]
@@ -369,9 +360,6 @@ namespace ssc.Areas.PE.Controllers
             };
         }
 
-        // ------------------------------------------------------------------
-        // Helper
-        // ------------------------------------------------------------------
 
         /// <summary>Filter periode; tanggal yang tidak dikirim diabaikan.</summary>
         private static FilterDefinition<ProdWaterfall> PeriodFilter(DateTime? start, DateTime? end)
@@ -418,20 +406,12 @@ namespace ssc.Areas.PE.Controllers
             return result;
         }
 
-        /// <summary>
-        /// Nama sumur yang ada di data daily pada rentang tanggal (inklusif).
-        /// Dipakai sebagai daftar pilihan sumur pada halaman add.
-        /// </summary>
-        private List<string> PeriodWells(DateTime? start, DateTime? end)
-        {
-            if (!start.HasValue || !end.HasValue)
-                return new List<string>();
 
-            return _daily.Find(r => r.date >= start && r.date <= end)
-                .Project<Daily>(DailyCommon._fields_daily)
-                .ToList()
-                .Where(t => !String.IsNullOrWhiteSpace(t.well))
-                .Select(t => t.well)
+        private List<string> DailyWells()
+        {
+            return _daily.Distinct<string>("well", Builders<Daily>.Filter.Ne(t => t.well, null))
+                .ToEnumerable()
+                .Where(t => !String.IsNullOrWhiteSpace(t))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }

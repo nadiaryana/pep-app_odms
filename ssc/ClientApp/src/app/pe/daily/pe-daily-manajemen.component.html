@@ -19,6 +19,19 @@
 
     <table mat-table [dataSource]="data" class="pe-table"
           matSort matSortActive="date" matSortDisableClear matSortDirection="desc" responsive="true">
+        <ng-template #viewNumber let-row let-field="field">
+          {{(row[field] ? row[field] : 0) | number : '1.0-2'}}
+        </ng-template>
+        <ng-template #editNumber let-row let-field="field">
+          <input
+            matInput
+            type="number"
+            [(ngModel)]="row[field]"
+            [ngModelOptions]="{standalone: true}"
+            (keydown.enter)="save(row)"
+            (keydown.escape)="cancel(row)"
+            [attr.aria-label]="field">
+        </ng-template>
         <ng-container matColumnDef="select" [sticky]="!isMobile">
           <th mat-header-cell *matHeaderCellDef rowspan="3">
             <div fxLayout="row" center>
@@ -41,16 +54,6 @@
               </div>
           </td>
         </ng-container>
-	  <ng-container matColumnDef="settings">
-        <th mat-header-cell *matHeaderCellDef rowspan="2">
-          <div fxLayout="row" fxLayoutAlign="center center">
-            <mat-icon>settings</mat-icon> Actions
-          </div>
-        </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" width="50px">
-          <button mat-stroked-button class="action-button" style="margin:2px" color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/daily/edit-osg',row._id]" *ngIf="pePermissionService.passPermission('pe/production/add')"><mat-icon>edit</mat-icon> {{row.report_status == 'On Review'? 'Review': row.report_status == 'On Revise'? 'Revise' : 'Edit'}}</button>
-        </td>
-      </ng-container>
 	  <ng-container matColumnDef="date" sticky>
           <th mat-header-cell *matHeaderCellDef >
             <div fxLayout="row" fxLayoutAlign="center">
@@ -66,7 +69,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sot? row.sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'sot'}"></ng-container>
+        </td>
       </ng-container>
       <ng-container matColumnDef="operation" >
         <th mat-header-cell *matHeaderCellDef rowspan="5" >
@@ -74,7 +79,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.operation? row.operation : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'operation'}"></ng-container>
+        </td>
       </ng-container>
       <ng-container matColumnDef="figure" >
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -82,7 +89,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.figure? row.figure : 0)| number :  '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'figure'}"></ng-container>
+        </td>
       </ng-container>
       
       <ng-container matColumnDef="gas">
@@ -91,7 +100,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.gas? row.gas : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'gas'}"></ng-container>
+        </td>
       </ng-container>
       <ng-container matColumnDef="gas_sales">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -99,7 +110,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">Gas Sales</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.gas_sales? row.gas_sales : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'gas_sales'}"></ng-container>
+        </td>
       </ng-container>
     <ng-container matColumnDef="sgt_sot">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -107,7 +120,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sgt_sot? row.sgt_sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'sgt_sot'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="sbr_sot">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -115,7 +130,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sbr_sot? row.sbr_sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'sbr_sot'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="bd_sot">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -123,7 +140,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD SOT</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.bd_sot? row.bd_sot : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'bd_sot'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="sgt_opr">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -131,7 +150,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sgt_opr? row.sgt_opr : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'sgt_opr'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="sbr_opr">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -139,7 +160,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sbr_opr? row.sbr_opr : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'sbr_opr'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="bd_opr">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -147,7 +170,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD Operation</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.bd_opr? row.bd_opr : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'bd_opr'}"></ng-container>
+        </td>
       </ng-container>
     <ng-container matColumnDef="sgt_fig">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -155,7 +180,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SGT Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sgt_fig? row.sgt_fig : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'sgt_fig'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="sbr_fig">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -163,7 +190,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">SBR Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.sbr_fig? row.sbr_fig : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'sbr_fig'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="bd_fig">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -171,7 +200,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">BD Figure</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.bd_fig? row.bd_fig : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'bd_fig'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="rkap_oil">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -179,7 +210,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP Oil</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.rkap_oil? row.rkap_oil : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'rkap_oil'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="wpnb_oil">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -187,7 +220,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B Oil</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.wpnb_oil? row.wpnb_oil : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'wpnb_oil'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="rkap_gas">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -195,7 +230,9 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">RKAP Gas</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.rkap_gas? row.rkap_gas : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'rkap_gas'}"></ng-container>
+        </td>
       </ng-container>
 	  <ng-container matColumnDef="wpnb_gas">
         <th mat-header-cell *matHeaderCellDef rowspan="2">
@@ -203,7 +240,45 @@
             <span mat-sort-header arrowPosition="before" class="mat-sort-header">WP&B Gas</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">{{(row.wpnb_gas? row.wpnb_gas : 0 )| number : '1.0-2'}}</td>
+        <td mat-cell *matCellDef="let row" class="cell-center" [class.clicked_row]="selection.isSelected(row)">
+          <ng-container *ngTemplateOutlet="row.isEdit ? editNumber : viewNumber; context: {$implicit: row, field: 'wpnb_gas'}"></ng-container>
+        </td>
+      </ng-container>
+       <ng-container matColumnDef="settings">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <div fxLayout="row" fxLayoutAlign="center center">
+            <mat-icon>settings</mat-icon> Actions
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-center" width="50px">
+          <button
+            mat-icon-button
+            color="primary"
+            [disabled]="isLoadingResults || (isEditing && !row.isEdit)"
+            (click)="edit(row)"
+            matTooltip="Edit"
+            *ngIf="!row.isEdit && pePermissionService.passPermission('pe/production/add')">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <ng-container *ngIf="row.isEdit">
+            <button
+              mat-icon-button
+              color="accent"
+              [disabled]="submitting"
+              (click)="save(row)"
+              matTooltip="Save">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              [disabled]="submitting"
+              (click)="cancel(row)"
+              matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+          </ng-container>
+        </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef='headerColumns1; sticky: true'></tr>
       <tr mat-row *matRowDef='let row; columns: displayedColumns;' (click)="(!isEditing) ? selection.toggle(row) : null"></tr>
@@ -215,4 +290,3 @@
   <router-outlet></router-outlet>
   <router-outlet name="overlay2"></router-outlet>
 </div>
-

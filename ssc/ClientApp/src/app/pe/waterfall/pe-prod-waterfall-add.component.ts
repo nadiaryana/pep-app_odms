@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { formatDate } from '@angular/common';
 import { Observable } from 'rxjs';
 
@@ -29,7 +29,7 @@ export class PeProdWaterfallAddComponent implements OnInit {
   end_dateControl = new FormControl(new Date());
   end_dateInput = "";
 
-  /** Sumur + delta harian dari API: sumber pilihan dropdown dan auto-isi delta. */
+
   wells: PeProdWaterfallWell[] = [];
   hideAdded = false;
 
@@ -39,7 +39,6 @@ export class PeProdWaterfallAddComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
-    private route: ActivatedRoute,
     private service: PeProdWaterfallService,
     private snackbarService: SnackbarService,
     private dialogService: DialogService,
@@ -67,7 +66,7 @@ export class PeProdWaterfallAddComponent implements OnInit {
     this.loadWells();
   }
 
-  /** Periode diwarisi dari halaman list (query param), default seminggu terakhir. */
+  /** Periode default seminggu terakhir; bisa diubah lewat picker di halaman ini. */
   private initDate() {
     var today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -76,11 +75,6 @@ export class PeProdWaterfallAddComponent implements OnInit {
 
     this.start_dateControl = new FormControl(defStart);
     this.end_dateControl = new FormControl(today);
-
-    var p_start = this.route.snapshot.queryParamMap.get('start_date');
-    var p_end = this.route.snapshot.queryParamMap.get('end_date');
-    if (p_start && !isNaN(Date.parse(p_start))) this.start_dateControl.setValue(new Date(p_start));
-    if (p_end && !isNaN(Date.parse(p_end))) this.end_dateControl.setValue(new Date(p_end));
 
     this.start_dateInput = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US');
     this.end_dateInput = formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
@@ -138,6 +132,7 @@ export class PeProdWaterfallAddComponent implements OnInit {
   removeWellForm(index: number) {
     if (this.wellsForm.length <= 1) return;
     this.wellsForm.removeAt(index);
+    this.wellSearch.splice(index, 1);
   }
 
   /** Baris yang sumurnya sudah dipilih. */
@@ -153,9 +148,23 @@ export class PeProdWaterfallAddComponent implements OnInit {
     return this.filledRows.reduce((sum, row) => sum + this.toNumber(row.get('delta_prod').value), 0);
   }
 
-  /** Pilihan dropdown; sumur yang sudah ada di waterfall dapat disembunyikan. */
+
+  /** Kata kunci pencarian pada dropdown Select Well, satu per baris. */
+  wellSearch: string[] = [];
+
   get wellOptions(): PeProdWaterfallWell[] {
     return this.wells.filter(w => !this.hideAdded || !w.added);
+  }
+
+  /** Pilihan dropdown baris ke-index, disaring oleh kata kunci pencarian baris itu. */
+  wellOptionsFor(index: number): PeProdWaterfallWell[] {
+    var keyword = (this.wellSearch[index] || "").trim().toLowerCase();
+    if (!keyword) return this.wellOptions;
+    return this.wellOptions.filter(w => w.well.toLowerCase().indexOf(keyword) >= 0);
+  }
+
+  onWellSearch(index: number, keyword: string) {
+    this.wellSearch[index] = keyword;
   }
 
   private wellValue(index: number): string {
@@ -185,12 +194,15 @@ export class PeProdWaterfallAddComponent implements OnInit {
 
   /** Delta harian sumur terpilih dipakai sebagai nilai awal Delta Prod. */
   wellChange(index: number, evt: any) {
+    // pencarian dikosongkan agar daftar penuh tampil lagi saat dropdown dibuka ulang
+    this.wellSearch[index] = "";
     var info = this.wells.find(w => w.well === evt.value) || null;
     (this.wellsForm.at(index) as FormGroup).get('delta_prod').setValue(info ? info.delta_prod : null);
   }
 
   private resetRows() {
     this.waterfallForm.setControl('wells', this.formBuilder.array([this.createWellForm()]));
+    this.wellSearch = [];
   }
 
   /** Delta dibulatkan 3 desimal agar nilai tersimpan sama dengan yang tampil. */
