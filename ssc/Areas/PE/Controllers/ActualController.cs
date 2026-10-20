@@ -163,9 +163,10 @@ namespace ssc.Areas.PE.Controllers
         //ws.Column(c).AutoFit();
       }
 
-      for (int i = 0; i < items.Count(); i++)
+      var sortedItems = items.OrderBy(t => t.date ?? DateTime.MaxValue).ToList();
+      for (int i = 0; i < sortedItems.Count; i++)
       {
-        var t = items.ElementAt(i);
+        var t = sortedItems[i];
         ws.Cells[3 + i, 1].Style.Numberformat.Format = "d-MMM-yy";
         ws.Cells[3 + i, 1].Value = t.date.HasValue ? t.date.Value.ToLocalTime().ToOADate() : (double?)null;
         ws.Cells[3 + i, 2].Value = t.total_opr;
