@@ -1,14 +1,13 @@
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using ssc.Services;
 using ssc.Areas.PE.Models;
 using System;
-using System.Net.Http;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
 using MongoDB.Driver;
 
 namespace ssc.Services
@@ -20,16 +19,14 @@ namespace ssc.Services
         private readonly ILogger<WatchdogService> _logger;
         private readonly IMongoCollection<WatchdogState> _stateCollection;
 
-        private readonly TimeSpan _offlineThreshold = TimeSpan.FromMinutes(2);
-        private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(15);
+        private readonly TimeSpan _offlineThreshold =
+            TimeSpan.FromMinutes(2);
 
-        // Fonnte WhatsApp config
-        private const string FonnteToken = "uY32HEmm747kGmXPcx8h";
-        private const string GrupWAId = "120363408080815318@g.us";
-        private const string FonnteUrl = "https://api.fonnte.com/send";
+        private readonly TimeSpan _checkInterval =
+            TimeSpan.FromSeconds(15);
 
-        // private const string PushoverToken = "ai2ce22rg828o1q1r5n6v6afp9vd1d";
-        // private const string PushoverUserKey = "ujjtrrauiqqqn84skaitcxwfsayqwt";
+        private readonly string _pushoverToken;
+        private readonly string _pushoverUserKey;
 
         public WatchdogService(
             ArusService arusService,
@@ -41,57 +38,133 @@ namespace ssc.Services
             _httpClientFactory = httpClientFactory;
             _logger = logger;
 
-            // Inisialisasi koleksi MongoDB 
-            var connectionString = config["PESumurSettings:ConnectionString"];
-            var databaseName = config["PESumurSettings:DatabaseName"];
+            // Ambil kredensial dari konfigurasi
+            _pushoverToken = config["Pushover:Token"] ?? "";
+            _pushoverUserKey = config["Pushover:UserKey"] ?? "";
+
+            // Inisialisasi MongoDB
+            var connectionString =
+                config["PESumurSettings:ConnectionString"];
+
+            var databaseName =
+                config["PESumurSettings:DatabaseName"];
+
+            if (string.IsNullOrWhiteSpace(connectionString) ||
+                string.IsNullOrWhiteSpace(databaseName))
+            {
+                throw new InvalidOperationException(
+                    "Konfigurasi MongoDB belum lengkap.");
+            }
+
             var client = new MongoClient(connectionString);
             var db = client.GetDatabase(databaseName);
-            _stateCollection = db.GetCollection<WatchdogState>("watchdog_state");
 
-            // Index agar cepat cari berdasar well_id
-            var indexKeys = Builders<WatchdogState>.IndexKeys.Ascending(x => x.WellId);
-            var indexOptions = new CreateIndexOptions { Unique = true };
+            _stateCollection =
+                db.GetCollection<WatchdogState>("watchdog_state");
+
+            // Satu state untuk setiap sumur
+            var indexKeys =
+                Builders<WatchdogState>.IndexKeys
+                    .Ascending(x => x.WellId);
+
+            var indexOptions = new CreateIndexOptions
+            {
+                Unique = true
+            };
+
             _stateCollection.Indexes.CreateOne(
-                new CreateIndexModel<WatchdogState>(indexKeys, indexOptions));
+                new CreateIndexModel<WatchdogState>(
+                    indexKeys, indexOptions));
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(
+            CancellationToken stoppingToken)
         {
-            _logger.LogInformation("[WATCHDOG] Service berjalan.");
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+            _logger.LogInformation(
+                "[WATCHDOG] Service OFFLINE monitor berjalan.");
 
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                await CekSemuaSumur();
-                await Task.Delay(_checkInterval, stoppingToken);
+                await Task.Delay(
+                    TimeSpan.FromSeconds(10), stoppingToken);
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await CekSemuaSumur(stoppingToken);
+
+                    await Task.Delay(
+                        _checkInterval, stoppingToken);
+                }
+            }
+            catch (OperationCanceledException)
+                when (stoppingToken.IsCancellationRequested)
+            {
+                // Service dihentikan secara normal
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(
+                    ex, "[WATCHDOG] Service berhenti karena error.");
+                throw;
             }
         }
 
-        private async Task CekSemuaSumur()
+        private async Task CekSemuaSumur(
+            CancellationToken stoppingToken)
         {
             try
             {
                 var wells = await _arusService.GetAllWellIdsAsync();
 
-                // Load semua state dari MongoDB sekali per siklus
-                var allState = await _stateCollection.Find(_ => true).ToListAsync();
-                var stateMap = allState.ToDictionary(s => s.WellId, s => s);
+                if (wells == null)
+                {
+                    _logger.LogWarning(
+                        "[WATCHDOG] Daftar sumur tidak tersedia.");
+                    return;
+                }
+
+                // Ambil state yang tersimpan di MongoDB
+                var allState = await _stateCollection
+                    .Find(Builders<WatchdogState>.Filter.Empty)
+                    .ToListAsync(stoppingToken);
+
+                var stateMap = new Dictionary<string, WatchdogState>(
+                    StringComparer.OrdinalIgnoreCase);
+
+                foreach (var item in allState)
+                {
+                    stateMap[item.WellId] = item;
+                }
 
                 var bulkOps = new List<WriteModel<WatchdogState>>();
 
                 foreach (var wellId in wells)
                 {
-                    var last = await _arusService.GetLastReadingAsync(wellId);
-                    if (last == null || last.CreatedAt == null) continue;
+                    stoppingToken.ThrowIfCancellationRequested();
 
-                    DateTime lastSeen = last.CreatedAt.Value;
-                    TimeSpan selisih = DateTime.UtcNow - lastSeen;
-                    bool isOnline = selisih <= _offlineThreshold;
-                    int arusStatus = last.Status; // 1=ON, 0=OFF
+                    var last = await _arusService
+                        .GetLastReadingAsync(wellId);
 
-                    // Ambil state dari MongoDB (atau default jika belum ada)
-                    bool stateExists = stateMap.TryGetValue(wellId, out var state);
-                    if (!stateExists)
+                    // Tanpa data terakhir, waktu offline belum
+                    // bisa dihitung dengan metode ini.
+                    if (last == null || last.CreatedAt == null)
+                    {
+                        _logger.LogWarning(
+                            "[WATCHDOG] {WellId}: data terakhir tidak ditemukan.",
+                            wellId);
+                        continue;
+                    }
+
+                    DateTime lastSeenUtc =
+                        ToUtc(last.CreatedAt.Value);
+
+                    TimeSpan age =
+                        DateTime.UtcNow - lastSeenUtc;
+
+                    bool isOnline = age <= _offlineThreshold;
+
+                    // Ambil state sebelumnya atau buat state baru.
+                    if (!stateMap.TryGetValue(wellId, out var state))
                     {
                         state = new WatchdogState
                         {
@@ -102,159 +175,206 @@ namespace ssc.Services
                         };
                     }
 
-                    bool lastOnline = state.LastOnline;
-                    int lastArus = state.LastArusStatus;
-                    bool offlineNotified = state.OfflineNotified;
-
                     _logger.LogInformation(
-                        "[WATCHDOG] " + wellId +
-                        " | " + Math.Round(selisih.TotalSeconds) + "s lalu" +
-                        " | Koneksi: " + (isOnline ? "ONLINE" : "OFFLINE") +
-                        " | Arus status: " + arusStatus);
-
+                        "[WATCHDOG] {WellId} | Data terakhir {Seconds}s lalu | {Status}",
+                        wellId,
+                        Math.Round(age.TotalSeconds),
+                        isOnline ? "ONLINE" : "OFFLINE");
 
                     if (!isOnline)
                     {
-                        // Kirim notif hanya sekali per periode offline & belum pernah dikirim
-                        if (!offlineNotified)
+                        // OFFLINE: kirim sekali saja selama
+                        // periode offline yang sama.
+                        if (!state.OfflineNotified)
                         {
-                            _logger.LogWarning("[WATCHDOG] " + wellId + " OFFLINE!");
+                            string message =
+                                "🔴 " + wellId + " OFFLINE\n" +
+                                "⚠ Tidak ada data masuk lebih dari 2 menit.\n" +
+                                "⏰ Data terakhir: " +
+                                FormatWita(lastSeenUtc);
 
-                            string msg = "🔴 " + wellId + " OFFLINE\n" +
-                                         "⚠ Alat tidak mengirim data\n" +
-                                         "⏰ Terakhir aktif: " +
-                                         lastSeen.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
+                            bool sent = await KirimPushover(
+                                "Sumur OFFLINE", message);
 
-                            await KirimWA(msg);
+                            if (sent)
+                            {
+                                state.OfflineNotified = true;
+
+                                _logger.LogWarning(
+                                    "[WATCHDOG] Notifikasi OFFLINE terkirim untuk {WellId}.",
+                                    wellId);
+                            }
+                            else
+                            {
+                                _logger.LogError(
+                                    "[WATCHDOG] Notifikasi OFFLINE gagal untuk {WellId}; akan dicoba kembali.",
+                                    wellId);
+                            }
                         }
 
-                        // Update state: offline, notified flag tetap true
                         state.LastOnline = false;
+
+                        // Watchdog tidak mengirim notifikasi arus ON/OFF.
                         state.LastArusStatus = -1;
-                        state.OfflineNotified = true;
+
                         bulkOps.Add(UpsertState(state));
                         continue;
                     }
 
-                    // ── WELL ONLINE ──
-                    // Reset flag offline_notified karena sudah online kembali
-
-                    if (arusStatus == 1)
-                    {
-                        // ── Arus ON ──
-                        bool kirimOn = !stateExists ||
-                                       lastOnline == false ||
-                                       lastArus == 0 ||
-                                       lastArus == -1;
-
-                        if (kirimOn)
-                        {
-                            _logger.LogInformation("[WATCHDOG] " + wellId + " ON!");
-
-                            string msg = "✅ " + wellId + " Status: ON\n" +
-                                         "⚡ Arus: " + last.Current.ToString("F2") + " A\n" +
-                                         "⏰ " + DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
-
-                            await KirimWA(msg);
-                        }
-                    }
-                    else
-                    {
-                        // ── Arus OFF < 1 ──
-                        bool kirimOff = !stateExists ||
-                                        lastArus == 1 ||
-                                        lastArus == -1;
-
-                        if (kirimOff)
-                        {
-                            _logger.LogInformation("[WATCHDOG] " + wellId + " OFF (arus rendah)!");
-
-                            string msg = "⚠ " + wellId + " Status: OFF\n" +
-                                         "⚡ Arus: " + last.Current.ToString("F2") + " A\n" +
-                                         "⏰ " + DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " WITA";
-
-                            await KirimWA(msg);
-                        }
-                    }
-
-                    // Update state: online, reset offline_notified untuk periode offline berikutnya
+                    // ONLINE: reset flag supaya kejadian OFFLINE
+                    // berikutnya bisa mengirim notifikasi baru.
                     state.LastOnline = true;
-                    state.LastArusStatus = arusStatus;
+                    state.LastArusStatus = last.Status;
                     state.OfflineNotified = false;
+
                     bulkOps.Add(UpsertState(state));
                 }
 
-                // Simpan semua perubahan state ke MongoDB sekaligus
+                // Simpan state ke MongoDB
                 if (bulkOps.Count > 0)
                 {
-                    await _stateCollection.BulkWriteAsync(bulkOps, new BulkWriteOptions { IsOrdered = false });
+                    await _stateCollection.BulkWriteAsync(
+                        bulkOps,
+                        new BulkWriteOptions
+                        {
+                            IsOrdered = false
+                        },
+                        stoppingToken);
                 }
+            }
+            catch (OperationCanceledException)
+                when (stoppingToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError("[WATCHDOG] Error: " + ex.Message);
+                _logger.LogError(
+                    ex, "[WATCHDOG] Gagal memeriksa status sumur.");
             }
         }
 
-        private static WriteModel<WatchdogState> UpsertState(WatchdogState state)
+        private static WriteModel<WatchdogState> UpsertState(
+            WatchdogState state)
         {
-            var filter = Builders<WatchdogState>.Filter.Eq(s => s.WellId, state.WellId);
+            var filter = Builders<WatchdogState>.Filter
+                .Eq(s => s.WellId, state.WellId);
+
             var update = Builders<WatchdogState>.Update
                 .Set(s => s.LastOnline, state.LastOnline)
                 .Set(s => s.LastArusStatus, state.LastArusStatus)
                 .Set(s => s.OfflineNotified, state.OfflineNotified);
-            return new UpdateOneModel<WatchdogState>(filter, update) { IsUpsert = true };
+
+            return new UpdateOneModel<WatchdogState>(
+                filter, update)
+            {
+                IsUpsert = true
+            };
         }
 
-        // private async Task KirimPushover(string title, string message)
-        // {
-        //     try
-        //     {
-        //         HttpClient client = _httpClientFactory.CreateClient();
-
-        //         var content = new FormUrlEncodedContent(new[]
-        //         {
-        //             new KeyValuePair<string, string>("token",   PushoverToken),
-        //             new KeyValuePair<string, string>("user",    PushoverUserKey),
-        //             new KeyValuePair<string, string>("title",   title),
-        //             new KeyValuePair<string, string>("message", message),
-        //         });
-
-        //         var response = await client.PostAsync(
-        //             "https://api.pushover.net/1/messages.json", content);
-
-        //         _logger.LogInformation("[WATCHDOG] Pushover: " + (int)response.StatusCode);
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError("[WATCHDOG] Gagal kirim Pushover: " + ex.Message);
-        //     }
-        // }
-
-        private async Task KirimWA(string message)
+        private async Task<bool> KirimPushover(
+            string title, string message)
         {
+            if (string.IsNullOrWhiteSpace(_pushoverToken) ||
+                string.IsNullOrWhiteSpace(_pushoverUserKey))
+            {
+                _logger.LogError(
+                    "[WATCHDOG] Konfigurasi Pushover belum lengkap.");
+                return false;
+            }
+
             try
             {
-                HttpClient client = _httpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Add("Authorization", FonnteToken);
+                using (var client = _httpClientFactory.CreateClient())
+                using (var content = new FormUrlEncodedContent(
+                    new[]
+                    {
+                        new KeyValuePair<string, string>(
+                            "token", _pushoverToken),
 
-                var content = new FormUrlEncodedContent(new[]
+                        new KeyValuePair<string, string>(
+                            "user", _pushoverUserKey),
+
+                        new KeyValuePair<string, string>(
+                            "title", title),
+
+                        new KeyValuePair<string, string>(
+                            "message", message)
+                    }))
+                using (var response = await client.PostAsync(
+                    "https://api.pushover.net/1/messages.json",
+                    content))
                 {
-                    new KeyValuePair<string, string>("target",  GrupWAId),
-                    new KeyValuePair<string, string>("message", message),
-                    new KeyValuePair<string, string>("isGroup", "true"),
-                });
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation(
+                            "[WATCHDOG] Pushover berhasil. HTTP {StatusCode}",
+                            (int)response.StatusCode);
 
-                var response = await client.PostAsync(FonnteUrl, content);
-                string result = await response.Content.ReadAsStringAsync();
+                        return true;
+                    }
 
-                _logger.LogInformation("[WATCHDOG] Fonnte WA response: " + result);
+                    string responseBody =
+                        await response.Content.ReadAsStringAsync();
+
+                    _logger.LogError(
+                        "[WATCHDOG] Pushover gagal. HTTP {StatusCode}; respons: {Response}",
+                        (int)response.StatusCode,
+                        responseBody);
+
+                    return false;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError("[WATCHDOG] Gagal kirim WA: " + ex.Message);
+                _logger.LogError(
+                    ex, "[WATCHDOG] Gagal mengirim Pushover.");
+
+                return false;
             }
+        }
+
+        private static DateTime ToUtc(DateTime value)
+        {
+            if (value.Kind == DateTimeKind.Utc)
+                return value;
+
+            if (value.Kind == DateTimeKind.Local)
+                return value.ToUniversalTime();
+
+            // MongoDB umumnya menyimpan DateTime dalam UTC.
+            return DateTime.SpecifyKind(
+                value, DateTimeKind.Utc);
+        }
+
+        private static string FormatWita(DateTime utcTime)
+        {
+            TimeZoneInfo wita;
+
+            try
+            {
+                // Linux
+                wita = TimeZoneInfo.FindSystemTimeZoneById(
+                    "Asia/Makassar");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                try
+                {
+                    // Windows
+                    wita = TimeZoneInfo.FindSystemTimeZoneById(
+                        "Singapore Standard Time");
+                }
+                catch (TimeZoneNotFoundException)
+                {
+                    return utcTime.ToString(
+                        "yyyy-MM-dd HH:mm:ss") + " UTC";
+                }
+            }
+
+            return TimeZoneInfo.ConvertTimeFromUtc(
+                utcTime, wita).ToString(
+                    "yyyy-MM-dd HH:mm:ss") + " WITA";
         }
     }
 }
