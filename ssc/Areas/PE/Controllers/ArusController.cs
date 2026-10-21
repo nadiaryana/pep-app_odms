@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ssc.Areas.PE.Models;
 using ssc.Services;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ssc.Areas.PE.Controllers
@@ -61,6 +62,21 @@ namespace ssc.Areas.PE.Controllers
                 current = last.Current,
                 recorded_at = last.RecordedAt
             });
+        }
+
+        // GET /api/arus/status  ← Angular polling status semua sumur
+        [HttpGet("status")]
+        public async Task<IActionResult> GetAllStatus()
+        {
+            var readings = await _arusService.GetLastReadingsAsync();
+            return Ok(readings.Select(r => new
+            {
+                well_id = r.WellId,
+                last_status = r.Status,
+                current = r.Current,
+                recorded_at = r.RecordedAt,
+                created_at = r.CreatedAt
+            }));
         }
 
         // GET /api/arus/wells  ← Angular dropdown

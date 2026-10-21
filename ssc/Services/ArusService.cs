@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using ssc.Areas.PE.Models;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ssc.Services
@@ -59,6 +60,18 @@ namespace ssc.Services
             return await _collection
                 .Distinct<string>("well_id", FilterDefinition<ArusReading>.Empty)
                 .ToListAsync();
+        }
+
+        // Data terakhir setiap sumur. Satu query terindex per sumur (sama seperti
+        // WatchdogService), supaya tetap ringan walaupun collection sudah besar.
+        public async Task<List<ArusReading>> GetLastReadingsAsync()
+        {
+            var wellIds = await GetAllWellIdsAsync();
+            var readings = await Task.WhenAll(wellIds.Select(GetLastReadingAsync));
+            return readings
+                .Where(r => r != null)
+                .OrderBy(r => r.WellId)
+                .ToList();
         }
     }
 }

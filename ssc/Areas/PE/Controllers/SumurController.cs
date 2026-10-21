@@ -18,6 +18,7 @@ using OfficeOpenXml.Style;
 using System.IO;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using ssc.Services;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ssc.Areas.PE.Controllers
 {
@@ -30,16 +31,22 @@ namespace ssc.Areas.PE.Controllers
         private readonly IMongoCollection<SumurTmp> _sumur_tmp;
         private readonly IMongoCollection<SumurTmpItem> _sumur_tmp_items;
         private readonly ProjectionDefinition<Sumur> _fields;
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _cache;
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly IJobTracker _jobTracker;
 
         // Flag agar index xfilter hanya dibuat satu kali per proses.
         private static int _xfilterIndexEnsured = 0;
 
-        public SumurController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue, IJobTracker jobTracker)
+        // Lama cache data terakhir per channel ThingSpeak untuk endpoint status.
+        private static readonly TimeSpan StatusCacheDuration = TimeSpan.FromSeconds(10);
+
+        public SumurController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue, IJobTracker jobTracker, IHttpClientFactory httpClientFactory, IMemoryCache cache)
         {
             _jobTracker = jobTracker;
+            _httpClientFactory = httpClientFactory;
+            _cache = cache;
             var client = new MongoClient(settings.ConnectionString);
             database = client.GetDatabase("pe");
 
@@ -122,49 +129,83 @@ namespace ssc.Areas.PE.Controllers
 
             try
             {
-                using (var httpClient = new HttpClient())
+                // Endpoint ini dipolling frontend, jadi pakai HttpClient dari factory
+                // (bukan new HttpClient per request) dan tidak menyimpan apa pun ke DB.
+                var httpClient = _httpClientFactory.CreateClient();
+                var url = $"https://api.thingspeak.com/channels/{channelId}/fields/1.json?api_key={apiKey}&results=100";
+                var response = await httpClient.GetStringAsync(url);
+                var json = JObject.Parse(response);
+                var feeds = json["feeds"] as JArray ?? new JArray();
+
+                return Ok(new
                 {
-                    var url = $"https://api.thingspeak.com/channels/{channelId}/fields/1.json?api_key={apiKey}&results=100";
-                    var response = await httpClient.GetStringAsync(url);
-                    var json = JObject.Parse(response);
-                    var feeds = json["feeds"];
-
-                    if (feeds == null || !feeds.Any())
-                        return BadRequest(new { message = "Tidak ada data dari ThingSpeak" });
-
-                    var list = new List<Sumur>();
-
-                    foreach (var f in feeds)
-                    {
-                        list.Add(new Sumur
-                        {
-                            wellName = wellName,
-                            Current = double.TryParse((string)f["field1"], out double val) ? val : 0,
-                            Timestamp = DateTime.TryParse((string)f["created_at"], out DateTime ts) ? ts : DateTime.UtcNow
-                        });
-                    }
-
-                    // simpan ke TMP collection
-                    var tmp = new SumurTmp
-                    {
-                        items = list.ToArray(),
-                        error_count = 0
-                    };
-
-                    await _sumur_tmp.InsertOneAsync(tmp);
-
-                    return Ok(new
-                    {
-                        message = $"Data fetched untuk {wellName}",
-                        tmp_id = tmp._id,
-                        count = list.Count,
-                        feeds = feeds,
-                    });
-                }
+                    message = feeds.Any() ? $"Data fetched untuk {wellName}" : "Tidak ada data dari ThingSpeak",
+                    count = feeds.Count,
+                    feeds = feeds,
+                });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST api/pe/sumur/status
+        // Status ON/OFF semua sumur dari field1 terakhir ThingSpeak (ON jika > 1).
+        // Dipolling frontend; semua channel diambil paralel dan di-cache sebentar
+        // supaya banyak user yang membuka halaman tidak memperbanyak request ke ThingSpeak.
+        [HttpPost("status")]
+        public async Task<IActionResult> GetStatus([FromBody] List<SumurChannel> wells)
+        {
+            if (wells == null || wells.Count == 0)
+            {
+                return BadRequest(new { message = "Daftar sumur wajib diisi" });
+            }
+
+            var httpClient = _httpClientFactory.CreateClient();
+            var results = await Task.WhenAll(wells.Select(async w =>
+            {
+                var latest = await GetLatestFeed(httpClient, w);
+                if (latest == null)
+                {
+                    // Gagal ambil data: status null, frontend mempertahankan status sebelumnya
+                    return new { wellName = w.wellName, status = (string)null, current = (double?)null, created_at = (string)null };
+                }
+
+                var current = double.TryParse((string)latest["field1"], NumberStyles.Float, CultureInfo.InvariantCulture, out double val) ? val : 0;
+                return new
+                {
+                    wellName = w.wellName,
+                    status = current > 1 ? "ON" : "OFF",
+                    current = (double?)current,
+                    created_at = (string)latest["created_at"],
+                };
+            }));
+
+            return Ok(results);
+        }
+
+        // Feed terakhir satu channel ThingSpeak (objek kosong jika channel belum ada data,
+        // null jika request gagal). Hanya hasil yang berhasil yang di-cache.
+        private async Task<JToken> GetLatestFeed(HttpClient httpClient, SumurChannel well)
+        {
+            if (string.IsNullOrEmpty(well.channelId) || string.IsNullOrEmpty(well.apiKey)) return null;
+
+            var cacheKey = $"sumur-status:{well.channelId}:{well.apiKey}";
+            if (_cache.TryGetValue(cacheKey, out JToken cached)) return cached;
+
+            try
+            {
+                var url = $"https://api.thingspeak.com/channels/{well.channelId}/fields/1.json?api_key={well.apiKey}&results=1";
+                var json = JObject.Parse(await httpClient.GetStringAsync(url));
+                var latest = (json["feeds"] as JArray)?.LastOrDefault() ?? new JObject();
+
+                _cache.Set(cacheKey, latest, StatusCacheDuration);
+                return latest;
+            }
+            catch
+            {
+                return null;
             }
         }
 

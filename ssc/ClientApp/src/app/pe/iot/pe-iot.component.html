@@ -53,6 +53,16 @@
 
     <mat-card fxFlex="70" class="dasboard_card">
       <mat-card-content *ngIf="selectedWell">
+        <div class="last-updated">
+          <ng-container *ngIf="!chartPaused">
+            <mat-icon>autorenew</mat-icon>
+            Terakhir diperbarui: {{ lastUpdated ? (lastUpdated | date: 'HH:mm:ss') : '-' }}
+          </ng-container>
+          <ng-container *ngIf="chartPaused">
+            <mat-icon>pause_circle_outline</mat-icon>
+            Pembaruan otomatis dijeda (filter tanggal). Klik sumur untuk kembali live.
+          </ng-container>
+        </div>
         <div #chartContainer
              style="width: 100%; display: block;"
              [style.height]="hasChartData ? '500px' : '0'"></div>

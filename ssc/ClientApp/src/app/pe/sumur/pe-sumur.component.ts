@@ -4,8 +4,13 @@ import { HttpClient } from "@angular/common/http";
 import * as Highcharts from "highcharts";
 import { FormControl } from "@angular/forms";
 import { MatDatepicker, MatPaginator, MatSort } from "@angular/material";
-import { merge, of as observableOf, Subscription } from 'rxjs';
-import { catchError, map, startWith, switchMap, debounceTime } from 'rxjs/operators';
+import { merge, of as observableOf, Subscription, Subject, Observable } from 'rxjs';
+import { catchError, map, startWith, switchMap, debounceTime, takeUntil, tap } from 'rxjs/operators';
+import { poll } from "src/app/polling";
+
+// Alat mengirim arus ke ThingSpeak tiap 15 detik
+const CHART_POLL_MS = 15000;
+const STATUS_POLL_MS = 15000;
 
 interface Well {
   id: number;
@@ -23,6 +28,13 @@ interface Well {
 export class SumurComponent implements OnInit, OnDestroy {
   Highcharts: typeof Highcharts = Highcharts;
   chartOptions: Highcharts.Options | null = null;
+
+  // Polling state
+  lastUpdated: Date | null = null;
+  private chart: Highcharts.Chart | null = null;
+  private lastEntryId: any = null;
+  private wellSelected$ = new Subject<Well>();
+  private destroy$ = new Subject<void>();
 
   // Table properties
   displayedColumns: string[] = ["date", "wellName", "entry_id", "field_1", "field_2"];
@@ -80,11 +92,24 @@ export class SumurComponent implements OnInit, OnDestroy {
       icon: "waves",
       breadcrumbs: []
     });
-    // refresh statuses on init
-    this.refreshAllWellStatuses();
+    // Status semua sumur dipolling selama halaman terbuka
+    poll(() => this.refreshAllWellStatuses(), { intervalMs: STATUS_POLL_MS })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
+
+    // Chart sumur terpilih dipolling; switchMap membatalkan polling sumur sebelumnya
+    this.wellSelected$.pipe(
+      switchMap((well) => poll(() => this.fetchWellFeeds(well), { intervalMs: CHART_POLL_MS }).pipe(
+        map((res) => ({ well, res }))
+      )),
+      takeUntil(this.destroy$)
+    ).subscribe(({ well, res }) => this.applyWellFeeds(well, res));
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
     // Unsubscribe to prevent memory leaks
     if (this.paginatorSubscription) {
       this.paginatorSubscription.unsubscribe();
@@ -203,33 +228,18 @@ export class SumurComponent implements OnInit, OnDestroy {
     );
   }
 
-  private evaluateStatusFromValue(value: number): "ON" | "OFF" {
-    return value > 1 ? "ON" : "OFF";
-  }
-
-  // Fetch latest field1 value from ThingSpeak and update the well status.
-  // Uses the same rule: ON if field1 > 1, OFF if field1 <= 1.
-  fetchLatestField1FromThingSpeak(well: Well): void {
-    const url = `https://api.thingspeak.com/channels/${well.channelId}/fields/1.json?results=1&api_key=${well.apiKey}`;
-    this.http.get<any>(url).subscribe(
-      (res: any) => {
-        const feeds = (res && res.feeds) || [];
-        const latestField = feeds.length ? parseFloat(feeds[feeds.length - 1].field1) || 0 : 0;
-        const newStatus = this.evaluateStatusFromValue(latestField);
-        well.status = newStatus;
-        if (this.selectedWell && this.selectedWell.id === well.id) {
-          this.selectedWell.status = newStatus;
+  // Status ON/OFF semua sumur dihitung backend dari field1 terakhir ThingSpeak,
+  // satu request untuk semua sumur. Status null (gagal ambil) -> status lama dipertahankan.
+  refreshAllWellStatuses(): Observable<any> {
+    const body = this.wells.map((w: Well) => ({ wellName: w.name, channelId: w.channelId, apiKey: w.apiKey }));
+    return this.http.post<any[]>('/api/pe/sumur/status', body).pipe(
+      tap((items: any[]) => (items || []).forEach((item: any) => {
+        const well = this.wells.find((w: Well) => w.name === item.wellName);
+        if (well && item.status) {
+          well.status = item.status;
         }
-      },
-      (err: any) => {
-        console.error(`Failed to fetch latest field1 for ${well.name}`, err);
-      }
+      }))
     );
-  }
-
-  // Convenience: refresh statuses for all wells (call this from ngOnInit if desired)
-  refreshAllWellStatuses(): void {
-    this.wells.forEach((w: Well) => this.fetchLatestField1FromThingSpeak(w));
   }
 
   selectWell(well: Well): void {
@@ -247,8 +257,20 @@ export class SumurComponent implements OnInit, OnDestroy {
       this.paginator.pageIndex = 0;
     }
 
-    // Call backend instead of full ThingSpeak API
-    const backendUrl = `/api/pe/sumur/fetch`;
+    // Reset chart supaya chart sumur sebelumnya tidak tampil, lalu mulai polling sumur ini
+    this.chartOptions = null;
+    this.chart = null;
+    this.lastEntryId = null;
+    this.lastUpdated = null;
+    this.wellSelected$.next(well);
+  }
+
+  onChartInstance(chart: Highcharts.Chart): void {
+    this.chart = chart;
+  }
+
+  // Call backend instead of full ThingSpeak API
+  private fetchWellFeeds(well: Well): Observable<any> {
     const httpOptions = {
       params: {
         channelId: well.channelId,
@@ -256,54 +278,50 @@ export class SumurComponent implements OnInit, OnDestroy {
         wellName: well.name,
       },
     };
+    return this.http.get<any>(`/api/pe/sumur/fetch`, httpOptions);
+  }
 
-    this.http.get<any>(backendUrl, httpOptions).subscribe(
-      (res: any) => {
-        const feeds = (res && res.feeds) || [];
+  private applyWellFeeds(well: Well, res: any): void {
+    const feeds = (res && res.feeds) || [];
+    this.lastUpdated = new Date();
 
-        const chartData: [number, number][] = feeds.map((f: any) => {
-          const ts = Date.parse(f.created_at);
-          const val = parseFloat(f.field1) || 0;
-          return [ts, val];
-        });
+    const chartData: [number, number][] = feeds.map((f: any) => {
+      const ts = Date.parse(f.created_at);
+      const val = parseFloat(f.field1) || 0;
+      return [ts, val];
+    });
 
-        // set well status based on latest field1 value (>1 => ON, <=1 => OFF)
-        if (chartData.length > 0) {
-          const latestVal = chartData[chartData.length - 1][1];
-          if (latestVal > 1) {
-            well.status = "ON";
-          } else {
-            // <= 1: treat as OFF
-            well.status = "OFF";
-          }
+    // Status ON/OFF diurus refreshAllWellStatuses() (dihitung backend), bukan dari data chart
 
-          if (this.selectedWell && this.selectedWell.id === well.id) {
-            this.selectedWell.status = well.status as "ON" | "OFF";
-          }
-        }
+    // Tidak ada data baru sejak polling sebelumnya -> chart tidak perlu digambar ulang
+    const latestEntryId = feeds.length ? feeds[feeds.length - 1].entry_id : null;
+    if (this.chartOptions && latestEntryId === this.lastEntryId) {
+      return;
+    }
+    this.lastEntryId = latestEntryId;
 
-        // Uncomment and set this.chartOptions if you want to render the chart with Highcharts
-        this.chartOptions = {
-          chart: { type: "line", backgroundColor: "#fff" },
-          title: { text: well.name },
-          time: { useUTC: false },
-          xAxis: { type: "datetime" },
-          yAxis: { title: { text: "Arus (A)" } },
-          tooltip: { valueSuffix: " A" },
-          legend: { enabled: false },
-          series: [
-            {
-              type: "line",
-              name: "Arus",
-              data: chartData,
-            },
-          ],
-        };
-      },
-      (err: any) => {
-        console.error(`Failed to fetch data for ${well.name}`, err);
-      }
-    );
+    // Chart sudah ada -> cukup ganti datanya
+    if (this.chart) {
+      this.chart.series[0].setData(chartData);
+      return;
+    }
+
+    this.chartOptions = {
+      chart: { type: "line", backgroundColor: "#fff" },
+      title: { text: well.name },
+      time: { useUTC: false },
+      xAxis: { type: "datetime" },
+      yAxis: { title: { text: "Arus (A)" } },
+      tooltip: { valueSuffix: " A" },
+      legend: { enabled: false },
+      series: [
+        {
+          type: "line",
+          name: "Arus",
+          data: chartData,
+        },
+      ],
+    };
   }
 
   @ViewChild('start_datePicker', { static: true }) start_datePicker: MatDatepicker<any>;

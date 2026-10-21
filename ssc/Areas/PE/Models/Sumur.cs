@@ -81,4 +81,12 @@ namespace ssc.Areas.PE.Models
     {
         public string tmp_id { get; set; }
     }
+
+    // Body api/pe/sumur/status: channel ThingSpeak per sumur
+    public class SumurChannel
+    {
+        public string wellName { get; set; }
+        public string channelId { get; set; }
+        public string apiKey { get; set; }
+    }
 }

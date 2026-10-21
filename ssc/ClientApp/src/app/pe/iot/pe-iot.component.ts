@@ -4,6 +4,12 @@ import { HttpClient } from "@angular/common/http";
 import * as Highcharts from "highcharts";
 import { FormControl } from "@angular/forms";
 import { MatPaginator, MatSort, MatTableDataSource } from "@angular/material";
+import { Observable, Subject, Subscription, EMPTY, of } from "rxjs";
+import { catchError, map, switchMap, takeUntil, tap } from "rxjs/operators";
+import { poll } from "src/app/polling";
+
+const STATUS_POLL_MS = 15000;
+const CHART_POLL_MS = 15000;
 
 
 interface ArusReading {
@@ -64,6 +70,15 @@ export class PeIotComponent implements OnInit, OnDestroy {
 
   wellSearch: string = "";
 
+  // Polling state
+  lastUpdated: Date | null = null;
+  chartPaused: boolean = false;   // true saat chart menampilkan rentang tanggal
+  private lastReadingId: string | null = null;
+  // Sumur yang chart-nya dipolling; null = polling chart dijeda
+  private chartWell$ = new Subject<IotWell | null>();
+  private destroy$ = new Subject<void>();
+  private rangeSub: Subscription;
+
 
   get filteredWells(): IotWell[] {
     const q = this.wellSearch.trim().toLowerCase();
@@ -79,44 +94,51 @@ export class PeIotComponent implements OnInit, OnDestroy {
       icon: "bolt",
       breadcrumbs: [],
     });
-    this.loadWells();
+    // Daftar sumur + status dipolling selama halaman terbuka
+    poll(() => this.refreshStatuses(), { intervalMs: STATUS_POLL_MS })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
+
+    // Chart sumur terpilih dipolling; switchMap membatalkan polling sumur sebelumnya,
+    // null (filter tanggal dipakai) menjeda polling sampai sumur diklik ulang
+    this.chartWell$.pipe(
+      switchMap((well) => well
+        ? poll(() => this.fetchLatestReadings(well), { intervalMs: CHART_POLL_MS }).pipe(
+            map((readings, i) => ({ readings, first: i === 0 }))
+          )
+        : EMPTY
+      ),
+      takeUntil(this.destroy$)
+    ).subscribe(({ readings, first }) => this.applyLiveReadings(readings, first));
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.rangeSub) this.rangeSub.unsubscribe();
+
     if (this.chartRef) {
       this.chartRef.destroy();
       this.chartRef = null;
     }
   }
 
-  // Ambil daftar well_id dari collection arus, lalu lengkapi status terakhirnya
-  loadWells(): void {
-    this.http.get<string[]>("/api/arus/wells").subscribe(
-      (ids) => {
-        this.wells = (ids || []).map((id) => ({
-          name: id,
-          status: "UNKNOWN" as const,
-          current: 0,
-          lastUpdate: "",
-        }));
-        this.wells.forEach((w) => this.refreshLastStatus(w));
-      },
-      (err) => console.error("Gagal memuat daftar sumur arus", err)
+  // GET /api/arus/status: data terakhir semua sumur dalam satu request.
+  // Objek well yang sudah ada diperbarui di tempat (selectedWell tetap menunjuk ke objek yang sama),
+  // sumur baru ditambahkan ke daftar.
+  refreshStatuses(): Observable<any[]> {
+    return this.http.get<any[]>("/api/arus/status").pipe(
+      tap((items) => (items || []).forEach((res) => {
+        let well = this.wells.find((w) => w.name === res.well_id);
+        if (!well) {
+          well = { name: res.well_id, status: "UNKNOWN", current: 0, lastUpdate: "" };
+          this.wells.push(well);
+        }
+        well.status = res.last_status === 1 ? "ON" : "OFF";
+        well.current = res.current || 0;
+        well.lastUpdate = res.recorded_at || "";
+      }))
     );
-  }
-
-  // GET /api/arus/laststatus/{wellId}
-  refreshLastStatus(well: IotWell): void {
-    this.http
-      .get<any>(`/api/arus/laststatus/${encodeURIComponent(well.name)}`)
-      .subscribe(
-        (res) => {
-          well.status = res && res.last_status === 1 ? "ON" : "OFF";
-          well.current = (res && res.current) || 0;
-          well.lastUpdate = (res && res.recorded_at) || "";
-        },
-        (err) => console.error(`Gagal memuat status ${well.name}`, err)
-      );
   }
 
   selectWell(well: IotWell): void {
@@ -133,8 +155,13 @@ export class PeIotComponent implements OnInit, OnDestroy {
       this.chartRef = null;
     }
 
-
-    this.loadData();
+    // Batalkan request rentang tanggal yang masih berjalan, lalu mulai polling live
+    if (this.rangeSub) this.rangeSub.unsubscribe();
+    this.chartPaused = false;
+    this.lastReadingId = null;
+    this.lastUpdated = null;
+    this.isLoadingResults = true;
+    this.chartWell$.next(well);
   }
 
   // Validasi rentang tanggal (mirip iSRP)
@@ -155,31 +182,74 @@ export class PeIotComponent implements OnInit, OnDestroy {
   }
 
 
+  // Filter tanggal: chart & tabel ikut rentang tanggal, polling chart dijeda
+  // sampai sumur diklik ulang
   applyDateFilter(): void {
     if (!this.selectedWell || !this.isDateRangeValid()) return;
-    this.loadData(true);
+    this.chartWell$.next(null);
+    this.chartPaused = true;
+    this.loadRangeData();
   }
 
-  // Ambil data dari API arus
-  private loadData(useRange: boolean = false): void {
+  // GET /api/arus/data/{wellId}?limit=  (data live terakhir)
+  // Error dikembalikan sebagai null supaya tampilan pertama tetap bisa menutup spinner.
+  private fetchLatestReadings(well: IotWell): Observable<ArusReading[] | null> {
+    const wellId = encodeURIComponent(well.name);
+    return this.http
+      .get<ArusReading[]>(`/api/arus/data/${wellId}`, { params: { limit: this.defaultLimit.toString() } })
+      .pipe(
+        catchError((err) => {
+          console.error("Gagal memuat data arus", err);
+          return of(null);
+        })
+      );
+  }
+
+  // Hasil polling live: tabel hanya diisi pada fetch pertama (tidak dipolling),
+  // chart diperbarui setiap ada data baru
+  private applyLiveReadings(readings: ArusReading[] | null, first: boolean): void {
+    if (first) {
+      this.isLoadingResults = false;
+    }
+    if (!readings) {
+      if (first) {
+        this.dataSource.data = [];
+        this.resultsLength = 0;
+      }
+      return;
+    }
+
+    this.lastUpdated = new Date();
+    if (first) {
+      this.populateTable(readings);
+    }
+
+    // Data API urut terbaru dulu; tidak ada data baru -> chart tidak perlu digambar ulang
+    const latestId = readings.length ? readings[0].Id : null;
+    if (!first && latestId === this.lastReadingId) {
+      return;
+    }
+    this.lastReadingId = latestId;
+
+    // Chart sudah ada -> cukup ganti datanya
+    if (this.chartRef && readings.length) {
+      this.chartRef.series[0].setData(this.toChartData(readings));
+      return;
+    }
+    this.buildChart(readings);
+  }
+
+  // GET /api/arus/data/{wellId}/range?from=&to=
+  private loadRangeData(): void {
     if (!this.selectedWell) return;
 
     const wellId = encodeURIComponent(this.selectedWell.name);
-    let url: string;
-    let params: any = {};
+    const from = new Date(this.dateStartControl.value).toISOString();
+    const to = new Date(this.dateEndControl.value).toISOString();
 
-    if (useRange && this.isDateRangeValid()) {
-      const from = new Date(this.dateStartControl.value).toISOString();
-      const to = new Date(this.dateEndControl.value).toISOString();
-      url = `/api/arus/data/${wellId}/range`;
-      params = { from, to };
-    } else {
-      url = `/api/arus/data/${wellId}`;
-      params = { limit: this.defaultLimit.toString() };
-    }
-
+    if (this.rangeSub) this.rangeSub.unsubscribe();
     this.isLoadingResults = true;
-    this.http.get<ArusReading[]>(url, { params }).subscribe(
+    this.rangeSub = this.http.get<ArusReading[]>(`/api/arus/data/${wellId}/range`, { params: { from, to } }).subscribe(
       (readings) => {
         this.isLoadingResults = false;
         const list = readings || [];
@@ -213,14 +283,18 @@ export class PeIotComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
+  // Urut menaik berdasarkan waktu agar chart kiri->kanan = lama->baru
+  private toChartData(readings: ArusReading[]): [number, number][] {
+    return readings
+      .slice()
+      .sort((a, b) => Date.parse(a.CreatedAt) - Date.parse(b.CreatedAt))
+      .map((r) => [Date.parse(r.CreatedAt), r.Current] as [number, number]);
+  }
+
   private buildChart(readings: ArusReading[]): void {
     if (!this.selectedWell) return;
 
-    // Urut menaik berdasarkan waktu agar chart kiri->kanan = lama->baru
-    const chartData: [number, number][] = readings
-      .slice()
-      .sort((a, b) => Date.parse(a.CreatedAt) - Date.parse(b.CreatedAt))
-      .map((r) => [Date.parse(r.CreatedAt), r.Current]);
+    const chartData = this.toChartData(readings);
 
     this.hasChartData = chartData.length > 0;
     if (!this.hasChartData) {

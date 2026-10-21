@@ -20,6 +20,29 @@
 
 .chart-card .mat-card-content {
   min-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card highcharts-chart {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Waktu polling terakhir di atas chart */
+.last-updated {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 12px;
+  color: #888;
+
+  .mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* Card daftar sumur: susun vertikal, daftar sumur bisa di-scroll */

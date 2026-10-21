@@ -53,10 +53,15 @@
 
     <mat-card fxFlex="70" class="dasboard_card chart-card">
       <mat-card-content *ngIf="selectedWell" class="chart-content">
+        <div class="last-updated">
+          <mat-icon>autorenew</mat-icon>
+          Terakhir diperbarui: {{ lastUpdated ? (lastUpdated | date: 'HH:mm:ss') : '-' }}
+        </div>
         <highcharts-chart
           *ngIf="chartOptions"
           [Highcharts]="Highcharts"
           [options]="chartOptions"
+          (chartInstance)="onChartInstance($event)"
           style="width: 100%; height: 100%; display: block;">
         </highcharts-chart>
       </mat-card-content>
