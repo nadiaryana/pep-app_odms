@@ -646,25 +646,34 @@ export class IprComponent implements OnInit {
 
   /** Hitung SBHP dan FBHP tanpa snackbar error — dipanggil otomatis setelah SFL/DFL terisi */
   tryCalculateSBHP_FBHP() {
-    const sflVal = this.static_fluid_level_manual.value || this.static_fluid_level.value;
-    const dflVal = this.dynamic_fluid_level_manual.value || this.dynamic_fluid_level.value;
+    const sflManual = this.static_fluid_level_manual.value;
+    const dflManual = this.dynamic_fluid_level_manual.value;
+    const sflVal = sflManual !== null && sflManual !== "" ? sflManual : this.static_fluid_level.value;
+    const dflVal = dflManual !== null && dflManual !== "" ? dflManual : this.dynamic_fluid_level.value;
     const bottomRaw = this.bottom_perforation_depth.value;
-    const topRaw = this.top_perforation_depth.value;
-    const dailyAverages = this.dailyAverages;
-
-    if (!sflVal || !dflVal || !bottomRaw || !topRaw || !dailyAverages || !dailyAverages.length) {
-      return; // silent — data belum lengkap
-    }
-
-    const wcAvg = dailyAverages[0].wcAvg;
+    const wcManual = this.wcAvgManual.value;
+    const wcAvg = wcManual !== null && wcManual !== ""
+      ? Number(wcManual)
+      : this.dailyAverages && this.dailyAverages.length
+        ? Number(this.dailyAverages[0].wcAvg)
+        : NaN;
     const bottomDepth = Number(bottomRaw);
     const static_fl = Number(sflVal);
     const dynamic_fl = Number(dflVal);
 
-    if (isNaN(wcAvg) || isNaN(bottomDepth) || isNaN(static_fl) || isNaN(dynamic_fl)) return;
+    if (
+      sflVal === null || sflVal === "" ||
+      dflVal === null || dflVal === "" ||
+      bottomRaw === null || bottomRaw === "" ||
+      !isFinite(wcAvg) || !isFinite(bottomDepth) ||
+      !isFinite(static_fl) || !isFinite(dynamic_fl)
+    ) {
+      return;
+    }
 
-    const ps = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomDepth - static_fl) * 3.281;
-    const pwf = (0.433 * wcAvg/100 + 0.346 * (1 - wcAvg/100)) * (bottomDepth - dynamic_fl) * 3.281;
+    const pressureGradient = 0.433 * wcAvg / 100 + 0.346 * (1 - wcAvg / 100);
+    const ps = pressureGradient * (bottomDepth - static_fl) * 3.281;
+    const pwf = pressureGradient * (bottomDepth - dynamic_fl) * 3.281;
 
     if (isFinite(ps)) this.static_botthomhole_pressure.setValue(ps.toFixed(2));
     if (isFinite(pwf)) this.flowing_bottomhole_pressure.setValue(pwf.toFixed(2));
@@ -690,9 +699,11 @@ export class IprComponent implements OnInit {
     }
 
     // Gunakan manual SFL/DFL jika diisi, fallback ke auto dari sonolog
-    const sflValue = this.static_fluid_level_manual.value || this.static_fluid_level.value;
-    const dflValue = this.dynamic_fluid_level_manual.value || this.dynamic_fluid_level.value;
-    if (!sflValue || !dflValue) {
+    const sflManual = this.static_fluid_level_manual.value;
+    const dflManual = this.dynamic_fluid_level_manual.value;
+    const sflValue = sflManual !== null && sflManual !== "" ? sflManual : this.static_fluid_level.value;
+    const dflValue = dflManual !== null && dflManual !== "" ? dflManual : this.dynamic_fluid_level.value;
+    if (sflValue === null || sflValue === "" || dflValue === null || dflValue === "") {
       this.snackbarService.status.next(
         new SnackbarApi(
           true,
@@ -721,7 +732,12 @@ export class IprComponent implements OnInit {
     const dailyAverages = this.dailyAverages;
 
     // ambil per average
-    const wcAvg = dailyAverages.length > 0 ? dailyAverages[0].wcAvg : 0;
+    const wcManual = this.wcAvgManual.value;
+    const wcAvg = wcManual !== null && wcManual !== ""
+      ? Number(wcManual)
+      : dailyAverages.length > 0
+        ? dailyAverages[0].wcAvg
+        : 0;
     const grossAvg = dailyAverages.length > 0 ? dailyAverages[0].grossAvg : 0;
 
     // 🔹 Hitung PS (sbhp) dan PWF (fbhp)
