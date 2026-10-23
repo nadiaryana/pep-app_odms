@@ -10,7 +10,9 @@ export class PeProdWaterfall {
 		public kategori: string = "",
 		public well: string = "",
 		public delta_prod: number = null,
-		public remarks: string = ""
+		public remarks: string = "",
+		public period2_start_date: Date = null,
+		public period2_end_date: Date = null
 	) {}
 }
 
@@ -28,11 +30,11 @@ export class PeProdWaterfallKategori {
 	}
 }
 
-/** Baris sumur pada halaman add; delta dihitung dari data daily. */
+/** Baris sumur pada halaman add; delta merupakan selisih rata-rata net dua periode. */
 export interface PeProdWaterfallWell {
 	well: string;
-	before: number;
-	after: number;
+	average_net_period1: number;
+	average_net_period2: number;
 	delta_prod: number;
 	added: boolean;
 }

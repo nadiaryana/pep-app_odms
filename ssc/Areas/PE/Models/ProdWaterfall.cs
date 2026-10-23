@@ -9,9 +9,8 @@ namespace ssc.Areas.PE.Models
     ///
     /// Setiap baris mewakili satu sumur pada satu periode (start_date - end_date)
     /// dan tergabung pada satu kategori (mis. "A. ARLIFT ISSUES AND FLUCTUATION").
-    /// Nilai delta_prod diisi otomatis dari data daily production (selisih
-    /// fig_curr_net antara end_date dan start_date) tetapi dapat diedit manual
-    /// pada halaman list.
+    /// start_date/end_date menyimpan rentang Periode 1. Rentang Periode 2 disimpan
+    /// terpisah; delta_prod adalah selisih rata-rata net Periode 2 dan Periode 1.
     /// </summary>
     public class ProdWaterfall
     {
@@ -25,12 +24,18 @@ namespace ssc.Areas.PE.Models
         /// <summary>Tanggal akhir periode (inklusif).</summary>
         public DateTime? end_date { get; set; }
 
+        /// <summary>Tanggal awal Periode 2 (inklusif).</summary>
+        public DateTime? period2_start_date { get; set; }
+
+        /// <summary>Tanggal akhir Periode 2 (inklusif).</summary>
+        public DateTime? period2_end_date { get; set; }
+
         /// <summary>Kode kategori master (lihat koleksi prod_waterfall_kategori).</summary>
         public string kategori { get; set; }
 
         public string well { get; set; }
 
-        /// <summary>Selisih produksi net (BOPD) dibanding awal periode.</summary>
+        /// <summary>Selisih rata-rata net Periode 2 dan Periode 1 (BOPD).</summary>
         public decimal? delta_prod { get; set; }
 
         public string remarks { get; set; }

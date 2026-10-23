@@ -1,18 +1,42 @@
 <div class="container-top-bar" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
 
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>Start Date</mat-label>
-    <input matInput [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)">
-    <mat-datepicker-toggle matSuffix [for]="start_datePicker"></mat-datepicker-toggle>
-    <mat-datepicker #start_datePicker></mat-datepicker>
-  </mat-form-field>
+  <div class="period-group">
+    <span class="period-title">Periode 1</span>
+    <div class="period-dates">
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="start_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #start_datePicker></mat-datepicker>
+      </mat-form-field>
 
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>End Date</mat-label>
-    <input matInput [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)">
-    <mat-datepicker-toggle matSuffix [for]="end_datePicker"></mat-datepicker-toggle>
-    <mat-datepicker #end_datePicker></mat-datepicker>
-  </mat-form-field>
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="end_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #end_datePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="period-group">
+    <span class="period-title">Periode 2</span>
+    <div class="period-dates">
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="period2_start_datePicker" [formControl]="period2_start_dateControl" (dateChange)="period2_start_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="period2_start_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #period2_start_datePicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="period2_end_datePicker" [formControl]="period2_end_dateControl" (dateChange)="period2_end_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="period2_end_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #period2_end_datePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
 
   <mat-form-field class="filter" floatLabel="never">
     <mat-label>Kategori</mat-label>
@@ -62,14 +86,14 @@
 
         <mat-grid-tile [colspan]="2" [rowspan]="1">
           <mat-form-field [formGroupName]="index">
-            <mat-label>Net Awal (BOPD)</mat-label>
+            <mat-label>Average Net 1 (BOPD)</mat-label>
             <input matInput readonly [value]="wellBefore(index) | number:'1.0-3'">
           </mat-form-field>
         </mat-grid-tile>
 
         <mat-grid-tile [colspan]="2" [rowspan]="1">
           <mat-form-field [formGroupName]="index">
-            <mat-label>Net Akhir (BOPD)</mat-label>
+            <mat-label>Average Net 2 (BOPD)</mat-label>
             <input matInput readonly [value]="wellAfter(index) | number:'1.0-3'">
           </mat-form-field>
         </mat-grid-tile>
@@ -99,7 +123,7 @@
     </ng-container>
 
     <div class="action-bar">
-      <button mat-raised-button color="secondary" (click)="onSave()" [disabled]="isSaving || !waterfallForm.valid">
+      <button mat-raised-button color="secondary" (click)="onSave()" [disabled]="isSaving || isLoading || !waterfallForm.valid">
         <mat-icon>save</mat-icon> Save
       </button>
       <span class="margin-10"></span>

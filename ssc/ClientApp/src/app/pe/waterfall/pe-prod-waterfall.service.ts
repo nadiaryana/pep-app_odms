@@ -37,6 +37,8 @@ export class PeProdWaterfallService {
 		mode: string = "",
 		start_date: Date = null,
 		end_date: Date = null,
+		period2_start_date: Date = null,
+		period2_end_date: Date = null,
 		httpOption: object = {}): Observable<PeProdWaterfallApi> {
 
 		var params = {};
@@ -49,6 +51,8 @@ export class PeProdWaterfallService {
 		if (mode != null) params["mode"] = mode;
 		if (start_date != null) params["start_date"] = start_date.toISOString();
 		if (end_date != null) params["end_date"] = end_date.toISOString();
+		if (period2_start_date != null) params["period2_start_date"] = period2_start_date.toISOString();
+		if (period2_end_date != null) params["period2_end_date"] = period2_end_date.toISOString();
 
 		httpOption["params"] = params;
 
@@ -61,12 +65,19 @@ export class PeProdWaterfallService {
 			.pipe(map(res => res["items"].map(k => new PeProdWaterfallKategori(k._id, k.code, k.name, k.order))));
 	}
 
-	/** Daftar sumur + delta otomatis dari data daily untuk satu periode. */
-	getWells(start_date: Date, end_date: Date): Observable<PeProdWaterfallWell[]> {
+	/** Daftar sumur + rata-rata net dan delta otomatis dari data daily dua periode. */
+	getWells(
+		start_date: Date,
+		end_date: Date,
+		period2_start_date: Date,
+		period2_end_date: Date
+	): Observable<PeProdWaterfallWell[]> {
 		return this.http.get<any>(this.apiUrl + '/Wells', {
 			params: {
 				start_date: start_date.toISOString(),
-				end_date: end_date.toISOString()
+				end_date: end_date.toISOString(),
+				period2_start_date: period2_start_date.toISOString(),
+				period2_end_date: period2_end_date.toISOString()
 			}
 		}).pipe(map(res => res["items"]));
 	}

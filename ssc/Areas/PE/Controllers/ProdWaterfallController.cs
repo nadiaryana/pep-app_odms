@@ -53,9 +53,12 @@ namespace ssc.Areas.PE.Controllers
             int pagesize = 50,
             String filter = "",
             String columnfilter = "",
-            string mode = "")
+            string mode = "",
+            DateTime? period2_start_date = null,
+            DateTime? period2_end_date = null)
         {
-            FilterDefinition<ProdWaterfall> xfilter = PeriodFilter(start_date, end_date);  //membatasi data berdasarkan periode
+            FilterDefinition<ProdWaterfall> xfilter = PeriodFilter(
+                start_date, end_date, period2_start_date, period2_end_date);  //membatasi data berdasarkan periode
             FilterDefinition<ProdWaterfall> xcolfilter;
 
             if (!String.IsNullOrWhiteSpace(filter))
@@ -228,15 +231,22 @@ namespace ssc.Areas.PE.Controllers
 
         [Authorize("PeProdWaterfall Read")]
         [HttpGet("Wells")]
-        public ActionResult GetWells(DateTime? start_date = null, DateTime? end_date = null)
+        public ActionResult GetWells(
+            DateTime? start_date = null,
+            DateTime? end_date = null,
+            DateTime? period2_start_date = null,
+            DateTime? period2_end_date = null)
         {
-            if (!start_date.HasValue || !end_date.HasValue)
+            if (!start_date.HasValue || !end_date.HasValue ||
+                !period2_start_date.HasValue || !period2_end_date.HasValue ||
+                start_date.Value.Date > end_date.Value.Date ||
+                period2_start_date.Value.Date > period2_end_date.Value.Date)
             {
                 return Ok(new { items = new List<object>() });
             }
 
-            var before = WellProduction(start_date);
-            var after = WellProduction(end_date);
+            var period1 = AverageWellProduction(start_date, end_date);
+            var period2 = AverageWellProduction(period2_start_date, period2_end_date);
             var added = new HashSet<string>(
                 _prod_waterfall.Find(PeriodFilter(start_date, end_date))
                     .ToList()
@@ -247,14 +257,14 @@ namespace ssc.Areas.PE.Controllers
                 .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
                 .Select(w =>
                 {
-                    var b = before.ContainsKey(w) ? before[w] : 0m;
-                    var a = after.ContainsKey(w) ? after[w] : 0m;
+                    var average1 = period1.ContainsKey(w) ? period1[w] : 0m;
+                    var average2 = period2.ContainsKey(w) ? period2[w] : 0m;
                     return new
                     {
                         well = w,
-                        before = b,
-                        after = a,
-                        delta_prod = a - b,
+                        average_net_period1 = average1,
+                        average_net_period2 = average2,
+                        delta_prod = average2 - average1,
                         added = added.Contains(w),
                     };
                 })
@@ -284,9 +294,14 @@ namespace ssc.Areas.PE.Controllers
             var created = 0;
             var skipped = new List<string>();
 
-            // produksi per sumur dihitung sekali untuk seluruh item
-            var before = WellProduction(items[0].start_date);
-            var after = WellProduction(items[0].end_date);
+            // Produksi per sumur dihitung sekali untuk seluruh item.
+            var hasPeriod2 = items[0].period2_start_date.HasValue && items[0].period2_end_date.HasValue;
+            var before = hasPeriod2
+                ? AverageWellProduction(items[0].start_date, items[0].end_date)
+                : WellProduction(items[0].start_date);
+            var after = hasPeriod2
+                ? AverageWellProduction(items[0].period2_start_date, items[0].period2_end_date)
+                : WellProduction(items[0].end_date);
 
             foreach (var item in items)
             {
@@ -362,11 +377,17 @@ namespace ssc.Areas.PE.Controllers
 
 
         /// <summary>Filter periode; tanggal yang tidak dikirim diabaikan.</summary>
-        private static FilterDefinition<ProdWaterfall> PeriodFilter(DateTime? start, DateTime? end)
+        private static FilterDefinition<ProdWaterfall> PeriodFilter(
+            DateTime? start,
+            DateTime? end,
+            DateTime? period2Start = null,
+            DateTime? period2End = null)
         {
             var filter = Builders<ProdWaterfall>.Filter.Ne("a", "b");
             if (start.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.start_date, start);
             if (end.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.end_date, end);
+            if (period2Start.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.period2_start_date, period2Start);
+            if (period2End.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.period2_end_date, period2End);
             return filter;
         }
 
@@ -401,6 +422,32 @@ namespace ssc.Areas.PE.Controllers
                 result[item.well] = result.ContainsKey(item.well)
                     ? result[item.well] + (item.fig_curr_net ?? 0)
                     : (item.fig_curr_net ?? 0);
+            }
+
+            return result;
+        }
+
+        /// <summary>Rata-rata net harian per sumur pada rentang tanggal inklusif.</summary>
+        private Dictionary<string, decimal> AverageWellProduction(DateTime? start_date, DateTime? end_date)
+        {
+            var result = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            if (!start_date.HasValue || !end_date.HasValue ||
+                start_date.Value.Date > end_date.Value.Date)
+                return result;
+
+            var start = start_date.Value;
+            var endExclusive = end_date.Value.AddDays(1);
+            var items = _daily.Find(r => r.date >= start && r.date < endExclusive)
+                .Project<Daily>(DailyCommon._fields_daily)
+                .ToList()
+                .Where(t => !String.IsNullOrWhiteSpace(t.well) && t.date.HasValue);
+
+            foreach (var well in items.GroupBy(t => t.well, StringComparer.OrdinalIgnoreCase))
+            {
+                var dailyNet = well
+                    .GroupBy(t => t.date.Value.Date)
+                    .Select(day => day.Sum(t => t.fig_curr_net ?? 0m));
+                result[well.Key] = dailyNet.Average();
             }
 
             return result;

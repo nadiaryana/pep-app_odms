@@ -23,11 +23,14 @@ export class PeProdWaterfallAddComponent implements OnInit {
   kategoriList: PeProdWaterfallKategori[] = [];
   selectedKategori = "";
 
-  start_dateControl = new FormControl(new Date());
+  start_dateControl = new FormControl(null);
   start_dateInput = "";
-
-  end_dateControl = new FormControl(new Date());
+  end_dateControl = new FormControl(null);
   end_dateInput = "";
+  period2_start_dateControl = new FormControl(null);
+  period2_start_dateInput = "";
+  period2_end_dateControl = new FormControl(null);
+  period2_end_dateInput = "";
 
 
   wells: PeProdWaterfallWell[] = [];
@@ -61,23 +64,8 @@ export class PeProdWaterfallAddComponent implements OnInit {
       wells: this.formBuilder.array([this.createWellForm()])
     });
 
-    this.initDate();
     this.loadKategori();
     this.loadWells();
-  }
-
-  /** Periode default seminggu terakhir; bisa diubah lewat picker di halaman ini. */
-  private initDate() {
-    var today = new Date();
-    today.setHours(0, 0, 0, 0);
-    var defStart = new Date(today);
-    defStart.setDate(defStart.getDate() - 7);
-
-    this.start_dateControl = new FormControl(defStart);
-    this.end_dateControl = new FormControl(today);
-
-    this.start_dateInput = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US');
-    this.end_dateInput = formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
   }
 
   loadKategori() {
@@ -88,10 +76,18 @@ export class PeProdWaterfallAddComponent implements OnInit {
   }
 
   loadWells() {
-    if (!this.start_dateControl.value || !this.end_dateControl.value) return;
+    this.wells = [];
+    if (!this.start_dateControl.value || !this.end_dateControl.value ||
+      !this.period2_start_dateControl.value || !this.period2_end_dateControl.value) return;
+    if (!this.dateRangesValid()) return;
 
     this.isLoading = true;
-    this.service.getWells(this.start_dateControl.value, this.end_dateControl.value).subscribe(res => {
+    this.service.getWells(
+      this.start_dateControl.value,
+      this.end_dateControl.value,
+      this.period2_start_dateControl.value,
+      this.period2_end_dateControl.value
+    ).subscribe(res => {
       this.isLoading = false;
       this.wells = res;
     }, error => {
@@ -100,14 +96,36 @@ export class PeProdWaterfallAddComponent implements OnInit {
     });
   }
 
+  private dateRangesValid(): boolean {
+    var start1 = this.start_dateControl.value;
+    var end1 = this.end_dateControl.value;
+    var start2 = this.period2_start_dateControl.value;
+    var end2 = this.period2_end_dateControl.value;
+    return !!start1 && !!end1 && !!start2 && !!end2 &&
+      start1.getTime() <= end1.getTime() &&
+      start2.getTime() <= end2.getTime();
+  }
+
   start_dateChange(evt) {
-    this.start_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.start_dateInput = evt.value ? formatDate(evt.value, 'd MMM y', 'en-US') : "";
     this.resetRows();
     this.loadWells();
   }
 
   end_dateChange(evt) {
-    this.end_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.end_dateInput = evt.value ? formatDate(evt.value, 'd MMM y', 'en-US') : "";
+    this.resetRows();
+    this.loadWells();
+  }
+
+  period2_start_dateChange(evt) {
+    this.period2_start_dateInput = evt.value ? formatDate(evt.value, 'd MMM y', 'en-US') : "";
+    this.resetRows();
+    this.loadWells();
+  }
+
+  period2_end_dateChange(evt) {
+    this.period2_end_dateInput = evt.value ? formatDate(evt.value, 'd MMM y', 'en-US') : "";
     this.resetRows();
     this.loadWells();
   }
@@ -179,12 +197,12 @@ export class PeProdWaterfallAddComponent implements OnInit {
 
   wellBefore(index: number): number {
     var info = this.wellInfo(index);
-    return info ? info.before : null;
+    return info ? info.average_net_period1 : null;
   }
 
   wellAfter(index: number): number {
     var info = this.wellInfo(index);
-    return info ? info.after : null;
+    return info ? info.average_net_period2 : null;
   }
 
   showWellError(index: number): boolean {
@@ -192,7 +210,7 @@ export class PeProdWaterfallAddComponent implements OnInit {
     return control.hasError('required') && (control.touched || control.dirty);
   }
 
-  /** Delta harian sumur terpilih dipakai sebagai nilai awal Delta Prod. */
+  /** Selisih rata-rata net kedua periode dipakai sebagai nilai awal Delta Prod. */
   wellChange(index: number, evt: any) {
     // pencarian dikosongkan agar daftar penuh tampil lagi saat dropdown dibuka ulang
     this.wellSearch[index] = "";
@@ -223,6 +241,10 @@ export class PeProdWaterfallAddComponent implements OnInit {
   }
 
   onSave() {
+    if (!this.dateRangesValid()) {
+      this.snackbarService.status.next(new SnackbarApi(true, "Tanggal awal harus sebelum atau sama dengan tanggal akhir pada setiap periode.", 'dismiss'));
+      return;
+    }
     if (!this.selectedKategori) {
       this.snackbarService.status.next(new SnackbarApi(true, "Pilih kategori terlebih dahulu.", 'dismiss'));
       return;
@@ -246,7 +268,9 @@ export class PeProdWaterfallAddComponent implements OnInit {
       this.selectedKategori,
       row.get('well').value,
       this.roundDelta(row.get('delta_prod').value),
-      row.get('remarks').value || ""
+      row.get('remarks').value || "",
+      this.period2_start_dateControl.value,
+      this.period2_end_dateControl.value
     ));
 
     this.isSaving = true;
@@ -269,8 +293,10 @@ export class PeProdWaterfallAddComponent implements OnInit {
   backToList() {
     this.router.navigate(['pe', 'waterfall', 'list'], {
       queryParams: {
-        start_date: this.start_dateControl.value.toISOString(),
-        end_date: this.end_dateControl.value.toISOString()
+        start_date: this.start_dateControl.value ? this.start_dateControl.value.toISOString() : null,
+        end_date: this.end_dateControl.value ? this.end_dateControl.value.toISOString() : null,
+        period2_start_date: this.period2_start_dateControl.value ? this.period2_start_dateControl.value.toISOString() : null,
+        period2_end_date: this.period2_end_dateControl.value ? this.period2_end_dateControl.value.toISOString() : null
       }
     });
   }

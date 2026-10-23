@@ -1,18 +1,42 @@
 <div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
 
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>Start Date</mat-label>
-    <input matInput [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)">
-    <mat-datepicker-toggle matSuffix [for]="start_datePicker"></mat-datepicker-toggle>
-    <mat-datepicker #start_datePicker></mat-datepicker>
-  </mat-form-field>
+  <div class="period-group">
+    <span class="period-title">Periode 1</span>
+    <div class="period-dates">
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="start_datePicker" [formControl]="start_dateControl" (dateChange)="start_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="start_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #start_datePicker></mat-datepicker>
+      </mat-form-field>
 
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>End Date</mat-label>
-    <input matInput [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)">
-    <mat-datepicker-toggle matSuffix [for]="end_datePicker"></mat-datepicker-toggle>
-    <mat-datepicker #end_datePicker></mat-datepicker>
-  </mat-form-field>
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="end_datePicker" [formControl]="end_dateControl" (dateChange)="end_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="end_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #end_datePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="period-group">
+    <span class="period-title">Periode 2</span>
+    <div class="period-dates">
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="period2_start_datePicker" [formControl]="period2_start_dateControl" (dateChange)="period2_start_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="period2_start_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #period2_start_datePicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field class="filter" floatLabel="never">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="period2_end_datePicker" [formControl]="period2_end_dateControl" (dateChange)="period2_end_dateChange($event)">
+        <mat-datepicker-toggle matSuffix [for]="period2_end_datePicker"></mat-datepicker-toggle>
+        <mat-datepicker #period2_end_datePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
 
   <button mat-button color="primary" (click)="addRow()" *ngIf="pePermissionService.passPermission('pe/waterfall/add')">
     <mat-icon>add</mat-icon> Add Sumur

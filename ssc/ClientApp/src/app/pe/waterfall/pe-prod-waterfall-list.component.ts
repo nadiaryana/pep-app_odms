@@ -51,11 +51,16 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
   kategoriList: PeProdWaterfallKategori[] = [];
   private kategoriLabel: Map<string, string> = new Map();
 
-  start_dateControl = new FormControl(new Date());
+  start_dateControl = new FormControl(null);
   start_dateInput = "";
 
-  end_dateControl = new FormControl(new Date());
+  end_dateControl = new FormControl(null);
   end_dateInput = "";
+
+  period2_start_dateControl = new FormControl(null);
+  period2_start_dateInput = "";
+  period2_end_dateControl = new FormControl(null);
+  period2_end_dateInput = "";
 
   resultsLength = 0;
   isLoadingResults = true;
@@ -145,6 +150,8 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
           "",
           this.start_dateControl.value,
           this.end_dateControl.value,
+          this.period2_start_dateControl.value,
+          this.period2_end_dateControl.value,
         );
       }),
       map(data => {
@@ -193,11 +200,21 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
 
     var p_start = this.route.snapshot.queryParamMap.get('start_date');
     var p_end = this.route.snapshot.queryParamMap.get('end_date');
+    var p2_start = this.route.snapshot.queryParamMap.get('period2_start_date');
+    var p2_end = this.route.snapshot.queryParamMap.get('period2_end_date');
     if (p_start && !isNaN(Date.parse(p_start))) this.start_dateControl.setValue(new Date(p_start));
     if (p_end && !isNaN(Date.parse(p_end))) this.end_dateControl.setValue(new Date(p_end));
+    if (p2_start && !isNaN(Date.parse(p2_start))) this.period2_start_dateControl.setValue(new Date(p2_start));
+    if (p2_end && !isNaN(Date.parse(p2_end))) this.period2_end_dateControl.setValue(new Date(p2_end));
 
     this.start_dateInput = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US');
     this.end_dateInput = formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+    this.period2_start_dateInput = this.period2_start_dateControl.value
+      ? formatDate(this.period2_start_dateControl.value, 'd MMM y', 'en-US')
+      : "";
+    this.period2_end_dateInput = this.period2_end_dateControl.value
+      ? formatDate(this.period2_end_dateControl.value, 'd MMM y', 'en-US')
+      : "";
   }
 
   start_dateChange(evt) {
@@ -208,6 +225,18 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
 
   end_dateChange(evt) {
     this.end_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.paginator.pageIndex = 0;
+    this.refresh.next();
+  }
+
+  period2_start_dateChange(evt) {
+    this.period2_start_dateInput = evt.value ? formatDate(evt.value, 'd MMM y', 'en-US') : "";
+    this.paginator.pageIndex = 0;
+    this.refresh.next();
+  }
+
+  period2_end_dateChange(evt) {
+    this.period2_end_dateInput = evt.value ? formatDate(evt.value, 'd MMM y', 'en-US') : "";
     this.paginator.pageIndex = 0;
     this.refresh.next();
   }
@@ -396,6 +425,8 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
       "excel",
       this.start_dateControl.value,
       this.end_dateControl.value,
+      this.period2_start_dateControl.value,
+      this.period2_end_dateControl.value,
       httpOption
     ).pipe(map((res) => {
       this.isLoadingResults = false;
@@ -449,6 +480,8 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
       column,
       this.start_dateControl.value,
       this.end_dateControl.value,
+      this.period2_start_dateControl.value,
+      this.period2_end_dateControl.value,
     ).pipe(map((res) => {
       return res;
     })).subscribe(res => {

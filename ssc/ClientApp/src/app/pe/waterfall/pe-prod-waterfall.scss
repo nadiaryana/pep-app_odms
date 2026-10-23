@@ -80,6 +80,32 @@ ng::host .mat-horizontal-stepper-content {
   width: 150px;
 }
 
+/* grup tanggal periode: judul periode di atas, start/end date di bawahnya */
+
+.period-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.period-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #616161;
+  text-transform: uppercase;
+  // padding-left: px;
+  margin-right: auto;
+  margin-bottom: 2px;
+}
+
+.period-dates {
+  display: flex;
+  align-items: flex-start;
+}
+
+.period-dates .filter + .filter {
+  margin-left: 10px;
+}
+
 .container-table {
   overflow: auto;
 }
