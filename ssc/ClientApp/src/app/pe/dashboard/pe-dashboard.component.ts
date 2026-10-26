@@ -103,6 +103,11 @@ export class PeDashboardComponent   {
 			
 		  // },
       opposite: true,
+		  plotOptions: {
+		    series: {
+		      turboThreshold: 0
+		    }
+		  },
 		  series: [{
         name: "Operation",
         yAxis : 0,
@@ -180,7 +185,9 @@ export class PeDashboardComponent   {
       reversed: false
     },
     plotOptions: {
-      
+      series: {
+        turboThreshold: 0
+      }
     },
     series: [
       {
@@ -889,12 +896,16 @@ export class PeDashboardComponent   {
       this.refresh_Production();
 
       this.dateControl3 = new FormControl(new Date(this.dateControl.value));
-      this.dateControl2 = new FormControl(new Date(new Date(this.dateControl.value).getFullYear(), new Date(this.dateControl.value).getMonth() - 1, new Date(this.dateControl.value).getDate()));
+      this.dateControl2 = new FormControl(new Date(
+        this.dateControl.value.getFullYear(),
+        this.dateControl.value.getMonth() - 1,
+        this.dateControl.value.getDate()
+      ));
 
       this.intervalCount();
 
       var end_date = this.dateControl3.value;
-      var start_date = new Date(end_date.getFullYear(), end_date.getMonth() - 1, end_date.getDate());
+      var start_date = this.dateControl2.value;
       this.dateInput2 = start_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" });
       this.dateInput3 = end_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" });
 
@@ -920,12 +931,16 @@ export class PeDashboardComponent   {
     this.refresh_Production();
 
     this.dateControl3 = new FormControl(new Date(this.dateControl.value));
-    this.dateControl2 = new FormControl(new Date(new Date(this.dateControl.value).getFullYear(), new Date(this.dateControl.value).getMonth() - 1, new Date(this.dateControl.value).getDate()));
+    this.dateControl2 = new FormControl(new Date(
+      this.dateControl.value.getFullYear(),
+      this.dateControl.value.getMonth() - 1,
+      this.dateControl.value.getDate()
+    ));
 
     this.intervalCount();
 
     var end_date = this.dateControl3.value;
-    var start_date = new Date(end_date.getFullYear(), end_date.getMonth() - 1, end_date.getDate());
+    var start_date = this.dateControl2.value;
     this.dateInput2 = start_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" });
     this.dateInput3 = end_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" });
 
@@ -1072,7 +1087,7 @@ export class PeDashboardComponent   {
     var start_date = this.dateControl2.value;
     var end_date = this.dateControl3.value;
 
-    this.http.get('/api/pe/production', { params: { sort: 'date', order: 'asc', pagesize: '10000', columnfilter: '{"date":[{"opr":"gte","val":"' + start_date.toISOString() + '","log":"and"},{"opr":"lte","val":"' + end_date.toISOString() + '","log":"and"}]}' } }).subscribe(res => {
+    this.http.get('/api/pe/production', { params: { sort: 'date', order: 'asc', pagesize: '0', columnfilter: '{"date":[{"opr":"gte","val":"' + start_date.toISOString() + '","log":"and"},{"opr":"lte","val":"' + end_date.toISOString() + '","log":"and"}]}' } }).subscribe(res => {
 
       var categories = [];
       var series_operation = [];
@@ -1779,10 +1794,14 @@ export class PeDashboardComponent   {
 
       this.refresh_Production();
       this.dateControl3 = new FormControl(new Date(this.dateControl.value));
-      this.dateControl2 = new FormControl(new Date(new Date(this.dateControl.value).getFullYear(), new Date(this.dateControl.value).getMonth() - 1, new Date(this.dateControl.value).getDate()));
+      this.dateControl2 = new FormControl(new Date(
+        this.dateControl.value.getFullYear(),
+        this.dateControl.value.getMonth() - 1,
+        this.dateControl.value.getDate()
+      ));
 
       var end_date = this.dateControl3.value;
-      var start_date = new Date(end_date.getFullYear(), end_date.getMonth() - 1, end_date.getDate());
+      var start_date = this.dateControl2.value;
       this.dateInput2 = start_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" });
       this.dateInput3 = end_date.toLocaleDateString("id-ID", { month: "short", year: "numeric", day: "numeric" });
 

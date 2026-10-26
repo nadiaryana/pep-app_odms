@@ -159,10 +159,12 @@ namespace ssc.Areas.PE.Controllers
       {
         case "":
         case null:
-          List<Production> items = _items
-          .Skip(page * pagesize)
-          .Limit(pagesize)
-          .Project<Production>(_fields_production).ToList();
+          var itemsQuery = _items.Skip(page * pagesize);
+          if (pagesize > 0)
+            itemsQuery = itemsQuery.Limit(pagesize);
+
+          List<Production> items = itemsQuery
+            .Project<Production>(_fields_production).ToList();
 
           return new JsonResult(new
           {
