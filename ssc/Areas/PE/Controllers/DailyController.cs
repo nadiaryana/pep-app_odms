@@ -39,6 +39,7 @@ namespace ssc.Areas.PE.Controllers
         private readonly IMongoCollection<Production> _production;
         private readonly IBackgroundTaskQueue _taskQueue;
         private readonly IJobTracker _jobTracker;
+        private static int _xfilterIndexEnsured = 0;
 
         public DailyController(IPEDatabaseSettings settings, IBackgroundTaskQueue taskQueue, IJobTracker jobTracker)
         {
@@ -55,6 +56,31 @@ namespace ssc.Areas.PE.Controllers
             _jobTracker = jobTracker;
 
             _quadrantRemarks = DailyCommon.database.GetCollection<PeOptimasiQuadrantRemark>("pe_optimasi_remarks");
+
+            EnsureXFilterIndexes();
+        }
+
+        /// <summary>
+        /// Membuat index pada field date sekali saja, supaya Distinct("date") untuk xfilter
+        /// bisa memakai DISTINCT_SCAN dan tidak melakukan full collection scan.
+        /// Dijalankan di background agar tidak memblokir request pertama.
+        /// </summary>
+        private void EnsureXFilterIndexes()
+        {
+            if (Interlocked.Exchange(ref _xfilterIndexEnsured, 1) == 1) return;
+            Task.Run(() =>
+            {
+                try
+                {
+                    _daily.Indexes.CreateOne(new CreateIndexModel<Daily>(
+                        Builders<Daily>.IndexKeys.Ascending(t => t.date)));
+                }
+                catch
+                {
+                    // Gagal -> reset flag supaya dicoba lagi pada request berikutnya.
+                    Interlocked.Exchange(ref _xfilterIndexEnsured, 0);
+                }
+            });
         }
 
         [Authorize("PeDaily Read")]
@@ -63,7 +89,7 @@ namespace ssc.Areas.PE.Controllers
         {
 
             //var _items = _tickets.Find(t => true);
-            FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Ne("a", "b");
+            FilterDefinition<Daily> xfilter = Builders<Daily>.Filter.Empty;
             FilterDefinition<Daily> xcolfilter;
 
             if (!String.IsNullOrWhiteSpace(filter))
@@ -129,7 +155,7 @@ namespace ssc.Areas.PE.Controllers
             if (!String.IsNullOrWhiteSpace(columnfilter))
             {
                 decimal wor;
-                xcolfilter = Builders<Daily>.Filter.Ne("a", "b");
+                xcolfilter = Builders<Daily>.Filter.Empty;
                 DailyList colfilter = JsonConvert.DeserializeObject<DailyList>(columnfilter);
                 if (colfilter.date?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.date.ToList().Select(c => (c is DateTime) ? Builders<Daily>.Filter.Eq(t => t.date, new BsonDateTime((DateTime)c)) : "{$expr:{$regexMatch:{input:{$dateToString:{format:\"%d %m %Y\",date:\"$date\",timezone:\"" + TimeZoneInfo.Local.DisplayName.Substring(4, 6) + "\"}},regex:/" + ReplaceMonth((string)c) + "/i}}}"));
                 if (colfilter.nomor?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Daily>.Filter.Or(colfilter.nomor.ToList().Where(c => !(c is JObject)).Select(c => Builders<Daily>.Filter.Regex(t => t.nomor, new BsonRegularExpression((string)c, "i"))));
@@ -263,9 +289,6 @@ namespace ssc.Areas.PE.Controllers
 
             var _items = _daily.Find(xfilter, new FindOptions() { Collation = new Collation("en_US", numericOrdering: true) });
 
-
-            var total_count = _items.CountDocuments();
-
             switch (sort)
             {
                 case "date": _items = (order == "asc") ? _items.SortBy(t => t.date) : _items.SortByDescending(t => t.date); break;
@@ -317,6 +340,8 @@ namespace ssc.Areas.PE.Controllers
             {
                 case "":
                 case null:
+                    // total_count hanya dipakai mode tabel, jangan dihitung untuk mode xfilter/excel
+                    var total_count = _items.CountDocuments();
                     List<Daily> items = _items
                     .Skip(page * pagesize)
                     .Limit(pagesize)
@@ -363,7 +388,13 @@ namespace ssc.Areas.PE.Controllers
                             break;
                         case "interval":
                             //res = _daily.Distinct<decimal[][]>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
-                            res = _daily.Find(xfilter).ToEnumerable().Select(t => String.Join(",", t.interval.Select(i => String.Join("-", i)))).Distinct().OrderBy(t => t).ToList();
+                            // interval bisa null di sebagian dokumen -> lewati, dan ambil field interval saja
+                            res = _daily.Find(xfilter & Builders<Daily>.Filter.Ne(t => t.interval, null))
+                                .Project<Daily>(Builders<Daily>.Projection.Include(t => t.interval))
+                                .ToEnumerable()
+                                .Where(t => t.interval != null)
+                                .Select(t => String.Join(",", t.interval.Where(i => i != null).Select(i => String.Join("-", i))))
+                                .Distinct().OrderBy(t => t).ToList();
                             break;
                         case "gas":
                             if (filter == "gas")
