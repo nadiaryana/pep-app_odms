@@ -1093,15 +1093,15 @@ export class PeDashboardComponent   {
         //var dt = xdt;
         //var dt = new Date(xdt.getFullYear(), xdt.getMonth(), xdt.getDate());
         categories.push(dt);
-        series_operation.push({ name: dt, y: d.operation });
-        series_sot.push({ name: dt, y: d.sot });
-        series_figure.push({ name: dt, y: d.figure });
-        series_rkap_oil.push({ name: dt, y: d.rkap_oil });
-        series_wpnb_oil.push({ name: dt, y: d.wpnb_oil });
-        series_gas.push({ name: dt, y: d.gas });
-        series_gas_sales.push({ name: dt, y: d.gas_sales });
-        series_rkap_gas.push({ name: dt, y: d.rkap_gas });
-        series_wpnb_gas.push({ name: dt, y: d.wpnb_gas });
+        series_operation.push(d.operation);
+        series_sot.push(d.sot);
+        series_figure.push(d.figure);
+        series_rkap_oil.push(d.rkap_oil);
+        series_wpnb_oil.push(d.wpnb_oil);
+        series_gas.push(d.gas);
+        series_gas_sales.push(d.gas_sales);
+        series_rkap_gas.push(d.rkap_gas);
+        series_wpnb_gas.push(d.wpnb_gas);
 
         console.log(this.dateControl.value.toLocaleDateString("id-ID"));
         console.log(new Date(d.date).toLocaleDateString("id-ID"));

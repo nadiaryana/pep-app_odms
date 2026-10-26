@@ -499,6 +499,7 @@ export class OneSlideComponent implements OnInit {
             this.start_date_iprInput,
             this.end_date_iprInput,
           );
+          this.tryCalculateIPR();
 
           const grossAvg =
           this.dailyAverages.length > 0
@@ -633,6 +634,7 @@ export class OneSlideComponent implements OnInit {
             this.static_fluid_level.setValue(sfl);
             // Setelah SFL terisi, coba hitung otomatis
             this.tryCalculateSBHP_FBHP();
+            this.tryCalculateIPR();
           });
   
       var params_dfl = new HttpParams()
@@ -650,6 +652,7 @@ export class OneSlideComponent implements OnInit {
             this.dynamic_fluid_level.setValue(dfl);
             // Setelah DFL terisi, coba hitung otomatis
             this.tryCalculateSBHP_FBHP();
+            this.tryCalculateIPR();
           });
 
   }
@@ -718,8 +721,49 @@ export class OneSlideComponent implements OnInit {
     const avg = (topDepth + bottomDepth) / 2;
     this.perforation_depth_reference.setValue(avg.toFixed(2));
 
-    // any other logic
-    // console.log("Perforation Change:", topDepth, bottomDepth, reference);
+    this.tryCalculateSBHP_FBHP();
+    this.tryCalculateIPR();
+  }
+
+  onFluidLevelChange() {
+    this.tryCalculateSBHP_FBHP();
+    this.tryCalculateIPR();
+  }
+
+  tryCalculateIPR() {
+    const sflManual = this.static_fluid_level_manual.value;
+    const dflManual = this.dynamic_fluid_level_manual.value;
+    const sflRaw = sflManual !== null && sflManual !== ""
+      ? sflManual
+      : this.static_fluid_level.value;
+    const dflRaw = dflManual !== null && dflManual !== ""
+      ? dflManual
+      : this.dynamic_fluid_level.value;
+    const sfl = sflManual !== null && sflManual !== ""
+      ? Number(sflManual)
+      : Number(sflRaw);
+    const dfl = dflManual !== null && dflManual !== ""
+      ? Number(dflManual)
+      : Number(dflRaw);
+
+    if (
+      !this.start_date_iprControl.value ||
+      !this.end_date_iprControl.value ||
+      !this.dailyAverages.length ||
+      sflRaw === null ||
+      sflRaw === "" ||
+      dflRaw === null ||
+      dflRaw === "" ||
+      this.bottom_perforation_depth.value === null ||
+      this.bottom_perforation_depth.value === "" ||
+      !isFinite(Number(this.bottom_perforation_depth.value)) ||
+      !isFinite(sfl) ||
+      !isFinite(dfl)
+    ) {
+      return;
+    }
+
+    this.testData();
   }
 
   tryCalculateSBHP_FBHP() {
@@ -791,8 +835,8 @@ export class OneSlideComponent implements OnInit {
     // config data
     const topRaw = this.top_perforation_depth.value;
     const bottomRaw = this.bottom_perforation_depth.value;
-    const static_fl = this.static_fluid_level.value;
-    const dynamic_fl = this.dynamic_fluid_level.value;
+    const static_fl = sflValue;
+    const dynamic_fl = dflValue;
     const factor_corr = this.factor_corr.value;
     
 
@@ -843,7 +887,7 @@ export class OneSlideComponent implements OnInit {
 
     let prod_reservoir = "-";
 
-    if (qmax > 0 && grossAvg > 0) {
+    if (isFinite(qmax) && qmax > 0 && grossAvg > 0) {
       prod_reservoir = Math.round(grossAvg / qmax).toString();
     }
 
@@ -1470,6 +1514,9 @@ export class OneSlideComponent implements OnInit {
   calculateWellAverages(data: any[], startDate: string, endDate: string) {
     const start = new Date(startDate);
     const end = new Date(endDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
 
     // 1️⃣ Filter data sesuai tanggal
     const filtered = data.filter((d) => {
