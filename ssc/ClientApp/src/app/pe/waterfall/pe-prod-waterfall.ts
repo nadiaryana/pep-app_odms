@@ -56,6 +56,8 @@ export interface PeProdWaterfallChartKategori {
 export interface PeProdWaterfallChart {
 	start_date: string;
 	end_date: string;
+	period2_start_date: string;
+	period2_end_date: string;
 	total_start: number;
 	total_end: number;
 	others: number;

@@ -317,7 +317,13 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
     this.router.navigate(['pe', 'waterfall', 'chart'], {
       queryParams: {
         start_date: this.start_dateControl.value.toISOString(),
-        end_date: this.end_dateControl.value.toISOString()
+        end_date: this.end_dateControl.value.toISOString(),
+        period2_start_date: this.period2_start_dateControl.value
+          ? this.period2_start_dateControl.value.toISOString()
+          : null,
+        period2_end_date: this.period2_end_dateControl.value
+          ? this.period2_end_dateControl.value.toISOString()
+          : null
       }
     });
   }

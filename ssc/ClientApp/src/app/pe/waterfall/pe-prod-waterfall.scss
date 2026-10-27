@@ -48,6 +48,7 @@ mat-card-actions {
 }
 
 .container-content {
+  position: relative;
   padding: 5px;
   box-shadow: 0 2px 1px -1px rgb(255, 0, 0), 0 1px 1px 0 rgb(0 0 0 / 14%), 0 1px 3px 0 rgb(0 0 0 / 12%);
   background-color: white;
@@ -78,6 +79,25 @@ ng::host .mat-horizontal-stepper-content {
 
 .filter {
   width: 150px;
+}
+
+.kategori-control {
+  display: flex;
+  align-items: center;
+  align-self: flex-end;
+  width: 500px;
+}
+
+.kategori-add-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 10px 12px;
+}
+
+.kategori-add-form mat-form-field {
+  width: 200px;
 }
 
 /* grup tanggal periode: judul periode di atas, start/end date di bawahnya */
@@ -346,4 +366,3 @@ tr.category-group-row .group-delta {
   color: #616161;
   font-style: italic;
 }
-

@@ -19,9 +19,12 @@ export class PeProdWaterfallAddComponent implements OnInit {
 
   isLoading = false;
   isSaving = false;
+  isAddingKategori = false;
+  showAddKategori = false;
 
   kategoriList: PeProdWaterfallKategori[] = [];
   selectedKategori = "";
+  kategoriForm: FormGroup;
 
   start_dateControl = new FormControl(null);
   start_dateInput = "";
@@ -63,6 +66,10 @@ export class PeProdWaterfallAddComponent implements OnInit {
     this.waterfallForm = this.formBuilder.group({
       wells: this.formBuilder.array([this.createWellForm()])
     });
+    this.kategoriForm = this.formBuilder.group({
+      code: ['', [Validators.required, Validators.maxLength(10)]],
+      name: ['', [Validators.required, Validators.maxLength(100)]]
+    });
 
     this.loadKategori();
     this.loadWells();
@@ -75,11 +82,45 @@ export class PeProdWaterfallAddComponent implements OnInit {
     });
   }
 
+  addKategori() {
+    if (this.kategoriForm.invalid || this.isAddingKategori) {
+      this.kategoriForm.markAsTouched();
+      return;
+    }
+
+    var code = this.kategoriForm.get('code').value.trim().toUpperCase();
+    var name = this.kategoriForm.get('name').value.trim();
+    if (!code || !name) {
+      this.snackbarService.status.next(new SnackbarApi(true, "Kode dan nama kategori wajib diisi.", 'dismiss'));
+      return;
+    }
+    if (this.kategoriList.some(k => k.code.toLowerCase() === code.toLowerCase())) {
+      this.snackbarService.status.next(new SnackbarApi(true, "Kode kategori sudah digunakan.", 'dismiss'));
+      return;
+    }
+
+    this.isAddingKategori = true;
+    this.service.addKategori(code, name).subscribe(kategori => {
+      this.isAddingKategori = false;
+      this.kategoriList = this.kategoriList.concat([kategori]).sort((a, b) => a.order - b.order);
+      this.selectedKategori = kategori.code;
+      this.kategoriForm.reset();
+      this.showAddKategori = false;
+      this.snackbarService.status.next(new SnackbarApi(true, "Kategori berhasil ditambahkan.", 'dismiss'));
+    }, error => {
+      this.isAddingKategori = false;
+      var message = error.error && error.error.message || error.message || 'Gagal menambahkan kategori';
+      this.snackbarService.status.next(new SnackbarApi(true, message, 'dismiss'));
+    });
+  }
+
+  cancelAddKategori() {
+    this.showAddKategori = false;
+    this.kategoriForm.reset();
+  }
+
   loadWells() {
     this.wells = [];
-    if (!this.start_dateControl.value || !this.end_dateControl.value ||
-      !this.period2_start_dateControl.value || !this.period2_end_dateControl.value) return;
-    if (!this.dateRangesValid()) return;
 
     this.isLoading = true;
     this.service.getWells(

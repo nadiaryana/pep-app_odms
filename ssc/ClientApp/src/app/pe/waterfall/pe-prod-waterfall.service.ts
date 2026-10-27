@@ -65,29 +65,46 @@ export class PeProdWaterfallService {
 			.pipe(map(res => res["items"].map(k => new PeProdWaterfallKategori(k._id, k.code, k.name, k.order))));
 	}
 
+	/** Tambahkan kategori waterfall baru. */
+	addKategori(code: string, name: string): Observable<PeProdWaterfallKategori> {
+		return this.http.post<any>(this.apiUrl + '/Kategori', { code: code, name: name })
+			.pipe(map(res => {
+				var k = res["item"];
+				return new PeProdWaterfallKategori(k._id, k.code, k.name, k.order);
+			}));
+	}
+
 	/** Daftar sumur + rata-rata net dan delta otomatis dari data daily dua periode. */
 	getWells(
+		start_date: Date = null,
+		end_date: Date = null,
+		period2_start_date: Date = null,
+		period2_end_date: Date = null
+	): Observable<PeProdWaterfallWell[]> {
+		var params = {};
+		if (start_date != null) params["start_date"] = start_date.toISOString();
+		if (end_date != null) params["end_date"] = end_date.toISOString();
+		if (period2_start_date != null) params["period2_start_date"] = period2_start_date.toISOString();
+		if (period2_end_date != null) params["period2_end_date"] = period2_end_date.toISOString();
+
+		return this.http.get<any>(this.apiUrl + '/Wells', {
+			params: params
+		}).pipe(map(res => res["items"]));
+	}
+
+	/** Data chart: rata-rata produksi dan delta kategori untuk dua periode. */
+	getChart(
 		start_date: Date,
 		end_date: Date,
 		period2_start_date: Date,
 		period2_end_date: Date
-	): Observable<PeProdWaterfallWell[]> {
-		return this.http.get<any>(this.apiUrl + '/Wells', {
+	): Observable<PeProdWaterfallChart> {
+		return this.http.get<PeProdWaterfallChart>(this.apiUrl + '/Chart', {
 			params: {
 				start_date: start_date.toISOString(),
 				end_date: end_date.toISOString(),
 				period2_start_date: period2_start_date.toISOString(),
 				period2_end_date: period2_end_date.toISOString()
-			}
-		}).pipe(map(res => res["items"]));
-	}
-
-	/** Data chart: total awal/akhir periode + delta per kategori. */
-	getChart(start_date: Date, end_date: Date): Observable<PeProdWaterfallChart> {
-		return this.http.get<PeProdWaterfallChart>(this.apiUrl + '/Chart', {
-			params: {
-				start_date: start_date.toISOString(),
-				end_date: end_date.toISOString()
 			}
 		});
 	}

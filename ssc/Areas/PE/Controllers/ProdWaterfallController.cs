@@ -167,15 +167,24 @@ namespace ssc.Areas.PE.Controllers
         }
 
         // ------------------------------------------------------------------
-        // GET: data untuk halaman chart (total awal/akhir + delta per kategori)
+        // GET: data untuk halaman chart (rata-rata dua periode + delta per kategori)
         // ------------------------------------------------------------------
 
         [Authorize("PeProdWaterfall Read")]
         [HttpGet("Chart")]
-        public ActionResult GetChart(DateTime? start_date = null, DateTime? end_date = null)
+        public ActionResult GetChart(
+            DateTime? start_date = null,
+            DateTime? end_date = null,
+            DateTime? period2_start_date = null,
+            DateTime? period2_end_date = null)
         {
+            if (!IsValidPeriod(start_date, end_date) ||
+                !IsValidPeriod(period2_start_date, period2_end_date))
+                return BadRequest(new { message = "Tanggal awal dan akhir wajib diisi dan valid untuk kedua periode." });
+
             var master = EnsureKategori();
-            var items = _prod_waterfall.Find(PeriodFilter(start_date, end_date)).ToList();
+            var items = _prod_waterfall.Find(
+                PeriodFilter(start_date, end_date, period2_start_date, period2_end_date)).ToList();
 
             var categories = items
                 .GroupBy(t => t.kategori ?? "")
@@ -189,8 +198,8 @@ namespace ssc.Areas.PE.Controllers
                 .OrderBy(g => OrderOf(master, g.kategori))
                 .ToList();
 
-            var total_start = TotalProduction(start_date);
-            var total_end = TotalProduction(end_date);
+            var total_start = AverageWellProduction(start_date, end_date).Values.Sum();
+            var total_end = AverageWellProduction(period2_start_date, period2_end_date).Values.Sum();
             var explained = categories.Sum(c => c.delta_prod);
 
             var breakdown = items
@@ -211,6 +220,8 @@ namespace ssc.Areas.PE.Controllers
             {
                 start_date = start_date,
                 end_date = end_date,
+                period2_start_date = period2_start_date,
+                period2_end_date = period2_end_date,
                 total_start = total_start,
                 total_end = total_end,
                 // selisih yang tidak dijelaskan kategori terpilih (mis. sumur lain
@@ -237,21 +248,24 @@ namespace ssc.Areas.PE.Controllers
             DateTime? period2_start_date = null,
             DateTime? period2_end_date = null)
         {
-            if (!start_date.HasValue || !end_date.HasValue ||
-                !period2_start_date.HasValue || !period2_end_date.HasValue ||
-                start_date.Value.Date > end_date.Value.Date ||
-                period2_start_date.Value.Date > period2_end_date.Value.Date)
-            {
-                return Ok(new { items = new List<object>() });
-            }
-
-            var period1 = AverageWellProduction(start_date, end_date);
-            var period2 = AverageWellProduction(period2_start_date, period2_end_date);
-            var added = new HashSet<string>(
-                _prod_waterfall.Find(PeriodFilter(start_date, end_date))
-                    .ToList()
-                    .Select(t => t.well ?? ""),
-                StringComparer.OrdinalIgnoreCase);
+            var validPeriod1 = start_date.HasValue && end_date.HasValue &&
+                start_date.Value.Date <= end_date.Value.Date;
+            var validPeriod2 = period2_start_date.HasValue && period2_end_date.HasValue &&
+                period2_start_date.Value.Date <= period2_end_date.Value.Date;
+            var validPeriods = validPeriod1 && validPeriod2;
+            var period1 = validPeriods
+                ? AverageWellProduction(start_date, end_date)
+                : new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            var period2 = validPeriods
+                ? AverageWellProduction(period2_start_date, period2_end_date)
+                : new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            var added = validPeriod1
+                ? new HashSet<string>(
+                    _prod_waterfall.Find(PeriodFilter(start_date, end_date))
+                        .ToList()
+                        .Select(t => t.well ?? ""),
+                    StringComparer.OrdinalIgnoreCase)
+                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var wells = DailyWells()
                 .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
@@ -280,6 +294,35 @@ namespace ssc.Areas.PE.Controllers
         public ActionResult GetKategori()
         {
             return Ok(new { items = EnsureKategori() });
+        }
+
+        [Authorize("PeProdWaterfall Add")]
+        [HttpPost("Kategori")]
+        public ActionResult PostKategori([FromBody] ProdWaterfallKategori kategori)
+        {
+            if (kategori == null ||
+                String.IsNullOrWhiteSpace(kategori.code) ||
+                String.IsNullOrWhiteSpace(kategori.name))
+                return BadRequest(new { message = "Kode dan nama kategori wajib diisi." });
+
+            var code = kategori.code.Trim().ToUpperInvariant();
+            var name = kategori.name.Trim();
+            if (code.Length > 10 || name.Length > 100)
+                return BadRequest(new { message = "Kode maksimal 10 karakter dan nama maksimal 100 karakter." });
+
+            var categories = EnsureKategori();
+            if (categories.Any(t => String.Equals(t.code, code, StringComparison.OrdinalIgnoreCase)))
+                return Conflict(new { message = "Kode kategori sudah digunakan." });
+
+            var created = new ProdWaterfallKategori
+            {
+                code = code,
+                name = name,
+                order = categories.Count == 0 ? 1 : categories.Max(t => t.order) + 1
+            };
+            _kategori.InsertOne(created);
+
+            return Ok(new { item = created });
         }
 
 
@@ -391,16 +434,9 @@ namespace ssc.Areas.PE.Controllers
             return filter;
         }
 
-        /// <summary>Total produksi net (BOPD) seluruh sumur pada satu tanggal.</summary>
-        private decimal TotalProduction(DateTime? date)
+        private static bool IsValidPeriod(DateTime? start, DateTime? end)
         {
-            if (!date.HasValue)
-                return 0;
-
-            return _daily.Find(r => r.date == date)
-                .Project<Daily>(DailyCommon._fields_daily)
-                .ToList()
-                .Sum(t => t.fig_curr_net ?? 0);
+            return start.HasValue && end.HasValue && start.Value.Date <= end.Value.Date;
         }
 
         /// <summary>Produksi net (BOPD) per sumur pada satu tanggal.</summary>

@@ -34,11 +34,15 @@ export class PeWaterfallChartComponent implements OnInit {
 
   isLoadingResults = false;
 
-  start_dateControl = new FormControl(new Date());
+  start_dateControl = new FormControl(null);
   start_dateInput = "";
 
-  end_dateControl = new FormControl(new Date());
+  end_dateControl = new FormControl(null);
   end_dateInput = "";
+  period2_start_dateControl = new FormControl(null);
+  period2_start_dateInput = "";
+  period2_end_dateControl = new FormControl(null);
+  period2_end_dateInput = "";
 
   chart_title = "";
   chart_subtitle = "";
@@ -72,6 +76,8 @@ export class PeWaterfallChartComponent implements OnInit {
 
     this.start_dateControl.valueChanges.subscribe(() => this.refresh());
     this.end_dateControl.valueChanges.subscribe(() => this.refresh());
+    this.period2_start_dateControl.valueChanges.subscribe(() => this.refresh());
+    this.period2_end_dateControl.valueChanges.subscribe(() => this.refresh());
 
     this.refresh();
   }
@@ -87,24 +93,63 @@ export class PeWaterfallChartComponent implements OnInit {
 
     var p_start = this.route.snapshot.queryParamMap.get('start_date');
     var p_end = this.route.snapshot.queryParamMap.get('end_date');
+    var p2_start = this.route.snapshot.queryParamMap.get('period2_start_date');
+    var p2_end = this.route.snapshot.queryParamMap.get('period2_end_date');
     if (p_start && !isNaN(Date.parse(p_start))) this.start_dateControl.setValue(new Date(p_start), { emitEvent: false });
     if (p_end && !isNaN(Date.parse(p_end))) this.end_dateControl.setValue(new Date(p_end), { emitEvent: false });
+    if (p2_start && !isNaN(Date.parse(p2_start))) this.period2_start_dateControl.setValue(new Date(p2_start), { emitEvent: false });
+    if (p2_end && !isNaN(Date.parse(p2_end))) this.period2_end_dateControl.setValue(new Date(p2_end), { emitEvent: false });
 
-    this.start_dateInput = formatDate(this.start_dateControl.value, 'd MMM y', 'en-US');
-    this.end_dateInput = formatDate(this.end_dateControl.value, 'd MMM y', 'en-US');
+    this.start_dateInput = this.formatDate(this.start_dateControl.value);
+    this.end_dateInput = this.formatDate(this.end_dateControl.value);
+    this.period2_start_dateInput = this.formatDate(this.period2_start_dateControl.value);
+    this.period2_end_dateInput = this.formatDate(this.period2_end_dateControl.value);
   }
 
   start_dateChange(evt) {
-    this.start_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.start_dateInput = this.formatDate(evt.value);
   }
 
   end_dateChange(evt) {
-    this.end_dateInput = formatDate(evt.value, 'd MMM y', 'en-US');
+    this.end_dateInput = this.formatDate(evt.value);
+  }
+
+  period2_start_dateChange(evt) {
+    this.period2_start_dateInput = this.formatDate(evt.value);
+  }
+
+  period2_end_dateChange(evt) {
+    this.period2_end_dateInput = this.formatDate(evt.value);
+  }
+
+  private formatDate(value: Date): string {
+    return value ? formatDate(value, 'd MMM y', 'en-US') : "";
+  }
+
+  get periodsComplete(): boolean {
+    return !!this.start_dateControl.value && !!this.end_dateControl.value &&
+      !!this.period2_start_dateControl.value && !!this.period2_end_dateControl.value;
+  }
+
+  get periodsValid(): boolean {
+    return this.periodsComplete &&
+      this.start_dateControl.value.getTime() <= this.end_dateControl.value.getTime() &&
+      this.period2_start_dateControl.value.getTime() <= this.period2_end_dateControl.value.getTime();
   }
 
   refresh() {
+    if (!this.periodsValid) {
+      this.isLoadingResults = false;
+      return;
+    }
+
     this.isLoadingResults = true;
-    this.service.getChart(this.start_dateControl.value, this.end_dateControl.value).subscribe(res => {
+    this.service.getChart(
+      this.start_dateControl.value,
+      this.end_dateControl.value,
+      this.period2_start_dateControl.value,
+      this.period2_end_dateControl.value
+    ).subscribe(res => {
       this.isLoadingResults = false;
       this.render(res);
     }, error => {
@@ -122,7 +167,8 @@ export class PeWaterfallChartComponent implements OnInit {
     this.total_kategori = this.round(data.categories.reduce((sum, c) => sum + this.toNumber(c.delta_prod), 0));
 
     this.chart_title = "Sangatta Production Monitoring";
-    this.chart_subtitle = this.start_dateInput + " - " + this.end_dateInput;
+    this.chart_subtitle = "Periode 1: " + this.start_dateInput + " - " + this.end_dateInput
+      + " | Periode 2: " + this.period2_start_dateInput + " - " + this.period2_end_dateInput;
 
     // this.buildTable(data);
     this.buildChart(data);
@@ -175,7 +221,7 @@ export class PeWaterfallChartComponent implements OnInit {
     var y_max = total_start;
 
     points.push({
-      name: "Start",
+      name: "Periode 1 Avg",
       y: total_start,
       color: total_color,
       custom: { delta: total_start, is_total: true }
@@ -207,7 +253,7 @@ export class PeWaterfallChartComponent implements OnInit {
     // }
 
     points.push({
-      name: "End",
+      name: "Periode 2 Avg",
       isSum: true,
       color: total_color,
       custom: { delta: total_end, is_total: true }

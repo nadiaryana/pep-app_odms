@@ -38,15 +38,41 @@
     </div>
   </div>
 
-  <mat-form-field class="filter" floatLabel="never">
-    <mat-label>Kategori</mat-label>
-    <mat-select [(ngModel)]="selectedKategori">
-      <mat-option *ngFor="let k of kategoriList" [value]="k.code">{{k.label}}</mat-option>
-    </mat-select>
-  </mat-form-field>
+  <div class="kategori-control">
+    <mat-form-field class="filter" floatLabel="never">
+      <mat-label>Kategori</mat-label>
+      <mat-select [(ngModel)]="selectedKategori">
+        <mat-option *ngFor="let k of kategoriList" [value]="k.code">{{k.label}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-icon-button type="button" aria-label="Tambah kategori"
+      (click)="showAddKategori = !showAddKategori">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
 
   <!-- <mat-checkbox [(ngModel)]="hideAdded">Sembunyikan sumur yang sudah ada</mat-checkbox> -->
 
+</div>
+
+<div class="kategori-add-form" *ngIf="showAddKategori" [formGroup]="kategoriForm">
+  <mat-form-field>
+    <mat-label>Kode kategori</mat-label>
+    <input matInput formControlName="code" maxlength="10" placeholder="Contoh: D">
+    <mat-error *ngIf="kategoriForm.get('code').hasError('required')">Kode kategori wajib diisi</mat-error>
+    <mat-error *ngIf="kategoriForm.get('code').hasError('maxlength')">Maksimal 10 karakter</mat-error>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Nama kategori</mat-label>
+    <input matInput formControlName="name" maxlength="100">
+    <mat-error *ngIf="kategoriForm.get('name').hasError('required')">Nama kategori wajib diisi</mat-error>
+    <mat-error *ngIf="kategoriForm.get('name').hasError('maxlength')">Maksimal 100 karakter</mat-error>
+  </mat-form-field>
+  <button mat-raised-button color="primary" type="button" (click)="addKategori()"
+    [disabled]="isAddingKategori || kategoriForm.invalid">
+    <mat-icon>save</mat-icon> Tambah
+  </button>
+  <button mat-button type="button" (click)="cancelAddKategori()" [disabled]="isAddingKategori">Batal</button>
 </div>
 
 <div class="container-content">
@@ -86,14 +112,14 @@
 
         <mat-grid-tile [colspan]="2" [rowspan]="1">
           <mat-form-field [formGroupName]="index">
-            <mat-label>Average Net 1 (BOPD)</mat-label>
+            <mat-label>Average Net 1</mat-label>
             <input matInput readonly [value]="wellBefore(index) | number:'1.0-3'">
           </mat-form-field>
         </mat-grid-tile>
 
         <mat-grid-tile [colspan]="2" [rowspan]="1">
           <mat-form-field [formGroupName]="index">
-            <mat-label>Average Net 2 (BOPD)</mat-label>
+            <mat-label>Average Net 2 </mat-label>
             <input matInput readonly [value]="wellAfter(index) | number:'1.0-3'">
           </mat-form-field>
         </mat-grid-tile>
