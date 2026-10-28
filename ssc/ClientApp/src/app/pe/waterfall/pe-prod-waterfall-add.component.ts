@@ -137,14 +137,24 @@ export class PeProdWaterfallAddComponent implements OnInit {
     });
   }
 
+
+  get hasPeriod2(): boolean {
+    return !!this.period2_start_dateControl.value && !!this.period2_end_dateControl.value;
+  }
+
   private dateRangesValid(): boolean {
     var start1 = this.start_dateControl.value;
     var end1 = this.end_dateControl.value;
     var start2 = this.period2_start_dateControl.value;
     var end2 = this.period2_end_dateControl.value;
-    return !!start1 && !!end1 && !!start2 && !!end2 &&
-      start1.getTime() <= end1.getTime() &&
-      start2.getTime() <= end2.getTime();
+
+    if (!start1 || !end1 || start1.getTime() > end1.getTime()) return false;
+
+    if (!start2 && !end2) return true;
+
+    if (!start2 || !end2) return false;
+
+    return start2.getTime() <= end2.getTime();
   }
 
   start_dateChange(evt) {
@@ -283,7 +293,9 @@ export class PeProdWaterfallAddComponent implements OnInit {
 
   onSave() {
     if (!this.dateRangesValid()) {
-      this.snackbarService.status.next(new SnackbarApi(true, "Tanggal awal harus sebelum atau sama dengan tanggal akhir pada setiap periode.", 'dismiss'));
+      this.snackbarService.status.next(new SnackbarApi(true, 
+        "Periode 1 wajib diisi. Periode 2 jika diisi, harus lengkap. Tanggal awal harus sebelum atau sama dengan tanggal akhir.",
+        'dismiss'));
       return;
     }
     if (!this.selectedKategori) {

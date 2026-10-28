@@ -114,6 +114,11 @@ export class PeWaterfallChartComponent implements OnInit {
     this.end_dateInput = this.formatDate(evt.value);
   }
 
+  get hasPeriod2(): boolean {
+    return !!this.period2_start_dateControl.value && !!this.period2_end_dateControl.value;
+  }
+
+
   period2_start_dateChange(evt) {
     this.period2_start_dateInput = this.formatDate(evt.value);
   }
@@ -127,14 +132,16 @@ export class PeWaterfallChartComponent implements OnInit {
   }
 
   get periodsComplete(): boolean {
-    return !!this.start_dateControl.value && !!this.end_dateControl.value &&
-      !!this.period2_start_dateControl.value && !!this.period2_end_dateControl.value;
+    var p2Partial = !!this.period2_start_dateControl.value !== !!this.period2_end_dateControl.value;
+    return !!this.start_dateControl.value && !!this.end_dateControl.value && !p2Partial;
   }
 
   get periodsValid(): boolean {
-    return this.periodsComplete &&
-      this.start_dateControl.value.getTime() <= this.end_dateControl.value.getTime() &&
+    if (!this.periodsComplete) return false;
+    var p1 = this.start_dateControl.value.getTime() <= this.end_dateControl.value.getTime();
+    var p2 = !this.hasPeriod2 ||
       this.period2_start_dateControl.value.getTime() <= this.period2_end_dateControl.value.getTime();
+    return p1 && p2;
   }
 
   refresh() {
@@ -167,8 +174,10 @@ export class PeWaterfallChartComponent implements OnInit {
     this.total_kategori = this.round(data.categories.reduce((sum, c) => sum + this.toNumber(c.delta_prod), 0));
 
     this.chart_title = "Sangatta Production Monitoring";
-    this.chart_subtitle = "Periode 1: " + this.start_dateInput + " - " + this.end_dateInput
-      + " | Periode 2: " + this.period2_start_dateInput + " - " + this.period2_end_dateInput;
+    this.chart_subtitle = this.hasPeriod2
+    ? "Periode 1: " + this.start_dateInput + " - " + this.end_dateInput
+      + " | Periode 2: " + this.period2_start_dateInput + " - " + this.period2_end_dateInput
+    : "Periode: " + this.start_dateInput + " - " + this.end_dateInput;
 
     // this.buildTable(data);
     this.buildChart(data);
@@ -220,8 +229,11 @@ export class PeWaterfallChartComponent implements OnInit {
     var y_min = total_start;
     var y_max = total_start;
 
+    var label_start = this.hasPeriod2 ? "Periode 1 Avg" : "Awal (" + this.start_dateInput + ")";
+    var label_end   = this.hasPeriod2 ? "Periode 2 Avg" : "Akhir (" + this.end_dateInput + ")";
+
     points.push({
-      name: "Periode 1 Avg",
+      name: label_start,
       y: total_start,
       color: total_color,
       custom: { delta: total_start, is_total: true }
@@ -253,7 +265,7 @@ export class PeWaterfallChartComponent implements OnInit {
     // }
 
     points.push({
-      name: "Periode 2 Avg",
+      name: label_end,
       isSum: true,
       color: total_color,
       custom: { delta: total_end, is_total: true }

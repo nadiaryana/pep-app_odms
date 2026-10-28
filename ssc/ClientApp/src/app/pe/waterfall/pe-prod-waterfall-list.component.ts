@@ -247,25 +247,40 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
     return code;
   }
 
+   /** Warna latar baris header kategori, tetap per kode kategori. */
+  private readonly categoryBgMap: { [code: string]: string } = {
+    A: '#a315ad', 
+    B: '#021488', 
+    C: '#f99a1e', 
+    D: '#31b14f', 
+    E: '#7d0d3c', 
+    F: '#20c8de', 
+  };
+
+  categoryBgColor(code: string): string {
+    return this.categoryBgMap[code] || '#eceff1'; // abu-abu jika tidak ada di mapping
+  }
+
+  /** Warna teks angka total pada baris header kategori. */
+  categoryColor(code: string): string {
+    return '#ffffff';
+  }
+
   /** Baris tabel yang berupa data sumur (tanpa baris header kategori). */
   get dataRows(): PeProdWaterfallRow[] {
     return this.dataSource.data.filter(r => !r.isGroup) as PeProdWaterfallRow[];
   }
 
-  /** Predikat `when` pada matRowDef: baris header kategori. */
   isGroupRow(index: number, row: PeProdWaterfallTableRow): boolean {
     return !!row && !!row.isGroup;
   }
 
-  /** Predikat `when` pada matRowDef: baris data sumur. */
+
   isDataRow(index: number, row: PeProdWaterfallTableRow): boolean {
     return !row || !row.isGroup;
   }
 
-  /**
-   * Susun baris tabel: satu baris header kategori (berisi total delta kategori)
-   * diikuti baris-baris sumur di bawahnya.
-   */
+
   private renderRows() {
     var display: any[] = [];
     var groupKeys: string[] = [];
@@ -282,15 +297,25 @@ export class PeProdWaterfallListComponent implements OnInit, OnDestroy {
       groups[index].push(row);
     });
 
-    groupKeys.forEach((code, index) => {
+    var orderedGroups = groupKeys.map((code, index) => ({
+      code: code,
+      rows: groups[index]
+    })).sort((a, b) => {
+      if (!a.code) return 1;
+      if (!b.code) return -1;
+      return a.code.localeCompare(b.code);
+    });
+
+    orderedGroups.forEach(group => {
+      var code = group.code;
       display.push({
         isGroup: true,
         kategori: code,
         label: this.kategoriLabel.get(code) || this.kategoriText(code),
-        delta_prod: this.categoryTotal(code, groups[index]),
-        well_count: groups[index].length
+        delta_prod: this.categoryTotal(code, group.rows),
+        well_count: group.rows.length
       });
-      groups[index].forEach(row => display.push(row));
+      group.rows.forEach(row => display.push(row));
     });
 
     this.dataSource.data = display;

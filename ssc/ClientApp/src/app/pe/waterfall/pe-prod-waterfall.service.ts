@@ -96,17 +96,18 @@ export class PeProdWaterfallService {
 	getChart(
 		start_date: Date,
 		end_date: Date,
-		period2_start_date: Date,
-		period2_end_date: Date
+		period2_start_date: Date |null = null,
+		period2_end_date: Date | null = null
 	): Observable<PeProdWaterfallChart> {
-		return this.http.get<PeProdWaterfallChart>(this.apiUrl + '/Chart', {
-			params: {
-				start_date: start_date.toISOString(),
-				end_date: end_date.toISOString(),
-				period2_start_date: period2_start_date.toISOString(),
-				period2_end_date: period2_end_date.toISOString()
-			}
-		});
+		var params = {
+			start_date: start_date.toISOString(),
+			end_date: end_date.toISOString()
+		};
+		if (period2_start_date && period2_end_date) {
+			params["period2_start_date"] = period2_start_date.toISOString();
+			params["period2_end_date"] = period2_end_date.toISOString();
+		}
+		return this.http.get<PeProdWaterfallChart>(this.apiUrl + '/Chart', { params: params });
 	}
 
 	add(items: PeProdWaterfall[]): Observable<any> {

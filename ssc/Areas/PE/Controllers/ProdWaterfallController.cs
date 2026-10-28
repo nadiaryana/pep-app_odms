@@ -178,13 +178,20 @@ namespace ssc.Areas.PE.Controllers
             DateTime? period2_start_date = null,
             DateTime? period2_end_date = null)
         {
+            var hasPeriod2 = period2_start_date.HasValue && period2_end_date.HasValue;
+
             if (!IsValidPeriod(start_date, end_date) ||
-                !IsValidPeriod(period2_start_date, period2_end_date))
-                return BadRequest(new { message = "Tanggal awal dan akhir wajib diisi dan valid untuk kedua periode." });
+                (hasPeriod2 && !IsValidPeriod(period2_start_date, period2_end_date)))
+                return BadRequest(new { message = "Tanggal periode tidak valid." });
 
             var master = EnsureKategori();
-            var items = _prod_waterfall.Find(
-                PeriodFilter(start_date, end_date, period2_start_date, period2_end_date)).ToList();
+            var filter = PeriodFilter(start_date, end_date, period2_start_date, period2_end_date);
+            if (!hasPeriod2)
+                // mode 1 rentang: hanya data yang memang dibuat tanpa Periode 2
+                filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.period2_start_date, null);
+
+            var items = _prod_waterfall.Find(filter).ToList();
+
 
             var categories = items
                 .GroupBy(t => t.kategori ?? "")
@@ -198,8 +205,14 @@ namespace ssc.Areas.PE.Controllers
                 .OrderBy(g => OrderOf(master, g.kategori))
                 .ToList();
 
-            var total_start = AverageWellProduction(start_date, end_date).Values.Sum();
-            var total_end = AverageWellProduction(period2_start_date, period2_end_date).Values.Sum();
+            // var total_start = AverageWellProduction(start_date, end_date).Values.Sum();
+            // var total_end = AverageWellProduction(period2_start_date, period2_end_date).Values.Sum();
+            var total_start = hasPeriod2
+                ? AverageWellProduction(start_date, end_date).Values.Sum()
+                : WellProduction(start_date).Values.Sum();
+            var total_end = hasPeriod2
+                ? AverageWellProduction(period2_start_date, period2_end_date).Values.Sum()
+                : WellProduction(end_date).Values.Sum();
             var explained = categories.Sum(c => c.delta_prod);
 
             var breakdown = items
@@ -248,20 +261,45 @@ namespace ssc.Areas.PE.Controllers
             DateTime? period2_start_date = null,
             DateTime? period2_end_date = null)
         {
-            var validPeriod1 = start_date.HasValue && end_date.HasValue &&
-                start_date.Value.Date <= end_date.Value.Date;
-            var validPeriod2 = period2_start_date.HasValue && period2_end_date.HasValue &&
-                period2_start_date.Value.Date <= period2_end_date.Value.Date;
-            var validPeriods = validPeriod1 && validPeriod2;
-            var period1 = validPeriods
-                ? AverageWellProduction(start_date, end_date)
-                : new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
-            var period2 = validPeriods
-                ? AverageWellProduction(period2_start_date, period2_end_date)
-                : new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
-            var added = validPeriod1
+
+            var validPeriod1 = IsValidPeriod(start_date, end_date);
+            var noPeriod2 = !period2_start_date.HasValue && !period2_end_date.HasValue;
+            var validPeriod2 = IsValidPeriod(period2_start_date, period2_end_date);
+
+            var twoRange = validPeriod1 && validPeriod2;
+            var singleRange = validPeriod1 && noPeriod2;
+
+            var empty = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+
+            // mode 2 rentang: rata-rata tiap periode; mode 1 rentang: produksi tanggal start dan end
+            var period1 = twoRange ? AverageWellProduction(start_date, end_date)
+                        : singleRange ? WellProduction(start_date)
+                        : empty;
+            var period2 = twoRange ? AverageWellProduction(period2_start_date, period2_end_date)
+                        : singleRange ? WellProduction(end_date)
+                        : empty;
+            // var validPeriod1 = start_date.HasValue && end_date.HasValue &&
+            //     start_date.Value.Date <= end_date.Value.Date;
+            // var validPeriod2 = period2_start_date.HasValue && period2_end_date.HasValue &&
+            //     period2_start_date.Value.Date <= period2_end_date.Value.Date;
+            // var validPeriods = validPeriod1 && validPeriod2;
+            // var period1 = validPeriods
+            //     ? AverageWellProduction(start_date, end_date)
+            //     : new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            // var period2 = validPeriods
+            //     ? AverageWellProduction(period2_start_date, period2_end_date)
+            //     : new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            // var added = validPeriod1
+            //     ? new HashSet<string>(
+            //         _prod_waterfall.Find(PeriodFilter(start_date, end_date))
+            //             .ToList()
+            //             .Select(t => t.well ?? ""),
+            //         StringComparer.OrdinalIgnoreCase)
+            //     : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var added = (twoRange || singleRange)
                 ? new HashSet<string>(
-                    _prod_waterfall.Find(PeriodFilter(start_date, end_date))
+                    _prod_waterfall.Find(PeriodFilter(start_date, end_date, period2_start_date, period2_end_date))
                         .ToList()
                         .Select(t => t.well ?? ""),
                     StringComparer.OrdinalIgnoreCase)
@@ -353,7 +391,7 @@ namespace ssc.Areas.PE.Controllers
 
                 // satu sumur hanya boleh muncul sekali per periode
                 var exists = _prod_waterfall.Find(
-                    PeriodFilter(item.start_date, item.end_date) &
+                    PeriodFilter(item.start_date, item.end_date, item.period2_start_date, item.period2_end_date) &
                     Builders<ProdWaterfall>.Filter.Eq(t => t.well, item.well)
                 ).FirstOrDefault();
 
@@ -430,7 +468,10 @@ namespace ssc.Areas.PE.Controllers
             if (start.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.start_date, start);
             if (end.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.end_date, end);
             if (period2Start.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.period2_start_date, period2Start);
+            else if (start.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.period2_start_date, (DateTime?)null);
             if (period2End.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.period2_end_date, period2End);
+            else if (start.HasValue) filter = filter & Builders<ProdWaterfall>.Filter.Eq(t => t.period2_end_date, (DateTime?)null);
+
             return filter;
         }
 
