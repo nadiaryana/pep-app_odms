@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ssc.Areas.PE.Models;
 using ssc.Services;
+using OfficeOpenXml;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -46,6 +48,56 @@ namespace ssc.Areas.PE.Controllers
         {
             var data = await _arusService.GetByWellAndRangeAsync(wellId, from, to);
             return Ok(data);
+        }
+
+        // GET /api/arus/data/{wellId}/excel?limit=200
+        // GET /api/arus/data/{wellId}/excel?from=&to=
+        [HttpGet("data/{wellId}/excel")]
+        public async Task<IActionResult> GetDataExcel(
+            string wellId,
+            [FromQuery] int limit = 100,
+            [FromQuery] DateTime? from = null,
+            [FromQuery] DateTime? to = null)
+        {
+            if (from.HasValue != to.HasValue)
+                return BadRequest(new { message = "Tanggal mulai dan tanggal akhir harus diisi bersama." });
+
+            if (from.HasValue && to.Value < from.Value)
+                return BadRequest(new { message = "Tanggal akhir tidak boleh kurang dari tanggal mulai." });
+
+            List<ArusReading> readings = from.HasValue
+                ? await _arusService.GetByWellAndRangeAsync(wellId, from.Value, to.Value)
+                : await _arusService.GetByWellAsync(wellId, limit);
+            readings = readings.OrderBy(reading => reading.CreatedAt).ToList();
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("IoT Arus");
+                string[] headers = { "Date", "Well Name", "Arus (A)", "Status", "Recorded At" };
+
+                for (var column = 0; column < headers.Length; column++)
+                    worksheet.Cells[1, column + 1].Value = headers[column];
+
+                for (var index = 0; index < readings.Count; index++)
+                {
+                    var reading = readings[index];
+                    var row = index + 2;
+                    worksheet.Cells[row, 1].Value = reading.CreatedAt;
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "dd mmm yyyy hh:mm:ss";
+                    worksheet.Cells[row, 2].Value = reading.WellId;
+                    worksheet.Cells[row, 3].Value = reading.Current;
+                    worksheet.Cells[row, 4].Value = reading.Status == 1 ? "ON" : "OFF";
+                    worksheet.Cells[row, 5].Value = reading.RecordedAt;
+                }
+
+                worksheet.Cells[1, 1, 1, headers.Length].Style.Font.Bold = true;
+                worksheet.Cells[1, 1, Math.Max(readings.Count + 1, 1), headers.Length].AutoFitColumns();
+
+                return File(
+                    package.GetAsByteArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "IoT-Arus.xlsx");
+            }
         }
 
         // GET /api/arus/laststatus/{wellId}  ← ESP32 saat boot

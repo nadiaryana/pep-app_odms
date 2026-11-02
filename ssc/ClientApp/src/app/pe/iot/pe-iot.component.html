@@ -98,7 +98,11 @@
       <button mat-raised-button color="primary" (click)="applyDateFilter()" [disabled]="!isDateRangeValid()">
         <mat-icon>search</mat-icon> Tampilkan Data
       </button>
+      <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults">
+        <mat-icon>file_download</mat-icon> Export to Excel
+      </button>
     </div>
+    <div *ngIf="exportError" style="color: #f44336; margin-bottom: 10px;">{{ exportError }}</div>
 
     <div class="loading-shade" *ngIf="isLoadingResults">
       <mat-spinner></mat-spinner>

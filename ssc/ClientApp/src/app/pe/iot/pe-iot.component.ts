@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from "@angular/core";
 import { TitleService } from "src/app/navigation/title/title.service";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import * as Highcharts from "highcharts";
 import { FormControl } from "@angular/forms";
 import { MatPaginator, MatSort, MatTableDataSource } from "@angular/material";
@@ -52,6 +52,7 @@ export class PeIotComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<ArusRow>([]);
   resultsLength = 0;
   isLoadingResults = false;
+  exportError: string = "";
 
   dateStartControl = new FormControl(null);
   dateEndControl = new FormControl(null);
@@ -78,6 +79,7 @@ export class PeIotComponent implements OnInit, OnDestroy {
   private chartWell$ = new Subject<IotWell | null>();
   private destroy$ = new Subject<void>();
   private rangeSub: Subscription;
+  private activeDateRange: { from: Date; to: Date } | null = null;
 
 
   get filteredWells(): IotWell[] {
@@ -149,6 +151,8 @@ export class PeIotComponent implements OnInit, OnDestroy {
     this.dateStartControl.setValue(null);
     this.dateEndControl.setValue(null);
     this.dateRangeError = "";
+    this.activeDateRange = null;
+    this.exportError = "";
     this.hasChartData = false;
     if (this.chartRef) {
       this.chartRef.destroy();
@@ -189,6 +193,45 @@ export class PeIotComponent implements OnInit, OnDestroy {
     this.chartWell$.next(null);
     this.chartPaused = true;
     this.loadRangeData();
+  }
+
+  exportExcel(): void {
+    if (!this.selectedWell || this.isLoadingResults) return;
+
+    this.exportError = "";
+    let params = new HttpParams().set("limit", this.defaultLimit.toString());
+    if (this.activeDateRange) {
+      params = new HttpParams()
+        .set("from", this.activeDateRange.from.toISOString())
+        .set("to", this.activeDateRange.to.toISOString());
+    }
+
+    const wellId = encodeURIComponent(this.selectedWell.name);
+    this.isLoadingResults = true;
+    this.http.get(`/api/arus/data/${wellId}/excel`, {
+      params,
+      responseType: "arraybuffer",
+    }).subscribe(
+      (data: ArrayBuffer) => {
+        this.isLoadingResults = false;
+        const blob = new Blob([data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url; 
+        anchor.download = "Sumur.xlsx";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.URL.revokeObjectURL(url);
+      },
+      (error) => {
+        this.isLoadingResults = false;
+        this.exportError = "Gagal mengunduh file Excel.";
+        console.error("Gagal mengunduh data arus ke Excel", error);
+      }
+    );
   }
 
   // GET /api/arus/data/{wellId}?limit=  (data live terakhir)
@@ -247,6 +290,10 @@ export class PeIotComponent implements OnInit, OnDestroy {
     const from = new Date(this.dateStartControl.value).toISOString();
     const to = new Date(this.dateEndControl.value).toISOString();
 
+    this.activeDateRange = {
+      from: new Date(this.dateStartControl.value),
+      to: new Date(this.dateEndControl.value),
+    };
     if (this.rangeSub) this.rangeSub.unsubscribe();
     this.isLoadingResults = true;
     this.rangeSub = this.http.get<ArusReading[]>(`/api/arus/data/${wellId}/range`, { params: { from, to } }).subscribe(

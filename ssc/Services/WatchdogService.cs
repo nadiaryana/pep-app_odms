@@ -200,6 +200,14 @@ namespace ssc.Services
                             {
                                 state.OfflineNotified = true;
 
+                                await _stateCollection.BulkWriteAsync(
+                                    new[]
+                                    {
+                                        UpsertState(state)
+                                    },
+                                    cancellationToken: stoppingToken);
+
+
                                 _logger.LogWarning(
                                     "[WATCHDOG] Notifikasi OFFLINE terkirim untuk {WellId}.",
                                     wellId);
@@ -225,7 +233,10 @@ namespace ssc.Services
                     // berikutnya bisa mengirim notifikasi baru.
                     state.LastOnline = true;
                     state.LastArusStatus = last.Status;
-                    state.OfflineNotified = false;
+                    if (last.Status == 1)
+                    {
+                        state.OfflineNotified = false;
+                    }
 
                     bulkOps.Add(UpsertState(state));
                 }
