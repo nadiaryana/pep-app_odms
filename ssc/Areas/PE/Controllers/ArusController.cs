@@ -33,9 +33,10 @@ namespace ssc.Areas.PE.Controllers
             return Ok(new { status = "ok", well_id = data.WellId });
         }
 
-        // GET /api/arus/data/{wellId}?limit=100  ← Angular chart
+        // GET /api/arus/data/{wellId}?limit=200  ← Angular chart
+        // GET /api/arus/data/{wellId}             ← Angular tabel history (limit kosong = semua data)
         [HttpGet("data/{wellId}")]
-        public async Task<IActionResult> GetData(string wellId, [FromQuery] int limit = 100)
+        public async Task<IActionResult> GetData(string wellId, [FromQuery] int? limit = null)
         {
             var data = await _arusService.GetByWellAsync(wellId, limit);
             return Ok(data);
@@ -50,12 +51,12 @@ namespace ssc.Areas.PE.Controllers
             return Ok(data);
         }
 
-        // GET /api/arus/data/{wellId}/excel?limit=200
+        // GET /api/arus/data/{wellId}/excel             (limit kosong = semua data)
         // GET /api/arus/data/{wellId}/excel?from=&to=
         [HttpGet("data/{wellId}/excel")]
         public async Task<IActionResult> GetDataExcel(
             string wellId,
-            [FromQuery] int limit = 100,
+            [FromQuery] int? limit = null,
             [FromQuery] DateTime? from = null,
             [FromQuery] DateTime? to = null)
         {

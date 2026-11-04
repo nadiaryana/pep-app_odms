@@ -33,12 +33,18 @@ namespace ssc.Services
         public async Task InsertAsync(ArusReading data) =>
             await _collection.InsertOneAsync(data);
 
-        public async Task<List<ArusReading>> GetByWellAsync(string wellId, int limit = 100) =>
-            await _collection
+        // limit null atau <= 0 berarti ambil semua data sumur tersebut
+        public async Task<List<ArusReading>> GetByWellAsync(string wellId, int? limit = null)
+        {
+            IFindFluent<ArusReading, ArusReading> query = _collection
                 .Find(x => x.WellId == wellId)
-                .SortByDescending(x => x.CreatedAt)
-                .Limit(limit)
-                .ToListAsync();
+                .SortByDescending(x => x.CreatedAt);
+
+            if (limit.HasValue && limit.Value > 0)
+                query = query.Limit(limit.Value);
+
+            return await query.ToListAsync();
+        }
 
         public async Task<List<ArusReading>> GetByWellAndRangeAsync(
             string wellId, DateTime from, DateTime to) =>

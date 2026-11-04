@@ -63,8 +63,8 @@ export class PeIotComponent implements OnInit, OnDestroy {
 
   todayDate: string = new Date().toLocaleDateString("id-ID");
 
-  // Berapa banyak data terakhir yang diambil saat tidak memakai filter tanggal
-  defaultLimit: number = 200;
+  // Jumlah data terakhir untuk chart live; tabel history selalu mengambil semua data
+  chartLimit: number = 200;
 
   wells: IotWell[] = [];
   selectedWell: IotWell | null = null;
@@ -75,10 +75,13 @@ export class PeIotComponent implements OnInit, OnDestroy {
   lastUpdated: Date | null = null;
   chartPaused: boolean = false;   // true saat chart menampilkan rentang tanggal
   private lastReadingId: string | null = null;
+  // Id baris terbaru yang sudah ada di tabel; dipakai untuk menambahkan data baru saat polling
+  private lastTableReadingId: string | null = null;
+  private tableReady: boolean = false;
   // Sumur yang chart-nya dipolling; null = polling chart dijeda
   private chartWell$ = new Subject<IotWell | null>();
   private destroy$ = new Subject<void>();
-  private rangeSub: Subscription;
+  private tableSub: Subscription;
   private activeDateRange: { from: Date; to: Date } | null = null;
 
 
@@ -117,7 +120,7 @@ export class PeIotComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    if (this.rangeSub) this.rangeSub.unsubscribe();
+    if (this.tableSub) this.tableSub.unsubscribe();
 
     if (this.chartRef) {
       this.chartRef.destroy();
@@ -159,12 +162,14 @@ export class PeIotComponent implements OnInit, OnDestroy {
       this.chartRef = null;
     }
 
-    // Batalkan request rentang tanggal yang masih berjalan, lalu mulai polling live
-    if (this.rangeSub) this.rangeSub.unsubscribe();
+    // Batalkan request tabel yang masih berjalan, lalu muat semua history + mulai polling live
+    if (this.tableSub) this.tableSub.unsubscribe();
     this.chartPaused = false;
     this.lastReadingId = null;
+    this.lastTableReadingId = null;
+    this.tableReady = false;
     this.lastUpdated = null;
-    this.isLoadingResults = true;
+    this.loadTableData(well);
     this.chartWell$.next(well);
   }
 
@@ -199,9 +204,10 @@ export class PeIotComponent implements OnInit, OnDestroy {
     if (!this.selectedWell || this.isLoadingResults) return;
 
     this.exportError = "";
-    let params = new HttpParams().set("limit", this.defaultLimit.toString());
+    // Tanpa limit & tanpa rentang tanggal = seluruh data history ikut diexport
+    let params = new HttpParams();
     if (this.activeDateRange) {
-      params = new HttpParams()
+      params = params
         .set("from", this.activeDateRange.from.toISOString())
         .set("to", this.activeDateRange.to.toISOString());
     }
@@ -234,12 +240,12 @@ export class PeIotComponent implements OnInit, OnDestroy {
     );
   }
 
-  // GET /api/arus/data/{wellId}?limit=  (data live terakhir)
-  // Error dikembalikan sebagai null supaya tampilan pertama tetap bisa menutup spinner.
+  // GET /api/arus/data/{wellId}?limit=  (data live terakhir untuk chart)
+  // Error dikembalikan sebagai null supaya polling berikutnya tetap berjalan.
   private fetchLatestReadings(well: IotWell): Observable<ArusReading[] | null> {
     const wellId = encodeURIComponent(well.name);
     return this.http
-      .get<ArusReading[]>(`/api/arus/data/${wellId}`, { params: { limit: this.defaultLimit.toString() } })
+      .get<ArusReading[]>(`/api/arus/data/${wellId}`, { params: { limit: this.chartLimit.toString() } })
       .pipe(
         catchError((err) => {
           console.error("Gagal memuat data arus", err);
@@ -248,24 +254,12 @@ export class PeIotComponent implements OnInit, OnDestroy {
       );
   }
 
-  // Hasil polling live: tabel hanya diisi pada fetch pertama (tidak dipolling),
-  // chart diperbarui setiap ada data baru
+  // Hasil polling live: baris baru ditambahkan ke tabel, seluruh data tetap dari loadTableData
   private applyLiveReadings(readings: ArusReading[] | null, first: boolean): void {
-    if (first) {
-      this.isLoadingResults = false;
-    }
-    if (!readings) {
-      if (first) {
-        this.dataSource.data = [];
-        this.resultsLength = 0;
-      }
-      return;
-    }
+    if (!readings) return;
 
     this.lastUpdated = new Date();
-    if (first) {
-      this.populateTable(readings);
-    }
+    this.appendNewRows(readings);
 
     // Data API urut terbaru dulu; tidak ada data baru -> chart tidak perlu digambar ulang
     const latestId = readings.length ? readings[0].Id : null;
@@ -282,6 +276,47 @@ export class PeIotComponent implements OnInit, OnDestroy {
     this.buildChart(readings);
   }
 
+  // GET /api/arus/data/{wellId} tanpa limit -> semua history sumur untuk tabel
+  private loadTableData(well: IotWell): void {
+    const wellId = encodeURIComponent(well.name);
+    this.isLoadingResults = true;
+    this.tableSub = this.http.get<ArusReading[]>(`/api/arus/data/${wellId}`).subscribe(
+      (readings) => {
+        this.isLoadingResults = false;
+        this.populateTable(readings || []);
+      },
+      (err) => {
+        this.isLoadingResults = false;
+        this.tableReady = false;
+        console.error("Gagal memuat data arus", err);
+        this.dataSource.data = [];
+        this.resultsLength = 0;
+      }
+    );
+  }
+
+  // Tambahkan hanya baris yang belum ada di tabel. Data polling urut terbaru dulu,
+  // jadi baris baru adalah semua data di atas Id terakhir yang sudah tampil.
+  private appendNewRows(readings: ArusReading[]): void {
+    if (!this.tableReady || !readings.length) return;
+
+    let newReadings: ArusReading[];
+    if (this.lastTableReadingId) {
+      const anchor = readings.findIndex((r) => r.Id === this.lastTableReadingId);
+      // Anchor tidak ditemukan = response polling lebih lama dari isi tabel; lewati
+      // supaya tabel tidak berisi baris ganda (tabel disegarkan saat sumur diklik ulang).
+      if (anchor === -1) return;
+      newReadings = readings.slice(0, anchor);
+    } else {
+      newReadings = readings;
+    }
+    if (!newReadings.length) return;
+
+    this.dataSource.data = this.toRows(newReadings).concat(this.dataSource.data);
+    this.resultsLength = this.dataSource.data.length;
+    this.lastTableReadingId = readings[0].Id;
+  }
+
   // GET /api/arus/data/{wellId}/range?from=&to=
   private loadRangeData(): void {
     if (!this.selectedWell) return;
@@ -294,9 +329,9 @@ export class PeIotComponent implements OnInit, OnDestroy {
       from: new Date(this.dateStartControl.value),
       to: new Date(this.dateEndControl.value),
     };
-    if (this.rangeSub) this.rangeSub.unsubscribe();
+    if (this.tableSub) this.tableSub.unsubscribe();
     this.isLoadingResults = true;
-    this.rangeSub = this.http.get<ArusReading[]>(`/api/arus/data/${wellId}/range`, { params: { from, to } }).subscribe(
+    this.tableSub = this.http.get<ArusReading[]>(`/api/arus/data/${wellId}/range`, { params: { from, to } }).subscribe(
       (readings) => {
         this.isLoadingResults = false;
         const list = readings || [];
@@ -305,6 +340,7 @@ export class PeIotComponent implements OnInit, OnDestroy {
       },
       (err) => {
         this.isLoadingResults = false;
+        this.tableReady = false;
         console.error("Gagal memuat data arus", err);
         this.dataSource.data = [];
         this.resultsLength = 0;
@@ -312,17 +348,21 @@ export class PeIotComponent implements OnInit, OnDestroy {
     );
   }
 
-  private populateTable(readings: ArusReading[]): void {
-    const rows: ArusRow[] = readings.map((r) => ({
+  private toRows(readings: ArusReading[]): ArusRow[] {
+    return readings.map((r) => ({
       date: r.CreatedAt,
       wellName: r.WellId,
       current: r.Current,
       status: r.Status,
       recorded_at: r.RecordedAt,
     }));
+  }
 
-    this.dataSource.data = rows;
-    this.resultsLength = rows.length;
+  private populateTable(readings: ArusReading[]): void {
+    this.dataSource.data = this.toRows(readings);
+    this.resultsLength = readings.length;
+    this.lastTableReadingId = readings.length ? readings[0].Id : null;
+    this.tableReady = true;
 
     setTimeout(() => {
       if (this.paginator) this.dataSource.paginator = this.paginator;
