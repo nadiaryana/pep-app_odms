@@ -1,0 +1,129 @@
+<div class="container-content rod_pump_card">
+
+  <div class="rod_pump_title">Rod Pump Data</div>
+
+  <div class="loading-shade" *ngIf="isLoadingResults">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+
+  <div class="container-table">
+
+    <table mat-table [dataSource]="dataSource" class="pe-table"
+      matSort matSortActive="rod_nomor" matSortDisableClear matSortDirection="asc">
+
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <mat-checkbox (change)="($event && !isEditing) ? masterToggle() : null"
+            [checked]="selection.hasValue() && isAllSelected()"
+            [indeterminate]="selection.hasValue() && !isAllSelected()"
+            [aria-label]="checkboxLabel()"
+            [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox (click)="$event.stopPropagation()"
+            (change)="($event && !isEditing) ? selection.toggle(row) : null"
+            [checked]="selection.isSelected(row)"
+            [aria-label]="checkboxLabel(row)"
+            [disabled]="isEditing" *ngIf="pePermissionService.passPermission('pe/daily/delete')">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_nomor">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Rod Nomor</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_nomor | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="plunger_diameter">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Plunger Diameter</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.plunger_diameter | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_weight">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Rod Weight</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_weight | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="elastic_constat">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Elastic Constant</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.elastic_constat | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="freq_factor">
+        <th mat-header-cell *matHeaderCellDef rowspan="2">
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">Freq. Factor</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.freq_factor | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string">
+        <th mat-header-cell *matHeaderCellDef colspan="7">Rod String</th>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string1">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">1 1/4"</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_string1 | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string2">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">1 1/8"</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_string2 | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string3">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">1"</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_string3 | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string4">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">7/8"</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_string4 | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string5">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">3/4"</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_string5 | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string6">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">5/8"</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_string6 | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="rod_string7">
+        <th mat-header-cell *matHeaderCellDef>
+          <span mat-sort-header arrowPosition="before" class="mat-sort-header">1/2"</span>
+        </th>
+        <td mat-cell *matCellDef="let row" class="cell-right">{{ (row.rod_string7 | number : '1.0-4') || '-' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="headerColumns1"></tr>
+      <tr mat-header-row *matHeaderRowDef="headerColumns2"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <mat-paginator [length]="resultsLength" [pageSizeOptions]="[50, 100, 500, 1000]"></mat-paginator>
+
+</div>

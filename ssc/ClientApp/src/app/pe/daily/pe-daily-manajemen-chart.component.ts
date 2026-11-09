@@ -147,6 +147,120 @@ export class PeDailyManajemenChartComponent {
     ]
 };
 
+
+@ViewChild('oil_chart_el', { static: true }) public oil_chart_el: ElementRef;
+
+    oil_chart_options:object = {
+      chart: {
+      alignTicks: true,
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: "spline",
+        style: {
+          fontFamily: 'Roboto, Helvetica Neue, sans-serif'
+        }
+    },
+    exporting: {
+        fallbackToExportServer: false
+      },
+    title: {
+        text: "Oil Production"
+      },
+      subtitle: {
+        text: "Oil Production"
+      },
+      xAxis: {
+        categories: [],
+        labels: {
+          //type: "datetime",
+          //format:'{value:%d-%b-%y}',
+          rotation: [-45],
+          step: 5,
+          style: {
+            fontSize: 10
+          }
+        },
+        maxPadding: 0.5
+      },
+      yAxis:[{
+        // Sumbu kiri
+        title: {
+          text: 'BOPD',
+          style: {
+            color: '#666666'
+          }
+        },
+        labels: {
+          formatter: function () {
+            return this.value.toLocaleString('id-ID');
+          }
+        }
+      }, {
+        // Sumbu kanan untuk SOT
+        title: {
+          text: 'SOT',
+          style: {
+            color: '#000000'
+          }
+        },
+        labels: {
+        formatter: function () {
+          // Format angka agar tampil penuh (tanpa singkatan)
+          return this.value.toLocaleString('id-ID');
+          },
+          style: {
+            // color: '#ed7d31'
+          }
+        },
+        opposite: true,
+      }],
+      // tooltip: {
+      //   pointFormat: "{series.name}: <b>{point.y:.2f}</b>"
+      // },
+      // plotOptions: {
+
+      // },
+      opposite: true,
+      plotOptions: {
+        series: {
+          turboThreshold: 0
+        }
+      },
+      series: [{
+        name: "Operation",
+        yAxis : 0,
+        color: '#5b9bd5',
+        data: [],
+      },{
+        name: "SOT",
+        yAxis : 1,
+        color: '#ed7d31',
+        data: [],
+      },{
+        name: "Figure",
+        yAxis : 0,
+        color: '#a9d18e',
+        data: [],
+      },{
+        name: "RKAP Oil",
+        yAxis : 0,
+        color: '#313647',
+        data: [],
+        marker: {
+          enabled: false
+        }
+      },{
+        name: "WP&B Oil",
+        yAxis : 0,
+        color: '#FF8F8F',
+        data: [],
+        marker: {
+          enabled: false
+        }
+      }]
+  }
+
   @ViewChild('start_datePicker', {static: true}) start_datePicker: MatDatepicker<any>;
   start_dateControl = new FormControl(new Date(new Date().setDate(new Date().getDate()-4)));
   start_dateInput = this.start_dateControl.value.toLocaleDateString("en-US", { month:"short", year:"numeric", day:"numeric" });
@@ -426,7 +540,7 @@ export class PeDailyManajemenChartComponent {
 //     });
 
 //   }
-refresh_Production() {
+  refresh_Production() {
 
     this.isLoadingResults = true;
 
@@ -458,6 +572,9 @@ refresh_Production() {
       var series_bd = [];
       var series_rkap = [];
       var series_wpnb = [];
+      var series_operation = [];
+      var series_sot = [];
+      var series_figure = [];
 
       res.items.map(d => {
 
@@ -479,6 +596,11 @@ refresh_Production() {
         /** TARGET */
         series_rkap.push({ name: dt, y: d.rkap_oil || 0 });
         series_wpnb.push({ name: dt, y: d.wpnb_oil || 0 });
+
+        //Total
+        series_operation.push({name: dt, y: d.operation});
+        series_sot.push({name: dt, y: d.sot});
+        series_figure.push({name: dt, y: d.figure});
 
       });
 
@@ -503,6 +625,18 @@ refresh_Production() {
       this.manajemen_chart_options.series[3].data = series_rkap;
       this.manajemen_chart_options.series[4].data = series_wpnb;
 
+      this.oil_chart_options["subtitle"]["text"] =
+        `( ${start_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })}` +
+        ` - ${end_date.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })} )`;
+      this.oil_chart_options["xAxis"]["tickInterval"] = Math.max(1, Math.ceil(categories.length / 90));
+      this.oil_chart_options["xAxis"]["categories"] = categories;
+      this.oil_chart_options["series"][0]["data"] = series_operation;
+      this.oil_chart_options["series"][1]["data"] = series_sot;
+      this.oil_chart_options["series"][2]["data"] = series_figure;
+      this.oil_chart_options["series"][3]["data"] = series_rkap;
+      this.oil_chart_options["series"][4]["data"] = series_wpnb;
+      Highcharts.chart(this.oil_chart_el.nativeElement, this.oil_chart_options);
+
       /** RENDER CHART */
 
       this.chart = Highcharts.chart(
@@ -521,6 +655,8 @@ refresh_Production() {
 
   }
 }
+
+
 
 export interface PeWellApi {
   items: any[];

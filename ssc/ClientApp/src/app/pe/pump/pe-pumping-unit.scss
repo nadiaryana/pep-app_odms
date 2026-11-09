@@ -55,6 +55,17 @@ mat-card-actions {
   border-radius: 8px;
 }
 
+.rod_pump_card {
+  position: relative;
+  margin-top: 10px;
+}
+
+.rod_pump_title {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+
 
 ng::host .mat-horizontal-stepper-content {
   display: flex !important;
