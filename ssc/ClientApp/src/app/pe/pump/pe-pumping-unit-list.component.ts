@@ -29,6 +29,8 @@ type PePumpingUnitRow = PePumpingUnit & {
 })
 export class PePumpingUnitListComponent implements OnInit {
 
+  activeTab = 'pumping';
+
   displayedColumns: string[] = ["select", "nomor","well", "status", "primemover", "merk", "tipe", "min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl","noted","action"];
   headerColumns1: string[] = ["select", "nomor","well","status","primemover", "merk", "tipe","crankhole","panjang_sl","noted","action"];
   headerColumns2: string[] = ["min_ch","med_ch","max_ch","min_sl","med_sl","max_sl","used_sl"];
@@ -113,6 +115,10 @@ export class PePumpingUnitListComponent implements OnInit {
         {label: 'Pumping Unit', routerLink: ''}
       ]}
     );
+      // buka tab sesuai query param, mis. ?tab=rod
+    if (this.route.snapshot.queryParamMap.get('tab') === 'rod') {
+      this.activeTab = 'rod';
+    }
 
     var p_start_submitDate = this.route.snapshot.paramMap.get('start_submitDate');
     if(p_start_submitDate != null && p_start_submitDate.length > 0) {
@@ -201,6 +207,10 @@ export class PePumpingUnitListComponent implements OnInit {
         }));
         this.selection.clear();
       });
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
   }
 
   edit(row: PePumpingUnitRow) {

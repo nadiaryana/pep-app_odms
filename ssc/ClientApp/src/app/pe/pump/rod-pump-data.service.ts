@@ -16,10 +16,16 @@ export class RodPumpDataService {
   getRodPumpData(sort: string, order: string, page: number, pagesize: number): Observable<RodPumpDataApi> {
     const params = new HttpParams()
       .set('sort', sort || 'rod_nomor')
-      .set('order', order || 'asc')
-      .set('page', page.toString())
-      .set('pagesize', pagesize.toString());
+      .set('order', order || 'asc')      
+      .set('page', (page || 0).toString())
+      .set('pagesize', (pagesize || 50).toString());
 
     return this.http.get<RodPumpDataApi>('/api/pe/RodPumpData', { params });
+  }
+
+  uploadRodPumpData(file: File): Observable<any> {
+    const fd = new FormData();
+    fd.append('files', file);
+    return this.http.post<any>('/api/pe/RodPumpData/UploadFiles', fd);
   }
 }

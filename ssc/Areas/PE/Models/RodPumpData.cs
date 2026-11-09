@@ -25,5 +25,21 @@ namespace ssc.Areas.PE.Models
         public DateTime? created_date { get; set; }
         public string updated_by { get; set; }
         public DateTime? updated_date { get; set; }
+
+        public RodPumpDataError _error { get; set; }
+    }
+
+    public class RodPumpDataError
+    {
+        public ErrorItem _row { get; set; }
+    }
+
+    public class RodPumpDataTmp
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string _id { get; set; }
+        public int error_count { get; set; }
+        public RodPumpData[] items { get; set; }
     }
 }

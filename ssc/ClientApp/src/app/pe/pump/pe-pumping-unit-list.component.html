@@ -1,14 +1,46 @@
-<div class="container-top-bar" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
-  <!--mat-form-field>
-    <input matInput placeholder="Filter" [formControl]="filterControl">
-  </mat-form-field-->
-  <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/pump/add']" *ngIf="pePermissionService.passPermission('pe/pump/add')"><mat-icon>add</mat-icon> Add/Edit</button>
-  <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/pump/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
-  <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
-  <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/bhp/bhp-chart']"><mat-icon>bar_chart</mat-icon>Chart</button> -->
+<div class="container-top-bar wp-topbar">
+
+  <!-- TABS -->
+  <div class="wp-tabs">
+
+    <button
+      mat-button
+      class="tab-pumping"
+      [class.active]="activeTab === 'pumping'"
+      (click)="setActiveTab('pumping')">
+      Pumping Unit
+    </button>
+
+    <button
+      mat-button
+      class="tab-rod"
+      [class.active]="activeTab === 'rod'"
+      (click)="setActiveTab('rod')">
+      Rod Pump Data
+    </button>
+
+  </div>
+
+  <div *ngIf="activeTab === 'pumping'">
+    <!--mat-form-field>
+      <input matInput placeholder="Filter" [formControl]="filterControl">
+    </mat-form-field-->
+    <button mat-button color="primary" [disabled]="isLoadingResults" [routerLink]="['/pe/pump/add']" *ngIf="pePermissionService.passPermission('pe/pump/add')"><mat-icon>add</mat-icon> Add/Edit</button>
+    <button mat-button color="warn" (click)="deleteSelected()" [disabled]="!selection.selected.length" *ngIf="pePermissionService.passPermission('pe/pump/delete')"><mat-icon>delete</mat-icon> Delete Selected</button>
+    <button mat-button color="secondary" (click)="exportExcel()" [disabled]="isLoadingResults"><mat-icon>file_download</mat-icon> Export to Excel</button>
+    <!-- <button mat-button color="tertiary" [disabled]="isLoadingResults" [routerLink]="['/pe/bhp/bhp-chart']"><mat-icon>bar_chart</mat-icon>Chart</button> -->
+  </div>
+
+  <div *ngIf="activeTab === 'rod'">
+    <button mat-button color="primary" [routerLink]="['/pe/pump/rod-add']" *ngIf="pePermissionService.passPermission('pe/pump/rod-add')"><mat-icon>add</mat-icon> Add/Edit</button>
+  </div>
+
 </div>
 
-<div class="container-content" [ngClass.gt-sm]="'top-flow'" [ngClass.lt-md]="'top-flow-xs'">
+<!-- TAB PUMPING UNIT -->
+<div [hidden]="activeTab !== 'pumping'">
+
+<div class="container-content">
   
   <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
     <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
@@ -385,4 +417,9 @@
   <router-outlet name="overlay2"></router-outlet>
 </div>
 
-<pe-rod-pump-data-list></pe-rod-pump-data-list>
+</div>
+
+<!-- TAB ROD PUMP DATA -->
+<div [hidden]="activeTab !== 'rod'">
+  <pe-rod-pump-data-list></pe-rod-pump-data-list>
+</div>

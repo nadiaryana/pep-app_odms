@@ -106,4 +106,10 @@ export class PeRodPumpDataListComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.listSubscription) this.listSubscription.unsubscribe();
   }
+
+  // 0.000000997 -> "0,997 × 10⁻⁶"
+  formatElastic(value: number): string {
+    if (value == null) return '-';
+    return (value * 1000000).toFixed(3).replace('.', ',') + ' × 10⁻⁶';
+  }
 }

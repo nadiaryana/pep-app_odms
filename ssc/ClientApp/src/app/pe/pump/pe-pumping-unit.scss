@@ -66,6 +66,45 @@ mat-card-actions {
   padding: 5px 10px;
 }
 
+.wp-topbar {
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  padding: 8px 16px !important;
+}
+
+/* Tabs */
+.wp-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  width: 100%;
+  gap: 4px;
+  padding: 4px;
+}
+
+.wp-tabs button {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 400;
+  color: #444;
+  border-radius: 8px;
+  background: transparent;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.wp-tabs button.tab-pumping.active,
+.wp-tabs button.tab-pumping:not(.active):hover {
+  background-color: #c0e1fc;
+  color: #406AAF;
+  font-weight: 500;
+}
+
+.wp-tabs button.tab-rod.active,
+.wp-tabs button.tab-rod:not(.active):hover {
+  background-color: #E4DFFB;
+  color: #6C5CE7;
+  font-weight: 500;
+}
+
 
 ng::host .mat-horizontal-stepper-content {
   display: flex !important;

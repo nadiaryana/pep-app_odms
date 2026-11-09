@@ -15,6 +15,9 @@ import {catchError,map,startWith,switchMap,debounceTime,take,mergeAll,timeout,} 
 import { xFilterService } from "src/app/xfilter/xfilter.component";
 import * as Highcharts from 'highcharts';
 import { formatDate } from '@angular/common';
+// floating button import
+// import { RodPumpDataService } from '../../pump/rod-pump-data.service';
+// import { RodPumpData } from '../../pump/rod-pump-data';
 // import * as html2canvas from 'html2canvas';
 
 const html2canvas = require('html2canvas');
@@ -99,6 +102,30 @@ export class OneSlideComponent implements OnInit {
   screenshotArea!: ElementRef;
 
 
+  // floating button attribute
+  // showCalcRod: boolean = false;
+  // rodDataList: RodPumpData[] = [];
+  // rodApiList: number[] = [];
+  // plungerList: number[] = [];
+
+  // calcSg: number = 1.01;
+  // calcWc: number = 99;
+  // calcRodApi: number = null;
+  // calcPlunger: number = null;
+
+  // calcResult: RodPumpData = null;
+  // calcNotFound: boolean = false;
+  // calcNp: number = null;
+
+  // rodSizes = [
+  //   { label: 'Rods 1-1/4 in', field: 'rod_string1' },
+  //   { label: 'Rods 1-1/8 in', field: 'rod_string2' },
+  //   { label: 'Rods 1 in',     field: 'rod_string3' },
+  //   { label: 'Rods 7/8 in',   field: 'rod_string4' },
+  //   { label: 'Rods 3/4 in',   field: 'rod_string5' },
+  //   { label: 'Rods 5/8 in',   field: 'rod_string6' },
+  //   { label: 'Rods 1/2 in',   field: 'rod_string7' },
+  // ];
 
 
   top_perforation_depth = new FormControl("");
@@ -238,7 +265,9 @@ export class OneSlideComponent implements OnInit {
     private titleService: TitleService,
     public snackbarService: SnackbarService,
     private xfilterService: xFilterService,
-    private http: HttpClient
+    private http: HttpClient,
+    // floating button constuctor
+    // private rodPumpDataService: RodPumpDataService,
   ) {}
 
   ngOnInit() {
@@ -1676,6 +1705,58 @@ export class OneSlideComponent implements OnInit {
     });
   }
 
+  // floating button function
+  // toggleCalcRod() {
+  //   this.showCalcRod = !this.showCalcRod;
+
+  //   // ambil data rod sekali saja saat popup pertama dibuka
+  //   if (this.showCalcRod && this.rodDataList.length === 0) {
+  //     this.loadRodData();
+  //   }
+  // }
+
+  // loadRodData() {
+  //   this.rodPumpDataService.getRodPumpData('rod_nomor', 'asc', 0, 1000).subscribe(res => {
+  //     this.rodDataList = res.items;
+  //     // ambil rod_nomor yang unik untuk dropdown
+  //     this.rodApiList = res.items
+  //       .map(r => r.rod_nomor)
+  //       .filter((v, i, arr) => arr.indexOf(v) === i);
+  //   });
+  // }
+
+  // onRodApiChange() {
+  //   this.calcPlunger = null;
+  //   this.calcResult = null;
+  //   this.calcNotFound = false;
+  //   // plunger yang tersedia untuk rod API yang dipilih
+  //   this.plungerList = this.rodDataList
+  //     .filter(r => r.rod_nomor === this.calcRodApi)
+  //     .map(r => r.plunger_diameter);
+  // }
+
+  // calculateRod() {
+  //   this.calcResult = this.rodDataList.find(r =>
+  //     r.rod_nomor === this.calcRodApi && r.plunger_diameter === this.calcPlunger
+  //   ) || null;
+
+  //   this.calcNotFound = !this.calcResult;
+  //   if (!this.calcResult) return;
+
+  //   // TODO: rumus Np (pakai this.calcSg, this.calcWc, dll)
+  //   this.calcNp = 0;
+  // }
+
+  // resetCalcRod() {
+  //   this.calcSg = null;
+  //   this.calcWc = null;
+  //   this.calcRodApi = null;
+  //   this.calcPlunger = null;
+  //   this.plungerList = [];
+  //   this.calcResult = null;
+  //   this.calcNotFound = false;
+  //   this.calcNp = null;
+  // }
 }
 
 export interface PeWellApi {

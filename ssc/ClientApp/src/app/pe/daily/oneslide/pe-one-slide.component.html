@@ -646,3 +646,79 @@
   </div>
 </div>
 </div>
+
+<!-- FLOATING BUTTON CALCULATION ROD -->
+<!-- <button mat-raised-button color="primary" class="calc-rod-button" (click)="toggleCalcRod()">
+  <mat-icon>calculate</mat-icon> Calculation Rod
+</button>
+
+<div class="calc-rod-popup" *ngIf="showCalcRod">
+
+  <div class="calc-rod-header">
+    <span>Calculation Rod</span>
+    <button mat-icon-button (click)="toggleCalcRod()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="calc-rod-body">
+    <div class="calc-rod-section-title">Input</div>
+    <div class="calc-rod-form">
+
+      <mat-form-field>
+        <mat-label>Sg</mat-label>
+        <input matInput type="number" step="0.01" [(ngModel)]="calcSg" placeholder="1.01">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Wc</mat-label>
+        <input matInput type="number" [(ngModel)]="calcWc" placeholder="99">
+        <span matSuffix>%</span>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Sucker Rod API</mat-label>
+        <mat-select [(ngModel)]="calcRodApi" (selectionChange)="onRodApiChange()">
+          <mat-option *ngFor="let item of rodApiList" [value]="item">{{ item }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Plunger Size</mat-label>
+        <mat-select [(ngModel)]="calcPlunger" [disabled]="!calcRodApi">
+          <mat-option *ngFor="let item of plungerList" [value]="item">{{ item }}</mat-option>
+        </mat-select>
+        <span matSuffix>in</span>
+      </mat-form-field>
+
+    </div>
+
+    <div class="calc-rod-actions">
+      <button mat-button (click)="resetCalcRod()">Reset</button>
+      <button mat-raised-button color="primary" (click)="calculateRod()"
+        [disabled]="!calcSg || !calcWc || !calcRodApi || !calcPlunger">
+        Hitung
+      </button>
+    </div>
+
+    <div class="calc-rod-empty" *ngIf="calcNotFound">
+      Data untuk kombinasi ini tidak ditemukan.
+    </div>
+
+    <ng-container *ngIf="calcResult">
+      <div class="calc-rod-section-title">Hasil</div>
+      <div class="calc-rod-result">
+        <div class="calc-rod-row" *ngFor="let rod of rodSizes" [class.zero]="!calcResult[rod.field]">
+          <span>{{ rod.label }}</span>
+          <span>{{ calcResult[rod.field] || 0 }}</span>
+        </div>
+        <div class="calc-rod-row calc-rod-np">
+          <span>Np</span>
+          <span>{{ calcNp }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+
+</div> -->

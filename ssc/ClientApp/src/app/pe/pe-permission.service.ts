@@ -109,6 +109,7 @@ export class PePermissionService {
 	new Menu("pump", true,null, ["PePumpingUnit Read"]),
 	new Menu("pump/list", true,null, ["PePumpingUnit Read"]),
 	new Menu("pump/add", true,null, ["PePumpingUnit Add"]),
+	new Menu("pump/rod-add", true,null, ["PePumpingUnit Add"]),
 	new Menu("pump/edit", true, /[a-z]/i, ["PePumpingUnit Edit"]),
 	new Menu("pump/delete", true,null, ["PePumpingUnit Delete"]),
 

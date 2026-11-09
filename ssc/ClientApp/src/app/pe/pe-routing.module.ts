@@ -79,6 +79,7 @@ import { PeMapAddComponent } from './map/pe-map-add.component';
 import { PeMapComponent } from './map/pe-map.component';
 import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
 import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component';
+import { PeRodPumpDataAddComponent } from './pump/pe-rod-pump-data-add.component';
 import { PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.component';
 import { PeWellDatabaseComponent } from './well-database/pe-well-database.component';
 import { PeWellDatabaseListComponent } from './well-database/pe-well-database-list.component';
@@ -185,6 +186,7 @@ const peRoutes: Routes = [
      { path: 'pump', component: PePumpingUnitComponent, children:[
       { path: 'list', component: PePumpingUnitListComponent, canActivate: [PePermissionGuard]},
       { path: 'add', component: PePumpingUnitAddComponent, canActivate: [PePermissionGuard] },
+      { path: 'rod-add', component: PeRodPumpDataAddComponent, canActivate: [PePermissionGuard] },
       { path: '', redirectTo: 'list', pathMatch:"full"},
     ]},
 

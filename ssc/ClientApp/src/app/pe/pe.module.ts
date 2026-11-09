@@ -96,6 +96,7 @@ import { PePumpingUnitAddComponent } from './pump/pe-pumping-unit-add.component'
 import { PePumpingUnitComponent } from './pump/pe-pumping-unit.component';
 import { PePumpingUnitDeleteDialogComponent, PePumpingUnitListComponent } from './pump/pe-pumping-unit-list.component';
 import { PeRodPumpDataListComponent } from './pump/pe-rod-pump-data-list.component';
+import { PeRodPumpDataAddComponent } from './pump/pe-rod-pump-data-add.component';
 import { PeWellDatabaseComponent } from './well-database/pe-well-database.component';
 import { PeWellDatabaseDeleteDialogComponent, PeWellDatabaseListComponent } from './well-database/pe-well-database-list.component';
 import { PeWellDatabaseAddComponent } from './well-database/pe-well-database-add.component';
@@ -206,6 +207,7 @@ import { PeWaterfallChartComponent } from './waterfall/pe-waterfall-chart.compon
   PePumpingUnitListComponent,
   PePumpingUnitDeleteDialogComponent,
   PeRodPumpDataListComponent,
+  PeRodPumpDataAddComponent,
 
   PeWellDatabaseComponent,
   PeWellDatabaseListComponent,
