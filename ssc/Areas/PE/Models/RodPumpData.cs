@@ -11,6 +11,7 @@ namespace ssc.Areas.PE.Models
         public string _id { get; set; }
         public decimal? rod_nomor { get; set; }
         public decimal? plunger_diameter { get; set; }
+        public decimal? kedalaman_pompa { get; set; }
         public decimal? rod_weight { get; set; }
         public decimal? elastic_constat { get; set; }
         public decimal? freq_factor { get; set; }

@@ -285,7 +285,7 @@ namespace ssc.Areas.PE.Controllers
 
             MemoryStream memoryStream = new MemoryStream(workbook.GetAsByteArray());
             memoryStream.Position = 0;
-            return File(memoryStream, "application/vnd.ms-excel", "BHP.xlsx");
+            return File(memoryStream, "application/vnd.ms-excel", "Pumping Unit.xlsx");
         }
 
         [Authorize("PePumpingUnit Add")]

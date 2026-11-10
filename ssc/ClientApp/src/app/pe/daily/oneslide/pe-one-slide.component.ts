@@ -16,17 +16,10 @@ import { xFilterService } from "src/app/xfilter/xfilter.component";
 import * as Highcharts from 'highcharts';
 import { formatDate } from '@angular/common';
 // floating button import
-// import { RodPumpDataService } from '../../pump/rod-pump-data.service';
-// import { RodPumpData } from '../../pump/rod-pump-data';
-// import * as html2canvas from 'html2canvas';
+import { RodPumpDataService } from '../../pump/rod-pump-data.service';
+import { RodPumpData } from '../../pump/rod-pump-data';
+import html2canvas from 'html2canvas';
 
-const html2canvas = require('html2canvas');
-
-
-// import { PeSonolog }    from './pe-sonolog';
-// import { SnackbarService } from './../snackbar.service';
-// import { SnackbarApi } from '../../snackbar.service';
-// import { DialogService } from '../../dialog.service';
 
 @Component({
   selector: "app-one-slide",
@@ -103,29 +96,30 @@ export class OneSlideComponent implements OnInit {
 
 
   // floating button attribute
-  // showCalcRod: boolean = false;
-  // rodDataList: RodPumpData[] = [];
-  // rodApiList: number[] = [];
-  // plungerList: number[] = [];
+  showCalcRod: boolean = false;
+  rodDataList: RodPumpData[] = [];
+  rodApiList: number[] = [];
+  plungerList: number[] = [];
 
-  // calcSg: number = 1.01;
-  // calcWc: number = 99;
-  // calcRodApi: number = null;
-  // calcPlunger: number = null;
+  calcSg: number = 1.01;
+  calcKedalamanPompa: number = null;
+  calcWc: number = 99;
+  calcRodApi: number = null;
+  calcPlunger: number = null;
 
-  // calcResult: RodPumpData = null;
-  // calcNotFound: boolean = false;
-  // calcNp: number = null;
+  calcResult: RodPumpData = null;
+  calcNotFound: boolean = false;
+  calcNp: number = null;
 
-  // rodSizes = [
-  //   { label: 'Rods 1-1/4 in', field: 'rod_string1' },
-  //   { label: 'Rods 1-1/8 in', field: 'rod_string2' },
-  //   { label: 'Rods 1 in',     field: 'rod_string3' },
-  //   { label: 'Rods 7/8 in',   field: 'rod_string4' },
-  //   { label: 'Rods 3/4 in',   field: 'rod_string5' },
-  //   { label: 'Rods 5/8 in',   field: 'rod_string6' },
-  //   { label: 'Rods 1/2 in',   field: 'rod_string7' },
-  // ];
+  rodSizes = [
+    { label: 'Rods 1-1/4 in', field: 'rod_string1' },
+    { label: 'Rods 1-1/8 in', field: 'rod_string2' },
+    { label: 'Rods 1 in',     field: 'rod_string3' },
+    { label: 'Rods 7/8 in',   field: 'rod_string4' },
+    { label: 'Rods 3/4 in',   field: 'rod_string5' },
+    { label: 'Rods 5/8 in',   field: 'rod_string6' },
+    { label: 'Rods 1/2 in',   field: 'rod_string7' },
+  ];
 
 
   top_perforation_depth = new FormControl("");
@@ -267,7 +261,7 @@ export class OneSlideComponent implements OnInit {
     private xfilterService: xFilterService,
     private http: HttpClient,
     // floating button constuctor
-    // private rodPumpDataService: RodPumpDataService,
+    private rodPumpDataService: RodPumpDataService,
   ) {}
 
   ngOnInit() {
@@ -1705,58 +1699,114 @@ export class OneSlideComponent implements OnInit {
     });
   }
 
-  // floating button function
-  // toggleCalcRod() {
-  //   this.showCalcRod = !this.showCalcRod;
+  // FLOATING BUTTON FUNCTION
+  toggleCalcRod() {
+    this.showCalcRod = !this.showCalcRod;
 
-  //   // ambil data rod sekali saja saat popup pertama dibuka
-  //   if (this.showCalcRod && this.rodDataList.length === 0) {
-  //     this.loadRodData();
-  //   }
-  // }
+    // ambil data rod sekali saja saat popup pertama dibuka
+    if (this.showCalcRod && this.rodDataList.length === 0) {
+      this.loadRodData();
+    }
+  }
 
-  // loadRodData() {
-  //   this.rodPumpDataService.getRodPumpData('rod_nomor', 'asc', 0, 1000).subscribe(res => {
-  //     this.rodDataList = res.items;
-  //     // ambil rod_nomor yang unik untuk dropdown
-  //     this.rodApiList = res.items
-  //       .map(r => r.rod_nomor)
-  //       .filter((v, i, arr) => arr.indexOf(v) === i);
-  //   });
-  // }
+  loadRodData() {
+    this.rodPumpDataService.getRodPumpData('rod_nomor', 'asc', 0, 1000).subscribe(res => {
+      this.rodDataList = res.items;
+      // ambil rod_nomor yang unik untuk dropdown
+      this.rodApiList = res.items
+        .map(r => r.rod_nomor)
+        .filter((v, i, arr) => arr.indexOf(v) === i); //buang duplikat
+    });
+  }
 
-  // onRodApiChange() {
-  //   this.calcPlunger = null;
-  //   this.calcResult = null;
-  //   this.calcNotFound = false;
-  //   // plunger yang tersedia untuk rod API yang dipilih
-  //   this.plungerList = this.rodDataList
-  //     .filter(r => r.rod_nomor === this.calcRodApi)
-  //     .map(r => r.plunger_diameter);
-  // }
+  onRodApiChange() {
+    this.calcPlunger = null;
+    this.calcResult = null;
+    this.calcNotFound = false;
+    // plunger yang tersedia untuk rod API yang dipilih
+    this.plungerList = this.rodDataList
+      .filter(r => r.rod_nomor === this.calcRodApi)
+      .map(r => r.plunger_diameter);
+  }
 
-  // calculateRod() {
-  //   this.calcResult = this.rodDataList.find(r =>
-  //     r.rod_nomor === this.calcRodApi && r.plunger_diameter === this.calcPlunger
-  //   ) || null;
+  // persentase dari tabel dibulatkan
+  private jointsFor(field: string): number {
+    const pct = this.rodDataList
+      .filter(r => r.rod_nomor === this.calcRodApi && r.plunger_diameter === this.calcPlunger)
+      .reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
 
-  //   this.calcNotFound = !this.calcResult;
-  //   if (!this.calcResult) return;
+    return Math.round(pct / 100 * ((this.calcKedalamanPompa || 0) * 3.28084) / 25);
+  }
 
-  //   // TODO: rumus Np (pakai this.calcSg, this.calcWc, dll)
-  //   this.calcNp = 0;
-  // }
+  calcTaper: { label: string; value: number }[] = [];
 
-  // resetCalcRod() {
-  //   this.calcSg = null;
-  //   this.calcWc = null;
-  //   this.calcRodApi = null;
-  //   this.calcPlunger = null;
-  //   this.plungerList = [];
-  //   this.calcResult = null;
-  //   this.calcNotFound = false;
-  //   this.calcNp = null;
-  // }
+  calculateRod() {
+    this.calcNp = null;
+    this.calcTaper = [];
+    this.calcResult = this.rodDataList.find(r =>
+      r.rod_nomor === this.calcRodApi && r.plunger_diameter === this.calcPlunger
+    ) || null;
+
+    this.calcNotFound = !this.calcResult;
+    if (!this.calcResult || !this.calcKedalamanPompa) return;
+
+    // jumlah joint per ukuran rod 
+    const r1 = this.jointsFor('rod_string1');   // 1-1/4"
+    const r2 = this.jointsFor('rod_string2');   // 1-1/8"
+    const r3 = this.jointsFor('rod_string3');   // 1"
+    const r4 = this.jointsFor('rod_string4');   // 7/8"
+    const r5 = this.jointsFor('rod_string5');   // 3/4"
+    const r6 = this.jointsFor('rod_string6');   // 5/8"
+    const r7 = this.jointsFor('rod_string7');   // 1/2"
+
+    this.calcTaper = [
+      { label: 'Rods 1-1/4 in', value: r1 },
+      { label: 'Rods 1-1/8 in', value: r2 },
+      { label: 'Rods 1 in',     value: r3 },
+      { label: 'Rods 7/8 in',   value: r4 },
+      { label: 'Rods 3/4 in',   value: r5 },
+      { label: 'Rods 5/8 in',   value: r6 },
+      { label: 'Rods 1/2 in',   value: r7 },
+    ];
+
+    // bobot rod
+    const w = { r1: 3.537, r2: 3.132, r3: 2.455, r4: 2.224, r5: 1.634, r6: 1.108, r7: 1.108 };
+
+    const wc = this.calcWc / 100; 
+
+    // pembilang: total bobot rod string
+    const numerator =
+      r1 * 7.6 * w.r1 + r2 * 7.6 * w.r2 + r3 * 7.6 * w.r3 + r4 * 7.6 * w.r4 +
+      r5 * 7.6 * w.r5 + r6 * 7.6 * w.r6 + r7 * 7.6 * w.r7;
+
+    const totalJoint = r1 + r2 + r3 + r4 + r5 + r6 + r7;
+    if (totalJoint === 0) { this.calcNp = 0; return; }
+
+    // bobot rata-rata per ft
+    const avgWeight = numerator / (totalJoint * 7.6);
+
+    // faktor bf dari gradien fluida
+    const fluidGradient = 0.433 * wc + 0.36 * (1 - wc);
+    const bf = (489 - fluidGradient * 7.48 * 19.25) / 489;
+
+    const denominator = avgWeight * bf;
+
+    this.calcNp = (numerator / denominator) / 3.281 / 7.6 * 0.8;
+  }
+
+
+  resetCalcRod() {
+    this.calcSg = null;
+    this.calcWc = null;
+    this.calcRodApi = null;
+    this.calcPlunger = null;
+    this.calcKedalamanPompa = null;
+    this.plungerList = [];
+    this.calcTaper = [];
+    this.calcResult = null;
+    this.calcNotFound = false;
+    this.calcNp = null;
+  }
 }
 
 export interface PeWellApi {

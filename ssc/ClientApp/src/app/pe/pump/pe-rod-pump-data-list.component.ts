@@ -112,4 +112,5 @@ export class PeRodPumpDataListComponent implements OnInit, OnDestroy {
     if (value == null) return '-';
     return (value * 1000000).toFixed(3).replace('.', ',') + ' × 10⁻⁶';
   }
+
 }

@@ -647,15 +647,16 @@
 </div>
 </div>
 
-<!-- FLOATING BUTTON CALCULATION ROD -->
+<!-- FLOATING BUTTON CALCULATION ROD --> 
 <!-- <button mat-raised-button color="primary" class="calc-rod-button" (click)="toggleCalcRod()">
   <mat-icon>calculate</mat-icon> Calculation Rod
 </button>
 
 <div class="calc-rod-popup" *ngIf="showCalcRod">
 
+
   <div class="calc-rod-header">
-    <span>Calculation Rod</span>
+    <span>Neutral Point & Tapper Rod Design</span>
     <button mat-icon-button (click)="toggleCalcRod()">
       <mat-icon>close</mat-icon>
     </button>
@@ -666,12 +667,12 @@
     <div class="calc-rod-form">
 
       <mat-form-field>
-        <mat-label>Sg</mat-label>
+        <mat-label>SG Fluida</mat-label>
         <input matInput type="number" step="0.01" [(ngModel)]="calcSg" placeholder="1.01">
       </mat-form-field>
 
       <mat-form-field>
-        <mat-label>Wc</mat-label>
+        <mat-label>WC</mat-label>
         <input matInput type="number" [(ngModel)]="calcWc" placeholder="99">
         <span matSuffix>%</span>
       </mat-form-field>
@@ -710,11 +711,11 @@
       <div class="calc-rod-result">
         <div class="calc-rod-row" *ngFor="let rod of rodSizes" [class.zero]="!calcResult[rod.field]">
           <span>{{ rod.label }}</span>
-          <span>{{ calcResult[rod.field] || 0 }}</span>
+          <span>{{ (calcResult[rod.field] || 0) | number: '1.0-0' }}</span>
         </div>
         <div class="calc-rod-row calc-rod-np">
-          <span>Np</span>
-          <span>{{ calcNp }}</span>
+          <span>Neutral Point</span>
+          <span>{{ calcNp  | number: '1.0-0' }} </span>
         </div>
       </div>
     </ng-container>
@@ -722,3 +723,198 @@
   </div>
 
 </div> -->
+
+<!-- Floating Button -->
+<button mat-raised-button
+        color="primary"
+        class="calc-rod-button"
+        (click)="toggleCalcRod()">
+  <mat-icon>calculate</mat-icon>
+  <span>Calculation Rod</span>
+</button>
+
+<!-- Calculation Popup -->
+<div class="calc-rod-popup" *ngIf="showCalcRod">
+
+  <!-- Header -->
+  <div class="calc-rod-header">
+
+    <div class="calc-rod-brand">
+      <div class="header-title">
+        <h3>Calculation Rod</h3>
+        <p>Neutral Point & Tapered Rod Design</p>
+      </div>
+    </div>
+
+    <button mat-icon-button
+            class="calc-close"
+            (click)="toggleCalcRod()">
+      <mat-icon>close</mat-icon>
+    </button>
+
+  </div>
+
+  <!-- Body -->
+  <div class="calc-rod-body">
+
+    <!-- Input Section -->
+    <div class="calc-section-heading">
+      <div class="section-icon">
+        <mat-icon>tune</mat-icon>
+      </div>
+      <div>
+        <h4>Input Parameters</h4>
+        <span>Enter calculation parameters</span>
+      </div>
+    </div>
+
+    <div class="calc-rod-form">
+
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>SG Fluida</mat-label>
+        <input matInput
+               type="number"
+               step="0.01"
+               [(ngModel)]="calcSg"
+               placeholder="1.01">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Water Cut (WC)</mat-label>
+        <input matInput
+               type="number"
+               [(ngModel)]="calcWc"
+               placeholder="99">
+        <span matSuffix>%</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Sucker Rod API</mat-label>
+        <mat-select [(ngModel)]="calcRodApi"
+                    (selectionChange)="onRodApiChange()">
+          <mat-option *ngFor="let item of rodApiList"
+                      [value]="item">
+            {{ item }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Plunger Size</mat-label>
+        <mat-select [(ngModel)]="calcPlunger"
+                    [disabled]="!calcRodApi">
+          <mat-option *ngFor="let item of plungerList"
+                      [value]="item">
+            {{ item }}
+          </mat-option>
+        </mat-select>
+        <span matSuffix>in</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Kedalaman Pompa</mat-label>
+         <input matInput
+               type="number"
+               [(ngModel)]="calcKedalamanPompa">
+        <span matSuffix>m</span>
+      </mat-form-field>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="calc-rod-actions">
+
+      <button mat-stroked-button
+              class="reset-button"
+              (click)="resetCalcRod()">
+        <mat-icon>refresh</mat-icon>
+        Reset
+      </button>
+
+      <button mat-raised-button
+              class="calculate-button"
+              (click)="calculateRod()"
+              [disabled]="!calcSg || !calcWc || !calcRodApi || !calcPlunger">
+        Hitung
+      </button>
+
+    </div>
+
+    <!-- Not Found -->
+    <div class="calc-rod-empty" *ngIf="calcNotFound">
+      <mat-icon>info_outline</mat-icon>
+      <span>Data untuk kombinasi ini tidak ditemukan.</span>
+    </div>
+
+    <!-- Result Section -->
+    <ng-container *ngIf="calcResult">
+
+      <div class="calc-section-heading result-heading">
+        <div class="section-icon">
+          <mat-icon>analytics</mat-icon>
+        </div>
+        <div>
+          <h4>Calculation Result</h4>
+        </div>
+
+        <div class="result-status">
+          <mat-icon>check_circle</mat-icon>
+          Calculated
+        </div>
+      </div>
+
+      <div class="calc-rod-result">
+
+        <div class="result-table-header">
+          <span>ROD SIZE</span>
+          <span>QUANTITY</span>
+        </div>
+
+        <div class="calc-rod-row"
+            *ngFor="let rod of rodSizes"
+            [class.zero]="!calcTaper[rod.field]">
+
+          <div class="rod-name">
+            <mat-icon>straighten</mat-icon>
+            <span>{{ rod.label }}</span>
+          </div>
+
+          <span class="rod-value">
+            {{ calcTaper[rod.field] || 0 }}
+          </span>
+        </div>
+
+        <!-- Neutral Point -->
+        <div class="calc-rod-np">
+          <div class="np-label">
+            <mat-icon>adjust</mat-icon>
+            <span>
+              <strong>Neutral Point</strong>
+              <small>Calculated reference point</small>
+            </span>
+          </div>
+
+          <div class="np-value">
+            {{ calcNp | number:'1.0-0' }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- <div class="result-footer">
+        <mat-icon>verified</mat-icon>
+        Calculation completed successfully
+      </div> -->
+
+    </ng-container>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="calc-rod-footer">
+    <!-- <span>PERTAMINA</span>
+    <span class="footer-divider"></span>
+    <span>ENERGIZING YOUR FUTURE</span> -->
+  </div>
+
+</div>

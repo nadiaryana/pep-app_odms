@@ -77,7 +77,7 @@ namespace ssc.Areas.PE.Controllers
             }
         }
 
-                [Authorize("PePumpingUnit Add")]
+        [Authorize("PePumpingUnit Add")]
         [HttpPost("UploadFiles")]
         public async Task<IActionResult> UploadFiles(List<IFormFile> files)
         {
@@ -105,19 +105,19 @@ namespace ssc.Areas.PE.Controllers
 
                 RodPumpData item = new RodPumpData
                 {
-                    rod_nomor        = ToDecimal(ws.Cells[r, 1].Value),
+                    rod_nomor = ToDecimal(ws.Cells[r, 1].Value),
                     plunger_diameter = ToDecimal(ws.Cells[r, 2].Value),
-                    rod_weight       = ToDecimal(ws.Cells[r, 3].Value),
-                    elastic_constat  = ToDecimal(ws.Cells[r, 4].Value),
-                    freq_factor      = ToDecimal(ws.Cells[r, 5].Value),
-                    rod_string1      = ToDecimal(ws.Cells[r, 6].Value),
-                    rod_string2      = ToDecimal(ws.Cells[r, 7].Value),
-                    rod_string3      = ToDecimal(ws.Cells[r, 8].Value),
-                    rod_string4      = ToDecimal(ws.Cells[r, 9].Value),
-                    rod_string5      = ToDecimal(ws.Cells[r, 10].Value),
-                    rod_string6      = ToDecimal(ws.Cells[r, 11].Value),
-                    rod_string7      = ToDecimal(ws.Cells[r, 12].Value),
-                    _error           = new RodPumpDataError(),
+                    rod_weight = ToDecimal(ws.Cells[r, 3].Value),
+                    elastic_constat = ToDecimal(ws.Cells[r, 4].Value),
+                    freq_factor = ToDecimal(ws.Cells[r, 5].Value),
+                    rod_string1 = ToDecimal(ws.Cells[r, 6].Value),
+                    rod_string2 = ToDecimal(ws.Cells[r, 7].Value),
+                    rod_string3 = ToDecimal(ws.Cells[r, 8].Value),
+                    rod_string4 = ToDecimal(ws.Cells[r, 9].Value),
+                    rod_string5 = ToDecimal(ws.Cells[r, 10].Value),
+                    rod_string6 = ToDecimal(ws.Cells[r, 11].Value),
+                    rod_string7 = ToDecimal(ws.Cells[r, 12].Value),
+                    _error = new RodPumpDataError(),
                 };
 
                 // cek kolom yang isinya bukan angka
@@ -217,7 +217,7 @@ namespace ssc.Areas.PE.Controllers
                 total_count = _tmp.items.Length
             });
         }
-    
+
         // ubah isi cell excel jadi angka
         private decimal? ToDecimal(object value)
         {
@@ -245,7 +245,7 @@ namespace ssc.Areas.PE.Controllers
             return null;
         }
 
-                // duplikat = semua kolom sama
+        // duplikat = semua kolom sama
         private FilterDefinition<RodPumpData> DuplicateFilter(RodPumpData item)
         {
             return Builders<RodPumpData>.Filter.Eq(t => t.rod_nomor, item.rod_nomor)
