@@ -1807,6 +1807,11 @@ export class OneSlideComponent implements OnInit {
     this.calcNotFound = false;
     this.calcNp = null;
   }
+  // Buat method di dalam component .ts Anda
+  getTaperValue(label: string): number {
+    const found = this.calcTaper.find(t => t.label === label);
+    return found ? found.value : 0;
+  }
 }
 
 export interface PeWellApi {

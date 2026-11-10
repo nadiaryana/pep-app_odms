@@ -880,7 +880,8 @@
           </div>
 
           <span class="rod-value">
-            {{ calcTaper[rod.field] || 0 }}
+            <!-- {{ calcTaper[rod.label] || 0 }} -->
+            {{ getTaperValue(rod.label) }}
           </span>
         </div>
 
