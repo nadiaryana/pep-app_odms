@@ -478,7 +478,7 @@ ng::host .mat-horizontal-stepper-content {
   color: #fff;
 
   font-size: 13px;
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.3px;
 
   box-shadow: 0 4px 12px rgba(9, 47, 104, 0.25);
@@ -669,7 +669,7 @@ ng::host .mat-horizontal-stepper-content {
 
 .calc-rod-form mat-form-field {
   width: 100%;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 /* Angular Material 7 styling */
@@ -730,7 +730,7 @@ ng::host .mat-horizontal-stepper-content {
   border-color: #c5d3e5;
 
   font-weight: 600;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .reset-button mat-icon {
@@ -749,7 +749,7 @@ ng::host .mat-horizontal-stepper-content {
   color: #fff;
   background: var(--pertamina-navy);
 
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 300;
 
   box-shadow: 0 3px 8px rgba(9, 47, 104, 0.2);
@@ -831,7 +831,8 @@ ng::host .mat-horizontal-stepper-content {
 .calc-rod-result {
   border: 1px solid #dce4ee;
   border-radius: 7px;
-  overflow: hidden;
+  background: #ffffff;
+  
 }
 
 .result-table-header {
@@ -840,9 +841,9 @@ ng::host .mat-horizontal-stepper-content {
 
   padding: 10px 13px;
 
-  color: #63758b;
-  background: #f2f5f9;
-  border-bottom: 1px solid #dce4ee;
+  color: #ffffff;
+  background: var(--pertamina-blue);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 
   font-size: 10px;
   font-weight: 500;
@@ -858,15 +859,16 @@ ng::host .mat-horizontal-stepper-content {
   padding: 7px 13px;
 
   border-bottom: 1px solid #edf0f5;
+  background: #ffffff;
 
-  color: var(--text-dark);
+  color: #1f2d3d;
   font-size: 12px;
 
   transition: background 0.15s ease;
 }
 
 .calc-rod-row:hover {
-  background: #f5f9ff;
+  background: #ffffff;
 }
 
 .rod-name {
@@ -884,19 +886,19 @@ ng::host .mat-horizontal-stepper-content {
 
 .rod-value {
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--pertamina-navy);
   font-variant-numeric: tabular-nums;
 }
 
 .calc-rod-row.zero {
-  color: #aab4c1;
-  background: #fafbfc;
+  color: #000;
+  background: #ffffff;
 }
 
 .calc-rod-row.zero .rod-name mat-icon,
 .calc-rod-row.zero .rod-value {
-  color: #b9c2cd;
+  color: #000000;
 }
 
 //neutral point
