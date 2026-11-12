@@ -472,7 +472,7 @@ ng::host .mat-horizontal-stepper-content {
 
   height: 46px;
   padding: 0 20px;
-  border-radius: 6px;
+  border-radius: 8px;
 
   background: var(--pertamina-navy);
   color: #fff;
@@ -481,13 +481,13 @@ ng::host .mat-horizontal-stepper-content {
   font-weight: 400;
   letter-spacing: 0.3px;
 
-  box-shadow: 0 4px 12px rgba(9, 47, 104, 0.25);
+  box-shadow: 0 4px 12px rgba(9, 47, 104, 0.30);
   transition: all 0.2s ease;
 }
 
 .calc-rod-button:hover {
   background: #064b91;
-  box-shadow: 0 6px 16px rgba(9, 47, 104, 0.3);
+  box-shadow: 0 6px 16px rgba(9, 47, 104, 0.5);
   transform: translateY(-2px);
 }
 
@@ -515,8 +515,8 @@ ng::host .mat-horizontal-stepper-content {
   border-radius: 12px;
 
   box-shadow:
-    0 12px 35px rgba(15, 40, 75, 0.15),
-    0 2px 8px rgba(15, 40, 75, 0.05);
+    0 12px 35px rgba(15, 40, 75, 0.30),
+    0 2px 8px rgba(15, 40, 75, 0.10);
 
   z-index: 1000;
 
@@ -542,14 +542,14 @@ ng::host .mat-horizontal-stepper-content {
 //header
 .calc-rod-header {
   min-height: 88px;
-  padding: 15px 18px;
+  padding: 15px 10px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   background:
-    linear-gradient(110deg, #ffffff 0%, #f4f8fd 75%, #eaf2fb 100%);
+    linear-gradient(110deg, #c4d5ff 0%, #f6faff 50%, #c4d5ff 100%);
 
   border-bottom: 3px solid var(--pertamina-navy);
   position: relative;
@@ -558,6 +558,8 @@ ng::host .mat-horizontal-stepper-content {
 .calc-rod-brand {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex: 1;
   min-width: 0;
 }
 
@@ -565,6 +567,7 @@ ng::host .mat-horizontal-stepper-content {
 
 .header-title {
   min-width: 0;
+  text-align: center;
 }
 
 .header-eyebrow {
@@ -582,30 +585,33 @@ ng::host .mat-horizontal-stepper-content {
   color: var(--pertamina-navy);
   margin: 0;
   line-height: 22px;
+  align-items: center;
 }
 
 .header-title p {
   color: var(--text-muted);
   font-size: 11px;
   margin: 3px 0 0;
+  align-items: center;
 }
 
 .calc-close {
   color: #53657b;
   flex-shrink: 0;
-  margin-left: 8px;
+  position: absolute;
+  right: 10px;
 }
 
 .calc-close:hover {
-  color: var(--pertamina-red);
-  background: #fff0f0;
+  color: #0000;
+  background: #ffffff;
 }
 
 
 .calc-rod-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 15px;
   background: #fff;
 }
 
@@ -782,7 +788,7 @@ ng::host .mat-horizontal-stepper-content {
   padding: 11px 13px;
   margin-bottom: 18px;
 
-  color: #b4232c;
+  color: #f7f3f3;
   background: #fff3f3;
   border: 1px solid #f5d1d1;
   border-radius: 6px;

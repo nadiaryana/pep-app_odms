@@ -3,8 +3,15 @@ pe.viewer - Pertamina@2025
 pe.admin - Pertamina@2025
 
 * Requirement
-- Microsoft .NET Core 2.1.30 Windows server hosting
-- MongoDB 6.0.25
+- Microsoft .NET Core SDK 2.1.818 (termasuk runtime 2.1.30)
+- MongoDB Community Server 6.0.25
+- MongoDB Database Tools 100.12.2 (mongorestore)
 - MongoDB Compass 1.35.0
+- MongoDB Shell (mongosh) 2.5.6
+- Postman
+- Node.js (LTS)
+- nvm-windows 
+- Git for Windows
 - Visual Studio 2022
+- Visual Studio Code
 - angular 16.2.2

@@ -871,11 +871,10 @@
         </div>
 
         <div class="calc-rod-row"
-            *ngFor="let rod of rodSizes"
-            [class.zero]="!calcTaper[rod.field]">
+            *ngFor="let rod of visibleTaper">
 
           <div class="rod-name">
-            <mat-icon>straighten</mat-icon>
+            <!-- <mat-icon>straighten</mat-icon> -->
             <span>{{ rod.label }}</span>
           </div>
 
@@ -891,7 +890,6 @@
             <mat-icon>adjust</mat-icon>
             <span>
               <strong>Neutral Point</strong>
-              <small>Calculated reference point</small>
             </span>
           </div>
 
