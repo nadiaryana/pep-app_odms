@@ -229,8 +229,8 @@ export class PeWaterfallChartComponent implements OnInit {
     var y_min = total_start;
     var y_max = total_start;
 
-    var label_start = this.hasPeriod2 ? "Periode 1 Avg" : "Awal (" + this.start_dateInput + ")";
-    var label_end   = this.hasPeriod2 ? "Periode 2 Avg" : "Akhir (" + this.end_dateInput + ")";
+    var label_start = this.start_dateInput;
+    var label_end = this.end_dateInput;
 
     points.push({
       name: label_start,

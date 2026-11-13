@@ -472,13 +472,13 @@ ng::host .mat-horizontal-stepper-content {
 
   height: 46px;
   padding: 0 20px;
-  border-radius: 8px;
+  border-radius: 10px;
 
   background: var(--pertamina-navy);
   color: #fff;
 
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 500;
   letter-spacing: 0.3px;
 
   box-shadow: 0 4px 12px rgba(9, 47, 104, 0.30);
@@ -756,7 +756,7 @@ ng::host .mat-horizontal-stepper-content {
   background: var(--pertamina-navy);
 
   font-size: 13px;
-  font-weight: 300;
+  font-weight: 600;
 
   box-shadow: 0 3px 8px rgba(9, 47, 104, 0.2);
 }
