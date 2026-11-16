@@ -139,5 +139,37 @@ namespace ssc.Areas.PE.Controllers
             var wells = await _arusService.GetAllWellIdsAsync();
             return Ok(wells);
         }
+
+
+        [Authorize("PeIot Read")]
+        [HttpGet("GetIotChart")]
+        public async Task<IActionResult> GetIotChart(
+            [FromQuery] string well,
+            [FromQuery] DateTime? date,
+            [FromQuery] DateTime? end_date)
+        {
+            if (string.IsNullOrWhiteSpace(well))
+                return BadRequest(new { message = "Sumur harus dipilih." });
+
+            if (date.HasValue != end_date.HasValue)
+                return BadRequest(new { message = "Tanggal mulai dan tanggal akhir harus diisi bersama." });
+
+            if (date.HasValue && end_date.Value < date.Value)
+                return BadRequest(new { message = "Tanggal akhir tidak boleh kurang dari tanggal mulai." });
+
+            var readings = date.HasValue
+                ? await _arusService.GetByWellAndRangeAsync(well, date.Value, end_date.Value)
+                : await _arusService.GetByWellAsync(well);
+
+            var chart = readings
+                .OrderBy(reading => reading.CreatedAt)
+                .Select(reading => new
+                {
+                    date = reading.CreatedAt,
+                    arus = reading.Current
+                });
+
+            return Ok(new { data = chart });
+        }
     }
 }

@@ -112,6 +112,7 @@ import { MonitoringRKDeleteDialogComponent, MonitoringRKListComponent } from './
 import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.component';
 import { MonitoringRKAddOprComponent } from './monitoring-rk/monitoring-rk-add-opr.component';
 import { PeIotComponent } from './iot/pe-iot.component';
+import { PeIotChartComponent } from './iot/pe-iot-chart.component';
 import { PeProdWaterfallComponent} from './waterfall/pe-prod-waterfall.component';
 import { PeProdWaterfallDeleteDialogComponent, PeProdWaterfallListComponent } from './waterfall/pe-prod-waterfall-list.component';
 import { PeProdWaterfallAddComponent } from './waterfall/pe-prod-waterfall-add.component';
@@ -238,6 +239,7 @@ import { PeWaterfallChartComponent } from './waterfall/pe-waterfall-chart.compon
   
 
   PeIotComponent,
+  PeIotChartComponent,
 
   // PeGrafikComponent,
   ],

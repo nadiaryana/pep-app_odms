@@ -95,6 +95,7 @@ import { MonitoringRKAddComponent } from './monitoring-rk/monitoring-rk-add.comp
 import { MonitoringRKChartComponent } from './monitoring-rk/monitoring-rk-chart.component';
 import { MonitoringRKAddOprComponent } from './monitoring-rk/monitoring-rk-add-opr.component';
 import { PeIotComponent } from './iot/pe-iot.component';
+import { PeIotChartComponent } from './iot/pe-iot-chart.component';
 import { PeProdWaterfallComponent } from './waterfall/pe-prod-waterfall.component';
 import { PeProdWaterfallListComponent} from './waterfall/pe-prod-waterfall-list.component';
 import { PeProdWaterfallAddComponent } from './waterfall/pe-prod-waterfall-add.component';
@@ -134,6 +135,7 @@ const peRoutes: Routes = [
       { path: '', redirectTo: 'list', pathMatch:"full" },
     ]},
     { path: 'ipr', component: IprComponent},
+    { path: 'iot/chart', component: PeIotChartComponent, canActivate: [PePermissionGuard] },
     { path: 'iot', component: PeIotComponent, canActivate: [PePermissionGuard] },
     // { path: 'sumur', component: SumurComponent},
     { path: 'current', component: PeSumurCurrentComponent, children: [

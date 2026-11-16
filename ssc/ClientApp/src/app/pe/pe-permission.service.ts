@@ -145,6 +145,7 @@ export class PePermissionService {
 	new Menu("waterfall/delete", true,null, ["PeProdWaterfall Delete"]),
 
 	new Menu("iot", true, null, ["PeIot Read"]),
+	new Menu("iot/chart", true, null, ["PeIot Read"]),
 	];
 	
 	
