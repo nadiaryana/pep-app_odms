@@ -24,6 +24,7 @@ namespace ssc.Areas.PE.Models
         public string thp { get; set; }
         public string spm { get; set; }
         public decimal? cp { get; set; }
+        public string cp_range { get; set; }
         public decimal? agf { get; set; }
         public decimal? pbhp { get; set; }
         public decimal? sbhp { get; set; }

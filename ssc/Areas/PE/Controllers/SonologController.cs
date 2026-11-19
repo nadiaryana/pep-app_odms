@@ -45,6 +45,7 @@ namespace ssc.Areas.PE.Controllers
                 .Include(t => t.thp)
                 .Include(t => t.spm)
                 .Include(t => t.cp)
+                .Include(t => t.cp_range)
                 .Include(t => t.agf)
                 .Include(t => t.pbhp)
                 .Include(t => t.sbhp)
@@ -77,6 +78,7 @@ namespace ssc.Areas.PE.Controllers
                     Builders<Sonolog>.Filter.Regex(t => t.thp, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.spm, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.cp, new BsonRegularExpression(filter, "i")) |
+                    Builders<Sonolog>.Filter.Regex(t => t.cp_range, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.agf, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.pbhp, new BsonRegularExpression(filter, "i")) |
                     Builders<Sonolog>.Filter.Regex(t => t.sbhp, new BsonRegularExpression(filter, "i")) |
@@ -101,7 +103,17 @@ namespace ssc.Areas.PE.Controllers
                 if (colfilter.al?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.al.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.al, Convert.ToDecimal(c))));
                 if (colfilter.thp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.thp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Regex(t => t.thp, new BsonRegularExpression((string)c, "i"))));
                 if (colfilter.spm?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.spm.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Regex(t => t.spm, new BsonRegularExpression((string)c, "i"))));
-                if (colfilter.cp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.cp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.cp, Convert.ToDecimal(c))));
+                if (colfilter.cp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.cp.ToList().Where(c => !(c is JObject)).Select(c =>
+                {
+                    var value = c.ToString();
+                    var exactValue = value.StartsWith("^") && value.EndsWith("$") ? value.Substring(1, value.Length - 2) : value;
+                    var filters = new List<FilterDefinition<Sonolog>>
+                    {
+                        Builders<Sonolog>.Filter.Regex(t => t.cp_range, new BsonRegularExpression(value, "i"))
+                    };
+                    if (decimal.TryParse(exactValue, out var cpValue)) filters.Add(Builders<Sonolog>.Filter.Eq(t => t.cp, cpValue));
+                    return Builders<Sonolog>.Filter.Or(filters);
+                }));
                 if (colfilter.agf?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.agf.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.agf, Convert.ToDecimal(c))));
                 if (colfilter.pbhp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.pbhp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.pbhp, Convert.ToDecimal(c))));
                 if (colfilter.sbhp?.ToList().Count(c => !(c is JObject)) > 0) xcolfilter = xcolfilter & Builders<Sonolog>.Filter.Or(colfilter.sbhp.ToList().Where(c => !(c is JObject)).Select(c => Builders<Sonolog>.Filter.Eq(t => t.sbhp, Convert.ToDecimal(c))));
@@ -124,7 +136,7 @@ namespace ssc.Areas.PE.Controllers
                     // if (colfilter.thp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.thp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$thp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.thp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.thp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$thp\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
                     if (colfilter.spm?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.spm.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$regexMatch:{{input:\"$spm\",regex:\"{0}\",options:\"i\"}}}}", DailyCommon.TextPattern(((JObject)c).GetValue("opr").ToString(), ((JObject)c).GetValue("val").ToString()))).ToArray()), log);
-                    if (colfilter.cp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.cp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$cp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
+                    if (colfilter.cp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.cp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{$and:[{{$ne:[\"$cp\",null]}},{{${0}:[{{$toDecimal:\"$cp\"}},{1}]}}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.agf?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.agf.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$agf\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.pbhp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.pbhp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$pbhp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
                     if (colfilter.sbhp?.ToList().Count(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log) > 0) xcolfilter = xcolfilter & String.Format("{{$expr:{{$and:[{{${1}:[{0}]}}]}}}}", String.Join(",", colfilter.sbhp.ToList().Where(c => (c is JObject) && ((JObject)c).GetValue("log").ToString() == log).Select(c => String.Format("{{${0}:[{{$toDecimal:\"$sbhp\"}},{1}]}}", ((JObject)c).GetValue("opr"), ((JObject)c).GetValue("val"))).ToArray()), log);
@@ -193,6 +205,16 @@ namespace ssc.Areas.PE.Controllers
                         case "well":
                             res = _sonolog.Distinct<string>(mode, xfilter).ToEnumerable().OrderBy(t => t).ToList();
                             break;
+                        case "cp":
+                            res = _sonolog.Distinct<decimal?>("cp", xfilter).ToEnumerable()
+                                .Where(t => t.HasValue)
+                                .Select(t => t.Value.ToString(CultureInfo.CurrentCulture))
+                                .Concat(_sonolog.Distinct<string>("cp_range", xfilter).ToEnumerable().Where(t => !String.IsNullOrWhiteSpace(t)))
+                                .Distinct()
+                                .OrderBy(t => decimal.TryParse(t, out var numericValue) ? numericValue : Decimal.MaxValue)
+                                .ThenBy(t => t)
+                                .ToList();
+                            break;
                         case "date":
                             res = _sonolog.Distinct<DateTime?>(mode, xfilter).ToEnumerable().OrderByDescending(t => t).ToList();
                             break;
@@ -223,6 +245,14 @@ namespace ssc.Areas.PE.Controllers
                 }
             }
             return str;
+        }
+
+        private static bool IsCpRange(string value)
+        {
+            var parts = value.Split('-');
+            return parts.Length == 2
+                && decimal.TryParse(parts[0].Trim(), out _)
+                && decimal.TryParse(parts[1].Trim(), out _);
         }
 
         public ActionResult GetExcel(List<Sonolog> items)
@@ -313,7 +343,7 @@ namespace ssc.Areas.PE.Controllers
                 ws.Cells[4 + i, 8].Value = t.al;
                 ws.Cells[4 + i, 9].Value = t.thp;
                 ws.Cells[4 + i, 10].Value = t.spm;
-                ws.Cells[4 + i, 11].Value = t.cp;
+                ws.Cells[4 + i, 11].Value = t.cp_range != null ? (object)t.cp_range : t.cp;
                 ws.Cells[4 + i, 12].Value = t.agf;
                 ws.Cells[4 + i, 13].Value = t.pbhp;
                 ws.Cells[4 + i, 14].Value = t.sbhp;
@@ -487,7 +517,23 @@ namespace ssc.Areas.PE.Controllers
 
                     try
                     {
-                        _row.cp = (!String.IsNullOrWhiteSpace(ws.Cells[r, 11].Value?.ToString())) ? decimal.Parse(ws.Cells[r, 11].Value?.ToString().Trim()) : (decimal?)null;
+                        var cpValue = ws.Cells[r, 11].Value?.ToString().Trim().Replace('\u2212', '-').Replace('\uFF0D', '-');
+                        if (String.IsNullOrWhiteSpace(cpValue))
+                        {
+                            _row.cp = null;
+                        }
+                        else if (decimal.TryParse(cpValue, out var cp))
+                        {
+                            _row.cp = cp;
+                        }
+                        else if (IsCpRange(cpValue))
+                        {
+                            _row.cp_range = cpValue;
+                        }
+                        else
+                        {
+                            throw new FormatException("CP must be a number or a range such as 0-2.");
+                        }
                     }
                     catch (Exception e)
                     {
@@ -692,6 +738,7 @@ namespace ssc.Areas.PE.Controllers
                         thp = item.thp,
                         spm = item.spm,
                         cp = item.cp,
+                        cp_range = item.cp_range,
                         agf = item.agf,
                         pbhp = item.pbhp,
                         sbhp = item.sbhp,

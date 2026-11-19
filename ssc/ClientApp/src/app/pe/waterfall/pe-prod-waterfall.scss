@@ -4,6 +4,17 @@
   text-align: right,
 }
 
+.container-top-bar > button.mat-button {
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+}
+
+.waterfall-list-toolbar > button.mat-button {
+  align-self: flex-end;
+  margin-bottom: 8px;
+}
+
 mat-card { 
   display: flex;
   justify-content: flex-start;

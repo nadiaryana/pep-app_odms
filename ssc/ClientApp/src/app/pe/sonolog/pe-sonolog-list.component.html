@@ -159,7 +159,7 @@
           <app-xfilter title="cp" column="cp" format="number" [selected]="cp_xSelected"></app-xfilter>
         </div>
      </th>
-     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{(row.cp | number : '1.0-0') || '-'}}</td>
+     <td mat-cell *matCellDef="let row" class="cell-right" [class.clicked_row]="selection.isSelected(row)">{{row.cp_range || (row.cp | number : '1.0-0') || '-'}}</td>
    </ng-container>
 
    <ng-container matColumnDef="agf">
