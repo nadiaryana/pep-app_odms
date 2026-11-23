@@ -35,6 +35,7 @@ import { MatCardModule, MatIconModule, MatListModule } from '@angular/material';
 import { SumurComponent } from './pe/sumur/pe-sumur.component';
 import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
 import { LandingComponent } from './landing/landing.component';
+import { UserManagementComponent } from './user-management/user-management.component';
 
 @NgModule({
   declarations: [
@@ -48,6 +49,7 @@ import { LandingComponent } from './landing/landing.component';
     LogoutComponent,
     DashboardComponent,
     LandingComponent,
+    UserManagementComponent,
 
     LocationComponent,
     LocationListComponent,

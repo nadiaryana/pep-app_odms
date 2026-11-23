@@ -24,6 +24,7 @@ export class PermissionService {
 	new Menu("location", true, ["Location Read"]),
 	new Menu("location/list", true, ["Location Read"]),
 	new Menu("location/add", true, ["Location Add"]),
+	new Menu("user-management", true, ["User Management"]),
 	new Menu("logout", true),
 	];
 	
@@ -36,7 +37,11 @@ export class PermissionService {
 
 	passPermission(path:String) {
         var res:boolean;
-        var ms:Menu[] = this.root.filter(m => m.link == path.replace(/^\/|\/$/g, ''));
+        var link = path.replace(/^\/|\/$/g, '');
+        if (link == "user-management" && this.currentUser != null && this.currentUser.Role == "ssa-pe") {
+            return true;
+        }
+        var ms:Menu[] = this.root.filter(m => m.link == link);
         if(ms.length > 0) {
             var menu:Menu = ms[0];
             if (this.currentUser != null) {

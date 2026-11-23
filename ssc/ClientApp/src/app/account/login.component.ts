@@ -59,7 +59,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 				this.loginForm.enable()
 				return;
 			}
-			localStorage.setItem('token', res.token);
 			this.router.navigate(['/dashboard']);
 			const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') 
 					|| '/dashboard';

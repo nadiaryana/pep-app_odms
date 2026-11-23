@@ -29,13 +29,15 @@ export class PanelComponent implements OnInit {
 	// this.authService.login.subscribe(res => {console.log("what is : "+JSON.stringify(res.user.DisplayName));})
     this.authService.currentUser.subscribe(res => {
       if(res != null) {
-        this.root = [
+        this.root = [];
          // new PanelItem("Home", "", "home", this.permissionService.passPermission("")),
          // new PanelItem("Employee", "employee", "dashboard", this.permissionService.passPermission("employee")),
          // new PanelItem("Enum", "enum", "dashboard", this.permissionService.passPermission("enum")),
          // new PanelItem("Location", "location", "dashboard", this.permissionService.passPermission("location")),
-          new PanelItem("Logout", "logout", "input", this.permissionService.passPermission("logout"), false, [], {overlay:"logout"}),
-          ];
+        if (this.permissionService.passPermission("user-management")) {
+          this.root.push(new PanelItem("User Management", "user-management", "manage_accounts", true));
+        }
+        this.root.push(new PanelItem("Logout", "logout", "input", this.permissionService.passPermission("logout"), false, [], {overlay:"logout"}));
         this.addPanel(new Panel("Hi, "+res.DisplayName, 0, this.root));
 		console.log("who this : "+res.DisplayName);
       } else {

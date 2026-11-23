@@ -24,7 +24,11 @@ export class AuthService {
 	private active: ActivatedRoute,
 	private router: Router
   ) { 
-	this.currentUserSubject = new BehaviorSubject<any>(JSON.parse(sessionStorage.getItem('currentUser')));
+	const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+	if (currentUser && typeof currentUser.token === 'string' && currentUser.token.length > 0) {
+		localStorage.setItem('token', currentUser.token);
+	}
+	this.currentUserSubject = new BehaviorSubject<any>(currentUser);
   }
   
   	public get currentUser(): Observable<any> {
@@ -44,6 +48,7 @@ export class AuthService {
 					return Object.assign({}, res, { errMsg: 'Akun ini tidak memiliki akses sebagai ' + roleName + '. Silakan gunakan halaman login yang sesuai.' });
 				}
 				// store user details and jwt token in local storage to keep user logged in between page refreshes
+				localStorage.setItem('token', res.user.token);
 				sessionStorage.setItem('currentUser', JSON.stringify(res.user));
 				// console.log("what is : "+JSON.stringify(res.user.DisplayName));
 				this.currentUserSubject.next(res.user);

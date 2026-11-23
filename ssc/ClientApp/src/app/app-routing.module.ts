@@ -16,6 +16,7 @@ import { SumurComponent } from './pe/sumur/pe-sumur.component';
 import { PeGrafikComponent } from './pe/grafik/pe-grafik.component';
 import { PeLabComponent } from './pe/lab/pe-lab.component';
 import { LandingComponent } from './landing/landing.component';
+import { UserManagementComponent } from './user-management/user-management.component';
 // import { PeSumurCurrentComponent } from './pe/current/pe-sumur-current.component';
 
 const appRoutes: Routes = [
@@ -28,6 +29,7 @@ const appRoutes: Routes = [
   { path: 'dashboard', redirectTo: 'pe/dashboard', pathMatch: 'full' },
   { path: 'pe', loadChildren: './pe/pe.module#PeModule', data: { preload: true, label: "PE" } },
   { path: 'logout', component: LogoutComponent, canActivate: [AuthGuard], outlet: "overlay" },
+  { path: 'user-management', component: UserManagementComponent, canActivate: [PermissionGuard] },
   { path: 'location', component: LocationComponent, children: [
   { path: 'list', component: LocationListComponent, canActivate: [PermissionGuard] },
   { path: 'add', component: LocationAddComponent, canActivate: [PermissionGuard] },

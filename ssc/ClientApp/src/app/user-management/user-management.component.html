@@ -1,0 +1,229 @@
+<section class="user-management-page">
+  <div class="page-surface">
+    <!-- <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <span class="product-mark"><mat-icon>dashboard</mat-icon></span>
+      <span>ODMS</span>
+      <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
+      <span class="current-crumb">User Management</span>
+    </nav> -->
+
+    <header class="page-header">
+      <div>
+        <h1>User management</h1>
+        <p>Kelola pengguna, role, dan akses ke dalam sistem.</p>
+      </div>
+      <div class="page-actions">
+        <button class="button button-secondary" type="button">
+          <mat-icon>file_download</mat-icon>
+          Export as
+        </button>
+        <button class="button button-primary" type="button" (click)="openAddUserDialog()">
+          <mat-icon>add</mat-icon>
+          Add user
+        </button>
+      </div>
+    </header>
+
+    <div class="users-summary">
+      <h2>All users <span>{{ users.length }}</span></h2>
+    </div>
+
+    <div class="table-toolbar">
+      <div class="status-tabs" role="tablist" aria-label="Filter status pengguna">
+        <button class="status-tab active" type="button" role="tab" aria-selected="true">View all</button>
+        <button class="status-tab" type="button" role="tab" aria-selected="false">Active</button>
+        <button class="status-tab" type="button" role="tab" aria-selected="false">Inactive</button>
+        <button class="status-tab" type="button" role="tab" aria-selected="false">Imported</button>
+        <button class="status-tab" type="button" role="tab" aria-selected="false">Archived</button>
+      </div>
+
+      <div class="table-controls">
+        <label class="search-control">
+          <mat-icon>search</mat-icon>
+          <input type="search" placeholder="Search" aria-label="Search users">
+        </label>
+        <button class="button button-secondary filter-button" type="button">
+          <mat-icon>filter_list</mat-icon>
+          Filters
+        </button>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table aria-label="Daftar pengguna">
+        <thead>
+          <tr>
+            <th class="select-column">
+              <input type="checkbox" aria-label="Pilih semua pengguna">
+            </th>
+            <th scope="col">User</th>
+            <th scope="col">Department</th>
+            <th scope="col">Role</th>
+            <th scope="col">Access</th>
+            <th scope="col">Status</th>
+            <th scope="col">Join date</th>
+            <th class="actions-column" scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoadingUsers">
+            <td class="empty-state" colspan="8">Memuat data pengguna...</td>
+          </tr>
+          <tr *ngIf="!isLoadingUsers && loadError">
+            <td class="empty-state load-error" colspan="8">{{ loadError }}</td>
+          </tr>
+          <tr *ngIf="!isLoadingUsers && !loadError && users.length === 0">
+            <td class="empty-state" colspan="8">
+              <span class="empty-icon"><mat-icon>people_outline</mat-icon></span>
+              <strong>Belum ada data pengguna</strong>
+              <span>Data pengguna akan ditampilkan di sini.</span>
+            </td>
+          </tr>
+          <tr *ngFor="let user of users">
+            <td class="select-column">
+              <input type="checkbox" [attr.aria-label]="'Pilih ' + user.name">
+            </td>
+            <td class="user-identity">
+              <span class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</span>
+              <span class="user-details">
+                <strong>{{ user.name }}</strong>
+                <span>{{ user.email }}</span>
+              </span>
+            </td>
+            <td>{{ user.department }}</td>
+            <td>{{ user.role }}</td>
+            <td><span class="access-chip">{{ user.access }}</span></td>
+            <td>
+              <span class="status-chip" [class.status-inactive]="user.status.toLowerCase() === 'inactive'">
+                <span class="status-dot"></span>
+                {{ user.status }}
+              </span>
+            </td>
+            <td>{{ user.join_date ? (user.join_date | date:'MMM d, y') : '-' }}</td>
+            <td class="row-actions"><button type="button" aria-label="More user actions"><mat-icon>more_vert</mat-icon></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="table-footer">
+      <span>Page 1 of 1</span>
+      <div class="pagination">
+        <button type="button" disabled aria-label="Previous page">
+          <mat-icon>chevron_left</mat-icon>
+          Previous
+        </button>
+        <button class="current-page" type="button" aria-current="page">1</button>
+        <button type="button" disabled aria-label="Next page">
+          Next
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <div
+    class="dialog-backdrop"
+    *ngIf="showAddUserDialog"
+    (click)="closeAddUserDialog()"
+    (keydown.escape)="closeAddUserDialog()"
+    tabindex="-1">
+    <section
+      class="add-user-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-user-title"
+      (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <h2 id="add-user-title">Add User &amp; Permissions</h2>
+        <button class="dialog-close" type="button" aria-label="Close dialog" (click)="closeAddUserDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <form #userForm="ngForm" (ngSubmit)="saveUser(userForm)">
+        <!-- <div class="dialog-subheader">
+          <span>User information</span>
+        </div> -->
+
+        <div class="form-panel">
+          <div class="form-panel-heading">
+            <h3>User information</h3>
+            <p>Enter the user's details and permissions.</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="form-field">
+              <span>User name <b>*</b></span>
+              <input
+                type="text"
+                name="name"
+                [(ngModel)]="newUser.name"
+                placeholder="Enter user name"
+                required>
+            </label>
+
+            <label class="form-field">
+              <span>Email address <b>*</b></span>
+              <input
+                type="email"
+                name="email"
+                [(ngModel)]="newUser.email"
+                placeholder="name@example.com"
+                required>
+            </label>
+
+            <label class="form-field">
+              <span>Department <b>*</b></span>
+              <input
+                type="text"
+                name="department"
+                [(ngModel)]="newUser.department"
+                placeholder="Enter department"
+                required>
+            </label>
+
+            <label class="form-field">
+              <span>Role <b>*</b></span>
+              <input
+                type="text"
+                name="role"
+                [(ngModel)]="newUser.role"
+                placeholder="Enter role"
+                required>
+            </label>
+
+            <label class="form-field">
+              <span>Access <b>*</b></span>
+              <select name="access" [(ngModel)]="newUser.access" required>
+                <option value="On">On</option>
+                <option value="Off">Off</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>Status <b>*</b></span>
+              <select name="status" [(ngModel)]="newUser.status" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>Join date</span>
+              <input type="date" name="join_date" [(ngModel)]="newUser.join_date">
+            </label>
+          </div>
+          <p class="form-error" *ngIf="saveError" role="alert">{{ saveError }}</p>
+        </div>
+
+        <footer class="dialog-actions">
+          <button class="button button-secondary" type="button" (click)="closeAddUserDialog()" [disabled]="isSaving">Cancel</button>
+          <button class="button button-primary" type="submit" [disabled]="userForm.invalid || isSaving">
+            {{ isSaving ? 'Saving...' : 'Save' }}
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+</section>
