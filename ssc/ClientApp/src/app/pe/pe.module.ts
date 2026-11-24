@@ -83,7 +83,7 @@ import { PeDailyOptimasiDeleteDialogComponent, PeOptimasiListComponent } from '.
 import { PeOptimasiAddComponent } from './optimasi/pe-optimasi-add.component';
 import { PeOptimasiChartComponent } from './optimasi/pe-optimasi-chart.component';
 import { PeOptimasiComponent } from './optimasi/pe-optimasi.component';
-import { MatButtonToggleModule, MatCheckboxModule, MatSliderModule } from '@angular/material';
+import { MatAutocompleteModule, MatButtonToggleModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSliderModule } from '@angular/material';
 import { PeLaporanLabDeleteDialogComponent, PeLaporanLabListComponent } from './laporan/pe-laporan-lab-list.component';
 import { PeLaporanLabAddComponent } from './laporan/pe-laporan-lab-add.component';
 import { PeLaporanLabChartComponent } from './laporan/pe-laporan-lab-chart.component';
@@ -258,11 +258,16 @@ import { PeWaterfallChartComponent } from './waterfall/pe-waterfall-chart.compon
   MatSliderModule,
   MatGridListModule,
   xFilterModule,
-    MatSlideToggleModule,
-    MatSortModule,
-    MatChipsModule,
-  
-    RouterModule,
+  MatSlideToggleModule,
+  MatSortModule,
+  MatChipsModule,
+
+  RouterModule,
+  MatChipsModule,
+  MatAutocompleteModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatIconModule,
 
   // NgChartsModule,
 

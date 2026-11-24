@@ -17,7 +17,10 @@ namespace ssc.Areas.PE.Models
         public string email { get; set; }
         public string department { get; set; }
         public string role { get; set; }
-        public string access { get; set; }
+
+        [BsonSerializer(typeof(StringArrayBsonSerializer))]
+        public string[] access { get; set; }
+
         public string status { get; set; }
         public DateTime? join_date { get; set; }
 
@@ -45,7 +48,8 @@ namespace ssc.Areas.PE.Models
         public string role { get; set; }
 
         [Required]
-        public string access { get; set; }
+        [MinLength(1)]
+        public string[] access { get; set; }
 
         [Required]
         public string status { get; set; }

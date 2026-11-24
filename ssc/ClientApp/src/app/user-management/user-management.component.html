@@ -13,10 +13,10 @@
         <p>Kelola pengguna, role, dan akses ke dalam sistem.</p>
       </div>
       <div class="page-actions">
-        <button class="button button-secondary" type="button">
+        <!-- <button class="button button-secondary" type="button">
           <mat-icon>file_download</mat-icon>
           Export as
-        </button>
+        </button> -->
         <button class="button button-primary" type="button" (click)="openAddUserDialog()">
           <mat-icon>add</mat-icon>
           Add user
@@ -49,6 +49,8 @@
       </div>
     </div>
 
+    <p class="table-error" *ngIf="actionError" role="alert">{{ actionError }}</p>
+
     <div class="table-scroll">
       <table aria-label="Daftar pengguna">
         <thead>
@@ -62,7 +64,7 @@
             <th scope="col">Access</th>
             <th scope="col">Status</th>
             <th scope="col">Join date</th>
-            <th class="actions-column" scope="col"><span class="visually-hidden">Actions</span></th>
+            <th class="actions-column" scope="col">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +102,25 @@
               </span>
             </td>
             <td>{{ user.join_date ? (user.join_date | date:'MMM d, y') : '-' }}</td>
-            <td class="row-actions"><button type="button" aria-label="More user actions"><mat-icon>more_vert</mat-icon></button></td>
+            <td class="row-actions">
+              <button
+                class="action-button action-edit"
+                type="button"
+                [attr.aria-label]="'Edit ' + user.name"
+                title="Edit"
+                (click)="openEditUserDialog(user)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                class="action-button action-delete"
+                type="button"
+                [attr.aria-label]="'Hapus ' + user.name"
+                title="Hapus"
+                [disabled]="deletingUserId === user._id"
+                (click)="deleteUser(user)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -135,7 +155,7 @@
       aria-labelledby="add-user-title"
       (click)="$event.stopPropagation()">
       <header class="dialog-header">
-        <h2 id="add-user-title">Add User &amp; Permissions</h2>
+        <h2 id="add-user-title">{{ isEditMode ? 'Edit User &amp; Permissions' : 'Add User &amp; Permissions' }}</h2>
         <button class="dialog-close" type="button" aria-label="Close dialog" (click)="closeAddUserDialog()">
           <mat-icon>close</mat-icon>
         </button>
@@ -193,12 +213,71 @@
                 required>
             </label>
 
-            <label class="form-field">
-              <span>Access <b>*</b></span>
-              <select name="access" [(ngModel)]="newUser.access" required>
-                <option value="On">On</option>
-                <option value="Off">Off</option>
-              </select>
+            <label class="form-field access-form-field">
+            <span>Access <b>*</b></span>
+
+            <mat-form-field appearance="outline" class="access-field">
+
+              <mat-chip-list #chipList>
+
+                <!-- Selected Access -->
+                <mat-chip
+                  *ngFor="let access of newUser.access"
+                  [removable]="true"
+                  (removed)="removeAccess(access)"
+                  color="primary"
+                  selected>
+
+                  {{ access }}
+
+                  <mat-icon matChipRemove>cancel</mat-icon>
+
+                </mat-chip>
+
+                <!-- Input Access -->
+                <input
+                  matInput
+                  placeholder="Search or select access..."
+                  [(ngModel)]="accessInput"
+                  [ngModelOptions]="{standalone: true}"
+                  [matAutocomplete]="accessAuto"
+                  [matChipInputFor]="chipList">
+
+              </mat-chip-list>
+
+              <!-- Autocomplete Options -->
+              <mat-autocomplete
+                #accessAuto="matAutocomplete"
+                (optionSelected)="addAccess($event.option.value)">
+
+                <mat-option
+                  *ngFor="let access of filteredAccess"
+                  [value]="access">
+
+                  <mat-icon class="access-option-icon">
+                    add_circle_outline
+                  </mat-icon>
+
+                  {{ access }}
+
+                </mat-option>
+
+                <mat-option
+                  *ngIf="filteredAccess.length === 0"
+                  disabled>
+
+                  No access found
+
+                </mat-option>
+
+              </mat-autocomplete>
+
+            </mat-form-field>
+
+            <small class="access-hint">
+              Select multiple permissions. Click × to remove.
+            </small>
+
             </label>
 
             <label class="form-field">
@@ -220,10 +299,40 @@
         <footer class="dialog-actions">
           <button class="button button-secondary" type="button" (click)="closeAddUserDialog()" [disabled]="isSaving">Cancel</button>
           <button class="button button-primary" type="submit" [disabled]="userForm.invalid || isSaving">
-            {{ isSaving ? 'Saving...' : 'Save' }}
+            {{ isSaving ? 'Saving...' : (isEditMode ? 'Update' : 'Save') }}
           </button>
         </footer>
       </form>
+    </section>
+  </div>
+
+  <div
+    class="dialog-backdrop"
+    *ngIf="pendingDeleteUser"
+    (click)="cancelDeleteUser()"
+    (keydown.escape)="cancelDeleteUser()"
+    tabindex="-1">
+    <section
+      class="confirm-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-delete-title"
+      aria-describedby="confirm-delete-message"
+      (click)="$event.stopPropagation()">
+      <span class="confirm-dialog-icon"><mat-icon>delete_outline</mat-icon></span>
+      <h2 id="confirm-delete-title">Hapus pengguna?</h2>
+      <p id="confirm-delete-message">
+        Pengguna <strong>{{ pendingDeleteUser.name }}</strong> akan dihapus permanen.
+        Yakin ingin menghapus?
+      </p>
+      <footer class="confirm-dialog-actions">
+        <button class="button button-secondary" type="button" (click)="cancelDeleteUser()" [disabled]="!!deletingUserId">
+          Batal
+        </button>
+        <button class="button button-danger" type="button" (click)="confirmDeleteUser()" [disabled]="!!deletingUserId">
+          {{ deletingUserId ? 'Menghapus...' : 'Hapus' }}
+        </button>
+      </footer>
     </section>
   </div>
 </section>
