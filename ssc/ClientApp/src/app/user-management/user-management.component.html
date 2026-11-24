@@ -17,6 +17,10 @@
           <mat-icon>file_download</mat-icon>
           Export as
         </button> -->
+        <button class="button button-secondary" type="button" (click)="openRoleDialog()">
+          <mat-icon>admin_panel_settings</mat-icon>
+          Manage roles
+        </button>
         <button class="button button-primary" type="button" (click)="openAddUserDialog()">
           <mat-icon>add</mat-icon>
           Add user
@@ -59,9 +63,9 @@
               <input type="checkbox" aria-label="Pilih semua pengguna">
             </th>
             <th scope="col">User</th>
+            <th scope="col">Username</th>
             <th scope="col">Department</th>
             <th scope="col">Role</th>
-            <th scope="col">Access</th>
             <th scope="col">Status</th>
             <th scope="col">Join date</th>
             <th class="actions-column" scope="col">Action</th>
@@ -86,19 +90,19 @@
               <input type="checkbox" [attr.aria-label]="'Pilih ' + user.name">
             </td>
             <td class="user-identity">
-              <span class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</span>
+              <span class="user-avatar">{{ (user.name || user.username || '?').charAt(0).toUpperCase() }}</span>
               <span class="user-details">
-                <strong>{{ user.name }}</strong>
+                <strong>{{ user.name || '-' }}</strong>
                 <span>{{ user.email }}</span>
               </span>
             </td>
-            <td>{{ user.department }}</td>
-            <td>{{ user.role }}</td>
-            <td><span class="access-chip">{{ user.access }}</span></td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.department || '-' }}</td>
+            <td><span class="access-chip">{{ user.role || '-' }}</span></td>
             <td>
-              <span class="status-chip" [class.status-inactive]="user.status.toLowerCase() === 'inactive'">
+              <span class="status-chip" [class.status-inactive]="user.status === 'Inactive'">
                 <span class="status-dot"></span>
-                {{ user.status }}
+                {{ user.status || '-' }}
               </span>
             </td>
             <td>{{ user.join_date ? (user.join_date | date:'MMM d, y') : '-' }}</td>
@@ -142,6 +146,8 @@
     </footer>
   </div>
 
+  <!-- Semua dialog dipindah ke <body> (lihat ngAfterViewInit) supaya tidak tertutup sidebar/toolbar -->
+  <div #dialogHost>
   <div
     class="dialog-backdrop"
     *ngIf="showAddUserDialog"
@@ -174,12 +180,23 @@
 
           <div class="form-grid">
             <label class="form-field">
-              <span>User name <b>*</b></span>
+              <span>Full name <b>*</b></span>
               <input
                 type="text"
                 name="name"
                 [(ngModel)]="newUser.name"
-                placeholder="Enter user name"
+                placeholder="Enter full name"
+                required>
+            </label>
+
+            <label class="form-field">
+              <span>Username <b>*</b></span>
+              <input
+                type="text"
+                name="username"
+                [(ngModel)]="newUser.username"
+                placeholder="Dipakai untuk login"
+                autocomplete="off"
                 required>
             </label>
 
@@ -194,6 +211,17 @@
             </label>
 
             <label class="form-field">
+              <span>Password <b *ngIf="!isEditMode">*</b></span>
+              <input
+                type="password"
+                name="password"
+                [(ngModel)]="newUser.password"
+                [placeholder]="isEditMode ? 'Kosongkan jika tidak diganti' : 'Enter password'"
+                autocomplete="new-password"
+                [required]="!isEditMode">
+            </label>
+
+            <label class="form-field">
               <span>Department <b>*</b></span>
               <input
                 type="text"
@@ -205,79 +233,10 @@
 
             <label class="form-field">
               <span>Role <b>*</b></span>
-              <input
-                type="text"
-                name="role"
-                [(ngModel)]="newUser.role"
-                placeholder="Enter role"
-                required>
-            </label>
-
-            <label class="form-field access-form-field">
-            <span>Access <b>*</b></span>
-
-            <mat-form-field appearance="outline" class="access-field">
-
-              <mat-chip-list #chipList>
-
-                <!-- Selected Access -->
-                <mat-chip
-                  *ngFor="let access of newUser.access"
-                  [removable]="true"
-                  (removed)="removeAccess(access)"
-                  color="primary"
-                  selected>
-
-                  {{ access }}
-
-                  <mat-icon matChipRemove>cancel</mat-icon>
-
-                </mat-chip>
-
-                <!-- Input Access -->
-                <input
-                  matInput
-                  placeholder="Search or select access..."
-                  [(ngModel)]="accessInput"
-                  [ngModelOptions]="{standalone: true}"
-                  [matAutocomplete]="accessAuto"
-                  [matChipInputFor]="chipList">
-
-              </mat-chip-list>
-
-              <!-- Autocomplete Options -->
-              <mat-autocomplete
-                #accessAuto="matAutocomplete"
-                (optionSelected)="addAccess($event.option.value)">
-
-                <mat-option
-                  *ngFor="let access of filteredAccess"
-                  [value]="access">
-
-                  <mat-icon class="access-option-icon">
-                    add_circle_outline
-                  </mat-icon>
-
-                  {{ access }}
-
-                </mat-option>
-
-                <mat-option
-                  *ngIf="filteredAccess.length === 0"
-                  disabled>
-
-                  No access found
-
-                </mat-option>
-
-              </mat-autocomplete>
-
-            </mat-form-field>
-
-            <small class="access-hint">
-              Select multiple permissions. Click × to remove.
-            </small>
-
+              <select name="role" [(ngModel)]="newUser.role" required>
+                <option value="" disabled>Select role</option>
+                <option *ngFor="let role of roles" [value]="role.name">{{ role.name }}</option>
+              </select>
             </label>
 
             <label class="form-field">
@@ -334,5 +293,120 @@
         </button>
       </footer>
     </section>
+  </div>
+
+  <!-- ================= ROLE DIALOG ================= -->
+  <div
+    class="dialog-backdrop"
+    *ngIf="showRoleDialog"
+    (click)="closeRoleDialog()"
+    (keydown.escape)="closeRoleDialog()"
+    tabindex="-1">
+    <section class="role-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <h2>Roles &amp; permissions</h2>
+        <button class="dialog-close" type="button" aria-label="Close dialog" (click)="closeRoleDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="role-layout">
+        <!-- Kiri: daftar role -->
+        <aside class="role-list">
+          <button
+            *ngFor="let role of roles"
+            type="button"
+            class="role-item"
+            [class.active]="isActiveRole(role)"
+            (click)="selectRole(role)">
+            {{ role.name }}
+          </button>
+          <button type="button" class="button button-secondary role-new" (click)="newRole()">
+            <mat-icon>add</mat-icon>
+            New role
+          </button>
+        </aside>
+
+        <!-- Kanan: detail role -->
+        <form *ngIf="selectedRole" class="role-detail" #roleForm="ngForm" (ngSubmit)="saveRole(roleForm)">
+          <div class="form-grid">
+            <label class="form-field">
+              <span>Role name <b>*</b></span>
+              <input
+                type="text"
+                name="roleName"
+                [(ngModel)]="selectedRole.name"
+                [readonly]="!isNewRole"
+                placeholder="Contoh: ssa-pe"
+                required>
+            </label>
+            <label class="form-field">
+              <span>Description</span>
+              <input
+                type="text"
+                name="roleDescription"
+                [(ngModel)]="selectedRole.description"
+                placeholder="Contoh: Akses penuh PE">
+            </label>
+          </div>
+
+          <div class="permission-toolbar">
+            <span>{{ selectedRole.permission.length }} permission dipilih</span>
+            <div>
+              <button type="button" class="button button-secondary" (click)="selectAllPermissions()">Select all</button>
+              <button type="button" class="button button-secondary" (click)="clearAllPermissions()">Clear all</button>
+            </div>
+          </div>
+
+          <div class="permission-scroll">
+            <table class="permission-table">
+              <thead>
+                <tr>
+                  <th>Menu</th>
+                  <th *ngFor="let action of roleActions">{{ action }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let menu of roleModules">
+                  <td>{{ menu }}</td>
+                  <td *ngFor="let action of roleActions">
+                    <input
+                      type="checkbox"
+                      [checked]="hasPermission(menu + ' ' + action)"
+                      (change)="togglePermission(menu + ' ' + action)">
+                  </td>
+                </tr>
+                <tr *ngFor="let permission of singlePermissions">
+                  <td>{{ permission }}</td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      [checked]="hasPermission(permission)"
+                      (change)="togglePermission(permission)">
+                  </td>
+                  <td colspan="3"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="form-error" *ngIf="roleError" role="alert">{{ roleError }}</p>
+
+          <footer class="dialog-actions">
+            <button *ngIf="!isNewRole" type="button" class="button button-danger" (click)="deleteRole()" [disabled]="isSavingRole">
+              Delete role
+            </button>
+            <span class="role-spacer"></span>
+            <button type="button" class="button button-secondary" (click)="closeRoleDialog()" [disabled]="isSavingRole">
+              Cancel
+            </button>
+            <button type="submit" class="button button-primary" [disabled]="roleForm.invalid || isSavingRole">
+              {{ isSavingRole ? 'Saving...' : 'Save role' }}
+            </button>
+          </footer>
+        </form>
+      </div>
+    </section>
+  </div>
   </div>
 </section>

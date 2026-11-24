@@ -508,7 +508,8 @@ input[type='checkbox'] {
 
 .dialog-backdrop {
   position: fixed;
-  z-index: 1200;
+  z-index: 900; // di atas toolbar (110), di bawah overlay Material (1000) supaya snackbar tetap terlihat
+  color: #20232b;
   inset: 0;
   display: flex;
   align-items: center;
@@ -825,4 +826,113 @@ input[type='checkbox'] {
   color: #94a3b8;
   font-size: 11px;
   margin-top: 4px;
+}
+
+// ================= ROLE DIALOG =================
+.role-dialog {
+  box-sizing: border-box;
+  width: min(100%, 980px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 20px 22px 16px;
+  border: 1px solid #eceef1;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(16, 24, 40, 0.2);
+}
+
+.role-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 16px;
+  border-right: 1px solid #eceef1;
+}
+
+.role-item {
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 7px;
+  color: #3b3f47;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: #f5f6f7;
+  }
+
+  &.active {
+    color: #20232b;
+    background: #eceef1;
+    font-weight: 600;
+  }
+}
+
+.role-new {
+  margin-top: 8px;
+}
+
+.permission-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 8px;
+  color: #727783;
+  font-size: 14px;
+
+  .button {
+    margin-left: 6px;
+  }
+}
+
+.permission-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+}
+
+.permission-table {
+  min-width: 0;
+
+  th,
+  td {
+    height: 38px;
+    text-align: center;
+  }
+
+  th:first-child,
+  td:first-child {
+    text-align: left;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+}
+
+.role-spacer {
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .role-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .role-list {
+    padding-right: 0;
+    border-right: 0;
+  }
 }

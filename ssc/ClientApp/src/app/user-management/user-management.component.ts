@@ -1,26 +1,26 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
+import { MatSnackBar } from '@angular/material';
 import { TitleService } from '../navigation/title/title.service';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatIconModule } from '@angular/material/icon';
-import { FormsModule } from '@angular/forms';
 
 interface UserManagementRow {
   _id?: string;
+  username: string;
+  password?: string; // hanya dikirim saat save, tidak pernah dikembalikan server
   name: string;
   email: string;
   department: string;
   role: string;
-  access: {
-    menu: string;
-    permissions: string[];
-  }[];
   status: string;
   join_date: string | null;
+}
+
+interface RoleRow {
+  _id?: string;
+  name: string;
+  description: string;
+  permission: string[];
 }
 
 @Component({
@@ -28,7 +28,9 @@ interface UserManagementRow {
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss']
 })
-export class UserManagementComponent implements OnInit {
+export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('dialogHost', { static: true }) dialogHost: ElementRef;
+
   users: UserManagementRow[] = [];
   showAddUserDialog = false;
   isLoadingUsers = true;
@@ -44,7 +46,8 @@ export class UserManagementComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private titleService: TitleService
+    private titleService: TitleService,
+    private snackBar: MatSnackBar
   ) { }
 
   ngOnInit() {
@@ -54,30 +57,21 @@ export class UserManagementComponent implements OnInit {
       breadcrumbs: [{ label: 'User Management', routerLink: '' }]
     });
     this.loadUsers();
+    this.loadRoles();
   }
 
-  // Daftar permission yang tersedia
-  allAccess: string[] = [
-    'Daily Production',
-    'Sonolog',
-    'Chan plot',
-    'PE Dashboard',
-    'Aggregate',
-    'Well Data',
-    'Barchart',
-    'Optimasi',
-    'ISRP',
-    'Arus',
-    'Map',
-    'Pumping Unit'
-  ];
+  // Dialog dipindah ke <body>, karena di dalam mat-sidenav-content
+  // dialog selalu tertutup sidebar & toolbar (z-index tidak bisa menang)
+  ngAfterViewInit() {
+    document.body.appendChild(this.dialogHost.nativeElement);
+  }
 
-  // Input pencarian access
-  accessInput = '';
+  ngOnDestroy() {
+    document.body.removeChild(this.dialogHost.nativeElement);
+  }
 
   openAddUserDialog() {
     this.newUser = this.createEmptyUser();
-    this.accessInput = '';
     this.isEditMode = false;
     this.editingUserId = null;
     this.saveError = '';
@@ -86,15 +80,15 @@ export class UserManagementComponent implements OnInit {
 
   openEditUserDialog(user: UserManagementRow) {
     this.newUser = {
+      username: user.username,
+      password: '',
       name: user.name,
       email: user.email,
       department: user.department,
       role: user.role,
-      access: [...(user.access || [])],
       status: user.status,
       join_date: this.toDateInputValue(user.join_date)
     };
-    this.accessInput = '';
     this.isEditMode = true;
     this.editingUserId = user._id || null;
     this.saveError = '';
@@ -133,8 +127,10 @@ export class UserManagementComponent implements OnInit {
       user => {
         if (this.isEditMode) {
           this.users = this.users.map(existing => existing._id === user._id ? user : existing);
+          this.snackBar.open('User berhasil diupdate', 'Tutup', { duration: 3000 });
         } else {
           this.users = [user, ...this.users];
+          this.snackBar.open('User berhasil ditambahkan', 'Tutup', { duration: 3000 });
         }
         this.showAddUserDialog = false;
         this.isEditMode = false;
@@ -145,6 +141,7 @@ export class UserManagementComponent implements OnInit {
       error => {
         this.isSaving = false;
         this.saveError = this.getHttpErrorMessage(error, 'User could not be saved.');
+        this.snackBar.open('Gagal menyimpan user: ' + this.saveError, 'Tutup', { duration: 5000 });
       }
     );
   }
@@ -224,42 +221,199 @@ export class UserManagementComponent implements OnInit {
 
   private createEmptyUser(): UserManagementRow {
     return {
+      username: '',
+      password: '',
       name: '',
       email: '',
       department: '',
       role: '',
-      access: [],
       status: 'Active',
       join_date: null
     };
   }
 
-  // Filter access berdasarkan input
-  get filteredAccess(): string[] {
-    const search = (this.accessInput || '').toLowerCase().trim();
+  // ================= ROLE MANAGEMENT =================
 
-    return this.allAccess.filter(access =>
-      access.toLowerCase().includes(search) &&
-      !this.newUser.access.includes(access)
+  roles: RoleRow[] = [];
+  showRoleDialog = false;
+  selectedRole: RoleRow | null = null; // role yang sedang diedit (salinan)
+  isNewRole = false;
+  isSavingRole = false;
+  roleError = '';
+
+  // Baris matriks = modul, kolom = aksi.
+  // Permission disimpan sebagai "<Modul> <Aksi>", contoh: "PeDaily Read"
+  roleModules: string[] = [
+    'PeDashboard',
+    'PeDaily',
+    'PeProduction',
+    'PeSonolog',
+    'PeSensor',
+    'PeSumur',
+    'PeChanPlot',
+    'PeBhp',
+    'PeBarchart',
+    'PeAggregate',
+    'PeLab',
+    'PeLaporanLab',
+    'PeOptimasi',
+    'PeMap',
+    'PePumpingUnit',
+    'PeWellDatabase',
+    'PeActual',
+    'PeMonitoringRK',
+    'PeIot',
+    'PeProdWaterfall',
+    // 'Location'
+    'User Management',
+  ];
+  roleActions: string[] = ['Read', 'Add', 'Edit', 'Delete'];
+
+  // Permission tanpa aksi
+  singlePermissions: string[] = [];
+
+  loadRoles() {
+    this.http.get<RoleRow[]>('/api/pe/role').subscribe(
+      roles => this.roles = roles,
+      error => this.roleError = this.getHttpErrorMessage(error, 'Roles could not be loaded.')
     );
   }
 
-  // Menambahkan access
-  addAccess(access: string) {
-    if (
-      access &&
-      !this.newUser.access.includes(access)
-    ) {
-      this.newUser.access.push(access);
+  openRoleDialog() {
+    this.roleError = '';
+    this.showRoleDialog = true;
+    if (this.roles.length > 0) {
+      this.selectRole(this.roles[0]);
+    } else {
+      this.newRole();
     }
-
-    this.accessInput = '';
   }
 
-  // Menghapus access
-  removeAccess(access: string) {
-    this.newUser.access = this.newUser.access.filter(
-      item => item !== access
+  closeRoleDialog() {
+    if (this.isSavingRole) {
+      return;
+    }
+    this.showRoleDialog = false;
+    this.selectedRole = null;
+  }
+
+  selectRole(role: RoleRow) {
+    this.isNewRole = false;
+    this.roleError = '';
+    // Salin supaya perubahan belum masuk ke list sebelum disimpan
+    this.selectedRole = {
+      _id: role._id,
+      name: role.name,
+      description: role.description || '',
+      permission: [...(role.permission || [])]
+    };
+  }
+
+  newRole() {
+    this.isNewRole = true;
+    this.roleError = '';
+    this.selectedRole = { name: '', description: '', permission: [] };
+  }
+
+  isActiveRole(role: RoleRow): boolean {
+    return !this.isNewRole && !!this.selectedRole && this.selectedRole._id === role._id;
+  }
+
+  hasPermission(permission: string): boolean {
+    return !!this.selectedRole && this.selectedRole.permission.includes(permission);
+  }
+
+  togglePermission(permission: string) {
+    if (!this.selectedRole) {
+      return;
+    }
+    if (this.hasPermission(permission)) {
+      this.selectedRole.permission = this.selectedRole.permission.filter(p => p !== permission);
+    } else {
+      this.selectedRole.permission.push(permission);
+    }
+  }
+
+  selectAllPermissions() {
+    if (!this.selectedRole) {
+      return;
+    }
+    for (const menu of this.roleModules) {
+      for (const action of this.roleActions) {
+        const permission = menu + ' ' + action;
+        if (!this.hasPermission(permission)) {
+          this.selectedRole.permission.push(permission);
+        }
+      }
+    }
+    for (const permission of this.singlePermissions) {
+      if (!this.hasPermission(permission)) {
+        this.selectedRole.permission.push(permission);
+      }
+    }
+  }
+
+  clearAllPermissions() {
+    if (this.selectedRole) {
+      this.selectedRole.permission = [];
+    }
+  }
+
+  saveRole(form: NgForm) {
+    if (!this.selectedRole || form.invalid || this.isSavingRole) {
+      return;
+    }
+
+    this.roleError = '';
+    this.isSavingRole = true;
+
+    const request = this.isNewRole
+      ? this.http.post<RoleRow>('/api/pe/role', this.selectedRole)
+      : this.http.put<RoleRow>('/api/pe/role/' + this.selectedRole._id, this.selectedRole);
+
+    request.subscribe(
+      saved => {
+        if (this.isNewRole) {
+          this.roles = [...this.roles, saved];
+        } else {
+          this.roles = this.roles.map(role => role._id === saved._id ? saved : role);
+        }
+        this.isSavingRole = false;
+        this.selectRole(saved);
+        this.snackBar.open('Role "' + saved.name + '" berhasil disimpan', 'Tutup', { duration: 3000 });
+      },
+      error => {
+        this.isSavingRole = false;
+        this.roleError = this.getHttpErrorMessage(error, 'Role could not be saved.');
+        this.snackBar.open('Gagal menyimpan role: ' + this.roleError, 'Tutup', { duration: 5000 });
+      }
+    );
+  }
+
+  deleteRole() {
+    const role = this.selectedRole;
+    if (!role || !role._id || this.isSavingRole) {
+      return;
+    }
+    if (!confirm('Hapus role "' + role.name + '"?')) {
+      return;
+    }
+
+    this.isSavingRole = true;
+    this.http.delete('/api/pe/role/' + role._id).subscribe(
+      () => {
+        this.roles = this.roles.filter(r => r._id !== role._id);
+        this.isSavingRole = false;
+        if (this.roles.length > 0) {
+          this.selectRole(this.roles[0]);
+        } else {
+          this.newRole();
+        }
+      },
+      error => {
+        this.isSavingRole = false;
+        this.roleError = this.getHttpErrorMessage(error, 'Role could not be deleted.');
+      }
     );
   }
 }

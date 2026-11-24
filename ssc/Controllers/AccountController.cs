@@ -42,6 +42,11 @@ namespace ssc.Controllers
       var user = _users.Find(x => x.username == username).FirstOrDefault();
       if (user != null && BCrypt.Net.BCrypt.Verify(password, user.password_hash))
       {
+        if (user.status == "Inactive")
+        {
+          return StatusCode(StatusCodes.Status401Unauthorized, new { message = "User tidak aktif" });
+        }
+
         var identity = new ClaimsIdentity("ssa", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
 
         Dictionary<string, string[]> role_permission = new Dictionary<string, string[]>();

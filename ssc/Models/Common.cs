@@ -29,6 +29,8 @@ namespace ssc.Models
     //    public string password { get; set; }
     //}
 
+    // Field lain (department, join_date, dll) diisi dari halaman User Management
+    [BsonIgnoreExtraElements]
     public class User
     {
         [BsonId]
@@ -39,6 +41,7 @@ namespace ssc.Models
         public string password_hash { get; set; }
         public string display_name { get; set; }
         public string role { get; set; }
+        public string status { get; set; }
     }
 
     public class Company
