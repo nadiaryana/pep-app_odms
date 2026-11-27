@@ -9,6 +9,12 @@
   // background: #f3f4f6;
 }
 
+.login-page.embedded {
+  display: block;
+  min-height: 0;
+  padding: 0;
+}
+
 .login-panel {
   width: 100%;
   max-width: 420px;
@@ -21,9 +27,39 @@
   box-sizing: border-box;
 }
 
+.login-page.embedded .login-panel {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 /* ── HEADER ─────────────────────────────── */
 .login-header {
   margin-bottom: 26px;
+}
+
+.login-page.embedded .login-header {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.login-page.embedded .panel-badge {
+  display: none;
+}
+
+.login-page.embedded .login-title-row {
+  justify-content: center;
+}
+
+.login-page.embedded .login-title {
+  font-size: 30px;
+}
+
+.login-page.embedded .login-subtitle {
+  color: #6b7280;
 }
 
 .panel-badge {

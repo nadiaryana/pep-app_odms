@@ -1,174 +1,174 @@
-body {
-  // margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-}
-
 :host {
   display: block;
+  width: 100%;
 }
 
-.hero .header h1 {
-  font-size: clamp(26px, 3.6vw, 38px);
-  font-weight: 700;
-  color: #134E8E;
-  text-align: center;
-  margin: 0;
-  padding: 0 24px;
+.landing-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  min-height: calc(100vh - 100px);
+  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(17, 24, 39, 0.1);
 }
 
-.hero {
-  // Gunakan min-height dengan fallback untuk iOS Safari
-  // 100vh di iOS = tinggi termasuk address bar → menyebabkan blank putih
-  // -webkit-fill-available = tinggi visible area di iOS
-  min-height: 100vh;
-  min-height: -webkit-fill-available;  /* iOS Safari fix */
-  min-height: fill-available;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%); 
-  margin-top: 0;
-
+.login-side {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
+  box-sizing: border-box;
+  padding: 88px 48px 72px;
+}
+
+.brand {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.brand img {
+  display: block;
+  width: 44px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.brand span {
+  margin-left: 8px;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.login-content,
+.welcome-content {
+  width: 100%;
+  max-width: 430px;
+}
+
+.welcome-content {
   text-align: center;
 }
-.hero-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/assets/image/bg.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: -1;
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(10, 15, 20, 0) 0%,
-      rgba(10, 15, 20, 0.15) 45%,
-      rgba(10, 15, 20, 0.78) 100%
-    );
-    z-index: 0;
-  }
+.welcome-content h1 {
+  margin: 12px 0;
+  color: #134e8e;
+  font-size: clamp(26px, 3vw, 38px);
 }
 
-.hero h2 {
-  font-size: 40px;
-  color: #3b3f5c;
-  margin-bottom: 40px;
+.welcome-content p {
+  color: #52606d;
 }
 
 .eyebrow {
-  display: block;
+  color: #e53935;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #f0997b;
-  margin-bottom: 14px;
 }
 
-.card-container {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  position: fixed;
-  // env(safe-area-inset-bottom) = jarak aman dari home indicator iPhone
-  bottom: calc(10vh + env(safe-area-inset-bottom, 0px));
-}
-
-// small mobile screen
-@media (max-width: 599px) {
-  .card-container {
-    flex-direction: column;
-    gap: 20px;
-    bottom: calc(5vh + env(safe-area-inset-bottom, 0px));
-  }
-
-  footer {
-    padding: 10px !important;
-    font-size: 10px !important;
-  }
-}
-
-.card {
-  width: 350px;
-  height: 180px;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 15px;
-  border-color: white;
-  // border: 1px solid rgb(255,255,255);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+.dashboard-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #e53935;
+  color: #fff;
+  font: inherit;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
 }
 
-.card:hover {
-  transform: translateY(-8px);
-  background: white;
-}
-
-.card.name h3 {
-  color: black;
-}
-
-// .card.viewer h3 {
-//   color: black;
-// }
-
-.card:hover h3 {
-  color: #e53935;  
-}
-
-.card-sub {
-  margin: 6px 0 0;
-  font-size: 14px;
-  color: #6B7280;
+.login-side footer {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  left: 24px;
+  color: #9ca3af;
+  font-size: 12px;
   text-align: center;
 }
 
-.icon {
-  width: 70px;
-  height: 80px;
-  background: #f8e1e7;
-  border-radius: 50%;
+.image-side {
   display: flex;
   align-items: center;
-  justify-content: center;
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 16px;
+  padding: 48px;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    linear-gradient(90deg, rgba(13, 30, 52, 0.78), rgba(13, 30, 52, 0.12)),
+    url('/assets/image/bg.jpg') center / cover no-repeat;
 }
 
-mat-icon {
-  font-size: 40px;
-  color: #e53935;
-  justify-content: center;
-  height: 40px;
-  align-items: center;
-  // display: flex;
+.image-copy {
+  color: #fff;
 }
 
-footer {
-  text-align: center;
-  padding: 20px;
-  // Tambah padding bawah untuk iPhone home indicator
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  background: #F8F9FA;
-  // color: rgba(255, 255, 255, 0.5);
-  color: #52606D;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  position: fixed;
-  bottom: 0;
-  left: 0;
+.image-copy h2 {
+  margin: 0 0 14px;
+  font-size: clamp(14px, 2.4vw, 40px);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.image-copy p {
+  max-width: 300px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+@media (max-width: 800px) {
+  .login-side {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .image-side {
+    padding: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-page {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .login-side {
+    min-height: 660px;
+    padding: 100px 24px 80px;
+  }
+
+  .brand {
+    top: 24px;
+    left: 24px;
+  }
+
+  .login-side footer {
+    bottom: 18px;
+  }
+
+  .image-side {
+    min-height: 280px;
+    margin: 0 12px 12px;
+    padding: 32px;
+  }
+
+  .image-copy h2 {
+    font-size: clamp(11px, 3.3vw, 20px);
+  }
 }

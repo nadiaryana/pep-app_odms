@@ -1,12 +1,9 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { HttpClient, HttpEventType } from '@angular/common/http';
-import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
-import { MatSnackBar, MatSnackBarRef } from '@angular/material';
-import { Login }    from '../login';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material';
 import { AuthService } from '../auth.service';
-//import { Company } from '../company';
 import { TitleService } from '../navigation/title/title.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -14,35 +11,19 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit, OnDestroy {
-	// @Input() companies;
+	@Input() embedded = false;
 	submitting = false;
 	hide = true;
 	loginForm: FormGroup;
-	loginMode: string = 'admin'; // 'admin' | 'viewer' — determined from the current route
-	expectedRole: string = 'ssa-pe';
 	
 	constructor(
 		private authService: AuthService,
 		private formBuilder: FormBuilder,
 		public snackBar: MatSnackBar,
 		private titleService: TitleService,
-		private http: HttpClient,
 		private router: Router,
-		private route: ActivatedRoute,
 	) { }
-	  
-	get loginBadge(): string {
-		return this.loginMode === 'viewer' ? 'Viewer Panel' : 'Admin Panel';
-	}
-
-	get loginTitle(): string {
-		return this.loginMode === 'viewer' ? 'Masuk sebagai Viewer' : 'Masuk sebagai Admin';
-	}
 	
-	goToLanding() {
-		this.router.navigateByUrl('/landing');
-	}
-	  
 	onSubmit() { 
 		this.submitting = true;
 		this.snackBar.dismiss();
@@ -51,7 +32,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 			// company_id:this.loginForm.controls.company_id.value, 
 			username: this.loginForm.controls.username.value,
 			password: this.loginForm.controls.password.value
-		}, this.expectedRole).subscribe(res => {
+		}).subscribe(res => {
 			
 			if(res["errMsg"]) {
 				this.snackBar.open(res["errMsg"], 'dismiss');
@@ -60,9 +41,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 				return;
 			}
 			this.router.navigate(['/dashboard']);
-			const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') 
-					|| '/dashboard';
-			// this.router.navigateByUrl(returnUrl);
 
 			this.submitting = false; 
 			this.loginForm.enable();
@@ -80,17 +58,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 	ngOnInit() { 
 		this.titleService.titleSource.next({ title: '', icon: '', breadcrumbs: [] });
 
-		// Deteksi halaman login: /admin/login → Admin, /viewer/login → Viewer
-		const path = this.route.snapshot.url.map(s => s.path).join('/');
-		this.loginMode = path.indexOf('viewer') !== -1 ? 'viewer' : 'admin';
-		this.expectedRole = this.loginMode === 'viewer' ? 'ssa-viewer' : 'ssa-pe';
-
-		// Set background gelap full-screen untuk halaman login
-		const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;
-		if (sidenavContent) {
-			sidenavContent.style.background = '#f3f4f6';
-			sidenavContent.style.backgroundAttachment = 'fixed';
-			sidenavContent.style.minHeight = '100vh';
+		if (!this.embedded) {
+			const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;
+			if (sidenavContent) {
+				sidenavContent.style.background = '#f3f4f6';
+				sidenavContent.style.backgroundAttachment = 'fixed';
+				sidenavContent.style.minHeight = '100vh';
+			}
 		}
 
 		this.loginForm = this.formBuilder.group({
@@ -99,19 +73,16 @@ export class LoginComponent implements OnInit, OnDestroy {
 			password: ['', Validators.required],
 			remember: [false],
 		});
-		// this.http.get<any>('api/account/company').subscribe(res => {
-			// this.companies = res.items;
-			// this.loginForm.controls.company_id.setValue(this.companies[0]._id);
-		// }); 
 	};
 
 	ngOnDestroy() {
-		// Hapus background saat keluar dari halaman login
-		const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;
-		if (sidenavContent) {
-			sidenavContent.style.background = '';
-			sidenavContent.style.backgroundAttachment = '';
-			sidenavContent.style.minHeight = '';
+		if (!this.embedded) {
+			const sidenavContent = document.querySelector('.mat-sidenav-content') as HTMLElement;
+			if (sidenavContent) {
+				sidenavContent.style.background = '';
+				sidenavContent.style.backgroundAttachment = '';
+				sidenavContent.style.minHeight = '';
+			}
 		}
 	}
 

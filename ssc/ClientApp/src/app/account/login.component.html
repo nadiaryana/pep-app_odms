@@ -1,17 +1,13 @@
-<div class="login-page">
+<div class="login-page" [class.embedded]="embedded">
 
   <div class="login-panel">
 
     <!-- HEADER -->
     <div class="login-header">
-      <span class="panel-badge">{{ loginBadge }}</span>
       <div class="login-title-row">
-        <button type="button" class="back-button" (click)="goToLanding()" aria-label="Kembali ke Landing Page">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h1 class="login-title">{{ loginTitle }}</h1>
+        <h1 class="login-title">Welcome Back!</h1>
       </div>
-      <p class="login-subtitle">Masuk untuk mengakses dashboard</p>
+      <p class="login-subtitle">Sign in to manage and monitor field operations.</p>
     </div>
 
     <mat-progress-bar *ngIf="submitting" class="login-progress" mode="indeterminate"></mat-progress-bar>
@@ -57,7 +53,7 @@
     <div class="login-footer">
       <div class="footer-divider"><span>SISTEM INTERNAL</span></div>
       <!-- <p class="footer-restrict">Akses terbatas untuk personel berwenang.</p> -->
-      <p class="footer-brand">PT Pertamina EP — Sangatta Field</p>
+      <p class="footer-brand">Petroleum Engineering</p>
     </div>
 
   </div>

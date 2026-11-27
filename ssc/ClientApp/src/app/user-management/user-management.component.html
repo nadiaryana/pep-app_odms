@@ -10,7 +10,7 @@
     <header class="page-header">
       <div>
         <h1>User management</h1>
-        <p>Kelola pengguna, role, dan akses ke dalam sistem.</p>
+        <p>Kelola user, role, dan akses ke dalam sistem.</p>
       </div>
       <div class="page-actions">
         <!-- <button class="button button-secondary" type="button">
@@ -29,27 +29,61 @@
     </header>
 
     <div class="users-summary">
-      <h2>All users <span>{{ users.length }}</span></h2>
+      <h2>All users <span>{{ filteredUsers.length }}</span></h2>
     </div>
 
     <div class="table-toolbar">
       <div class="status-tabs" role="tablist" aria-label="Filter status pengguna">
-        <button class="status-tab active" type="button" role="tab" aria-selected="true">View all</button>
-        <button class="status-tab" type="button" role="tab" aria-selected="false">Active</button>
-        <button class="status-tab" type="button" role="tab" aria-selected="false">Inactive</button>
-        <button class="status-tab" type="button" role="tab" aria-selected="false">Imported</button>
-        <button class="status-tab" type="button" role="tab" aria-selected="false">Archived</button>
+        <button
+          *ngFor="let tab of statusTabs"
+          class="status-tab"
+          type="button"
+          role="tab"
+          [class.active]="selectedStatus === tab.value"
+          [attr.aria-selected]="selectedStatus === tab.value"
+          (click)="selectStatus(tab.value)">
+          {{ tab.label }} ({{ countByStatus(tab.value) }})
+        </button>
       </div>
 
       <div class="table-controls">
         <label class="search-control">
           <mat-icon>search</mat-icon>
-          <input type="search" placeholder="Search" aria-label="Search users">
+          <input
+            type="search"
+            placeholder="Search"
+            aria-label="Search users"
+            [(ngModel)]="searchTerm"
+            [ngModelOptions]="{ standalone: true }">
         </label>
-        <button class="button button-secondary filter-button" type="button">
-          <mat-icon>filter_list</mat-icon>
-          Filters
-        </button>
+
+        <div class="filter-wrapper">
+          <button class="button button-secondary filter-button" type="button" (click)="toggleFilterPanel()">
+            <mat-icon>filter_list</mat-icon>
+            Filters<span *ngIf="activeFilterCount"> ({{ activeFilterCount }})</span>
+          </button>
+
+          <div class="filter-panel" *ngIf="showFilterPanel">
+            <label class="form-field">
+              <span>Role</span>
+              <select [(ngModel)]="roleFilter" [ngModelOptions]="{ standalone: true }">
+                <option value="">All roles</option>
+                <option *ngFor="let role of roles" [value]="role.name">{{ role.name }}</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span>Department</span>
+              <select [(ngModel)]="departmentFilter" [ngModelOptions]="{ standalone: true }">
+                <option value="">All departments</option>
+                <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+              </select>
+            </label>
+            <div class="filter-actions">
+              <button class="button button-secondary" type="button" (click)="resetFilters()">Reset</button>
+              <button class="button button-primary" type="button" (click)="showFilterPanel = false">Done</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -85,7 +119,13 @@
               <span>Data pengguna akan ditampilkan di sini.</span>
             </td>
           </tr>
-          <tr *ngFor="let user of users">
+          <tr *ngIf="!isLoadingUsers && !loadError && users.length > 0 && filteredUsers.length === 0">
+            <td class="empty-state" colspan="8">
+              <strong>Tidak ada pengguna yang cocok</strong>
+              <!-- <span>Coba ubah kata kunci atau filter.</span> -->
+            </td>
+          </tr>
+          <tr *ngFor="let user of filteredUsers">
             <td class="select-column">
               <input type="checkbox" [attr.aria-label]="'Pilih ' + user.name">
             </td>
@@ -146,7 +186,7 @@
     </footer>
   </div>
 
-  <!-- Semua dialog dipindah ke <body> (lihat ngAfterViewInit) supaya tidak tertutup sidebar/toolbar -->
+
   <div #dialogHost>
   <div
     class="dialog-backdrop"
@@ -241,9 +281,9 @@
 
             <label class="form-field">
               <span>Status <b>*</b></span>
-              <select name="status" [(ngModel)]="newUser.status" required>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+             <select name="status" [(ngModel)]="newUser.status" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
               </select>
             </label>
 

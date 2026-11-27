@@ -1,41 +1,30 @@
+<div class="landing-page">
+  <section class="login-side">
+    <!-- <a class="brand" routerLink="/landing" aria-label="Pertamina EP Sangatta Field">
+      <img src="assets/image/logo.png" alt="">
+      <span>Pertamina EP Sangatta Field</span>
+    </a> -->
 
-<div class="hero">
-  <div class="hero-bg"></div>
-  
-  <div class="header">
-    <span class="eyebrow">Petroleum Engineering Sangatta Field</span>
-    <h1>Selamat Datang di Pertamina EP</h1>
-  </div>
-  
-  <div class="card-container" *ngIf="!currentUser">
-
-    <div class="card name" (click)="goAdmin()">
-      <div class="icon">
-        <mat-icon>person</mat-icon>
-      </div>
-      <h3>Admin</h3>
+    <div class="login-content" *ngIf="!currentUser">
+      <app-login [embedded]="true"></app-login>
     </div>
 
-    <div class="card name" (click)="goViewer()">
-      <div class="icon">
-        <mat-icon>groups</mat-icon>
-      </div>
-      <h3> Viewer</h3>
+    <div class="welcome-content" *ngIf="currentUser">
+      <span class="eyebrow">Pertamina EP Sangatta Field</span>
+      <h1>Selamat Datang di Pertamina EP</h1>
+      <p>{{ displayName }}</p>
+      <button type="button" class="dashboard-button" (click)="goDashboard()">
+        Buka Dashboard
+      </button>
     </div>
 
-  </div>
+    <footer>© Pertamina EP Sangatta Field. All Rights Reserved</footer>
+  </section>
 
-  <div class="card-container" *ngIf="currentUser">
-    <div class="card name" (click)="goDashboard()">
-      <div class="icon">
-        <mat-icon>{{ isAdmin ? 'admin_panel_settings' : 'visibility' }}</mat-icon>
-      </div>
-      <h3>{{ isAdmin ? 'Admin Dashboard' : 'Viewer Dashboard' }}</h3>
-      <p class="card-sub">{{ displayName }}</p>
+  <aside class="image-side" aria-label="Gedung Pertamina EP Sangatta Field">
+    <div class="image-copy">
+      <h2>Pertamina EP Sangatta Field</h2>
+      <p>An integrated platform for managing, monitoring, and analyzing operational data.</p>
     </div>
-  </div>
+  </aside>
 </div>
-
-<footer>
-    © Pertamina EP Sangatta Field. All Rights Reserved
-</footer>

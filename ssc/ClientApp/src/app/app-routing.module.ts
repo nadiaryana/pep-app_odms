@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 import { AuthGuard } from './auth.guard';
-import { LoginComponent } from './account/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SelectivePreloadingStrategyService } from './selective-preloading-strategy.service';
 import { LogoutComponent } from './account/logout.component';
@@ -20,12 +19,11 @@ import { UserManagementComponent } from './user-management/user-management.compo
 // import { PeSumurCurrentComponent } from './pe/current/pe-sumur-current.component';
 
 const appRoutes: Routes = [
-  // { path: 'login', component: LoginComponent },
   { path: '', redirectTo: 'landing', pathMatch: 'full'  },
   { path: 'landing', component: LandingComponent },
-  { path: 'admin/login', component: LoginComponent },
-  { path: 'viewer/login', component: LoginComponent },
-  { path: 'login', component: LoginComponent },
+  { path: 'admin/login', redirectTo: 'landing', pathMatch: 'full' },
+  { path: 'viewer/login', redirectTo: 'landing', pathMatch: 'full' },
+  { path: 'login', redirectTo: 'landing', pathMatch: 'full' },
   { path: 'dashboard', redirectTo: 'pe/dashboard', pathMatch: 'full' },
   { path: 'pe', loadChildren: './pe/pe.module#PeModule', data: { preload: true, label: "PE" } },
   { path: 'logout', component: LogoutComponent, canActivate: [AuthGuard], outlet: "overlay" },

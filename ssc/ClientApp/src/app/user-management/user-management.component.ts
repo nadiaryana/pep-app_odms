@@ -44,6 +44,17 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
   actionError = '';
   newUser: UserManagementRow = this.createEmptyUser();
 
+  statusTabs = [
+    { label: 'View all', value: '' },
+    { label: 'Active', value: 'Active' },
+    { label: 'Inactive', value: 'Inactive' },
+  ];
+  selectedStatus = '';
+  searchTerm = '';
+  showFilterPanel = false;
+  roleFilter = '';
+  departmentFilter = '';
+
   constructor(
     private http: HttpClient,
     private titleService: TitleService,
@@ -183,6 +194,55 @@ export class UserManagementComponent implements OnInit, AfterViewInit, OnDestroy
         this.actionError = this.getHttpErrorMessage(error, 'User could not be deleted.');
       }
     );
+  }
+
+  get filteredUsers(): UserManagementRow[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    return this.users.filter(user => {
+      if (this.selectedStatus && user.status !== this.selectedStatus) {
+        return false;
+      }
+      if (this.roleFilter && user.role !== this.roleFilter) {
+        return false;
+      }
+      if (this.departmentFilter && user.department !== this.departmentFilter) {
+        return false;
+      }
+      if (!term) {
+        return true;
+      }
+      return [user.name, user.username, user.email, user.department, user.role]
+        .some(value => (value || '').toLowerCase().includes(term));
+    });
+  }
+
+  get departments(): string[] {
+    const set = new Set<string>();
+    this.users.forEach(user => user.department && set.add(user.department));
+    return Array.from(set).sort();
+  }
+
+  get activeFilterCount(): number {
+    return (this.roleFilter ? 1 : 0) + (this.departmentFilter ? 1 : 0);
+  }
+
+  countByStatus(value: string): number {
+    return value ? this.users.filter(u => u.status === value).length : this.users.length;
+  }
+
+  selectStatus(value: string) {
+    this.selectedStatus = value;
+  }
+
+  toggleFilterPanel() {
+    this.showFilterPanel = !this.showFilterPanel;
+  }
+
+  resetFilters() {
+    this.roleFilter = '';
+    this.departmentFilter = '';
+    this.searchTerm = '';
+    this.selectedStatus = '';
   }
 
   private loadUsers() {

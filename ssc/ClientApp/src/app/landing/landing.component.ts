@@ -20,35 +20,8 @@ export class LandingComponent implements OnInit, OnDestroy {
     private authService: AuthService
   ) {}
 
-  get isAdmin(): boolean {
-    return this.currentUser != null &&
-      (this.currentUser.Role === 'ssa-pe' || this.currentUser.Name === 'pe.admin');
-  }
-
-  get isViewer(): boolean {
-    return this.currentUser != null && !this.isAdmin;
-  }
-
   get displayName(): string {
     return (this.currentUser && (this.currentUser.DisplayName || this.currentUser.Name)) || '';
-  }
-
-  goAdmin() {
-    // Jika sudah login sebagai Admin, langsung ke dashboard
-    if (this.currentUser && this.isAdmin) {
-      this.router.navigateByUrl('/dashboard');
-      return;
-    }
-    this.router.navigateByUrl('/admin/login');
-  }
-
-  goViewer() {
-    // Jika sudah login sebagai Viewer, langsung ke dashboard
-    if (this.currentUser && this.isViewer) {
-      this.router.navigateByUrl('/dashboard');
-      return;
-    }
-    this.router.navigateByUrl('/viewer/login');
   }
 
   goDashboard() {

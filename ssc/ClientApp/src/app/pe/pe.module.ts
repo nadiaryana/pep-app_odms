@@ -303,8 +303,6 @@ import { PeWaterfallChartComponent } from './waterfall/pe-waterfall-chart.compon
 })
 
 export class PeModule { 
-
-  private readonly actualAdminUsername = 'pe.admin';
   
   constructor (
     private panelService: PanelService,
@@ -312,7 +310,7 @@ export class PeModule {
     private authService: AuthService,
     ) { 
  
-    this.authService.currentUser.subscribe(res => {
+    this.authService.currentUser.subscribe(() => {
       this.panelService.messageSource.next(new Panel(
         "Petroleum Engineering", 2, [
         new PanelItem("Dashboard", "pe/dashboard", "dashboard", this.pePermission.passPermission("pe/dashboard")),
@@ -328,7 +326,7 @@ export class PeModule {
             new PanelSubItem("Aggregate", "pe/aggregate", "change_history"),
             new PanelSubItem("Barchart", "pe/barchart", "bar_chart", this.pePermission.passPermission("pe/barchart")),
             new PanelSubItem("Optimasi", "pe/optimasi", "tune"),
-            ...(this.isActualAdmin(res) ? [new PanelSubItem("Actual", "pe/actual", "data_usage")] : []),
+            ...(this.pePermission.passPermission("pe/actual") ? [new PanelSubItem("Actual", "pe/actual", "data_usage")] : []),
             new PanelSubItem("Monitoring RK", "pe/monitoring-rk", "fact_check", this.pePermission.passPermission("pe/monitoring-rk")),
             
             
@@ -355,9 +353,5 @@ export class PeModule {
         ]));
     });
 
-  }
-
-  private isActualAdmin(user: any): boolean {
-    return user != null && user.Name === this.actualAdminUsername;
   }
 }
